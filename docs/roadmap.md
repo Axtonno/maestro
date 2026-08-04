@@ -46,7 +46,7 @@ Obiettivi:
 
 # Milestone 1 — Runtime Core
 
-Stato: Conclusa
+Stato: In corso
 
 Obiettivi:
 
@@ -66,7 +66,7 @@ Un runtime funzionante senza alcun provider.
 
 # Milestone 2 — Provider Layer
 
-Stato: In corso
+Stato: 
 
 Obiettivi:
 
