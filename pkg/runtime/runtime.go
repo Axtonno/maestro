@@ -3,18 +3,12 @@ package runtime
 import "context"
 
 type Runtime interface {
+	Register(Component) error
 
-    Register(Component) error
+	Start(context.Context) error
+	Stop(context.Context) error
 
-    Start(Component) error
-
-    Stop(Component) error
-
-    Restart(Component) error
-
-    Reload(Component) error
-
-    Health(Component) error
-
-    State(Component) State
+	Registry() Registry
+	EventBus() EventBus
+	StateManager() StateManager
 }

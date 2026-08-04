@@ -19,3 +19,20 @@ const (
 
 	StateFailed
 )
+
+type Transition struct {
+	From State
+	To State
+}
+
+var ValidTransitions = []Transition{
+	{StateCreated, StateConfigured},
+	{StateConfigured, StateInitialized},
+	{StateInitialized, StateRunning},
+	{StateRunning, StateStopping},
+	{StateStopping, StateStopped},
+
+	{StateConfigured, StateFailed},
+	{StateInitialized, StateFailed},
+	{StateRunning, StateFailed},
+}

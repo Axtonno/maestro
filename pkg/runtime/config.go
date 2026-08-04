@@ -1,5 +1,5 @@
 package runtime
 
 type Config interface {
-	Get(key string) any
+	Get(string) any
 }

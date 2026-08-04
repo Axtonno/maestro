@@ -1,11 +1,8 @@
 package runtime
 
 type Logger interface {
-	Debug(msg string)
-
-	Info(msg string)
-
-	Warn(msg string)
-
-	Error(msg string)
+	Debug(string)
+	Info(string)
+	Warn(string)
+	Error(string)
 }

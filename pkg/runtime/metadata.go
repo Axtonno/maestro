@@ -1,7 +1,15 @@
 package runtime
 
 type Metadata struct {
-	Name        string
-	Version     string
+	ID ComponentID
+
+	Name string
+
+	Version string
+
 	Description string
+
+	Dependencies []Dependency
+
+	Capabilities []Capability
 }

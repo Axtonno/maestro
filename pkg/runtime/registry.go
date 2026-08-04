@@ -3,7 +3,7 @@ package runtime
 type Registry interface {
 	Register(Service) error
 
-	Resolve(name string) (Service, error)
+	Resolve(ComponentID) (Service, error)
 
-	Has(name string) bool
+	Has(ComponentID) bool
 }

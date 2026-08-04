@@ -1,3 +1,5 @@
+# MAESTRO_CONTEXT
+
 ## Stato documentazione
 
 Completati:
@@ -11,44 +13,75 @@ Completati:
 - design-decisions.md
 - README.md
 
-Da realizzare:
+ADR completate:
 
-- ADR-0001 (Scelta del nome Maestro)
-- ADR-0002 (Provider abstraction)
-- ADR-0003 (Plugin architecture)
+- ADR-0001 — Scelta del nome Maestro
+- ADR-0002 — Provider Abstraction
+- ADR-0003 — Plugin Architecture
+- ADR-0004 — Capability-Based Runtime Architecture
 
 ---
 
 ## Stato architetturale
 
-L'architettura logica del progetto è stata definita.
+L'architettura logica del progetto è stata consolidata.
 
-I macro-componenti identificati sono:
+Macro-componenti identificati:
 
 - Runtime
 - Provider Layer
-- Gestor
 - Plugin System
 - Context Engine
 - Tool System
 - Agent System
+- Gestor
 
-Le responsabilità di ciascun componente sono state documentate.
+Il Runtime rappresenta il cuore dell'intero sistema.
 
-L'implementazione dovrà rispettare l'architettura definita.
+Principi architetturali adottati:
+
+- API First
+- Composition over Inheritance
+- Capability-Based Architecture
+- Separation of Identity, Capability, State and Orchestration
+- Minimal Public Contracts
+- Internal Implementations hidden under internal/
+
+Il contratto pubblico (`pkg/runtime`) è stato definito e costituisce la base stabile per lo sviluppo futuro.
 
 ---
 
-## Prossima milestone
+## Runtime Public API
 
-Bootstrap del Runtime.
+Sono stati definiti i contratti pubblici per:
 
-Attività previste:
+- Runtime
+- Component
+- Context
+- Registry
+- Service
+- EventBus
+- Event
+- StateManager
+- LifecycleManager
+- Config
+- Logger
 
-- Creazione della struttura dei package.
-- Definizione delle interfacce pubbliche.
-- Bootstrap della CLI.
-- Introduzione del sistema di configurazione.
-- Primo Event Bus.
+Sono stati inoltre introdotti i tipi fondamentali:
 
-Le nuove chat potranno essere dedicate ai singoli componenti, mantenendo `MAESTRO_CONTEXT.md` come riferimento comune.
+- ComponentID
+- Metadata
+- Dependency
+- Capability
+- State
+- Transition
+- ComponentState
+
+Le operazioni del ciclo di vita non fanno parte di `Component`.
+
+Ogni componente espone esclusivamente:
+
+```go
+type Component interface {
+    Metadata() Metadata
+}
