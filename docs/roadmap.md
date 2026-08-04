@@ -30,7 +30,7 @@ Costruire un runtime locale modulare, estensibile e provider-agnostic per lo svi
 
 # Milestone 0 — Fondamenta
 
-Stato: In corso
+Stato: Conclusa
 
 Obiettivi:
 
@@ -45,6 +45,8 @@ Obiettivi:
 ---
 
 # Milestone 1 — Runtime Core
+
+Stato: Conclusa
 
 Obiettivi:
 
@@ -63,6 +65,8 @@ Un runtime funzionante senza alcun provider.
 ---
 
 # Milestone 2 — Provider Layer
+
+Stato: In corso
 
 Obiettivi:
 
