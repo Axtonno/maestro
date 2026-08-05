@@ -74,6 +74,10 @@ Responsabilità:
 
 Il Runtime non contiene logica di dominio.
 
+L'Event Bus interno permette la comunicazione disaccoppiata tra componenti.
+La consegna è sincrona, ordinata per sottoscrizione e thread-safe. Il Runtime e
+il `Context` dei componenti espongono la stessa istanza del bus.
+
 Invarianti del Runtime interno
 
 Le implementazioni contenute in `internal/runtime` nascondono la propria rappresentazione e consentono modifiche soltanto attraverso operazioni controllate.

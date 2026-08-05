@@ -64,6 +64,16 @@ Le capacità operative sono espresse tramite interfacce opzionali (`Starter`, `I
 
 ---
 
+## ADR-0005
+
+Synchronous In-Process Event Bus.
+
+L'Event Bus usa dispatch sincrono, topic esatti, fan-out ordinato e snapshot dei
+subscriber. Le operazioni sono thread-safe e i callback non vengono eseguiti
+mentre il bus mantiene lock interni.
+
+---
+
 # Principi architetturali consolidati
 
 L'architettura di Maestro è oggi fondata sui seguenti principi.
@@ -364,6 +374,41 @@ Responsabilità aggiunte:
 
 ---
 
+## Fase 4 — Event System
+
+Completata.
+
+Package:
+
+```
+pkg/runtime
+internal/runtime
+```
+
+Componenti implementati:
+
+### eventBus
+
+Event Bus in-process thread-safe.
+
+Responsabilità:
+
+* validazione di eventi, topic e handler
+* dispatch sincrono
+* più handler per topic
+* ordine deterministico di sottoscrizione
+* snapshot dei subscriber per pubblicazione
+* callback eseguiti senza lock interni
+* rimozione idempotente di tutti gli handler di un topic
+
+Semantica e limiti della prima versione sono descritti in:
+
+```
+docs/event-system.md
+```
+
+---
+
 # Convenzioni implementative
 
 Per `internal/runtime` sono state adottate le seguenti regole.
@@ -380,6 +425,7 @@ Per `internal/runtime` sono state adottate le seguenti regole.
 * builder coordina senza conservare stato.
 * stateManager mantiene gli invarianti degli stati dei componenti.
 * lifecycleManager orchestra le capability senza conoscere la logica di dominio.
+* eventBus protegge i subscriber e non mantiene lock durante i callback.
 * runtime orchestra senza duplicare responsabilità.
 
 ---
@@ -403,6 +449,7 @@ Copertura funzionale:
 * Validator
 * Builder
 * Runtime
+* Event Bus
 
 Verifica effettuata con:
 
@@ -422,9 +469,9 @@ Documentazione consolidata.
 
 API pubbliche consolidate.
 
-Runtime interno implementato fino alla costruzione e validazione del Dependency Graph.
+Runtime interno implementato fino al Lifecycle Engine e all'Event System.
 
-Il progetto è ora pronto per introdurre l'Event System.
+Il progetto è ora pronto per introdurre il Provider Runtime.
 
 ---
 
@@ -462,7 +509,7 @@ Obiettivi:
 
 ---
 
-### Fase 4
+### ✅ Fase 4
 
 Event System
 
@@ -488,6 +535,6 @@ Le API pubbliche risultano minimali e orientate all'estensibilità.
 
 Le implementazioni interne rispettano il principio di proprietà degli invarianti e la separazione delle responsabilità.
 
-Le prossime evoluzioni interesseranno principalmente il Lifecycle Engine, senza richiedere modifiche significative ai contratti pubblici già definiti.
+Le prossime evoluzioni interesseranno principalmente il Provider Runtime, senza richiedere modifiche significative ai contratti pubblici già definiti.
 
 Il Runtime Core dispone ora di una base sufficientemente solida per sostenere le fasi successive dello sviluppo di Maestro.

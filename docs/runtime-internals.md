@@ -89,6 +89,23 @@ Le operazioni che coinvolgono più nodi devono essere coordinate dal grafo, non 
 * proteggere l'accesso concorrente;
 * non esporre direttamente la mappa interna.
 
+### Event Bus
+
+`eventBus` protegge la collezione dei subscriber.
+
+È responsabile di:
+
+* validare eventi, topic e handler;
+* mantenere l'ordine di registrazione degli handler;
+* consentire più handler per topic;
+* creare uno snapshot dei subscriber per ogni pubblicazione;
+* non eseguire callback mentre mantiene un lock interno;
+* rimuovere in modo atomico tutti gli handler associati a un topic.
+
+Evento e payload non appartengono al bus e non vengono copiati o modificati.
+La loro eventuale mutabilità resta responsabilità dei componenti che li
+condividono.
+
 ### Resolver
 
 `resolver` interpreta le dipendenze dichiarate nei metadati e costruisce le relazioni necessarie.
@@ -156,6 +173,7 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 8. Il Builder non espone né conserva risultati parziali.
 9. Il Runtime orchestra i servizi interni senza duplicarne le responsabilità.
 10. Nuove ottimizzazioni interne non devono richiedere modifiche ai contratti pubblici.
+11. L'Event Bus non mantiene lock interni durante l'esecuzione degli handler.
 
 ## Evoluzione futura
 
