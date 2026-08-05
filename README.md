@@ -63,8 +63,9 @@ Il Runtime Core, il lifecycle e l'Event System sono implementati. Il primo
 incremento del Provider Runtime introduce registry, routing capability-based,
 streaming ed embedding provider-agnostic.
 
-Il prossimo passo è costruire il primo adapter provider concreto sopra questi
-contratti.
+Il primo adapter concreto per Ollama implementa completion, streaming,
+embedding e model listing. Il prossimo passo è consolidare i contratti con un
+secondo adapter oppure estendere Ollama quando emergeranno requisiti condivisi.
 
 ---
 

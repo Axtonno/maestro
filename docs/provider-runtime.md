@@ -100,8 +100,10 @@ modificarli concorrentemente durante un'operazione.
 
 Gli errori pubblici distinguono provider non valido, registrazione duplicata,
 provider non trovato, default assente, capability non supportata e stream non
-valido. Gli errori dei provider vengono arricchiti con operazione e ID e restano
-ispezionabili tramite `errors.Is`.
+valido. `ErrInvalidRequest` e `ErrInvalidResponse` permettono inoltre agli
+adapter di segnalare errori neutrali di validazione. Gli errori dei provider
+vengono arricchiti con operazione e ID e restano ispezionabili tramite
+`errors.Is`.
 
 ---
 
@@ -115,7 +117,13 @@ La prima implementazione non introduce:
 * persistenza delle conversazioni;
 * caching di risposte, modelli o embedding;
 * traduzione di opzioni specifiche dei singoli SDK;
-* implementazioni Ollama o llama.cpp.
+* implementazioni concrete diverse dall'adapter Ollama.
 
 Queste funzionalità verranno aggiunte sopra i contratti correnti quando i
 relativi requisiti saranno concreti.
+
+La prima implementazione concreta è descritta in:
+
+```
+docs/ollama-provider.md
+```

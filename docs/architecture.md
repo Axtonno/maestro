@@ -112,9 +112,12 @@ Il Provider Runtime mantiene un registry thread-safe, applica una selezione
 esplicita del provider predefinito e inoltra le operazioni senza mantenere lock
 durante l'esecuzione di codice esterno.
 
-Implementazioni previste:
+Implementazioni disponibili:
 
 - Ollama
+
+Implementazioni previste:
+
 - llama.cpp
 - LM Studio
 - OpenAI

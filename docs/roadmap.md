@@ -89,6 +89,15 @@ Primo incremento completato:
 - streaming pull-based;
 - integrazione con Runtime e Context.
 
+Secondo incremento completato:
+
+- adapter Ollama basato su `net/http`;
+- completion conversazionale;
+- streaming NDJSON;
+- embedding multipli;
+- listing dei modelli locali;
+- test unitari isolati e test d'integrazione opzionali.
+
 ---
 
 # Milestone 3 — Gestor

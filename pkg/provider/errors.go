@@ -9,4 +9,6 @@ var (
 	ErrDefaultNotConfigured  = errors.New("default provider not configured")
 	ErrUnsupportedCapability = errors.New("provider capability not supported")
 	ErrInvalidStream         = errors.New("invalid provider stream")
+	ErrInvalidRequest        = errors.New("invalid provider request")
+	ErrInvalidResponse       = errors.New("invalid provider response")
 )

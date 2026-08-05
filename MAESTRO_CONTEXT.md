@@ -452,8 +452,41 @@ Semantica e limiti sono descritti in:
 docs/provider-runtime.md
 ```
 
-Restano da introdurre sopra questi contratti le implementazioni concrete dei
-provider e le eventuali policy di resilienza richieste da casi d'uso reali.
+Su questi contratti è ora disponibile l'adapter Ollama. Restano da introdurre
+ulteriori provider e le eventuali policy di resilienza richieste da casi d'uso
+reali.
+
+### Secondo incremento — Adapter Ollama
+
+Completato.
+
+Package:
+
+```
+pkg/provider/ollama
+internal/provider/ollama
+```
+
+Funzionalità:
+
+* facade pubblica e configurazione tipizzata
+* implementazione privata basata sulla libreria standard `net/http`
+* completion tramite `POST /api/chat`
+* streaming NDJSON tramite `POST /api/chat`
+* embedding multipli tramite `POST /api/embed`
+* model listing tramite `GET /api/tags`
+* risoluzione tra modello esplicito e modello predefinito
+* validazione semantica delle risposte
+* error handling HTTP con body limitato
+* propagazione di cancellazione e deadline
+* test HTTP in-memory
+* test d'integrazione opzionali tramite build tag
+
+Semantica, configurazione e limiti sono descritti in:
+
+```
+docs/ollama-provider.md
+```
 
 ---
 
@@ -488,7 +521,9 @@ Package:
 ```
 internal/runtime
 internal/provider
+internal/provider/ollama
 pkg/runtime
+pkg/provider/ollama
 ```
 
 Copertura funzionale:
@@ -503,6 +538,7 @@ Copertura funzionale:
 * Event Bus
 * Provider Runtime
 * Configurazione
+* Adapter Ollama
 
 Verifica effettuata con:
 
@@ -524,7 +560,8 @@ API pubbliche estese con i contratti provider e il composition root.
 
 Runtime interno implementato fino all'integrazione del Provider Runtime.
 
-Il progetto è ora pronto per introdurre il primo adapter provider concreto.
+Il progetto dispone ora del primo adapter provider concreto ed è pronto per
+validare l'astrazione con un secondo adapter.
 
 ---
 
@@ -572,7 +609,8 @@ Event System
 
 Provider Runtime/Configuration
 
-Primo incremento completato; implementazioni concrete ancora da sviluppare.
+Provider Runtime e primo adapter Ollama completati; la fase resta aperta per il
+consolidamento con ulteriori provider.
 
 ---
 
