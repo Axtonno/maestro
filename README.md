@@ -57,11 +57,14 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 
 ## Stato del progetto
 
-🚧 Early Architecture Phase
+🚧 Runtime Core / Provider Runtime
 
-Il progetto è nelle fasi iniziali di progettazione dell'architettura.
+Il Runtime Core, il lifecycle e l'Event System sono implementati. Il primo
+incremento del Provider Runtime introduce registry, routing capability-based,
+streaming ed embedding provider-agnostic.
 
-L'obiettivo attuale è costruire fondamenta solide prima dell'implementazione del runtime.
+Il prossimo passo è costruire il primo adapter provider concreto sopra questi
+contratti.
 
 ---
 

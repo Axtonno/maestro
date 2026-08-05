@@ -1,12 +1,16 @@
 package runtime
 
-import pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
+import (
+	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
+	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
+)
 
 type runtimeContext struct {
-	config   pkgRuntime.Config
-	logger   pkgRuntime.Logger
-	eventBus pkgRuntime.EventBus
-	registry pkgRuntime.Registry
+	config    pkgRuntime.Config
+	logger    pkgRuntime.Logger
+	eventBus  pkgRuntime.EventBus
+	registry  pkgRuntime.Registry
+	providers pkgProvider.Runtime
 }
 
 func newRuntimeContext(
@@ -14,12 +18,14 @@ func newRuntimeContext(
 	logger pkgRuntime.Logger,
 	eventBus pkgRuntime.EventBus,
 	registry pkgRuntime.Registry,
+	providers pkgProvider.Runtime,
 ) *runtimeContext {
 	return &runtimeContext{
-		config:   config,
-		logger:   logger,
-		eventBus: eventBus,
-		registry: registry,
+		config:    config,
+		logger:    logger,
+		eventBus:  eventBus,
+		registry:  registry,
+		providers: providers,
 	}
 }
 
@@ -37,4 +43,8 @@ func (c *runtimeContext) EventBus() pkgRuntime.EventBus {
 
 func (c *runtimeContext) Registry() pkgRuntime.Registry {
 	return c.registry
+}
+
+func (c *runtimeContext) Providers() pkgProvider.Runtime {
+	return c.providers
 }

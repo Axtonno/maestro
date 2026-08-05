@@ -66,7 +66,7 @@ Un runtime funzionante senza alcun provider.
 
 # Milestone 2 — Provider Layer
 
-Stato: 
+Stato: In corso
 
 Obiettivi:
 
@@ -80,6 +80,14 @@ Obiettivi:
 Output atteso:
 
 Runtime capace di dialogare con differenti provider.
+
+Primo incremento completato:
+
+- contratti provider capability-based;
+- Provider Runtime con registry, default esplicito e routing;
+- configurazione del default provider;
+- streaming pull-based;
+- integrazione con Runtime e Context.
 
 ---
 

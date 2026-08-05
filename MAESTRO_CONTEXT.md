@@ -74,6 +74,16 @@ mentre il bus mantiene lock interni.
 
 ---
 
+## ADR-0006
+
+Capability-Based Provider Runtime.
+
+Il provider descrive la propria identità. Completion, streaming, embedding e
+model listing sono capability opzionali. Il Provider Runtime registra, risolve
+e orchestra i provider senza dipendere dalle loro implementazioni concrete.
+
+---
+
 # Principi architetturali consolidati
 
 L'architettura di Maestro è oggi fondata sui seguenti principi.
@@ -409,6 +419,44 @@ docs/event-system.md
 
 ---
 
+## Fase 5 — Provider Runtime/Configuration
+
+In corso.
+
+Primo incremento implementato nei package:
+
+```
+pkg/provider
+internal/provider
+pkg/runtime
+internal/runtime
+```
+
+Componenti disponibili:
+
+* identità `Provider` separata dalle capability operative
+* capability `Completer`, `Streamer`, `Embedder` e `ModelLister`
+* tipi condivisi per messaggi, completion, stream, embedding e modelli
+* Provider Runtime thread-safe
+* registrazione e risoluzione provider
+* selezione esplicita del provider predefinito
+* routing delle capability senza lock durante codice esterno
+* streaming pull-based con chiusura esplicita
+* configurazione minimale tramite `runtime.NewConfig`
+* composition root pubblico `maestro.New`
+* Provider Runtime e Config condivisi con il `runtime.Context`
+
+Semantica e limiti sono descritti in:
+
+```
+docs/provider-runtime.md
+```
+
+Restano da introdurre sopra questi contratti le implementazioni concrete dei
+provider e le eventuali policy di resilienza richieste da casi d'uso reali.
+
+---
+
 # Convenzioni implementative
 
 Per `internal/runtime` sono state adottate le seguenti regole.
@@ -426,6 +474,7 @@ Per `internal/runtime` sono state adottate le seguenti regole.
 * stateManager mantiene gli invarianti degli stati dei componenti.
 * lifecycleManager orchestra le capability senza conoscere la logica di dominio.
 * eventBus protegge i subscriber e non mantiene lock durante i callback.
+* provider runtime protegge registry e default senza mantenere lock durante le chiamate esterne.
 * runtime orchestra senza duplicare responsabilità.
 
 ---
@@ -438,6 +487,8 @@ Package:
 
 ```
 internal/runtime
+internal/provider
+pkg/runtime
 ```
 
 Copertura funzionale:
@@ -450,6 +501,8 @@ Copertura funzionale:
 * Builder
 * Runtime
 * Event Bus
+* Provider Runtime
+* Configurazione
 
 Verifica effettuata con:
 
@@ -467,11 +520,11 @@ Tutti i test superati.
 
 Documentazione consolidata.
 
-API pubbliche consolidate.
+API pubbliche estese con i contratti provider e il composition root.
 
-Runtime interno implementato fino al Lifecycle Engine e all'Event System.
+Runtime interno implementato fino all'integrazione del Provider Runtime.
 
-Il progetto è ora pronto per introdurre il Provider Runtime.
+Il progetto è ora pronto per introdurre il primo adapter provider concreto.
 
 ---
 
@@ -515,9 +568,11 @@ Event System
 
 ---
 
-### Fase 5
+### 🚧 Fase 5
 
-Provider Runtime
+Provider Runtime/Configuration
+
+Primo incremento completato; implementazioni concrete ancora da sviluppare.
 
 ---
 
@@ -535,6 +590,7 @@ Le API pubbliche risultano minimali e orientate all'estensibilità.
 
 Le implementazioni interne rispettano il principio di proprietà degli invarianti e la separazione delle responsabilità.
 
-Le prossime evoluzioni interesseranno principalmente il Provider Runtime, senza richiedere modifiche significative ai contratti pubblici già definiti.
+Le prossime evoluzioni interesseranno gli adapter provider concreti costruiti
+sopra i contratti appena definiti.
 
 Il Runtime Core dispone ora di una base sufficientemente solida per sostenere le fasi successive dello sviluppo di Maestro.

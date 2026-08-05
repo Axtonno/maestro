@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	internalProvider "github.com/antonio-cafeo/maestro/internal/provider"
+	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
@@ -20,6 +22,7 @@ type runtime struct {
 	eventBus         pkgRuntime.EventBus
 	stateManager     *stateManager
 	lifecycleManager *lifecycleManager
+	providerRuntime  pkgProvider.Runtime
 
 	dependencyGraph *graph
 
@@ -29,6 +32,21 @@ type runtime struct {
 }
 
 func newRuntime() *runtime {
+	return newRuntimeWithServices(nil, nil)
+}
+
+func newRuntimeWithServices(
+	config pkgRuntime.Config,
+	logger pkgRuntime.Logger,
+) *runtime {
+	if nilService(config) {
+		config = newEmptyConfig()
+	}
+
+	if nilService(logger) {
+		logger = newNoopLogger()
+	}
+
 	componentRegistry := newRegistry()
 	dependencyResolver := newResolver(componentRegistry)
 	graphValidator := newValidator()
@@ -38,20 +56,25 @@ func newRuntime() *runtime {
 	)
 	componentStates := newStateManager()
 	componentEventBus := newEventBus()
+	providerRuntime := internalProvider.NewRuntime(
+		defaultProviderID(config),
+	)
 
 	rt := &runtime{
-		registry:     componentRegistry,
-		builder:      graphBuilder,
-		eventBus:     componentEventBus,
-		stateManager: componentStates,
+		registry:        componentRegistry,
+		builder:         graphBuilder,
+		eventBus:        componentEventBus,
+		stateManager:    componentStates,
+		providerRuntime: providerRuntime,
 	}
 
 	rt.registryView = newRuntimeRegistry(rt)
 	runtimeContext := newRuntimeContext(
-		newEmptyConfig(),
-		newNoopLogger(),
+		config,
+		logger,
 		componentEventBus,
 		rt.registryView,
+		providerRuntime,
 	)
 	rt.lifecycleManager = newLifecycleManager(
 		componentStates,
@@ -59,6 +82,15 @@ func newRuntime() *runtime {
 	)
 
 	return rt
+}
+
+// New is the internal composition entry point used by the public maestro
+// package. Concrete services remain hidden behind the public contracts.
+func New(
+	config pkgRuntime.Config,
+	logger pkgRuntime.Logger,
+) pkgRuntime.Runtime {
+	return newRuntimeWithServices(config, logger)
 }
 
 func (r *runtime) Register(
@@ -250,6 +282,10 @@ func (r *runtime) StateManager() pkgRuntime.StateManager {
 	return r.stateManager
 }
 
+func (r *runtime) Providers() pkgProvider.Runtime {
+	return r.providerRuntime
+}
+
 func (r *runtime) buildDependencyGraph() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -280,6 +316,19 @@ func (r *runtime) graph() (*graph, bool) {
 	}
 
 	return r.dependencyGraph, true
+}
+
+func defaultProviderID(config pkgRuntime.Config) pkgProvider.ID {
+	value := config.Get(pkgProvider.ConfigDefaultProvider)
+
+	switch configured := value.(type) {
+	case pkgProvider.ID:
+		return configured
+	case string:
+		return pkgProvider.ID(configured)
+	default:
+		return ""
+	}
 }
 
 func (r *runtime) ready() bool {

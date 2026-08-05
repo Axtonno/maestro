@@ -106,6 +106,24 @@ Evento e payload non appartengono al bus e non vengono copiati o modificati.
 La loro eventuale mutabilità resta responsabilità dei componenti che li
 condividono.
 
+### Provider Runtime
+
+Il Provider Runtime concreto vive in `internal/provider` e protegge la
+collezione dei provider registrati e la selezione del default.
+
+È responsabile di:
+
+* validare provider e identificativi;
+* impedire registrazioni duplicate;
+* risolvere provider espliciti o il default configurato;
+* verificare le capability richieste;
+* inoltrare completion, streaming, embedding e model listing;
+* proteggere registry e default durante l'accesso concorrente;
+* non mantenere lock interni durante l'esecuzione di codice del provider.
+
+Richieste, risposte e stream appartengono al chiamante e al provider. Il router
+non ne modifica o copia il contenuto.
+
 ### Resolver
 
 `resolver` interpreta le dipendenze dichiarate nei metadati e costruisce le relazioni necessarie.
@@ -139,6 +157,10 @@ Un errore non deve lasciare nel builder o nel Runtime un oggetto parzialmente co
 Quando una nuova registrazione rende obsoleto il grafo esistente, il Runtime deve invalidarlo.
 
 Il Runtime non deve duplicare la logica appartenente a Registry, Graph, Resolver, Validator o Builder.
+
+Il Runtime è anche il composition root dei servizi Config, Logger, Event Bus e
+Provider Runtime. La stessa istanza di ogni servizio viene esposta
+all'applicazione e al `runtimeContext` dei componenti.
 
 ## Costruttori
 
@@ -174,6 +196,7 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 9. Il Runtime orchestra i servizi interni senza duplicarne le responsabilità.
 10. Nuove ottimizzazioni interne non devono richiedere modifiche ai contratti pubblici.
 11. L'Event Bus non mantiene lock interni durante l'esecuzione degli handler.
+12. Il Provider Runtime non mantiene lock interni durante l'esecuzione dei provider.
 
 ## Evoluzione futura
 

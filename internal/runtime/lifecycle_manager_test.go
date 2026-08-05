@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	internalProvider "github.com/antonio-cafeo/maestro/internal/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
@@ -133,6 +134,7 @@ func newTestLifecycleManager(
 		newNoopLogger(),
 		componentEventBus,
 		componentRegistry,
+		internalProvider.NewRuntime(""),
 	)
 
 	return newLifecycleManager(

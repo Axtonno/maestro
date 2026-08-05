@@ -1,6 +1,10 @@
 package runtime
 
-import "context"
+import (
+	"context"
+
+	"github.com/antonio-cafeo/maestro/pkg/provider"
+)
 
 type Runtime interface {
 	Register(Component) error
@@ -11,4 +15,5 @@ type Runtime interface {
 	Registry() Registry
 	EventBus() EventBus
 	StateManager() StateManager
+	Providers() provider.Runtime
 }

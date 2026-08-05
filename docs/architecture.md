@@ -78,6 +78,14 @@ L'Event Bus interno permette la comunicazione disaccoppiata tra componenti.
 La consegna è sincrona, ordinata per sottoscrizione e thread-safe. Il Runtime e
 il `Context` dei componenti espongono la stessa istanza del bus.
 
+Il Runtime compone inoltre un Provider Runtime condiviso. Applicazioni e
+componenti usano la stessa istanza per registrare, risolvere e invocare provider
+senza conoscere le implementazioni concrete.
+
+La configurazione viene iniettata nel composition root e consegnata ai
+componenti come snapshot a chiavi esatte. Il core non decide come leggere file,
+variabili d'ambiente o secret esterni.
+
 Invarianti del Runtime interno
 
 Le implementazioni contenute in `internal/runtime` nascondono la propria rappresentazione e consentono modifiche soltanto attraverso operazioni controllate.
@@ -93,9 +101,16 @@ Questa convenzione permette di modificare e ottimizzare l'implementazione intern
 Responsabilità:
 
 - comunicazione con i modelli;
-- gestione delle conversazioni;
+- rappresentazione delle richieste conversazionali;
 - streaming;
 - embedding.
+
+Il contratto del layer è capability-based. L'identità del provider è separata
+dalle capability di completion, streaming, embedding e model listing.
+
+Il Provider Runtime mantiene un registry thread-safe, applica una selezione
+esplicita del provider predefinito e inoltra le operazioni senza mantenere lock
+durante l'esecuzione di codice esterno.
 
 Implementazioni previste:
 
