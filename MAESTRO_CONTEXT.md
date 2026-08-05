@@ -27,6 +27,7 @@ Completati:
 * provider-runtime.md
 * ollama-provider.md
 * plugin-runtime.md
+* laravel-plugin.md
 
 ---
 
@@ -94,8 +95,19 @@ Component-Based In-Process Plugin Runtime.
 
 I plugin sono componenti registrati attraverso un registry dedicato. Il Plugin
 Runtime possiede classificazione e risoluzione; dependency graph, stato e
-lifecycle restano responsabilità del Runtime Core. Il primo incremento supporta
-plugin Go collegati staticamente e registrati in-process.
+lifecycle restano responsabilità del Runtime Core. Il modello supporta plugin Go
+fidati caricati e registrati in-process.
+
+---
+
+## ADR-0008
+
+Trusted In-Process Plugin Catalog.
+
+Discovery e caricamento usano un catalogo thread-safe di loader in-process. Il
+manifest dichiara la versione dell'API Plugin Runtime e i loader vengono
+eseguiti senza lock. Plugin e loader sono codice fidato con i privilegi del
+processo Maestro.
 
 ---
 
@@ -519,13 +531,15 @@ un difetto dell'adapter, ma impedisce di dichiarare completata la verifica live.
 
 ## Fase 6 — Plugin Runtime
 
-In corso.
+Completata.
 
-Primo incremento implementato nei package:
+Implementazione disponibile nei package:
 
 ```
 pkg/plugin
+pkg/plugin/laravel
 internal/plugin
+internal/plugin/laravel
 internal/runtime
 ```
 
@@ -533,25 +547,32 @@ Componenti disponibili:
 
 * contratto pubblico `Plugin` basato su `runtime.Component`
 * alias dell'identità plugin a `runtime.ComponentID`
-* Plugin Runtime pubblico con registrazione, risoluzione e lookup
-* registry plugin thread-safe
+* manifest con versione dell'API Plugin Runtime
+* Plugin Runtime pubblico con registrazione, risoluzione e listing
+* registry e catalogo loader thread-safe
+* discovery deterministica tramite `Available` e `Registered`
+* loader interface e adapter `LoaderFunc`
+* caricamento cancellabile senza lock durante codice esterno
+* validazione di ID, risultato del loader e compatibilità
 * validazione di plugin nil, typed nil e ID
 * coordinamento della registrazione con il Runtime Core
 * collisioni coerenti tra plugin e normali componenti
+* eventi per loader registrato, plugin registrato e plugin caricato
 * integrazione nel composition root `maestro.New`
 * riuso del dependency graph e del lifecycle globali
+* primo plugin Laravel con detection, versione framework e health
 * test unitari, concorrenti e d'integrazione
 
 Semantica e limiti sono descritti in:
 
 ```
 docs/plugin-runtime.md
+docs/laravel-plugin.md
 ```
 
-Il primo incremento accetta plugin Go collegati staticamente. Discovery,
-manifest, installazione, caricamento di artefatti esterni, isolamento e unload
-rimangono esclusi finché non saranno definiti i relativi contratti di
-compatibilità e sicurezza.
+Il gate della fase usa plugin Go fidati caricati in-process. Packaging remoto,
+firme, sandbox, process isolation, unload e hot replacement sono estensioni
+dell'ecosistema e non modificano i contratti completati.
 
 ---
 
@@ -573,7 +594,7 @@ Per `internal/runtime` sono state adottate le seguenti regole.
 * lifecycleManager orchestra le capability senza conoscere la logica di dominio.
 * eventBus protegge i subscriber e non mantiene lock durante i callback.
 * provider runtime protegge registry e default senza mantenere lock durante le chiamate esterne.
-* plugin runtime protegge il proprio indice e delega stato e lifecycle al Runtime Core.
+* plugin runtime protegge registry e catalogo, esegue loader senza lock e delega stato e lifecycle al Runtime Core.
 * runtime orchestra senza duplicare responsabilità.
 
 ---
@@ -589,8 +610,10 @@ internal/runtime
 internal/provider
 internal/provider/ollama
 internal/plugin
+internal/plugin/laravel
 pkg/runtime
 pkg/plugin
+pkg/plugin/laravel
 pkg/provider/ollama
 ```
 
@@ -606,6 +629,7 @@ Copertura funzionale:
 * Event Bus
 * Provider Runtime
 * Plugin Runtime
+* Plugin Laravel
 * Configurazione
 * Adapter Ollama
 
@@ -627,10 +651,10 @@ Documentazione consolidata.
 
 API pubbliche estese con i contratti provider, plugin e il composition root.
 
-Runtime interno implementato fino all'integrazione del primo Plugin Runtime.
+Runtime interno implementato fino alla chiusura del Plugin Runtime.
 
-Il progetto dispone del primo adapter provider concreto e di un percorso
-in-process per registrare plugin nel grafo globale dei componenti.
+Il progetto dispone del primo adapter provider concreto, di un catalogo per
+plugin trusted in-process e del primo plugin framework-aware Laravel.
 
 ---
 
@@ -683,13 +707,12 @@ test live dell'adapter Ollama.
 
 ---
 
-### 🚧 Fase 6
+### ✅ Fase 6
 
 Plugin Runtime
 
-Primo incremento completato: contratti, registry in-process, integrazione nel
-composition root e lifecycle condiviso. Restano gli incrementi relativi a
-manifest, discovery, distribuzione, caricamento e sicurezza.
+Completata: contratti, manifest, registry, catalogo loader, discovery,
+caricamento, eventi, lifecycle condiviso e primo plugin Laravel.
 
 ---
 
@@ -702,7 +725,7 @@ Le API pubbliche risultano minimali e orientate all'estensibilità.
 Le implementazioni interne rispettano il principio di proprietà degli invarianti e la separazione delle responsabilità.
 
 Gli adapter e le policy provider future appartengono alla Milestone 2 — Provider
-Layer e non bloccano la progressione verso la Fase 6 — Plugin Runtime.
+Layer e possono evolvere indipendentemente dal Plugin Runtime completato.
 
 Il Runtime Core dispone ora di una base sufficientemente solida per sostenere
-plugin in-process senza duplicare grafo, stati o lifecycle.
+plugin trusted in-process senza duplicare grafo, stati o lifecycle.
