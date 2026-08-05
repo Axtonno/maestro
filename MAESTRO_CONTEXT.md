@@ -488,6 +488,18 @@ Semantica, configurazione e limiti sono descritti in:
 docs/ollama-provider.md
 ```
 
+Gate di chiusura pendente:
+
+* smoke test live contro un'istanza Ollama
+* listing dei modelli
+* completion non-streaming
+* streaming fino a chiusura regolare
+* embedding con un modello compatibile
+* cancellazione dello stream e chiusura delle risorse
+
+L'indisponibilità di un'istanza Ollama nell'ambiente corrente non costituisce
+un difetto dell'adapter, ma impedisce di dichiarare completata la verifica live.
+
 ---
 
 # Convenzioni implementative
@@ -609,8 +621,8 @@ Event System
 
 Provider Runtime/Configuration
 
-Provider Runtime e primo adapter Ollama completati; la fase resta aperta per il
-consolidamento con ulteriori provider.
+Implementazione completata. Fase ancora in corso esclusivamente per lo smoke
+test live dell'adapter Ollama.
 
 ---
 
@@ -628,7 +640,7 @@ Le API pubbliche risultano minimali e orientate all'estensibilità.
 
 Le implementazioni interne rispettano il principio di proprietà degli invarianti e la separazione delle responsabilità.
 
-Le prossime evoluzioni interesseranno gli adapter provider concreti costruiti
-sopra i contratti appena definiti.
+Gli adapter e le policy provider future appartengono alla Milestone 2 — Provider
+Layer e non bloccano la progressione verso la Fase 6 — Plugin Runtime.
 
 Il Runtime Core dispone ora di una base sufficientemente solida per sostenere le fasi successive dello sviluppo di Maestro.

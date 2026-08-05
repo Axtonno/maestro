@@ -77,6 +77,35 @@ func TestOllamaIntegration(t *testing.T) {
 				}
 			}
 		})
+
+		t.Run("stream cancellation", func(t *testing.T) {
+			streamContext, cancelStream := context.WithCancel(context.Background())
+			stream, err := provider.Stream(
+				streamContext,
+				pkgProvider.CompletionRequest{
+					Model: chatModel,
+					Messages: []pkgProvider.Message{{
+						Role:    pkgProvider.RoleUser,
+						Content: "Write a detailed explanation of local AI runtimes.",
+					}},
+				},
+			)
+			if err != nil {
+				cancelStream()
+				t.Fatalf("open cancellable stream: %v", err)
+			}
+
+			cancelStream()
+
+			if _, err := stream.Recv(); !errors.Is(err, context.Canceled) {
+				_ = stream.Close()
+				t.Fatalf("expected context cancellation, got %v", err)
+			}
+
+			if err := stream.Close(); err != nil {
+				t.Fatalf("close canceled stream: %v", err)
+			}
+		})
 	}
 
 	embedModel := os.Getenv("MAESTRO_OLLAMA_EMBED_MODEL")

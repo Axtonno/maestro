@@ -154,6 +154,10 @@ go test -tags=integration ./pkg/provider/ollama
 
 Senza `MAESTRO_OLLAMA_BASE_URL` il test viene saltato.
 
+Lo smoke test verifica listing, completion non-streaming, streaming fino a
+`io.EOF`, embedding e cancellazione di uno stream con successiva chiusura
+esplicita. Non misura prestazioni e non esercita retry o resilienza.
+
 ---
 
 # Limiti della prima versione

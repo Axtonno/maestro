@@ -64,39 +64,52 @@ Un runtime funzionante senza alcun provider.
 
 ---
 
+# Fase 5 — Provider Runtime/Configuration
+
+Stato: In corso — smoke test live pendente
+
+Scope:
+
+- Contratti provider.
+- Capability operative.
+- Registry e provider predefinito.
+- Routing e configurazione.
+- Integrazione nel Runtime.
+- Primo adapter concreto Ollama.
+- Test e documentazione.
+- Smoke test contro un'istanza Ollama reale.
+
+L'implementazione e i test isolati sono completati. La fase viene chiusa quando
+lo smoke test conferma listing, completion, streaming, embedding e
+cancellazione senza incompatibilità di protocollo.
+
+Ulteriori adapter e policy non appartengono al gate di chiusura della Fase 5.
+
+---
+
 # Milestone 2 — Provider Layer
 
-Stato: In corso
+Stato: Evoluzione incrementale
 
 Obiettivi:
 
-- Interfacce provider.
-- Implementazione Ollama.
-- Implementazione llama.cpp.
-- Gestione dei modelli.
-- Streaming delle risposte.
-- Gestione embedding.
+- Adapter llama.cpp.
+- Eventuali adapter per altri runtime locali.
+- Model discovery avanzata.
+- Download, pull e rimozione dei modelli.
+- Gestione del ciclo di vita dei modelli.
+- Keep-alive e unload.
+- Retry e backoff.
+- Circuit breaker.
+- Metriche e tracing.
+- Normalizzazione avanzata degli errori.
+- Capability detection dinamica.
+- Eventuale supporto a tool calling e output strutturati.
 
 Output atteso:
 
-Runtime capace di dialogare con differenti provider.
-
-Primo incremento completato:
-
-- contratti provider capability-based;
-- Provider Runtime con registry, default esplicito e routing;
-- configurazione del default provider;
-- streaming pull-based;
-- integrazione con Runtime e Context.
-
-Secondo incremento completato:
-
-- adapter Ollama basato su `net/http`;
-- completion conversazionale;
-- streaming NDJSON;
-- embedding multipli;
-- listing dei modelli locali;
-- test unitari isolati e test d'integrazione opzionali.
+Una Provider Layer capace di evolvere indipendentemente dalla progressione del
+Runtime Core e del Plugin Runtime.
 
 ---
 

@@ -64,8 +64,9 @@ incremento del Provider Runtime introduce registry, routing capability-based,
 streaming ed embedding provider-agnostic.
 
 Il primo adapter concreto per Ollama implementa completion, streaming,
-embedding e model listing. Il prossimo passo è consolidare i contratti con un
-secondo adapter oppure estendere Ollama quando emergeranno requisiti condivisi.
+embedding e model listing. La chiusura della Fase 5 richiede soltanto lo smoke
+test contro un'istanza Ollama reale; provider e policy ulteriori proseguono
+separatamente nella Milestone 2 senza bloccare il Plugin Runtime.
 
 ---
 
