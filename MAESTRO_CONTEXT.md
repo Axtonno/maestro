@@ -23,6 +23,10 @@ Completati:
 * roadmap.md
 * design-decisions.md
 * runtime-internals.md
+* event-system.md
+* provider-runtime.md
+* ollama-provider.md
+* plugin-runtime.md
 
 ---
 
@@ -81,6 +85,17 @@ Capability-Based Provider Runtime.
 Il provider descrive la propria identità. Completion, streaming, embedding e
 model listing sono capability opzionali. Il Provider Runtime registra, risolve
 e orchestra i provider senza dipendere dalle loro implementazioni concrete.
+
+---
+
+## ADR-0007
+
+Component-Based In-Process Plugin Runtime.
+
+I plugin sono componenti registrati attraverso un registry dedicato. Il Plugin
+Runtime possiede classificazione e risoluzione; dependency graph, stato e
+lifecycle restano responsabilità del Runtime Core. Il primo incremento supporta
+plugin Go collegati staticamente e registrati in-process.
 
 ---
 
@@ -502,6 +517,44 @@ un difetto dell'adapter, ma impedisce di dichiarare completata la verifica live.
 
 ---
 
+## Fase 6 — Plugin Runtime
+
+In corso.
+
+Primo incremento implementato nei package:
+
+```
+pkg/plugin
+internal/plugin
+internal/runtime
+```
+
+Componenti disponibili:
+
+* contratto pubblico `Plugin` basato su `runtime.Component`
+* alias dell'identità plugin a `runtime.ComponentID`
+* Plugin Runtime pubblico con registrazione, risoluzione e lookup
+* registry plugin thread-safe
+* validazione di plugin nil, typed nil e ID
+* coordinamento della registrazione con il Runtime Core
+* collisioni coerenti tra plugin e normali componenti
+* integrazione nel composition root `maestro.New`
+* riuso del dependency graph e del lifecycle globali
+* test unitari, concorrenti e d'integrazione
+
+Semantica e limiti sono descritti in:
+
+```
+docs/plugin-runtime.md
+```
+
+Il primo incremento accetta plugin Go collegati staticamente. Discovery,
+manifest, installazione, caricamento di artefatti esterni, isolamento e unload
+rimangono esclusi finché non saranno definiti i relativi contratti di
+compatibilità e sicurezza.
+
+---
+
 # Convenzioni implementative
 
 Per `internal/runtime` sono state adottate le seguenti regole.
@@ -520,6 +573,7 @@ Per `internal/runtime` sono state adottate le seguenti regole.
 * lifecycleManager orchestra le capability senza conoscere la logica di dominio.
 * eventBus protegge i subscriber e non mantiene lock durante i callback.
 * provider runtime protegge registry e default senza mantenere lock durante le chiamate esterne.
+* plugin runtime protegge il proprio indice e delega stato e lifecycle al Runtime Core.
 * runtime orchestra senza duplicare responsabilità.
 
 ---
@@ -534,7 +588,9 @@ Package:
 internal/runtime
 internal/provider
 internal/provider/ollama
+internal/plugin
 pkg/runtime
+pkg/plugin
 pkg/provider/ollama
 ```
 
@@ -549,6 +605,7 @@ Copertura funzionale:
 * Runtime
 * Event Bus
 * Provider Runtime
+* Plugin Runtime
 * Configurazione
 * Adapter Ollama
 
@@ -568,12 +625,12 @@ Tutti i test superati.
 
 Documentazione consolidata.
 
-API pubbliche estese con i contratti provider e il composition root.
+API pubbliche estese con i contratti provider, plugin e il composition root.
 
-Runtime interno implementato fino all'integrazione del Provider Runtime.
+Runtime interno implementato fino all'integrazione del primo Plugin Runtime.
 
-Il progetto dispone ora del primo adapter provider concreto ed è pronto per
-validare l'astrazione con un secondo adapter.
+Il progetto dispone del primo adapter provider concreto e di un percorso
+in-process per registrare plugin nel grafo globale dei componenti.
 
 ---
 
@@ -626,9 +683,13 @@ test live dell'adapter Ollama.
 
 ---
 
-### Fase 6
+### 🚧 Fase 6
 
 Plugin Runtime
+
+Primo incremento completato: contratti, registry in-process, integrazione nel
+composition root e lifecycle condiviso. Restano gli incrementi relativi a
+manifest, discovery, distribuzione, caricamento e sicurezza.
 
 ---
 
@@ -643,4 +704,5 @@ Le implementazioni interne rispettano il principio di proprietà degli invariant
 Gli adapter e le policy provider future appartengono alla Milestone 2 — Provider
 Layer e non bloccano la progressione verso la Fase 6 — Plugin Runtime.
 
-Il Runtime Core dispone ora di una base sufficientemente solida per sostenere le fasi successive dello sviluppo di Maestro.
+Il Runtime Core dispone ora di una base sufficientemente solida per sostenere
+plugin in-process senza duplicare grafo, stati o lifecycle.

@@ -87,6 +87,33 @@ Ulteriori adapter e policy non appartengono al gate di chiusura della Fase 5.
 
 ---
 
+# Fase 6 — Plugin Runtime
+
+Stato: In corso — primo incremento implementato
+
+Scope del primo incremento:
+
+- Contratto pubblico `Plugin` basato su `runtime.Component`.
+- Registry plugin thread-safe.
+- Registrazione coordinata con il Runtime Core.
+- Riutilizzo di dependency graph, stato e lifecycle globali.
+- Esposizione tramite il composition root `maestro.New`.
+- Test e documentazione.
+
+Incrementi successivi:
+
+- Contratto di manifest e compatibilità.
+- Discovery e installazione.
+- Modello di distribuzione e caricamento.
+- Trust, firme e isolamento.
+- Primo plugin framework-aware.
+
+Il caricamento dinamico non viene accoppiato al contratto di registrazione:
+formato degli artefatti e confine di sicurezza saranno definiti prima di
+scegliere tra collegamento statico, shared object o processi isolati.
+
+---
+
 # Milestone 2 — Provider Layer
 
 Stato: Evoluzione incrementale

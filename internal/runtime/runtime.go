@@ -5,12 +5,23 @@ import (
 	"fmt"
 	"sync"
 
+	internalPlugin "github.com/antonio-cafeo/maestro/internal/plugin"
 	internalProvider "github.com/antonio-cafeo/maestro/internal/provider"
+	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
 var _ pkgRuntime.Runtime = (*runtime)(nil)
+
+// Runtime extends the Runtime Core contract with the services composed by the
+// Maestro entry point.
+type Runtime interface {
+	pkgRuntime.Runtime
+	Plugins() pkgPlugin.Runtime
+}
+
+var _ Runtime = (*runtime)(nil)
 
 type runtime struct {
 	mu sync.RWMutex
@@ -22,6 +33,7 @@ type runtime struct {
 	eventBus         pkgRuntime.EventBus
 	stateManager     *stateManager
 	lifecycleManager *lifecycleManager
+	pluginRuntime    pkgPlugin.Runtime
 	providerRuntime  pkgProvider.Runtime
 
 	dependencyGraph *graph
@@ -69,6 +81,7 @@ func newRuntimeWithServices(
 	}
 
 	rt.registryView = newRuntimeRegistry(rt)
+	rt.pluginRuntime = internalPlugin.NewRuntime(rt.registryView)
 	runtimeContext := newRuntimeContext(
 		config,
 		logger,
@@ -89,7 +102,7 @@ func newRuntimeWithServices(
 func New(
 	config pkgRuntime.Config,
 	logger pkgRuntime.Logger,
-) pkgRuntime.Runtime {
+) Runtime {
 	return newRuntimeWithServices(config, logger)
 }
 
@@ -284,6 +297,10 @@ func (r *runtime) StateManager() pkgRuntime.StateManager {
 
 func (r *runtime) Providers() pkgProvider.Runtime {
 	return r.providerRuntime
+}
+
+func (r *runtime) Plugins() pkgPlugin.Runtime {
+	return r.pluginRuntime
 }
 
 func (r *runtime) buildDependencyGraph() error {

@@ -2,8 +2,11 @@ package maestro
 
 import (
 	"context"
+	"errors"
+	"reflect"
 	"testing"
 
+	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
@@ -14,6 +17,56 @@ type testProvider struct {
 
 type contextComponent struct {
 	context pkgRuntime.Context
+}
+
+type lifecyclePlugin struct {
+	metadata pkgRuntime.Metadata
+	calls    *[]string
+	context  pkgRuntime.Context
+}
+
+func newLifecyclePlugin(
+	id pkgPlugin.ID,
+	calls *[]string,
+	dependencies ...pkgRuntime.Dependency,
+) *lifecyclePlugin {
+	return &lifecyclePlugin{
+		metadata: pkgRuntime.Metadata{
+			ID:           id,
+			Name:         string(id),
+			Version:      "1.0.0",
+			Dependencies: dependencies,
+			Capabilities: []pkgRuntime.Capability{
+				pkgRuntime.CapabilityConfigure,
+				pkgRuntime.CapabilityStart,
+				pkgRuntime.CapabilityStop,
+			},
+		},
+		calls: calls,
+	}
+}
+
+func (p *lifecyclePlugin) Metadata() pkgRuntime.Metadata {
+	return p.metadata
+}
+
+func (p *lifecyclePlugin) Configure(context pkgRuntime.Context) error {
+	p.context = context
+	*p.calls = append(*p.calls, string(p.metadata.ID)+":configure")
+
+	return nil
+}
+
+func (p *lifecyclePlugin) Start(pkgRuntime.Context) error {
+	*p.calls = append(*p.calls, string(p.metadata.ID)+":start")
+
+	return nil
+}
+
+func (p *lifecyclePlugin) Stop(pkgRuntime.Context) error {
+	*p.calls = append(*p.calls, string(p.metadata.ID)+":stop")
+
+	return nil
 }
 
 func (c *contextComponent) Metadata() pkgRuntime.Metadata {
@@ -101,6 +154,147 @@ func TestNewReplacesTypedNilServicesWithDefaults(t *testing.T) {
 
 	if _, err := runtime.Providers().Default(); err == nil {
 		t.Fatal("expected an unconfigured default provider")
+	}
+}
+
+func TestNewRegistersPluginAsRuntimeComponent(t *testing.T) {
+	runtime := New()
+	calls := make([]string, 0)
+	registered := newLifecyclePlugin("laravel", &calls)
+
+	if err := runtime.Plugins().Register(registered); err != nil {
+		t.Fatalf("register plugin: %v", err)
+	}
+
+	resolvedPlugin, err := runtime.Plugins().Resolve("laravel")
+	if err != nil {
+		t.Fatalf("resolve plugin: %v", err)
+	}
+	if resolvedPlugin != registered {
+		t.Fatal("resolved an unexpected plugin")
+	}
+
+	resolvedComponent, err := runtime.Registry().Resolve("laravel")
+	if err != nil {
+		t.Fatalf("resolve plugin as component: %v", err)
+	}
+	if resolvedComponent != registered {
+		t.Fatal("plugin and component registries resolved different values")
+	}
+
+	if state := runtime.StateManager().Get(registered).State; state != pkgRuntime.StateCreated {
+		t.Fatalf("expected plugin state Created, got %d", state)
+	}
+}
+
+func TestPluginUsesCoreDependencyGraphAndLifecycle(t *testing.T) {
+	runtime := New()
+	calls := make([]string, 0)
+	dependency := newLifecyclePlugin("framework", &calls)
+	dependent := newLifecyclePlugin(
+		"framework-tools",
+		&calls,
+		pkgRuntime.Dependency{ID: "framework", Required: true},
+	)
+
+	if err := runtime.Plugins().Register(dependent); err != nil {
+		t.Fatalf("register dependent plugin: %v", err)
+	}
+	if err := runtime.Plugins().Register(dependency); err != nil {
+		t.Fatalf("register dependency plugin: %v", err)
+	}
+
+	if err := runtime.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+
+	if dependent.context == nil || dependency.context == nil {
+		t.Fatal("plugins did not receive the Runtime Context")
+	}
+
+	if got, want := calls, []string{
+		"framework:configure",
+		"framework:start",
+		"framework-tools:configure",
+		"framework-tools:start",
+	}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected calls %v, got %v", want, got)
+	}
+
+	calls = calls[:0]
+	if err := runtime.Stop(context.Background()); err != nil {
+		t.Fatalf("stop runtime: %v", err)
+	}
+
+	if got, want := calls, []string{
+		"framework-tools:stop",
+		"framework:stop",
+	}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected calls %v, got %v", want, got)
+	}
+}
+
+func TestDirectComponentRegistrationDoesNotClassifyPlugin(t *testing.T) {
+	runtime := New()
+	component := &contextComponent{}
+
+	if err := runtime.Register(component); err != nil {
+		t.Fatalf("register component: %v", err)
+	}
+
+	if runtime.Plugins().Has(component.Metadata().ID) {
+		t.Fatal("directly registered component was classified as a plugin")
+	}
+
+	if _, err := runtime.Plugins().Resolve(component.Metadata().ID); !errors.Is(
+		err,
+		pkgPlugin.ErrNotFound,
+	) {
+		t.Fatalf("expected plugin ErrNotFound, got %v", err)
+	}
+}
+
+func TestPluginRegistrationRejectsComponentIDCollision(t *testing.T) {
+	runtime := New()
+	component := &contextComponent{}
+	calls := make([]string, 0)
+
+	if err := runtime.Register(component); err != nil {
+		t.Fatalf("register component: %v", err)
+	}
+
+	err := runtime.Plugins().Register(
+		newLifecyclePlugin(component.Metadata().ID, &calls),
+	)
+	if !errors.Is(err, pkgPlugin.ErrAlreadyRegistered) {
+		t.Fatalf("expected plugin ErrAlreadyRegistered, got %v", err)
+	}
+	if !errors.Is(err, pkgRuntime.ErrAlreadyRegistered) {
+		t.Fatalf("expected runtime ErrAlreadyRegistered, got %v", err)
+	}
+
+	if runtime.Plugins().Has(component.Metadata().ID) {
+		t.Fatal("plugin rejected for component ID collision was indexed")
+	}
+}
+
+func TestPluginRegistrationRespectsRuntimeState(t *testing.T) {
+	runtime := New()
+	calls := make([]string, 0)
+
+	if err := runtime.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+
+	err := runtime.Plugins().Register(
+		newLifecyclePlugin("late-plugin", &calls),
+	)
+	if !errors.Is(err, pkgRuntime.ErrAlreadyStarted) {
+		t.Fatalf("expected ErrAlreadyStarted, got %v", err)
+	}
+
+	if runtime.Plugins().Has("late-plugin") {
+		t.Fatal("plugin rejected by Runtime Core was indexed")
 	}
 }
 

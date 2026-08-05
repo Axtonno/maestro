@@ -2,8 +2,16 @@ package maestro
 
 import (
 	internalRuntime "github.com/antonio-cafeo/maestro/internal/runtime"
+	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
+
+// Runtime is Maestro's composition root. It extends the Runtime Core with the
+// dedicated Plugin Runtime.
+type Runtime interface {
+	pkgRuntime.Runtime
+	Plugins() pkgPlugin.Runtime
+}
 
 type options struct {
 	config pkgRuntime.Config
@@ -25,9 +33,9 @@ func WithLogger(logger pkgRuntime.Logger) Option {
 	}
 }
 
-// New constructs a Runtime with isolated component, event, state and provider
-// services. Nil services are replaced by safe defaults.
-func New(runtimeOptions ...Option) pkgRuntime.Runtime {
+// New constructs a Runtime with isolated component, event, state, provider and
+// plugin services. Nil configurable services are replaced by safe defaults.
+func New(runtimeOptions ...Option) Runtime {
 	configured := &options{}
 
 	for _, option := range runtimeOptions {

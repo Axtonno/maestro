@@ -82,6 +82,10 @@ Il Runtime compone inoltre un Provider Runtime condiviso. Applicazioni e
 componenti usano la stessa istanza per registrare, risolvere e invocare provider
 senza conoscere le implementazioni concrete.
 
+Il composition root pubblico compone anche un Plugin Runtime. La registrazione
+di un plugin confluisce nel Registry dei componenti, così dependency graph,
+stato e lifecycle rimangono unici.
+
 La configurazione viene iniettata nel composition root e consegnata ai
 componenti come snapshot a chiavi esatte. Il core non decide come leggere file,
 variabili d'ambiente o secret esterni.
@@ -146,9 +150,15 @@ Coordina il sistema.
 
 Responsabilità:
 
-- caricamento plugin;
 - registrazione plugin;
 - lifecycle plugin.
+- risoluzione dei plugin registrati;
+- integrazione con il dependency graph globale.
+
+Nel primo incremento i plugin sono componenti Go collegati staticamente e
+registrati in-process. Il Plugin Runtime li indicizza, mentre il Runtime Core ne
+orchestra il lifecycle. Discovery, installazione e caricamento di artefatti
+esterni richiedono un livello successivo dedicato a distribuzione e sicurezza.
 
 Esempi:
 

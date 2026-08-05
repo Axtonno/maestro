@@ -124,6 +124,25 @@ collezione dei provider registrati e la selezione del default.
 Richieste, risposte e stream appartengono al chiamante e al provider. Il router
 non ne modifica o copia il contenuto.
 
+### Plugin Runtime
+
+Il Plugin Runtime concreto vive in `internal/plugin` e protegge l'indice dei
+componenti registrati come plugin.
+
+È responsabile di:
+
+* validare plugin e identificativi prima della registrazione;
+* delegare la registrazione al Runtime Core;
+* indicizzare un plugin soltanto dopo la registrazione del componente;
+* impedire collisioni con plugin e componenti già registrati;
+* risolvere soltanto componenti registrati attraverso il Plugin Runtime;
+* proteggere l'indice durante l'accesso concorrente;
+* non eseguire metodi del plugin mentre mantiene il lock dell'indice.
+
+Il Plugin Runtime non possiede stati, dependency graph o lifecycle. Questi
+invarianti restano nel Runtime Core e vengono applicati ai plugin come a ogni
+altro componente.
+
 ### Resolver
 
 `resolver` interpreta le dipendenze dichiarate nei metadati e costruisce le relazioni necessarie.
@@ -158,9 +177,10 @@ Quando una nuova registrazione rende obsoleto il grafo esistente, il Runtime dev
 
 Il Runtime non deve duplicare la logica appartenente a Registry, Graph, Resolver, Validator o Builder.
 
-Il Runtime è anche il composition root dei servizi Config, Logger, Event Bus e
-Provider Runtime. La stessa istanza di ogni servizio viene esposta
-all'applicazione e al `runtimeContext` dei componenti.
+Il Runtime è anche il composition root dei servizi Config, Logger, Event Bus,
+Provider Runtime e Plugin Runtime. Config, Logger, Event Bus e Provider Runtime
+sono condivisi con il `runtimeContext` dei componenti; il Plugin Runtime è
+esposto dal composition root pubblico.
 
 ## Costruttori
 
@@ -197,6 +217,8 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 10. Nuove ottimizzazioni interne non devono richiedere modifiche ai contratti pubblici.
 11. L'Event Bus non mantiene lock interni durante l'esecuzione degli handler.
 12. Il Provider Runtime non mantiene lock interni durante l'esecuzione dei provider.
+13. Il Plugin Runtime indicizza un plugin soltanto dopo che il Runtime Core ne ha accettato la registrazione.
+14. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
 
 ## Evoluzione futura
 

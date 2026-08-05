@@ -57,7 +57,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 
 ## Stato del progetto
 
-🚧 Runtime Core / Provider Runtime
+🚧 Runtime Core / Provider Runtime / Plugin Runtime
 
 Il Runtime Core, il lifecycle e l'Event System sono implementati. Il primo
 incremento del Provider Runtime introduce registry, routing capability-based,
@@ -67,6 +67,12 @@ Il primo adapter concreto per Ollama implementa completion, streaming,
 embedding e model listing. La chiusura della Fase 5 richiede soltanto lo smoke
 test contro un'istanza Ollama reale; provider e policy ulteriori proseguono
 separatamente nella Milestone 2 senza bloccare il Plugin Runtime.
+
+Il primo incremento del Plugin Runtime aggiunge contratti pubblici, registry
+thread-safe e registrazione integrata nel Runtime Core. I plugin in-process
+riusano dependency graph, stato e lifecycle dei componenti. Discovery,
+installazione e caricamento di artefatti esterni appartengono agli incrementi
+successivi.
 
 ---
 
