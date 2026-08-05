@@ -1,0 +1,166 @@
+# Runtime Internals
+
+## Scopo del documento
+
+Questo documento definisce le convenzioni implementative adottate all'interno del package `internal/runtime`.
+
+Le regole qui descritte non costituiscono un contratto pubblico del progetto. Servono a preservare la coerenza interna del Runtime, rendere esplicite le responsabilità dei diversi tipi e facilitare l'evoluzione dell'implementazione senza compromettere gli invarianti del sistema.
+
+## Principio fondamentale
+
+Ogni tipo interno del Runtime protegge gli invarianti del proprio livello di responsabilità.
+
+I tipi interni non devono essere necessariamente immutabili. Possono mantenere e modificare uno stato interno, ma tale mutabilità deve essere controllata dal tipo proprietario.
+
+La rappresentazione interna non deve essere manipolata liberamente dal resto del package.
+
+## Incapsulamento della rappresentazione
+
+Tutti i campi dei tipi definiti in `internal/runtime` devono rimanere privati.
+
+Mappe, slice, puntatori o altre strutture mutabili interne non devono essere esposti direttamente quando ciò consentirebbe al chiamante di alterare lo stato senza passare attraverso il tipo proprietario.
+
+Quando una collezione deve essere resa disponibile, il tipo deve restituire:
+
+* una copia della collezione;
+* una vista in sola lettura;
+* oppure un risultato che non permetta di modificare la rappresentazione interna.
+
+## Operazioni intenzionali
+
+Le modifiche allo stato devono avvenire attraverso metodi che esprimono un'intenzione di dominio.
+
+Esempi:
+
+```go
+node.AddDependency(dependency)
+node.AddDependent(dependent)
+graph.Add(component)
+graph.AddDependency(componentID, dependencyID)
+```
+
+Sono da evitare modifiche dirette come:
+
+```go
+node.dependencies = append(node.dependencies, dependency)
+graph.nodes[id] = node
+```
+
+al di fuori del tipo responsabile di mantenere tali strutture.
+
+I metodi intenzionali costituiscono il punto nel quale applicare validazioni, prevenire duplicati, mantenere relazioni coerenti e introdurre future ottimizzazioni.
+
+## Proprietà degli invarianti
+
+Gli invarianti locali sono mantenuti dal tipo che possiede direttamente lo stato.
+
+Gli invarianti che coinvolgono più entità sono mantenuti dal relativo aggregato.
+
+### Node
+
+`node` protegge gli invarianti relativi a un singolo nodo.
+
+È responsabile della propria rappresentazione interna e delle collezioni di dipendenze e dipendenti.
+
+Non deve coordinare autonomamente modifiche che coinvolgono altri nodi del grafo.
+
+### Graph
+
+`graph` protegge la coerenza complessiva tra i nodi.
+
+È responsabile di:
+
+* registrare i nodi;
+* impedire identificativi duplicati;
+* creare relazioni tra componenti;
+* mantenere coerenti le direzioni `dependencies` e `dependents`;
+* impedire che chiamanti esterni alterino direttamente la propria struttura.
+
+Le operazioni che coinvolgono più nodi devono essere coordinate dal grafo, non dai singoli chiamanti.
+
+### Registry
+
+`registry` protegge la collezione dei componenti registrati.
+
+È responsabile di:
+
+* impedire registrazioni duplicate;
+* risolvere componenti tramite `ComponentID`;
+* proteggere l'accesso concorrente;
+* non esporre direttamente la mappa interna.
+
+### Resolver
+
+`resolver` interpreta le dipendenze dichiarate nei metadati e costruisce le relazioni necessarie.
+
+Non modifica un grafo già validato e non conserva stato temporaneo tra diverse esecuzioni.
+
+Il resolver costruisce ciò che è stato dichiarato, senza decidere autonomamente se la struttura risultante sia semanticamente valida.
+
+### Validator
+
+`validator` verifica la validità strutturale e semantica del grafo.
+
+Non modifica il grafo durante la validazione.
+
+Gli stati temporanei utilizzati dagli algoritmi di visita, come quelli necessari al rilevamento dei cicli, devono rimanere locali alla singola operazione di validazione.
+
+### Builder
+
+`builder` coordina il processo di costruzione.
+
+Può mantenere riferimenti ai propri collaboratori, ma non deve condividere con essi uno stato di costruzione parziale.
+
+Il grafo viene restituito soltanto quando la risoluzione e la validazione sono state completate con successo.
+
+Un errore non deve lasciare nel builder o nel Runtime un oggetto parzialmente costruito.
+
+### Runtime
+
+`runtime` coordina i servizi interni e mantiene la coerenza tra il Registry e il grafo delle dipendenze corrente.
+
+Quando una nuova registrazione rende obsoleto il grafo esistente, il Runtime deve invalidarlo.
+
+Il Runtime non deve duplicare la logica appartenente a Registry, Graph, Resolver, Validator o Builder.
+
+## Costruttori
+
+I costruttori interni devono creare oggetti che rispettino gli invarianti iniziali del tipo.
+
+Esempi:
+
+```go
+newRegistry()
+newNode(component)
+newGraph()
+newResolver(registry)
+newValidator()
+newBuilder(resolver, validator)
+```
+
+Un oggetto restituito da un costruttore deve essere immediatamente utilizzabile secondo il proprio contratto interno.
+
+Le validazioni che riguardano la composizione di più oggetti possono essere eseguite dal relativo aggregato o dal processo di bootstrap.
+
+## Regole operative
+
+Per `internal/runtime` vengono adottate le seguenti regole:
+
+1. Tutti i campi dei tipi interni rimangono privati.
+2. Nessuna struttura mutabile interna viene restituita direttamente.
+3. Le modifiche avvengono attraverso metodi che esprimono un'intenzione di dominio.
+4. I costruttori garantiscono gli invarianti iniziali.
+5. Ogni tipo mantiene gli invarianti del proprio livello di responsabilità.
+6. Le modifiche che coinvolgono più oggetti sono coordinate dal relativo aggregato.
+7. Resolver e Validator non modificano un grafo già costruito.
+8. Il Builder non espone né conserva risultati parziali.
+9. Il Runtime orchestra i servizi interni senza duplicarne le responsabilità.
+10. Nuove ottimizzazioni interne non devono richiedere modifiche ai contratti pubblici.
+
+## Evoluzione futura
+
+Questa convenzione si applica inizialmente a `internal/runtime`.
+
+Potrà essere estesa agli altri package interni di Maestro qualora emerga la necessità di adottare formalmente lo stesso modello di proprietà degli invarianti nell'intero progetto.
+
+In quel caso, la convenzione potrà essere promossa a decisione architetturale generale.

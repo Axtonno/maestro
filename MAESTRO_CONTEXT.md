@@ -59,7 +59,6 @@ Sono stati definiti i contratti pubblici per:
 - Component
 - Context
 - Registry
-- Service
 - EventBus
 - Event
 - StateManager

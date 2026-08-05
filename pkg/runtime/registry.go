@@ -1,9 +1,9 @@
 package runtime
 
 type Registry interface {
-	Register(Service) error
+	Register(Component) error
 
-	Resolve(ComponentID) (Service, error)
+	Resolve(ComponentID) (Component, error)
 
 	Has(ComponentID) bool
 }

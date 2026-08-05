@@ -74,6 +74,14 @@ Responsabilità:
 
 Il Runtime non contiene logica di dominio.
 
+Invarianti del Runtime interno
+
+Le implementazioni contenute in `internal/runtime` nascondono la propria rappresentazione e consentono modifiche soltanto attraverso operazioni controllate.
+
+Ogni tipo protegge gli invarianti del proprio livello di responsabilità. Gli invarianti locali appartengono al tipo proprietario, mentre quelli che coinvolgono più entità sono coordinati dal relativo aggregato.
+
+Questa convenzione permette di modificare e ottimizzare l'implementazione interna senza ampliare i contratti pubblici o distribuire la responsabilità degli invarianti tra più componenti.
+
 ---
 
 ## Provider Layer
