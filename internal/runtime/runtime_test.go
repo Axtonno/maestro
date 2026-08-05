@@ -1,7 +1,9 @@
 package runtime
 
 import (
+	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
@@ -195,6 +197,215 @@ func TestRuntimeCanRebuildInvalidatedGraph(t *testing.T) {
 		t.Fatalf(
 			"expected rebuilt graph length 2, got %d",
 			dependencyGraph.Len(),
+		)
+	}
+}
+
+func TestRuntimeStartsComponentsInTopologicalOrder(t *testing.T) {
+	rt := newRuntime()
+	calls := make([]string, 0)
+
+	config := newLifecycleTestComponent("config", &calls)
+	provider := newLifecycleTestComponent(
+		"provider",
+		&calls,
+		pkgRuntime.Dependency{
+			ID:       "config",
+			Required: true,
+		},
+	)
+	agent := newLifecycleTestComponent(
+		"agent",
+		&calls,
+		pkgRuntime.Dependency{
+			ID:       "provider",
+			Required: true,
+		},
+	)
+
+	for _, component := range []pkgRuntime.Component{
+		agent,
+		provider,
+		config,
+	} {
+		if err := rt.Register(component); err != nil {
+			t.Fatalf("register component: %v", err)
+		}
+	}
+
+	if err := rt.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+
+	if got, want := calls, []string{
+		"config:configure",
+		"config:initialize",
+		"config:start",
+		"provider:configure",
+		"provider:initialize",
+		"provider:start",
+		"agent:configure",
+		"agent:initialize",
+		"agent:start",
+	}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected calls %v, got %v", want, got)
+	}
+
+	if componentState := rt.StateManager().Get(agent); componentState.State != pkgRuntime.StateRunning {
+		t.Fatalf(
+			"expected agent running, got %d",
+			componentState.State,
+		)
+	}
+}
+
+func TestRuntimeStopsComponentsInReverseTopologicalOrder(t *testing.T) {
+	rt := newRuntime()
+	calls := make([]string, 0)
+
+	config := newLifecycleTestComponent("config", &calls)
+	provider := newLifecycleTestComponent(
+		"provider",
+		&calls,
+		pkgRuntime.Dependency{
+			ID:       "config",
+			Required: true,
+		},
+	)
+	agent := newLifecycleTestComponent(
+		"agent",
+		&calls,
+		pkgRuntime.Dependency{
+			ID:       "provider",
+			Required: true,
+		},
+	)
+
+	for _, component := range []pkgRuntime.Component{
+		config,
+		provider,
+		agent,
+	} {
+		if err := rt.Register(component); err != nil {
+			t.Fatalf("register component: %v", err)
+		}
+	}
+
+	if err := rt.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+
+	calls = calls[:0]
+
+	if err := rt.Stop(context.Background()); err != nil {
+		t.Fatalf("stop runtime: %v", err)
+	}
+
+	if got, want := calls, []string{
+		"agent:stop",
+		"provider:stop",
+		"config:stop",
+	}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected calls %v, got %v", want, got)
+	}
+
+	if componentState := rt.StateManager().Get(config); componentState.State != pkgRuntime.StateStopped {
+		t.Fatalf(
+			"expected config stopped, got %d",
+			componentState.State,
+		)
+	}
+}
+
+func TestRuntimeRejectsDuplicateStart(t *testing.T) {
+	rt := newRuntime()
+
+	if err := rt.Register(
+		newTestComponent("config"),
+	); err != nil {
+		t.Fatalf("register component: %v", err)
+	}
+
+	if err := rt.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+
+	err := rt.Start(context.Background())
+	if !errors.Is(err, pkgRuntime.ErrAlreadyStarted) {
+		t.Fatalf(
+			"expected ErrAlreadyStarted, got %v",
+			err,
+		)
+	}
+}
+
+func TestRuntimeRejectsStopBeforeStart(t *testing.T) {
+	rt := newRuntime()
+
+	err := rt.Stop(context.Background())
+	if !errors.Is(err, pkgRuntime.ErrAlreadyStopped) {
+		t.Fatalf(
+			"expected ErrAlreadyStopped, got %v",
+			err,
+		)
+	}
+}
+
+func TestRuntimeStartFailureMarksComponentFailed(t *testing.T) {
+	rt := newRuntime()
+	calls := make([]string, 0)
+
+	config := newLifecycleTestComponent("config", &calls)
+	provider := newLifecycleTestComponent(
+		"provider",
+		&calls,
+		pkgRuntime.Dependency{
+			ID:       "config",
+			Required: true,
+		},
+	)
+	provider.failOn = "start"
+
+	if err := rt.Register(config); err != nil {
+		t.Fatalf("register config: %v", err)
+	}
+
+	if err := rt.Register(provider); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+
+	err := rt.Start(context.Background())
+	if err == nil {
+		t.Fatal("expected runtime start error")
+	}
+
+	componentState := rt.StateManager().Get(provider)
+	if componentState.State != pkgRuntime.StateFailed {
+		t.Fatalf(
+			"expected provider failed, got %d",
+			componentState.State,
+		)
+	}
+}
+
+func TestRuntimeRejectsRegistrationAfterStart(t *testing.T) {
+	rt := newRuntime()
+
+	if err := rt.Register(
+		newTestComponent("config"),
+	); err != nil {
+		t.Fatalf("register config: %v", err)
+	}
+
+	if err := rt.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+
+	err := rt.Register(newTestComponent("provider"))
+	if !errors.Is(err, pkgRuntime.ErrAlreadyStarted) {
+		t.Fatalf(
+			"expected ErrAlreadyStarted, got %v",
+			err,
 		)
 	}
 }

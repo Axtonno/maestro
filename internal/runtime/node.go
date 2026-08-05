@@ -12,9 +12,9 @@ type node struct {
 
 func newNode(component pkgRuntime.Component) *node {
 	return &node{
-		component: component,
+		component:    component,
 		dependencies: make([]*node, 0),
-		dependents: make([]*node, 0),
+		dependents:   make([]*node, 0),
 	}
 }
 

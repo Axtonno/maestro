@@ -22,15 +22,17 @@ const (
 
 type Transition struct {
 	From State
-	To State
+	To   State
 }
 
 var ValidTransitions = []Transition{
 	{StateCreated, StateConfigured},
+	{StateCreated, StateFailed},
 	{StateConfigured, StateInitialized},
 	{StateInitialized, StateRunning},
 	{StateRunning, StateStopping},
 	{StateStopping, StateStopped},
+	{StateStopping, StateFailed},
 
 	{StateConfigured, StateFailed},
 	{StateInitialized, StateFailed},

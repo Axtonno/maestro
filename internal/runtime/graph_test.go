@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
@@ -154,4 +155,94 @@ func TestGraphLen(t *testing.T) {
 			dependencyGraph.Len(),
 		)
 	}
+}
+
+func TestGraphTopologicalOrder(t *testing.T) {
+	dependencyGraph := newGraph()
+
+	config := newTestComponent("config")
+	provider := newTestComponent("provider")
+	agent := newTestComponent("agent")
+
+	for _, component := range []pkgRuntime.Component{
+		agent,
+		provider,
+		config,
+	} {
+		if err := dependencyGraph.Add(component); err != nil {
+			t.Fatalf("add component: %v", err)
+		}
+	}
+
+	if err := dependencyGraph.AddDependency(
+		"provider",
+		"config",
+	); err != nil {
+		t.Fatalf("add provider dependency: %v", err)
+	}
+
+	if err := dependencyGraph.AddDependency(
+		"agent",
+		"provider",
+	); err != nil {
+		t.Fatalf("add agent dependency: %v", err)
+	}
+
+	orderedNodes, err := dependencyGraph.TopologicalOrder()
+	if err != nil {
+		t.Fatalf("topological order: %v", err)
+	}
+
+	if got, want := componentIDs(orderedNodes), []pkgRuntime.ComponentID{
+		"config",
+		"provider",
+		"agent",
+	}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected order %v, got %v", want, got)
+	}
+}
+
+func TestGraphReverseTopologicalOrder(t *testing.T) {
+	dependencyGraph := newGraph()
+
+	config := newTestComponent("config")
+	provider := newTestComponent("provider")
+
+	for _, component := range []pkgRuntime.Component{
+		provider,
+		config,
+	} {
+		if err := dependencyGraph.Add(component); err != nil {
+			t.Fatalf("add component: %v", err)
+		}
+	}
+
+	if err := dependencyGraph.AddDependency(
+		"provider",
+		"config",
+	); err != nil {
+		t.Fatalf("add dependency: %v", err)
+	}
+
+	orderedNodes, err := dependencyGraph.ReverseTopologicalOrder()
+	if err != nil {
+		t.Fatalf("reverse topological order: %v", err)
+	}
+
+	if got, want := componentIDs(orderedNodes), []pkgRuntime.ComponentID{
+		"provider",
+		"config",
+	}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected order %v, got %v", want, got)
+	}
+}
+
+func componentIDs(nodes []*node) []pkgRuntime.ComponentID {
+	ids := make([]pkgRuntime.ComponentID, 0, len(nodes))
+
+	for _, currentNode := range nodes {
+		ids = append(ids, currentNode.Component().Metadata().ID)
+	}
+
+	return ids
 }

@@ -278,6 +278,92 @@ Builder completamente stateless.
 
 ---
 
+## Fase 3 — Lifecycle Engine
+
+Completata.
+
+Package:
+
+```
+internal/runtime
+```
+
+Componenti implementati:
+
+### stateManager
+
+State manager thread-safe.
+
+Responsabilità:
+
+* tracciamento dello stato dei componenti
+* inizializzazione a `StateCreated` durante la registrazione
+* transizioni controllate tramite state machine interna
+* marcatura dei componenti falliti con causa
+
+---
+
+### lifecycleManager
+
+Motore lifecycle per singolo componente.
+
+Responsabilità:
+
+* esecuzione ordinata delle capability opzionali
+* `Configure`
+* `Initialize`
+* `Start`
+* `Stop`
+* `Reload`
+* `Health`
+* aggiornamento coerente dello stato
+* propagazione degli errori e passaggio a `StateFailed`
+
+---
+
+### runtimeContext
+
+Context interno passato ai componenti durante il lifecycle.
+
+Espone:
+
+* Config
+* Logger
+* EventBus
+* Registry
+
+---
+
+### graph lifecycle ordering
+
+Il grafo espone ora:
+
+* ordinamento topologico stabile
+* ordinamento topologico inverso
+
+Questi ordinamenti sono usati per garantire:
+
+* startup dependency-first
+* shutdown dependent-first
+
+---
+
+### runtime bootstrap
+
+Il Runtime interno implementa ora il contratto pubblico `pkg/runtime.Runtime`.
+
+Responsabilità aggiunte:
+
+* bootstrap automatico del Dependency Graph al primo `Start`
+* avvio ordinato dei componenti
+* shutdown ordinato dei componenti
+* protezione da start duplicati
+* protezione da stop prima dello start
+* blocco delle registrazioni durante o dopo lo start
+* accesso pubblico a Registry, EventBus e StateManager
+
+---
+
 # Convenzioni implementative
 
 Per `internal/runtime` sono state adottate le seguenti regole.
@@ -292,6 +378,8 @@ Per `internal/runtime` sono state adottate le seguenti regole.
 * resolver costruisce ma non valida.
 * validator valida ma non modifica.
 * builder coordina senza conservare stato.
+* stateManager mantiene gli invarianti degli stati dei componenti.
+* lifecycleManager orchestra le capability senza conoscere la logica di dominio.
 * runtime orchestra senza duplicare responsabilità.
 
 ---
@@ -319,7 +407,7 @@ Copertura funzionale:
 Verifica effettuata con:
 
 ```
-go test ./internal/runtime
+GOCACHE=/tmp/maestro-go-build go test ./...
 ```
 
 Risultato:
@@ -336,7 +424,7 @@ API pubbliche consolidate.
 
 Runtime interno implementato fino alla costruzione e validazione del Dependency Graph.
 
-Il progetto è ora pronto per introdurre il Lifecycle Engine.
+Il progetto è ora pronto per introdurre l'Event System.
 
 ---
 
@@ -356,7 +444,7 @@ Dependency Container & Registry
 
 ---
 
-### 🔜 Fase 3
+### ✅ Fase 3
 
 Lifecycle Engine
 

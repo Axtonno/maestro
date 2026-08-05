@@ -3,10 +3,10 @@ package runtime
 type Capability string
 
 const (
-	CapabilityConfigure Capability = "configure"
+	CapabilityConfigure  Capability = "configure"
 	CapabilityInitialize Capability = "initialize"
-	CapabilityStart Capability = "start"
-	CapabilityStop Capability = "stop"
-	CapabilityReload Capability = "reload"
-	CapabilityHealth Capability = "health"
+	CapabilityStart      Capability = "start"
+	CapabilityStop       Capability = "stop"
+	CapabilityReload     Capability = "reload"
+	CapabilityHealth     Capability = "health"
 )

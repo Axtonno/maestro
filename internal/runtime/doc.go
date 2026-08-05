@@ -1,4 +1,3 @@
-```go
 // Package runtime contiene l'implementazione interna del Runtime Core di Maestro.
 //
 // I tipi del package nascondono la propria rappresentazione e consentono
@@ -19,4 +18,3 @@
 // Le operazioni che coinvolgono più oggetti devono essere coordinate
 // dall'aggregato che ne possiede gli invarianti.
 package runtime
-```
