@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Primo incremento
+Stato: Implementato
 
 Ultimo aggiornamento: 2026-08-05
 
@@ -10,95 +10,115 @@ Ultimo aggiornamento: 2026-08-05
 
 # Scopo
 
-Il Plugin Runtime registra e risolve le estensioni opzionali di Maestro senza
+Il Plugin Runtime registra, scopre e carica estensioni opzionali senza
 introdurre un secondo sistema di componenti o un secondo lifecycle.
 
-Il contratto pubblico vive in `pkg/plugin`; l'implementazione concreta vive in
+I contratti pubblici vivono in `pkg/plugin`, l'implementazione concreta in
 `internal/plugin`. Il composition root restituito da `maestro.New` espone la
 stessa istanza tramite `Plugins()`.
 
 ---
 
-# Modello
+# Plugin e manifest
 
-Un `Plugin` è un `runtime.Component` registrato attraverso il Plugin Runtime.
-Usa quindi i metadati, le dipendenze e le capability lifecycle già definite dal
+Un `Plugin` è un `runtime.Component` che espone anche un `Manifest`.
+
+I metadati del componente restano l'unica fonte per identità, versione,
+dipendenze e capability. Il manifest dichiara la versione dell'API Plugin
+Runtime richiesta dal plugin. La versione corrente è disponibile come
+`plugin.RuntimeAPIVersion`; una versione vuota produce `ErrInvalidManifest` e
+una versione differente produce `ErrIncompatible` prima della registrazione nel
 Runtime Core.
 
-Questa relazione produce una sola fonte di verità:
-
-* `Metadata.ID` identifica sia il componente sia il plugin;
-* `Metadata.Dependencies` partecipa al dependency graph globale;
-* `Configurer`, `Initializer`, `Starter`, `Stopper`, `Reloader` e
-  `HealthChecker` mantengono la semantica del Runtime Core;
-* stato e failure sono osservabili attraverso lo `StateManager` globale.
-
-Il Plugin Runtime mantiene un indice dedicato soltanto per distinguere i plugin
-dai componenti registrati direttamente. In Go l'interfaccia `Plugin` è
-strutturale: è il percorso `Plugins().Register`, non un marker aggiuntivo, a
-classificare un componente come plugin.
+`Metadata.ID` deve rimanere stabile dopo la registrazione.
 
 ---
 
-# Registrazione e risoluzione
+# Registry e osservabilità
 
 Il Plugin Runtime espone:
 
-* `Register`, che valida l'identità minima e registra il plugin anche nel
-  Runtime Core;
-* `Resolve`, che restituisce soltanto componenti registrati come plugin;
-* `Has`, per verificare la presenza di un plugin.
+* `Register`, `Resolve` e `Has` per le istanze plugin;
+* `Registered`, che restituisce gli ID registrati in ordine deterministico;
+* `RegisterLoader` per aggiungere una factory al catalogo;
+* `Available`, che restituisce gli ID dei loader in ordine di registrazione;
+* `Load`, che costruisce e registra un plugin dal catalogo.
 
-Gli ID vuoti, composti da soli spazi o con spazi iniziali/finali vengono
-rifiutati. Un ID occupato da un altro plugin o da un normale componente non può
-essere registrato di nuovo.
+Gli snapshot restituiti non espongono le slice interne. Registry e catalogo sono
+thread-safe. ID vuoti, blank o con spazi iniziali/finali, typed nil, duplicati e
+collisioni con normali componenti vengono rifiutati con errori ispezionabili
+tramite `errors.Is`.
 
-Come per ogni componente, `Metadata.ID` deve rimanere stabile dopo la
-registrazione. L'indice e il dependency graph usano quell'identità come
-invariante condiviso.
+Le operazioni riuscite pubblicano sullo stesso Event Bus del Runtime:
 
-La registrazione deve avvenire prima dell'avvio del Runtime, come per ogni
-altro componente. Dopo che `Register` restituisce successo, plugin registry,
-component registry e state manager descrivono lo stesso componente.
+* `plugin.loader.registered`;
+* `plugin.registered`;
+* `plugin.loaded`.
+
+Il payload pubblico contiene ID e, quando disponibile, l'istanza plugin.
+
+---
+
+# Loader e caricamento
+
+Un `Loader` è una factory pull-based:
+
+```go
+type Loader interface {
+    Load(context.Context) (Plugin, error)
+}
+```
+
+`LoaderFunc` adatta direttamente una funzione. Il Plugin Runtime risolve il
+loader sotto lock, lo esegue senza lock, verifica cancellazione, risultato non
+nil, corrispondenza tra ID richiesto e prodotto, manifest e registrazione nel
+Runtime Core.
+
+Un loader costruisce soltanto l'istanza: non la registra, non ne avvia il
+lifecycle e non acquisisce risorse di lunga durata. Queste ultime appartengono
+alle capability `Initialize` e `Start`, così un errore di registrazione non
+lascia risorse orfane.
+
+Il catalogo descrive plugin disponibili nella build corrente. Non esegue
+scansioni, download o selezioni implicite.
 
 ---
 
 # Lifecycle e dipendenze
 
-Il Plugin Runtime non invoca direttamente codice lifecycle.
+Il Plugin Runtime non invoca direttamente le capability lifecycle.
 
-All'avvio, il Runtime Core costruisce il grafo globale e avvia ogni plugin dopo
-le sue dipendenze richieste. All'arresto usa l'ordine inverso. Le dipendenze
-possono riferirsi indifferentemente a plugin o ad altri componenti.
-
-Il `runtime.Context` ricevuto dalle capability del plugin espone configurazione,
-logger, Event Bus, component Registry e Provider Runtime condivisi.
-
----
-
-# Concorrenza e ownership
-
-L'indice dei plugin è thread-safe e non espone la mappa interna. I metodi del
-plugin non vengono eseguiti mantenendo il lock dell'indice.
-
-Il Plugin Runtime possiede la classificazione e la risoluzione dei plugin. Il
-Runtime Core continua a possedere registrazione dei componenti, dependency
-graph, stati e lifecycle.
+Dopo il caricamento, il Runtime Core inserisce il plugin nel dependency graph
+globale. Startup e shutdown rispettano gli stessi ordinamenti dei componenti;
+stato e failure sono osservabili tramite lo `StateManager` globale. Il plugin
+riceve lo stesso `runtime.Context` con configurazione, logger, Event Bus,
+Registry e Provider Runtime.
 
 ---
 
-# Estensioni escluse dal primo incremento
+# Modello di fiducia
 
-Questa versione non introduce:
+I loader e i plugin sono codice Go in-process e hanno i privilegi del processo
+Maestro. La registrazione di un loader equivale quindi ad autorizzare codice
+fidato già collegato all'applicazione.
 
-* discovery da directory o manifest;
-* installazione e risoluzione delle versioni;
-* caricamento di shared object Go;
-* plugin eseguiti in processi isolati;
-* sandbox o verifica delle firme;
-* unload e hot reload del codice;
-* enable/disable persistente.
+Shared object, download, firme, sandbox, process isolation, permission model,
+unload e hot replacement sono livelli di distribuzione e sicurezza successivi;
+non modificano il contratto di registry e lifecycle completato in questa fase.
 
-Questi aspetti richiedono contratti di compatibilità, sicurezza e distribuzione
-separati. Verranno progettati senza modificare la semantica di registrazione e
-lifecycle definita da questo incremento.
+---
+
+# Primo plugin
+
+Il primo adapter framework-aware è Laravel:
+
+```
+pkg/plugin/laravel
+internal/plugin/laravel
+```
+
+Configurazione e detection sono descritte in:
+
+```
+docs/laravel-plugin.md
+```

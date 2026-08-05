@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/antonio-cafeo/maestro"
+	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
@@ -14,6 +15,12 @@ func (p *frameworkPlugin) Metadata() pkgRuntime.Metadata {
 		ID:      "laravel",
 		Name:    "Laravel",
 		Version: "1.0.0",
+	}
+}
+
+func (p *frameworkPlugin) Manifest() pkgPlugin.Manifest {
+	return pkgPlugin.Manifest{
+		RuntimeAPIVersion: pkgPlugin.RuntimeAPIVersion,
 	}
 }
 

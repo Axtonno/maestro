@@ -52,6 +52,9 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 6. `roadmap.md`
 7. `design-decisions.md`
 8. `adr/`
+9. `provider-runtime.md`
+10. `plugin-runtime.md`
+11. `laravel-plugin.md`
 
 ---
 
@@ -68,11 +71,11 @@ embedding e model listing. La chiusura della Fase 5 richiede soltanto lo smoke
 test contro un'istanza Ollama reale; provider e policy ulteriori proseguono
 separatamente nella Milestone 2 senza bloccare il Plugin Runtime.
 
-Il primo incremento del Plugin Runtime aggiunge contratti pubblici, registry
-thread-safe e registrazione integrata nel Runtime Core. I plugin in-process
-riusano dependency graph, stato e lifecycle dei componenti. Discovery,
-installazione e caricamento di artefatti esterni appartengono agli incrementi
-successivi.
+La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
+compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
+cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin
+Laravel implementa detection del workspace e health. Packaging esterno,
+sandbox e unload appartengono all'evoluzione successiva dell'ecosistema.
 
 ---
 

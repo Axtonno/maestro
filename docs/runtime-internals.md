@@ -127,7 +127,7 @@ non ne modifica o copia il contenuto.
 ### Plugin Runtime
 
 Il Plugin Runtime concreto vive in `internal/plugin` e protegge l'indice dei
-componenti registrati come plugin.
+componenti registrati come plugin e il catalogo dei loader.
 
 È responsabile di:
 
@@ -136,8 +136,13 @@ componenti registrati come plugin.
 * indicizzare un plugin soltanto dopo la registrazione del componente;
 * impedire collisioni con plugin e componenti già registrati;
 * risolvere soltanto componenti registrati attraverso il Plugin Runtime;
-* proteggere l'indice durante l'accesso concorrente;
-* non eseguire metodi del plugin mentre mantiene il lock dell'indice.
+* validare manifest e versione dell'API Plugin Runtime;
+* registrare e scoprire loader in ordine deterministico;
+* eseguire i loader senza lock interni e rispettare la cancellazione;
+* verificare che il loader produca il plugin richiesto;
+* pubblicare eventi riusciti sul bus condiviso;
+* proteggere indici e catalogo durante l'accesso concorrente;
+* non eseguire metodi del plugin o del loader mentre mantiene lock interni.
 
 Il Plugin Runtime non possiede stati, dependency graph o lifecycle. Questi
 invarianti restano nel Runtime Core e vengono applicati ai plugin come a ogni
@@ -219,6 +224,8 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 12. Il Provider Runtime non mantiene lock interni durante l'esecuzione dei provider.
 13. Il Plugin Runtime indicizza un plugin soltanto dopo che il Runtime Core ne ha accettato la registrazione.
 14. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
+15. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
+16. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
 
 ## Evoluzione futura
 

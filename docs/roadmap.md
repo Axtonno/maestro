@@ -89,28 +89,34 @@ Ulteriori adapter e policy non appartengono al gate di chiusura della Fase 5.
 
 # Fase 6 — Plugin Runtime
 
-Stato: In corso — primo incremento implementato
+Stato: Conclusa
 
-Scope del primo incremento:
+Scope completato:
 
 - Contratto pubblico `Plugin` basato su `runtime.Component`.
+- Manifest e compatibilità dell'API Plugin Runtime.
 - Registry plugin thread-safe.
 - Registrazione coordinata con il Runtime Core.
 - Riutilizzo di dependency graph, stato e lifecycle globali.
+- Catalogo thread-safe di loader in-process.
+- Discovery deterministica dei loader e dei plugin registrati.
+- Caricamento cancellabile con validazione di ID e risultato.
+- Eventi di catalogo, registrazione e caricamento.
 - Esposizione tramite il composition root `maestro.New`.
+- Primo plugin framework-aware Laravel con detection e health.
 - Test e documentazione.
 
-Incrementi successivi:
+Evoluzione successiva, fuori dal gate della Fase 6:
 
-- Contratto di manifest e compatibilità.
-- Discovery e installazione.
-- Modello di distribuzione e caricamento.
-- Trust, firme e isolamento.
-- Primo plugin framework-aware.
+- Packaging e installazione di plugin esterni.
+- Firme e policy di trust.
+- Process isolation o sandbox.
+- Unload e hot replacement.
+- Capability Laravel avanzate.
 
-Il caricamento dinamico non viene accoppiato al contratto di registrazione:
-formato degli artefatti e confine di sicurezza saranno definiti prima di
-scegliere tra collegamento statico, shared object o processi isolati.
+Il gate si chiude sul modello trusted in-process definito da ADR-0008. Formati
+di distribuzione esterni potranno alimentare lo stesso contratto `Loader` senza
+modificare registry e lifecycle.
 
 ---
 
@@ -157,6 +163,8 @@ Sistema modulare basato sulle capability.
 
 # Milestone 4 — Plugin System
 
+Stato: Baseline completata nella Fase 6; ecosistema in evoluzione
+
 Obiettivi:
 
 - Caricamento plugin.
@@ -166,7 +174,7 @@ Obiettivi:
 
 Primo plugin:
 
-Laravel.
+Laravel (detection e health implementati).
 
 ---
 

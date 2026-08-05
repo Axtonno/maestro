@@ -81,7 +81,10 @@ func newRuntimeWithServices(
 	}
 
 	rt.registryView = newRuntimeRegistry(rt)
-	rt.pluginRuntime = internalPlugin.NewRuntime(rt.registryView)
+	rt.pluginRuntime = internalPlugin.NewRuntimeWithEventBus(
+		rt.registryView,
+		componentEventBus,
+	)
 	runtimeContext := newRuntimeContext(
 		config,
 		logger,

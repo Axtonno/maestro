@@ -151,18 +151,21 @@ Coordina il sistema.
 Responsabilità:
 
 - registrazione plugin;
-- lifecycle plugin.
+- lifecycle plugin;
 - risoluzione dei plugin registrati;
+- catalogo e caricamento dei loader;
+- validazione della compatibilità;
+- pubblicazione degli eventi plugin;
 - integrazione con il dependency graph globale.
 
-Nel primo incremento i plugin sono componenti Go collegati staticamente e
-registrati in-process. Il Plugin Runtime li indicizza, mentre il Runtime Core ne
-orchestra il lifecycle. Discovery, installazione e caricamento di artefatti
-esterni richiedono un livello successivo dedicato a distribuzione e sicurezza.
+I plugin sono componenti Go fidati caricati in-process. Un catalogo di loader
+fornisce discovery deterministica; il Plugin Runtime valida ID e manifest, li
+indicizza e pubblica gli eventi, mentre il Runtime Core orchestra il lifecycle.
+Distribuzione di artefatti esterni e isolamento sono livelli successivi.
 
 Esempi:
 
-- Laravel
+- Laravel (implementato)
 - Symfony
 - Django
 - React

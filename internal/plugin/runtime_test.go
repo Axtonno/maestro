@@ -1,8 +1,10 @@
 package plugin
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"testing"
 
@@ -12,6 +14,7 @@ import (
 
 type testPlugin struct {
 	metadata pkgRuntime.Metadata
+	manifest pkgPlugin.Manifest
 }
 
 func newTestPlugin(id pkgPlugin.ID) *testPlugin {
@@ -21,6 +24,9 @@ func newTestPlugin(id pkgPlugin.ID) *testPlugin {
 			Name:    string(id),
 			Version: "1.0.0",
 		},
+		manifest: pkgPlugin.Manifest{
+			RuntimeAPIVersion: pkgPlugin.RuntimeAPIVersion,
+		},
 	}
 }
 
@@ -28,10 +34,23 @@ func (p *testPlugin) Metadata() pkgRuntime.Metadata {
 	return p.metadata
 }
 
+func (p *testPlugin) Manifest() pkgPlugin.Manifest {
+	return p.manifest
+}
+
 type recordingRegistrar struct {
 	mu         sync.Mutex
 	components map[pkgRuntime.ComponentID]pkgRuntime.Component
 	err        error
+}
+
+type testLoader struct {
+	plugin pkgPlugin.Plugin
+	err    error
+}
+
+func (l *testLoader) Load(context.Context) (pkgPlugin.Plugin, error) {
+	return l.plugin, l.err
 }
 
 func newRecordingRegistrar() *recordingRegistrar {
@@ -127,6 +146,32 @@ func TestRuntimeRejectsInvalidPlugin(t *testing.T) {
 	}
 }
 
+func TestRuntimeValidatesPluginManifest(t *testing.T) {
+	pluginRuntime := NewRuntime(newRecordingRegistrar())
+
+	missingVersion := newTestPlugin("missing-version")
+	missingVersion.manifest.RuntimeAPIVersion = ""
+	if err := pluginRuntime.Register(missingVersion); !errors.Is(
+		err,
+		pkgPlugin.ErrInvalidManifest,
+	) {
+		t.Fatalf("expected ErrInvalidManifest, got %v", err)
+	}
+
+	incompatible := newTestPlugin("incompatible")
+	incompatible.manifest.RuntimeAPIVersion = "999"
+	if err := pluginRuntime.Register(incompatible); !errors.Is(
+		err,
+		pkgPlugin.ErrIncompatible,
+	) {
+		t.Fatalf("expected ErrIncompatible, got %v", err)
+	}
+
+	if pluginRuntime.Has("missing-version") || pluginRuntime.Has("incompatible") {
+		t.Fatal("plugin with invalid manifest was indexed")
+	}
+}
+
 func TestRuntimeRejectsDuplicatePlugin(t *testing.T) {
 	pluginRuntime := NewRuntime(newRecordingRegistrar())
 	registered := newTestPlugin("laravel")
@@ -211,5 +256,228 @@ func TestRuntimeSupportsConcurrentRegistrationAndResolution(t *testing.T) {
 
 	for err := range errorsChannel {
 		t.Errorf("concurrent plugin operation: %v", err)
+	}
+}
+
+func TestRuntimeReportsRegisteredPluginsInOrder(t *testing.T) {
+	pluginRuntime := NewRuntime(newRecordingRegistrar())
+
+	for _, id := range []pkgPlugin.ID{"laravel", "symfony", "django"} {
+		if err := pluginRuntime.Register(newTestPlugin(id)); err != nil {
+			t.Fatalf("register plugin %q: %v", id, err)
+		}
+	}
+
+	registered := pluginRuntime.Registered()
+	want := []pkgPlugin.ID{"laravel", "symfony", "django"}
+	if !reflect.DeepEqual(registered, want) {
+		t.Fatalf("expected registered plugins %v, got %v", want, registered)
+	}
+
+	registered[0] = "changed"
+	if got := pluginRuntime.Registered()[0]; got != "laravel" {
+		t.Fatalf("registered plugin snapshot changed internal order: %q", got)
+	}
+}
+
+func TestRuntimeRegistersAndDiscoversLoaders(t *testing.T) {
+	pluginRuntime := NewRuntime(newRecordingRegistrar())
+	laravelLoader := &testLoader{plugin: newTestPlugin("laravel")}
+
+	if err := pluginRuntime.RegisterLoader("laravel", laravelLoader); err != nil {
+		t.Fatalf("register loader: %v", err)
+	}
+	if err := pluginRuntime.RegisterLoader(
+		"symfony",
+		pkgPlugin.LoaderFunc(func(context.Context) (pkgPlugin.Plugin, error) {
+			return newTestPlugin("symfony"), nil
+		}),
+	); err != nil {
+		t.Fatalf("register function loader: %v", err)
+	}
+
+	available := pluginRuntime.Available()
+	want := []pkgPlugin.ID{"laravel", "symfony"}
+	if !reflect.DeepEqual(available, want) {
+		t.Fatalf("expected available plugins %v, got %v", want, available)
+	}
+
+	available[0] = "changed"
+	if got := pluginRuntime.Available()[0]; got != "laravel" {
+		t.Fatalf("available plugin snapshot changed internal order: %q", got)
+	}
+
+	if err := pluginRuntime.RegisterLoader("laravel", laravelLoader); !errors.Is(
+		err,
+		pkgPlugin.ErrLoaderAlreadyRegistered,
+	) {
+		t.Fatalf("expected ErrLoaderAlreadyRegistered, got %v", err)
+	}
+}
+
+func TestRuntimeRejectsInvalidLoader(t *testing.T) {
+	pluginRuntime := NewRuntime(newRecordingRegistrar())
+	var typedNil *testLoader
+
+	tests := []struct {
+		name   string
+		id     pkgPlugin.ID
+		loader pkgPlugin.Loader
+	}{
+		{name: "empty ID", loader: &testLoader{}},
+		{name: "blank ID", id: "   ", loader: &testLoader{}},
+		{name: "nil", id: "laravel"},
+		{name: "typed nil", id: "laravel", loader: typedNil},
+		{name: "nil function", id: "laravel", loader: pkgPlugin.LoaderFunc(nil)},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := pluginRuntime.RegisterLoader(test.id, test.loader)
+			if !errors.Is(err, pkgPlugin.ErrInvalidLoader) {
+				t.Fatalf("expected ErrInvalidLoader, got %v", err)
+			}
+		})
+	}
+}
+
+func TestRuntimeLoadsAndRegistersPlugin(t *testing.T) {
+	registrar := newRecordingRegistrar()
+	pluginRuntime := NewRuntime(registrar)
+	loaded := newTestPlugin("laravel")
+
+	if err := pluginRuntime.RegisterLoader(
+		"laravel",
+		&testLoader{plugin: loaded},
+	); err != nil {
+		t.Fatalf("register loader: %v", err)
+	}
+
+	plugin, err := pluginRuntime.Load(context.Background(), "laravel")
+	if err != nil {
+		t.Fatalf("load plugin: %v", err)
+	}
+	if plugin != loaded {
+		t.Fatal("loaded an unexpected plugin")
+	}
+	if !pluginRuntime.Has("laravel") {
+		t.Fatal("loaded plugin was not registered")
+	}
+	if component, exists := registrar.resolve("laravel"); !exists || component != loaded {
+		t.Fatal("loaded plugin was not registered as a Runtime component")
+	}
+}
+
+func TestRuntimeReportsLoaderFailures(t *testing.T) {
+	loadFailure := errors.New("factory failed")
+
+	tests := []struct {
+		name   string
+		id     pkgPlugin.ID
+		loader pkgPlugin.Loader
+		ctx    context.Context
+		want   error
+	}{
+		{
+			name: "missing loader",
+			id:   "missing",
+			ctx:  context.Background(),
+			want: pkgPlugin.ErrLoaderNotFound,
+		},
+		{
+			name:   "loader error",
+			id:     "failure",
+			loader: &testLoader{err: loadFailure},
+			ctx:    context.Background(),
+			want:   pkgPlugin.ErrLoadFailed,
+		},
+		{
+			name:   "nil plugin",
+			id:     "nil-plugin",
+			loader: &testLoader{},
+			ctx:    context.Background(),
+			want:   pkgPlugin.ErrInvalidPlugin,
+		},
+		{
+			name:   "mismatched ID",
+			id:     "expected",
+			loader: &testLoader{plugin: newTestPlugin("other")},
+			ctx:    context.Background(),
+			want:   pkgPlugin.ErrInvalidPlugin,
+		},
+		{
+			name: "nil context",
+			id:   "nil-context",
+			ctx:  nil,
+			want: pkgPlugin.ErrInvalidLoader,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pluginRuntime := NewRuntime(newRecordingRegistrar())
+			if test.loader != nil {
+				if err := pluginRuntime.RegisterLoader(test.id, test.loader); err != nil {
+					t.Fatalf("register loader: %v", err)
+				}
+			}
+
+			_, err := pluginRuntime.Load(test.ctx, test.id)
+			if !errors.Is(err, test.want) {
+				t.Fatalf("expected %v, got %v", test.want, err)
+			}
+			if test.want == pkgPlugin.ErrLoadFailed && !errors.Is(err, loadFailure) {
+				t.Fatalf("expected wrapped loader error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestRuntimeLoadHonorsCanceledContext(t *testing.T) {
+	pluginRuntime := NewRuntime(newRecordingRegistrar())
+	if err := pluginRuntime.RegisterLoader(
+		"laravel",
+		&testLoader{plugin: newTestPlugin("laravel")},
+	); err != nil {
+		t.Fatalf("register loader: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if _, err := pluginRuntime.Load(ctx, "laravel"); !errors.Is(
+		err,
+		context.Canceled,
+	) {
+		t.Fatalf("expected context cancellation, got %v", err)
+	}
+	if pluginRuntime.Has("laravel") {
+		t.Fatal("plugin was registered after context cancellation")
+	}
+}
+
+func TestRuntimeLoadChecksCancellationAfterLoader(t *testing.T) {
+	pluginRuntime := NewRuntime(newRecordingRegistrar())
+	ctx, cancel := context.WithCancel(context.Background())
+
+	if err := pluginRuntime.RegisterLoader(
+		"laravel",
+		pkgPlugin.LoaderFunc(func(context.Context) (pkgPlugin.Plugin, error) {
+			cancel()
+
+			return newTestPlugin("laravel"), nil
+		}),
+	); err != nil {
+		t.Fatalf("register loader: %v", err)
+	}
+
+	if _, err := pluginRuntime.Load(ctx, "laravel"); !errors.Is(
+		err,
+		context.Canceled,
+	) {
+		t.Fatalf("expected context cancellation, got %v", err)
+	}
+	if pluginRuntime.Has("laravel") {
+		t.Fatal("plugin was registered after loader canceled context")
 	}
 }

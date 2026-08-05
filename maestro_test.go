@@ -50,6 +50,12 @@ func (p *lifecyclePlugin) Metadata() pkgRuntime.Metadata {
 	return p.metadata
 }
 
+func (p *lifecyclePlugin) Manifest() pkgPlugin.Manifest {
+	return pkgPlugin.Manifest{
+		RuntimeAPIVersion: pkgPlugin.RuntimeAPIVersion,
+	}
+}
+
 func (p *lifecyclePlugin) Configure(context pkgRuntime.Context) error {
 	p.context = context
 	*p.calls = append(*p.calls, string(p.metadata.ID)+":configure")
@@ -295,6 +301,64 @@ func TestPluginRegistrationRespectsRuntimeState(t *testing.T) {
 
 	if runtime.Plugins().Has("late-plugin") {
 		t.Fatal("plugin rejected by Runtime Core was indexed")
+	}
+}
+
+func TestPluginRuntimePublishesSuccessfulOperations(t *testing.T) {
+	runtime := New()
+	calls := make([]string, 0)
+	events := make([]pkgPlugin.EventPayload, 0)
+	pluginCalls := make([]string, 0)
+
+	for _, topic := range []string{
+		pkgPlugin.EventLoaderRegistered,
+		pkgPlugin.EventRegistered,
+		pkgPlugin.EventLoaded,
+	} {
+		if err := runtime.EventBus().Subscribe(
+			topic,
+			func(event pkgRuntime.Event) {
+				calls = append(calls, event.Name())
+				events = append(events, event.Payload().(pkgPlugin.EventPayload))
+			},
+		); err != nil {
+			t.Fatalf("subscribe to %q: %v", topic, err)
+		}
+	}
+
+	if err := runtime.Plugins().RegisterLoader(
+		"laravel",
+		pkgPlugin.LoaderFunc(func(context.Context) (pkgPlugin.Plugin, error) {
+			return newLifecyclePlugin("laravel", &pluginCalls), nil
+		}),
+	); err != nil {
+		t.Fatalf("register plugin loader: %v", err)
+	}
+	loaded, err := runtime.Plugins().Load(context.Background(), "laravel")
+	if err != nil {
+		t.Fatalf("load plugin: %v", err)
+	}
+
+	if want := []string{
+		pkgPlugin.EventLoaderRegistered,
+		pkgPlugin.EventRegistered,
+		pkgPlugin.EventLoaded,
+	}; !reflect.DeepEqual(calls, want) {
+		t.Fatalf("expected event calls %v, got %v", want, calls)
+	}
+	if len(events) != 3 {
+		t.Fatalf("expected 3 plugin events, got %d", len(events))
+	}
+	for index, event := range events {
+		if event.ID != "laravel" {
+			t.Fatalf("event %d has unexpected plugin ID %q", index, event.ID)
+		}
+	}
+	if events[0].Plugin != nil {
+		t.Fatal("loader registration event unexpectedly contains a plugin")
+	}
+	if events[1].Plugin != loaded || events[2].Plugin != loaded {
+		t.Fatal("registration and load events do not contain loaded plugin")
 	}
 }
 
