@@ -77,11 +77,10 @@ Scope:
 - Integrazione nel Runtime.
 - Primo adapter concreto Ollama.
 - Test e documentazione.
-- Smoke test contro un'istanza Ollama reale.
 
-L'implementazione e i test isolati sono completati. Lo smoke test live di
-listing, completion, streaming, embedding e cancellazione è consolidato nel
-gate finale della Milestone 2.
+L'implementazione e i test isolati sono completati. La verifica live di
+listing, completion, streaming, embedding e cancellazione confluisce nello
+Smoke Benchmark della Milestone 3.
 
 Ulteriori adapter e policy non appartengono al gate di chiusura della Fase 5.
 
@@ -136,7 +135,7 @@ Scope:
 - Model listing del modello caricato.
 - Autenticazione Bearer opzionale.
 - Validazione, error handling e propagazione del context.
-- Test HTTP in-memory e smoke test live opzionale.
+- Test HTTP in-memory e definizione dello scenario live.
 - Documentazione dell'adapter.
 
 Il primo incremento usa la superficie compatibile con OpenAI esposta da
@@ -144,7 +143,7 @@ Il primo incremento usa la superficie compatibile con OpenAI esposta da
 di resilienza restano fasi successive della Provider Layer.
 
 Facade, adapter, test isolati e documentazione sono completati. Lo smoke test
-live è consolidato nel gate finale della Milestone 2 e non blocca le singole
+live confluisce nello Smoke Benchmark della Milestone 3 e non blocca le singole
 fasi incrementali.
 
 ## Fase 2 — Model Discovery & Lifecycle
@@ -165,8 +164,8 @@ Pull, delete, progress streaming e policy di resilienza restano fuori dal gate
 della Fase 2.
 
 Contratti, routing, implementazioni Ollama e llama.cpp, test e documentazione
-sono completati. Gli smoke test live delle capability provider vengono eseguiti
-insieme al gate finale della Milestone 2.
+sono completati. Gli smoke test live delle capability provider confluiscono
+nello Smoke Benchmark della Milestone 3.
 
 ## Fasi successive
 
@@ -182,8 +181,8 @@ modelli, senza accesso diretto del Provider Runtime ai file gestiti dai server.
 
 Contratti `ModelPuller`, `ModelRemover` e `ModelPullStream`, routing, adapter
 Ollama e llama.cpp, test isolati, ADR-0010 e documentazione sono completati.
-Gli smoke test live che modificano il catalogo restano consolidati nella Fase
-10.
+Gli smoke test live che modificano il catalogo confluiscono nello Smoke
+Benchmark della Milestone 3.
 
 ### Fase 4 — Model Residency Policies
 
@@ -227,12 +226,12 @@ Stato: Pianificata
 Opzioni comuni di generazione, output strutturati e tool calling validati sugli
 adapter Ollama e llama.cpp.
 
-### Fase 10 — Hardening & Milestone Gate
+### Fase 10 — Hardening & Provider Handoff
 
 Stato: Pianificata
 
-Audit di compatibilità, verifica concorrente e matrice live completa. Gli smoke
-test rinviati dalle fasi precedenti confluiscono esclusivamente in questo gate.
+Audit di compatibilità, verifica concorrente, suite deterministica e handoff
+degli scenari live al Benchmark Layer.
 
 Output atteso:
 
@@ -241,17 +240,19 @@ Runtime Core e del Plugin Runtime.
 
 Gate finale della milestone:
 
-- smoke test Ollama;
-- smoke test llama.cpp;
-- listing e discovery dei modelli;
-- pull e rimozione dove supportati;
-- load e unload su modelli dedicati;
-- keep-alive configurabile e autoload esplicito;
-- capability introspection e normalizzazione degli errori;
-- retry, circuit breaker e osservabilità;
-- completion, streaming, embedding e cancellazione;
-- output strutturati e tool calling sui due adapter;
-- suite isolata, race detector, vet e audit della documentazione.
+- contratti pubblici sottoposti ad audit di compatibilità;
+- capability e routing coperti da test deterministici;
+- adapter Ollama e llama.cpp verificati con trasporti HTTP in-memory;
+- completion, streaming, embedding, lifecycle, pull e remove coperti in modo
+  isolato, inclusi errori e cancellazione;
+- introspection, resilienza e osservabilità verificate senza servizi esterni;
+- output strutturati e tool calling coperti sui due adapter;
+- suite completa, race detector, vet e audit della documentazione;
+- manifest degli scenari live consegnato alla Milestone 3.
+
+La chiusura della Provider Layer non richiede processi o modelli locali. La
+matrice live Ollama/llama.cpp e gli smoke test rinviati diventano il primo
+livello del Benchmark & Evaluation Layer.
 
 Nuovi adapter, fallback multi-provider, selezione automatica del modello,
 supervisione dei processi locali, multimodalità e reasoning non sono requisiti
@@ -259,7 +260,58 @@ di chiusura della Milestone 2.
 
 ---
 
-# Milestone 3 — Gestor
+# Milestone 3 — Benchmark & Evaluation Layer
+
+Stato: Pianificata
+
+Obiettivo:
+
+Fornire benchmark locali e riproducibili per valutare combinazioni di hardware,
+provider, modello e plugin in scenari di sviluppo reali.
+
+Prerequisiti:
+
+- Provider Layer completata;
+- capability introspection;
+- error semantics;
+- provider observability;
+- Plugin Runtime e baseline Laravel per il Developer Benchmark.
+
+Livelli:
+
+1. Smoke Benchmark — verifica live di provider, modelli, streaming, embedding e
+   lifecycle.
+2. Runtime Benchmark — misura latenza, throughput, risorse e cancellazione.
+3. Developer Benchmark — misura task reali PHP/Laravel, refactor, test e
+   recupero tramite embedding.
+
+Famiglie di misura:
+
+- conformità dei provider;
+- prestazioni;
+- RAM, CPU e VRAM quando disponibile;
+- stabilità dello streaming;
+- embedding;
+- task di sviluppo reali.
+
+Output atteso:
+
+- `maestro bench smoke`;
+- `maestro bench provider`;
+- `maestro bench model`;
+- `maestro bench laravel`;
+- report JSON versionato;
+- report Markdown leggibile;
+- profili hardware documentati;
+- dataset minimale di task reali.
+
+Il Benchmark Layer valuta il sistema completo e non produce classifiche
+assolute tra modelli. Piano, metriche, rubriche e gate sono descritti in
+`benchmark-evaluation-plan.md`.
+
+---
+
+# Milestone 4 — Gestor
 
 Obiettivi:
 
@@ -274,7 +326,7 @@ Sistema modulare basato sulle capability.
 
 ---
 
-# Milestone 4 — Plugin System
+# Milestone 5 — Plugin System
 
 Stato: Baseline completata nella Fase 6; ecosistema in evoluzione
 
@@ -291,7 +343,7 @@ Laravel (detection e health implementati).
 
 ---
 
-# Milestone 5 — Context Engine
+# Milestone 6 — Context Engine
 
 Obiettivi:
 
@@ -307,7 +359,7 @@ Costruzione intelligente del contesto.
 
 ---
 
-# Milestone 6 — Agent System
+# Milestone 7 — Agent System
 
 Obiettivi:
 
@@ -323,7 +375,7 @@ Primo agente autonomo.
 
 ---
 
-# Milestone 7 — Ecosistema
+# Milestone 8 — Ecosistema
 
 Obiettivi:
 
@@ -353,4 +405,6 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 # Documenti dipendenti
 
 - architecture.md
+- provider-layer-plan.md
+- benchmark-evaluation-plan.md
 - MAESTRO_CONTEXT.md

@@ -18,10 +18,10 @@ Questo documento scompone il lavoro necessario per chiudere la Milestone 2 —
 Provider Layer dopo il completamento delle Fasi 1 e 2.
 
 La milestone è conclusa quando Maestro dispone di contratti provider stabili,
-due adapter locali verificati, gestione completa del catalogo e della residenza
-dei modelli, capability interrogabili, semantica uniforme degli errori,
-resilienza configurabile, osservabilità e una baseline comune per tool calling
-e output strutturati.
+due adapter locali verificati con test deterministici, gestione completa del
+catalogo e della residenza dei modelli, capability interrogabili, semantica
+uniforme degli errori, resilienza configurabile, osservabilità e una baseline
+comune per tool calling e output strutturati.
 
 L'aggiunta di altri adapter non è un requisito di chiusura: Ollama e llama.cpp
 sono le due implementazioni concrete usate per validare i contratti. Un terzo
@@ -40,7 +40,7 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 | 7 | Pianificata | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
 | 8 | Pianificata | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
 | 9 | Pianificata | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
-| 10 | Pianificata | Hardening & Milestone Gate | Fasi 3–9 | Matrice isolata e live completata, documentazione allineata |
+| 10 | Pianificata | Hardening & Provider Handoff | Fasi 3–9 | Suite deterministica completa e scenari live consegnati alla Milestone 3 |
 
 L'ordine rappresenta le dipendenze architetturali, non soltanto la priorità.
 In particolare, le policy di resilienza non devono interpretare stringhe di
@@ -271,39 +271,45 @@ opzioni di sampling esclusivamente proprietarie restano fuori dalla milestone.
 
 ---
 
-# Fase 10 — Hardening & Milestone Gate
+# Fase 10 — Hardening & Provider Handoff
 
 ## Obiettivo
 
-Chiudere la milestone con una verifica integrata, inclusi gli smoke test live
-rinviati dalle fasi precedenti.
+Chiudere la Provider Layer con verifiche deterministiche e consegnare al
+Benchmark Layer una matrice esplicita degli scenari live da eseguire.
 
 ## Scope
 
-- Eseguire la suite completa, race detector, vet e test di integrazione
-  disponibili.
-- Eseguire smoke test live contro Ollama, `llama-server` e llama.cpp router mode.
+- Eseguire la suite completa, race detector, vet e compilare le suite protette
+  da tag di integrazione senza richiedere servizi live.
 - Verificare cancellazione, deadline, chiusura degli stream e assenza di leak.
 - Verificare la matrice di capability su modello chat, modello embedding e
-  configurazioni single-model e router.
-- Verificare pull/remove dove supportati e load/unload con modelli dedicati.
+  configurazioni single-model e router attraverso fixture HTTP isolate.
+- Verificare pull/remove e load/unload attraverso protocolli simulati e
+  deterministici.
 - Eseguire scenari controllati di error mapping, retry e circuit breaker.
 - Verificare redazione e completezza dei segnali di osservabilità.
 - Allineare esempi, ADR, documentazione degli adapter, roadmap e contesto di
   progetto.
-- Registrare esplicitamente eventuali limitazioni dipendenti dalle versioni dei
-  server usate nel gate.
+- Definire il manifest degli smoke benchmark, inclusi capability richieste,
+  modelli fixture, cleanup e variabili di configurazione.
+- Registrare esplicitamente le limitazioni dipendenti dalle versioni dei server
+  che il Benchmark Layer dovrà riportare.
 
 ## Gate finale
 
 La Milestone 2 è conclusa soltanto quando:
 
-- tutti i test isolati e di integrazione obbligatori sono verdi;
-- la matrice live Ollama/llama.cpp è stata eseguita e documentata;
-- nessuno smoke test delle Fasi 1–9 resta rinviato;
+- tutti i test deterministici obbligatori sono verdi;
 - le API pubbliche sono state sottoposte ad audit di compatibilità;
 - limiti, capability non supportate e requisiti operativi sono documentati;
+- gli scenari live rinviati hanno un caso corrispondente nel piano della
+  Milestone 3;
 - non restano attività obbligatorie senza owner o fase di destinazione.
+
+Processi, hardware e modelli locali non sono prerequisiti del gate della
+Provider Layer. Gli smoke test live sono responsabilità del Livello 1 — Smoke
+Benchmark della Milestone 3.
 
 ---
 

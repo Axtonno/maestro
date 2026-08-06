@@ -132,6 +132,23 @@ Implementazioni previste:
 
 ---
 
+## Benchmark & Evaluation Layer
+
+Responsabilità:
+
+- esecuzione riproducibile degli smoke test live;
+- misura di latenza, throughput e risorse;
+- valutazione di streaming, embedding e lifecycle provider;
+- scenari di sviluppo basati su fixture e plugin;
+- produzione di report JSON e Markdown;
+- descrizione redatta del profilo hardware–provider–modello–plugin.
+
+Il layer consuma capability introspection, error semantics e osservabilità della
+Provider Layer. Non introduce classifiche assolute tra modelli, non invia
+risultati a servizi remoti e non modifica automaticamente la configurazione.
+
+---
+
 ## Gestor
 
 Gestor rappresenta il registro centrale delle capability.

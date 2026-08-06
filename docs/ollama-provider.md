@@ -204,8 +204,8 @@ Lo smoke test verifica listing, discovery, completion non-streaming, streaming
 fino a `io.EOF`, embedding e cancellazione di uno stream con successiva chiusura
 esplicita. Load e unload vengono eseguiti soltanto quando è configurata
 `MAESTRO_OLLAMA_LIFECYCLE_MODEL`. Il test non misura prestazioni e non esercita
-retry o resilienza. Pull e remove live rimangono nel gate finale della
-Milestone 2 e richiederanno un modello dedicato.
+retry o resilienza. Pull e remove live confluiscono nello Smoke Benchmark della
+Milestone 3 e richiederanno un modello dedicato.
 
 ---
 

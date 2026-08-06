@@ -146,7 +146,8 @@ La suite ordinaria usa un trasporto HTTP in-memory e non richiede un processo
 Uno smoke test live viene mantenuto dietro il build tag `integration` e usa
 variabili d'ambiente dedicate. La verifica live non fa parte della suite
 ordinaria perché disponibilità e capability dipendono dal processo e dal
-modello caricati.
+modello caricati. Lo scenario confluisce nello Smoke Benchmark della Milestone
+3.
 
 ---
 

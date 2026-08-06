@@ -167,8 +167,8 @@ La suite isolata copre:
 * cleanup remoto del download llama.cpp;
 * rimozione senza accesso diretto al filesystem.
 
-Gli smoke test live di pull e remove rimangono nel gate finale della Milestone
-2, perché modificano il catalogo locale e richiedono modelli dedicati.
+Gli smoke test live di pull e remove confluiscono nello Smoke Benchmark della
+Milestone 3, perché modificano il catalogo locale e richiedono modelli dedicati.
 
 ---
 
