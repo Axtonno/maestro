@@ -56,8 +56,9 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 10. `ollama-provider.md`
 11. `llamacpp-provider.md`
 12. `provider-model-lifecycle.md`
-13. `plugin-runtime.md`
-14. `laravel-plugin.md`
+13. `provider-layer-plan.md`
+14. `plugin-runtime.md`
+15. `laravel-plugin.md`
 
 ---
 
@@ -83,6 +84,12 @@ La Fase 2 aggiunge discovery avanzata e lifecycle dei modelli attraverso
 capability opzionali. Ollama e llama.cpp espongono ora snapshot di stato, load e
 unload attraverso lo stesso Provider Runtime, mantenendo i dettagli di
 protocollo nei rispettivi adapter.
+
+Il completamento della Milestone 2 è suddiviso nelle Fasi 3–10: acquisizione dei
+modelli, policy di residenza, capability introspection, semantica degli errori,
+resilienza, osservabilità, contratti avanzati di generazione e hardening finale.
+Il piano e i gate di ogni incremento sono descritti in
+`provider-layer-plan.md`.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento

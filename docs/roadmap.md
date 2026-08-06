@@ -168,32 +168,89 @@ Contratti, routing, implementazioni Ollama e llama.cpp, test e documentazione
 sono completati. Gli smoke test live delle capability provider vengono eseguiti
 insieme al gate finale della Milestone 2.
 
-## Evoluzione successiva
+## Fasi successive
 
-Obiettivi:
+Il piano dettagliato, le dipendenze e i criteri di uscita sono definiti in
+`provider-layer-plan.md`.
 
-- Eventuali adapter per altri runtime locali.
-- Download, pull e rimozione dei modelli.
-- Keep-alive configurabile e policy di autoload.
-- Retry e backoff.
-- Circuit breaker.
-- Metriche e tracing.
-- Normalizzazione avanzata degli errori.
-- Capability detection dinamica.
-- Eventuale supporto a tool calling e output strutturati.
+### Fase 3 — Model Acquisition & Removal
+
+Stato: Pianificata
+
+Capability opzionali e cancellabili per pull, avanzamento e rimozione dei
+modelli, senza accesso diretto del Provider Runtime ai file gestiti dai server.
+
+### Fase 4 — Model Residency Policies
+
+Stato: Pianificata
+
+Keep-alive e autoload configurabili, coordinati senza duplicare lo stato
+osservabile posseduto dai provider.
+
+### Fase 5 — Capability Introspection
+
+Stato: Pianificata
+
+Descrittori neutrali per distinguere capability dell'adapter, dell'istanza
+configurata e del singolo modello.
+
+### Fase 6 — Error Semantics
+
+Stato: Pianificata
+
+Classificazione uniforme degli errori provider, compatibile con gli errori Go e
+utilizzabile dalle policy senza analizzare stringhe o payload proprietari.
+
+### Fase 7 — Resilience Policies
+
+Stato: Pianificata
+
+Retry/backoff e circuit breaker opt-in, limitati dal context e applicati in base
+all'idempotenza delle operazioni.
+
+### Fase 8 — Provider Observability
+
+Stato: Pianificata
+
+Hook neutrali per metriche, tracing e logging, con redazione dei contenuti
+sensibili e senza dipendenze obbligatorie da SDK esterni.
+
+### Fase 9 — Advanced Generation Baseline
+
+Stato: Pianificata
+
+Opzioni comuni di generazione, output strutturati e tool calling validati sugli
+adapter Ollama e llama.cpp.
+
+### Fase 10 — Hardening & Milestone Gate
+
+Stato: Pianificata
+
+Audit di compatibilità, verifica concorrente e matrice live completa. Gli smoke
+test rinviati dalle fasi precedenti confluiscono esclusivamente in questo gate.
 
 Output atteso:
 
 Una Provider Layer capace di evolvere indipendentemente dalla progressione del
 Runtime Core e del Plugin Runtime.
 
-Gate live della milestone:
+Gate finale della milestone:
 
 - smoke test Ollama;
 - smoke test llama.cpp;
 - listing e discovery dei modelli;
+- pull e rimozione dove supportati;
 - load e unload su modelli dedicati;
-- completion, streaming, embedding e cancellazione.
+- keep-alive configurabile e autoload esplicito;
+- capability introspection e normalizzazione degli errori;
+- retry, circuit breaker e osservabilità;
+- completion, streaming, embedding e cancellazione;
+- output strutturati e tool calling sui due adapter;
+- suite isolata, race detector, vet e audit della documentazione.
+
+Nuovi adapter, fallback multi-provider, selezione automatica del modello,
+supervisione dei processi locali, multimodalità e reasoning non sono requisiti
+di chiusura della Milestone 2.
 
 ---
 

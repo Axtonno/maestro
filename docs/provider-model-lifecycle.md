@@ -145,5 +145,8 @@ Questa fase non include:
 * retry, backoff o circuit breaker;
 * selezione automatica del modello.
 
-Queste funzioni potranno essere aggiunte come capability o policy indipendenti
-dopo aver consolidato discovery e lifecycle su entrambi gli adapter.
+Queste funzioni sono assegnate alle fasi successive descritte in
+`provider-layer-plan.md`. Acquisizione e rimozione appartengono alla Fase 3,
+residenza e autoload alla Fase 4, mentre errori e resilienza sono separati nelle
+Fasi 6 e 7. Caching della discovery e selezione automatica del modello non sono
+requisiti di chiusura della Milestone 2.

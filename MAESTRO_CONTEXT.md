@@ -28,6 +28,7 @@ Completati:
 * ollama-provider.md
 * llamacpp-provider.md
 * provider-model-lifecycle.md
+* provider-layer-plan.md
 * plugin-runtime.md
 * laravel-plugin.md
 
@@ -782,14 +783,38 @@ Completati:
 * test isolati e d'integrazione opzionali;
 * ADR-0009 e documentazione dedicata.
 
+## Fasi 3–10 pianificate
+
+Il completamento della Provider Layer è scomposto in incrementi con dipendenze
+e gate espliciti:
+
+* Fase 3 — Model Acquisition & Removal;
+* Fase 4 — Model Residency Policies;
+* Fase 5 — Capability Introspection;
+* Fase 6 — Error Semantics;
+* Fase 7 — Resilience Policies;
+* Fase 8 — Provider Observability;
+* Fase 9 — Advanced Generation Baseline;
+* Fase 10 — Hardening & Milestone Gate.
+
+Il piano completo è descritto in `docs/provider-layer-plan.md`. Nuovi adapter,
+fallback multi-provider, selezione hardware-aware, supervisione dei processi,
+multimodalità e reasoning non sono requisiti di chiusura della Milestone 2.
+
 ## Gate live della Milestone 2
 
 * smoke test live contro `llama-server`;
 * smoke test live contro Ollama;
 * model listing;
 * discovery e stato dei modelli;
+* pull e rimozione dove supportati;
 * load e unload con modelli dedicati;
+* keep-alive configurabile e autoload esplicito;
+* capability introspection e normalizzazione degli errori;
+* retry, circuit breaker e osservabilità;
 * completion non-streaming;
 * streaming SSE fino a `[DONE]`;
 * embedding con un modello compatibile;
-* cancellazione dello stream e chiusura delle risorse.
+* output strutturati e tool calling;
+* cancellazione dello stream e chiusura delle risorse;
+* suite isolata, race detector, vet e audit della documentazione.
