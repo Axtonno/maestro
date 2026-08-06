@@ -26,6 +26,7 @@ Completati:
 * event-system.md
 * provider-runtime.md
 * ollama-provider.md
+* llamacpp-provider.md
 * plugin-runtime.md
 * laravel-plugin.md
 
@@ -609,12 +610,14 @@ Package:
 internal/runtime
 internal/provider
 internal/provider/ollama
+internal/provider/llamacpp
 internal/plugin
 internal/plugin/laravel
 pkg/runtime
 pkg/plugin
 pkg/plugin/laravel
 pkg/provider/ollama
+pkg/provider/llamacpp
 ```
 
 Copertura funzionale:
@@ -632,6 +635,7 @@ Copertura funzionale:
 * Plugin Laravel
 * Configurazione
 * Adapter Ollama
+* Adapter llama.cpp
 
 Verifica effettuata con:
 
@@ -653,8 +657,13 @@ API pubbliche estese con i contratti provider, plugin e il composition root.
 
 Runtime interno implementato fino alla chiusura del Plugin Runtime.
 
-Il progetto dispone del primo adapter provider concreto, di un catalogo per
-plugin trusted in-process e del primo plugin framework-aware Laravel.
+Il progetto dispone di due adapter provider concreti, di un catalogo per plugin
+trusted in-process e del primo plugin framework-aware Laravel.
+
+La Milestone 2 — Provider Layer è iniziata con l'adapter llama.cpp. Facade
+pubblica, protocollo HTTP interno, completion, streaming SSE, embedding, model
+listing, autenticazione Bearer opzionale, test isolati e smoke test opzionale
+sono implementati. Resta pendente la verifica live contro `llama-server`.
 
 ---
 
@@ -729,3 +738,18 @@ Layer e possono evolvere indipendentemente dal Plugin Runtime completato.
 
 Il Runtime Core dispone ora di una base sufficientemente solida per sostenere
 plugin trusted in-process senza duplicare grafo, stati o lifecycle.
+
+---
+
+# Provider Layer — Fase 1
+
+## 🚧 Adapter llama.cpp
+
+Implementazione e test isolati completati. Gate di chiusura pendente:
+
+* smoke test live contro `llama-server`;
+* model listing;
+* completion non-streaming;
+* streaming SSE fino a `[DONE]`;
+* embedding con un modello compatibile;
+* cancellazione dello stream e chiusura delle risorse.

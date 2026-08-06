@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Living Document
 
-Ultimo aggiornamento: 2026-07-20
+Ultimo aggiornamento: 2026-08-06
 
 Autori:
 - Antonio Cafeo
@@ -124,9 +124,33 @@ modificare registry e lifecycle.
 
 Stato: Evoluzione incrementale
 
+## Fase 1 — Adapter llama.cpp
+
+Stato: Implementazione completata — smoke test live pendente
+
+Scope:
+
+- Facade pubblica e configurazione tipizzata.
+- Completion e streaming SSE tramite Chat Completions API.
+- Embedding tramite API compatibile OpenAI.
+- Model listing del modello caricato.
+- Autenticazione Bearer opzionale.
+- Validazione, error handling e propagazione del context.
+- Test HTTP in-memory e smoke test live opzionale.
+- Documentazione dell'adapter.
+
+Il primo incremento usa la superficie compatibile con OpenAI esposta da
+`llama-server`. Lifecycle del processo, gestione dei modelli e policy di
+resilienza restano fasi successive della Provider Layer.
+
+Facade, adapter, test isolati e documentazione sono completati. Il gate della
+fase rimane aperto esclusivamente per lo smoke test contro un processo
+`llama-server` reale.
+
+## Evoluzione successiva
+
 Obiettivi:
 
-- Adapter llama.cpp.
 - Eventuali adapter per altri runtime locali.
 - Model discovery avanzata.
 - Download, pull e rimozione dei modelli.

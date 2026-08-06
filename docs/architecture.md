@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Draft
 
-Ultimo aggiornamento: 2026-07-20
+Ultimo aggiornamento: 2026-08-06
 
 Autori:
 - Antonio Cafeo
@@ -119,10 +119,10 @@ durante l'esecuzione di codice esterno.
 Implementazioni disponibili:
 
 - Ollama
+- llama.cpp
 
 Implementazioni previste:
 
-- llama.cpp
 - LM Studio
 - OpenAI
 - Anthropic
