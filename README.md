@@ -55,28 +55,34 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 9. `provider-runtime.md`
 10. `ollama-provider.md`
 11. `llamacpp-provider.md`
-12. `plugin-runtime.md`
-13. `laravel-plugin.md`
+12. `provider-model-lifecycle.md`
+13. `plugin-runtime.md`
+14. `laravel-plugin.md`
 
 ---
 
 ## Stato del progetto
 
-🚧 Provider Layer — Fase 1
+🚧 Provider Layer
 
 Il Runtime Core, il lifecycle e l'Event System sono implementati. Il primo
 incremento del Provider Runtime introduce registry, routing capability-based,
 streaming ed embedding provider-agnostic.
 
 Il primo adapter concreto per Ollama implementa completion, streaming,
-embedding e model listing. La chiusura della Fase 5 richiede soltanto lo smoke
-test contro un'istanza Ollama reale; provider e policy ulteriori proseguono
-separatamente nella Milestone 2 senza bloccare il Plugin Runtime.
+embedding e model listing. La Fase 5 del Runtime Core è conclusa; lo smoke test
+contro un'istanza Ollama reale è consolidato nel gate finale della Milestone 2.
+Provider e policy ulteriori proseguono senza bloccare il Plugin Runtime.
 
 La Fase 1 della Provider Layer aggiunge l'adapter llama.cpp sulle API
 OpenAI-compatible di `llama-server`, con completion, streaming SSE, embedding,
 model listing e autenticazione Bearer opzionale. Implementazione e test isolati
-sono completati; resta pendente lo smoke test live.
+sono completati; lo smoke test live è parte del gate finale della Milestone 2.
+
+La Fase 2 aggiunge discovery avanzata e lifecycle dei modelli attraverso
+capability opzionali. Ollama e llama.cpp espongono ora snapshot di stato, load e
+unload attraverso lo stesso Provider Runtime, mantenendo i dettagli di
+protocollo nei rispettivi adapter.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento

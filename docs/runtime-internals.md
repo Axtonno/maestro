@@ -117,7 +117,8 @@ collezione dei provider registrati e la selezione del default.
 * impedire registrazioni duplicate;
 * risolvere provider espliciti o il default configurato;
 * verificare le capability richieste;
-* inoltrare completion, streaming, embedding e model listing;
+* inoltrare completion, streaming, embedding, model listing, discovery e
+  lifecycle dei modelli;
 * proteggere registry e default durante l'accesso concorrente;
 * non mantenere lock interni durante l'esecuzione di codice del provider.
 

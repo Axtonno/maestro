@@ -26,6 +26,9 @@ type capableProvider struct {
 	completionResponse pkgProvider.CompletionResponse
 	embeddingResponse  pkgProvider.EmbeddingResponse
 	models             []pkgProvider.Model
+	modelInfos         []pkgProvider.ModelInfo
+	loadedModel        string
+	unloadedModel      string
 	stream             pkgProvider.Stream
 	err                error
 }
@@ -69,6 +72,30 @@ func (p *capableProvider) Models(
 	_ context.Context,
 ) ([]pkgProvider.Model, error) {
 	return p.models, p.err
+}
+
+func (p *capableProvider) DiscoverModels(
+	_ context.Context,
+) ([]pkgProvider.ModelInfo, error) {
+	return p.modelInfos, p.err
+}
+
+func (p *capableProvider) LoadModel(
+	_ context.Context,
+	request pkgProvider.ModelLoadRequest,
+) error {
+	p.loadedModel = request.Model
+
+	return p.err
+}
+
+func (p *capableProvider) UnloadModel(
+	_ context.Context,
+	request pkgProvider.ModelUnloadRequest,
+) error {
+	p.unloadedModel = request.Model
+
+	return p.err
 }
 
 type testStream struct {
@@ -212,6 +239,10 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 			Embeddings: [][]float32{{1, 2}},
 		},
 		models: []pkgProvider.Model{{ID: "qwen"}},
+		modelInfos: []pkgProvider.ModelInfo{{
+			Model: pkgProvider.Model{ID: "qwen"},
+			State: pkgProvider.ModelStateLoaded,
+		}},
 		stream: stream,
 	}
 	providerRuntime := NewRuntime("ollama")
@@ -270,6 +301,39 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 	if !reflect.DeepEqual(models, []pkgProvider.Model{{ID: "qwen"}}) {
 		t.Fatalf("unexpected models: %#v", models)
 	}
+
+	modelInfos, err := providerRuntime.DiscoverModels(
+		context.Background(),
+		"ollama",
+	)
+	if err != nil {
+		t.Fatalf("discover models: %v", err)
+	}
+	if !reflect.DeepEqual(modelInfos, registered.modelInfos) {
+		t.Fatalf("unexpected model info: %#v", modelInfos)
+	}
+
+	if err := providerRuntime.LoadModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelLoadRequest{Model: "qwen"},
+	); err != nil {
+		t.Fatalf("load model: %v", err)
+	}
+	if registered.loadedModel != "qwen" {
+		t.Fatalf("unexpected loaded model %q", registered.loadedModel)
+	}
+
+	if err := providerRuntime.UnloadModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelUnloadRequest{Model: "qwen"},
+	); err != nil {
+		t.Fatalf("unload model: %v", err)
+	}
+	if registered.unloadedModel != "qwen" {
+		t.Fatalf("unexpected unloaded model %q", registered.unloadedModel)
+	}
 }
 
 func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
@@ -311,6 +375,26 @@ func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
 
 	_, err = providerRuntime.Models(context.Background(), "identity-only")
 	assertUnsupported("models", err)
+
+	_, err = providerRuntime.DiscoverModels(
+		context.Background(),
+		"identity-only",
+	)
+	assertUnsupported("model discovery", err)
+
+	err = providerRuntime.LoadModel(
+		context.Background(),
+		"identity-only",
+		pkgProvider.ModelLoadRequest{},
+	)
+	assertUnsupported("model loading", err)
+
+	err = providerRuntime.UnloadModel(
+		context.Background(),
+		"identity-only",
+		pkgProvider.ModelUnloadRequest{},
+	)
+	assertUnsupported("model unloading", err)
 }
 
 func TestRuntimeRejectsNilStream(t *testing.T) {
@@ -352,6 +436,29 @@ func TestRuntimePreservesProviderError(t *testing.T) {
 	)
 	if !errors.Is(err, cause) {
 		t.Fatalf("expected provider cause, got %v", err)
+	}
+
+	_, err = providerRuntime.DiscoverModels(context.Background(), "ollama")
+	if !errors.Is(err, cause) {
+		t.Fatalf("expected discovery provider cause, got %v", err)
+	}
+
+	err = providerRuntime.LoadModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelLoadRequest{},
+	)
+	if !errors.Is(err, cause) {
+		t.Fatalf("expected load provider cause, got %v", err)
+	}
+
+	err = providerRuntime.UnloadModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelUnloadRequest{},
+	)
+	if !errors.Is(err, cause) {
+		t.Fatalf("expected unload provider cause, got %v", err)
 	}
 }
 

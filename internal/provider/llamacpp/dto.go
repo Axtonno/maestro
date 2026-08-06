@@ -62,7 +62,29 @@ type modelsResponse struct {
 }
 
 type modelData struct {
-	ID string `json:"id"`
+	ID     string          `json:"id"`
+	Path   string          `json:"path"`
+	Status modelStatusData `json:"status"`
+	Meta   modelMeta       `json:"meta"`
+}
+
+type modelStatusData struct {
+	Value  string `json:"value"`
+	Failed bool   `json:"failed"`
+}
+
+type modelMeta struct {
+	Size       int64 `json:"size"`
+	ContextLen int   `json:"n_ctx_train"`
+}
+
+type modelLifecycleRequest struct {
+	Model string `json:"model"`
+}
+
+type modelLifecycleResponse struct {
+	Success bool            `json:"success"`
+	Error   json.RawMessage `json:"error"`
 }
 
 type errorDetail struct {

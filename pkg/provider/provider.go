@@ -32,6 +32,24 @@ type ModelLister interface {
 	Models(context.Context) ([]Model, error)
 }
 
+type ModelDiscoverer interface {
+	Provider
+
+	DiscoverModels(context.Context) ([]ModelInfo, error)
+}
+
+type ModelLoader interface {
+	Provider
+
+	LoadModel(context.Context, ModelLoadRequest) error
+}
+
+type ModelUnloader interface {
+	Provider
+
+	UnloadModel(context.Context, ModelUnloadRequest) error
+}
+
 // Stream is a pull-based completion stream. Recv returns io.EOF when the
 // stream has completed. Callers must close streams they acquire.
 type Stream interface {

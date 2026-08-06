@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -32,6 +33,9 @@ func TestNewBuildsOllamaProviderWithDefaults(t *testing.T) {
 	var _ pkgProvider.Streamer = provider
 	var _ pkgProvider.Embedder = provider
 	var _ pkgProvider.ModelLister = provider
+	var _ pkgProvider.ModelDiscoverer = provider
+	var _ pkgProvider.ModelLoader = provider
+	var _ pkgProvider.ModelUnloader = provider
 }
 
 func TestNewRejectsInvalidConfiguration(t *testing.T) {
@@ -106,5 +110,54 @@ func TestNewUsesInjectedHTTPClient(t *testing.T) {
 	}
 	if !called {
 		t.Fatal("injected HTTP client was not used")
+	}
+}
+
+func TestProviderExposesModelDiscoveryAndLifecycle(t *testing.T) {
+	paths := make([]string, 0, 4)
+	client := &http.Client{Transport: roundTripFunc(func(
+		request *http.Request,
+	) (*http.Response, error) {
+		paths = append(paths, request.URL.Path)
+		body := `{"models":[]}`
+		if request.URL.Path == "/api/generate" {
+			body = `{"done":true}`
+		}
+
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     make(http.Header),
+			Body:       io.NopCloser(strings.NewReader(body)),
+			Request:    request,
+		}, nil
+	})}
+	provider, err := New(Config{
+		BaseURL:      "http://ollama.test",
+		DefaultModel: "model",
+		HTTPClient:   client,
+	})
+	if err != nil {
+		t.Fatalf("create provider: %v", err)
+	}
+
+	if _, err := provider.DiscoverModels(context.Background()); err != nil {
+		t.Fatalf("discover models: %v", err)
+	}
+	if err := provider.LoadModel(
+		context.Background(),
+		pkgProvider.ModelLoadRequest{},
+	); err != nil {
+		t.Fatalf("load model: %v", err)
+	}
+	if err := provider.UnloadModel(
+		context.Background(),
+		pkgProvider.ModelUnloadRequest{},
+	); err != nil {
+		t.Fatalf("unload model: %v", err)
+	}
+
+	want := []string{"/api/tags", "/api/ps", "/api/generate", "/api/generate"}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("expected paths %#v, got %#v", want, paths)
 	}
 }

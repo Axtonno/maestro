@@ -1,5 +1,7 @@
 package provider
 
+import "time"
+
 type ID string
 
 type Role string
@@ -55,4 +57,43 @@ type Model struct {
 	ID          string
 	Name        string
 	Description string
+}
+
+type ModelState string
+
+const (
+	ModelStateUnknown     ModelState = "unknown"
+	ModelStateAvailable   ModelState = "available"
+	ModelStateDownloading ModelState = "downloading"
+	ModelStateLoading     ModelState = "loading"
+	ModelStateLoaded      ModelState = "loaded"
+	ModelStateSleeping    ModelState = "sleeping"
+	ModelStateFailed      ModelState = "failed"
+)
+
+// ModelInfo is a provider-neutral snapshot of a model and its observed state.
+// Fields unavailable from a provider retain their zero value.
+type ModelInfo struct {
+	Model Model
+	State ModelState
+
+	Digest        string
+	SizeBytes     int64
+	VRAMBytes     int64
+	ContextLength int
+
+	Format        string
+	Family        string
+	ParameterSize string
+	Quantization  string
+	ModifiedAt    time.Time
+	ExpiresAt     time.Time
+}
+
+type ModelLoadRequest struct {
+	Model string
+}
+
+type ModelUnloadRequest struct {
+	Model string
 }

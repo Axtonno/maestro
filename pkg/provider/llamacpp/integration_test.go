@@ -121,4 +121,28 @@ func TestLlamaCPPIntegration(t *testing.T) {
 			}
 		})
 	}
+
+	lifecycleModel := os.Getenv("MAESTRO_LLAMACPP_LIFECYCLE_MODEL")
+	if lifecycleModel == "" {
+		t.Log("MAESTRO_LLAMACPP_LIFECYCLE_MODEL is not configured; skipping router discovery and lifecycle tests")
+	} else {
+		t.Run("model discovery", func(t *testing.T) {
+			if _, err := provider.DiscoverModels(ctx); err != nil {
+				t.Fatalf("discover models: %v", err)
+			}
+		})
+
+		t.Run("model lifecycle", func(t *testing.T) {
+			if err := provider.LoadModel(ctx, pkgProvider.ModelLoadRequest{
+				Model: lifecycleModel,
+			}); err != nil {
+				t.Fatalf("load model: %v", err)
+			}
+			if err := provider.UnloadModel(ctx, pkgProvider.ModelUnloadRequest{
+				Model: lifecycleModel,
+			}); err != nil {
+				t.Fatalf("unload model: %v", err)
+			}
+		})
+	}
 }

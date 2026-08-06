@@ -12,11 +12,14 @@ import (
 const ID pkgProvider.ID = "ollama"
 
 var (
-	_ pkgProvider.Provider    = (*Provider)(nil)
-	_ pkgProvider.Completer   = (*Provider)(nil)
-	_ pkgProvider.Streamer    = (*Provider)(nil)
-	_ pkgProvider.Embedder    = (*Provider)(nil)
-	_ pkgProvider.ModelLister = (*Provider)(nil)
+	_ pkgProvider.Provider        = (*Provider)(nil)
+	_ pkgProvider.Completer       = (*Provider)(nil)
+	_ pkgProvider.Streamer        = (*Provider)(nil)
+	_ pkgProvider.Embedder        = (*Provider)(nil)
+	_ pkgProvider.ModelLister     = (*Provider)(nil)
+	_ pkgProvider.ModelDiscoverer = (*Provider)(nil)
+	_ pkgProvider.ModelLoader     = (*Provider)(nil)
+	_ pkgProvider.ModelUnloader   = (*Provider)(nil)
 )
 
 type adapter interface {
@@ -24,6 +27,9 @@ type adapter interface {
 	pkgProvider.Streamer
 	pkgProvider.Embedder
 	pkgProvider.ModelLister
+	pkgProvider.ModelDiscoverer
+	pkgProvider.ModelLoader
+	pkgProvider.ModelUnloader
 }
 
 // Provider is a public facade over Maestro's internal Ollama adapter.
@@ -99,4 +105,24 @@ func (p *Provider) Models(
 	ctx context.Context,
 ) ([]pkgProvider.Model, error) {
 	return p.adapter.Models(ctx)
+}
+
+func (p *Provider) DiscoverModels(
+	ctx context.Context,
+) ([]pkgProvider.ModelInfo, error) {
+	return p.adapter.DiscoverModels(ctx)
+}
+
+func (p *Provider) LoadModel(
+	ctx context.Context,
+	request pkgProvider.ModelLoadRequest,
+) error {
+	return p.adapter.LoadModel(ctx, request)
+}
+
+func (p *Provider) UnloadModel(
+	ctx context.Context,
+	request pkgProvider.ModelUnloadRequest,
+) error {
+	return p.adapter.UnloadModel(ctx, request)
 }

@@ -46,7 +46,7 @@ Obiettivi:
 
 # Milestone 1 — Runtime Core
 
-Stato: In corso
+Stato: Conclusa
 
 Obiettivi:
 
@@ -66,7 +66,7 @@ Un runtime funzionante senza alcun provider.
 
 # Fase 5 — Provider Runtime/Configuration
 
-Stato: In corso — smoke test live pendente
+Stato: Conclusa
 
 Scope:
 
@@ -79,9 +79,9 @@ Scope:
 - Test e documentazione.
 - Smoke test contro un'istanza Ollama reale.
 
-L'implementazione e i test isolati sono completati. La fase viene chiusa quando
-lo smoke test conferma listing, completion, streaming, embedding e
-cancellazione senza incompatibilità di protocollo.
+L'implementazione e i test isolati sono completati. Lo smoke test live di
+listing, completion, streaming, embedding e cancellazione è consolidato nel
+gate finale della Milestone 2.
 
 Ulteriori adapter e policy non appartengono al gate di chiusura della Fase 5.
 
@@ -126,7 +126,7 @@ Stato: Evoluzione incrementale
 
 ## Fase 1 — Adapter llama.cpp
 
-Stato: Implementazione completata — smoke test live pendente
+Stato: Conclusa
 
 Scope:
 
@@ -140,22 +140,41 @@ Scope:
 - Documentazione dell'adapter.
 
 Il primo incremento usa la superficie compatibile con OpenAI esposta da
-`llama-server`. Lifecycle del processo, gestione dei modelli e policy di
-resilienza restano fasi successive della Provider Layer.
+`llama-server`. Lifecycle del processo, download/rimozione dei modelli e policy
+di resilienza restano fasi successive della Provider Layer.
 
-Facade, adapter, test isolati e documentazione sono completati. Il gate della
-fase rimane aperto esclusivamente per lo smoke test contro un processo
-`llama-server` reale.
+Facade, adapter, test isolati e documentazione sono completati. Lo smoke test
+live è consolidato nel gate finale della Milestone 2 e non blocca le singole
+fasi incrementali.
+
+## Fase 2 — Model Discovery & Lifecycle
+
+Stato: Conclusa
+
+Scope:
+
+- Contratti neutrali per discovery avanzata.
+- Stato osservabile dei modelli.
+- Capability indipendenti di load e unload.
+- Routing nel Provider Runtime.
+- Implementazione Ollama.
+- Implementazione llama.cpp router mode.
+- Test isolati e documentazione.
+
+Pull, delete, progress streaming e policy di resilienza restano fuori dal gate
+della Fase 2.
+
+Contratti, routing, implementazioni Ollama e llama.cpp, test e documentazione
+sono completati. Gli smoke test live delle capability provider vengono eseguiti
+insieme al gate finale della Milestone 2.
 
 ## Evoluzione successiva
 
 Obiettivi:
 
 - Eventuali adapter per altri runtime locali.
-- Model discovery avanzata.
 - Download, pull e rimozione dei modelli.
-- Gestione del ciclo di vita dei modelli.
-- Keep-alive e unload.
+- Keep-alive configurabile e policy di autoload.
 - Retry e backoff.
 - Circuit breaker.
 - Metriche e tracing.
@@ -167,6 +186,14 @@ Output atteso:
 
 Una Provider Layer capace di evolvere indipendentemente dalla progressione del
 Runtime Core e del Plugin Runtime.
+
+Gate live della milestone:
+
+- smoke test Ollama;
+- smoke test llama.cpp;
+- listing e discovery dei modelli;
+- load e unload su modelli dedicati;
+- completion, streaming, embedding e cancellazione.
 
 ---
 

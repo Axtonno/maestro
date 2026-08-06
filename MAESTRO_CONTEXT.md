@@ -27,6 +27,7 @@ Completati:
 * provider-runtime.md
 * ollama-provider.md
 * llamacpp-provider.md
+* provider-model-lifecycle.md
 * plugin-runtime.md
 * laravel-plugin.md
 
@@ -109,6 +110,16 @@ Discovery e caricamento usano un catalogo thread-safe di loader in-process. Il
 manifest dichiara la versione dell'API Plugin Runtime e i loader vengono
 eseguiti senza lock. Plugin e loader sono codice fidato con i privilegi del
 processo Maestro.
+
+---
+
+## ADR-0009
+
+Capability-Based Model Discovery and Lifecycle.
+
+Discovery arricchita, load e unload sono capability provider opzionali e
+indipendenti. Lo stato modello è uno snapshot autorevole del provider e non
+viene duplicato nel Runtime.
 
 ---
 
@@ -449,7 +460,7 @@ docs/event-system.md
 
 ## Fase 5 — Provider Runtime/Configuration
 
-In corso.
+Completata.
 
 Primo incremento implementato nei package:
 
@@ -463,7 +474,8 @@ internal/runtime
 Componenti disponibili:
 
 * identità `Provider` separata dalle capability operative
-* capability `Completer`, `Streamer`, `Embedder` e `ModelLister`
+* capability `Completer`, `Streamer`, `Embedder`, `ModelLister`,
+  `ModelDiscoverer`, `ModelLoader` e `ModelUnloader`
 * tipi condivisi per messaggi, completion, stream, embedding e modelli
 * Provider Runtime thread-safe
 * registrazione e risoluzione provider
@@ -516,7 +528,7 @@ Semantica, configurazione e limiti sono descritti in:
 docs/ollama-provider.md
 ```
 
-Gate di chiusura pendente:
+Smoke test consolidato nel gate finale della Milestone 2:
 
 * smoke test live contro un'istanza Ollama
 * listing dei modelli
@@ -526,7 +538,8 @@ Gate di chiusura pendente:
 * cancellazione dello stream e chiusura delle risorse
 
 L'indisponibilità di un'istanza Ollama nell'ambiente corrente non costituisce
-un difetto dell'adapter, ma impedisce di dichiarare completata la verifica live.
+un difetto dell'adapter e non blocca più la chiusura della fase del Runtime
+Core.
 
 ---
 
@@ -636,6 +649,7 @@ Copertura funzionale:
 * Configurazione
 * Adapter Ollama
 * Adapter llama.cpp
+* Model discovery e lifecycle provider
 
 Verifica effettuata con:
 
@@ -663,7 +677,14 @@ trusted in-process e del primo plugin framework-aware Laravel.
 La Milestone 2 — Provider Layer è iniziata con l'adapter llama.cpp. Facade
 pubblica, protocollo HTTP interno, completion, streaming SSE, embedding, model
 listing, autenticazione Bearer opzionale, test isolati e smoke test opzionale
-sono implementati. Resta pendente la verifica live contro `llama-server`.
+sono implementati. La verifica live contro `llama-server` è consolidata nel
+gate finale della Milestone 2.
+
+La Fase 2 della Provider Layer aggiunge `ModelInfo`, stati neutrali e capability
+indipendenti per discovery, load e unload. Il Provider Runtime espone il routing
+senza possedere stato modello. Ollama unisce `/api/tags` e `/api/ps` e governa
+il lifecycle tramite `keep_alive`; llama.cpp usa il catalogo e gli endpoint del
+router mode.
 
 ---
 
@@ -707,12 +728,12 @@ Event System
 
 ---
 
-### 🚧 Fase 5
+### ✅ Fase 5
 
 Provider Runtime/Configuration
 
-Implementazione completata. Fase ancora in corso esclusivamente per lo smoke
-test live dell'adapter Ollama.
+Implementazione completata. Gli smoke test live provider sono consolidati nel
+gate finale della Milestone 2.
 
 ---
 
@@ -741,14 +762,33 @@ plugin trusted in-process senza duplicare grafo, stati o lifecycle.
 
 ---
 
-# Provider Layer — Fase 1
+# Provider Layer
 
-## 🚧 Adapter llama.cpp
+## ✅ Fase 1 — Adapter llama.cpp
 
-Implementazione e test isolati completati. Gate di chiusura pendente:
+Implementazione, test isolati e documentazione completati. Lo smoke test live è
+consolidato nel gate finale della Milestone 2.
+
+## ✅ Fase 2 — Model Discovery & Lifecycle
+
+Completati:
+
+* `ModelInfo` e `ModelState` neutrali;
+* capability `ModelDiscoverer`, `ModelLoader` e `ModelUnloader`;
+* routing tramite `provider.Runtime`;
+* discovery Ollama attraverso `/api/tags` e `/api/ps`;
+* load/unload Ollama tramite `keep_alive`;
+* discovery e lifecycle llama.cpp in router mode;
+* test isolati e d'integrazione opzionali;
+* ADR-0009 e documentazione dedicata.
+
+## Gate live della Milestone 2
 
 * smoke test live contro `llama-server`;
+* smoke test live contro Ollama;
 * model listing;
+* discovery e stato dei modelli;
+* load e unload con modelli dedicati;
 * completion non-streaming;
 * streaming SSE fino a `[DONE]`;
 * embedding con un modello compatibile;

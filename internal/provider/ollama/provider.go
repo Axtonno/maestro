@@ -12,11 +12,14 @@ import (
 const providerID pkgProvider.ID = "ollama"
 
 var (
-	_ pkgProvider.Provider    = (*Provider)(nil)
-	_ pkgProvider.Completer   = (*Provider)(nil)
-	_ pkgProvider.Streamer    = (*Provider)(nil)
-	_ pkgProvider.Embedder    = (*Provider)(nil)
-	_ pkgProvider.ModelLister = (*Provider)(nil)
+	_ pkgProvider.Provider        = (*Provider)(nil)
+	_ pkgProvider.Completer       = (*Provider)(nil)
+	_ pkgProvider.Streamer        = (*Provider)(nil)
+	_ pkgProvider.Embedder        = (*Provider)(nil)
+	_ pkgProvider.ModelLister     = (*Provider)(nil)
+	_ pkgProvider.ModelDiscoverer = (*Provider)(nil)
+	_ pkgProvider.ModelLoader     = (*Provider)(nil)
+	_ pkgProvider.ModelUnloader   = (*Provider)(nil)
 )
 
 type Provider struct {

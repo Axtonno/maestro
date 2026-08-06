@@ -234,6 +234,96 @@ func (r *runtime) Models(
 	return models, nil
 }
 
+func (r *runtime) DiscoverModels(
+	ctx context.Context,
+	providerID pkgProvider.ID,
+) ([]pkgProvider.ModelInfo, error) {
+	provider, err := r.Resolve(providerID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"discover models with provider %q: %w",
+			providerID,
+			err,
+		)
+	}
+
+	discoverer, ok := provider.(pkgProvider.ModelDiscoverer)
+	if !ok {
+		return nil, unsupportedCapability(provider.ID(), "model discovery")
+	}
+
+	models, err := discoverer.DiscoverModels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"discover models with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	return models, nil
+}
+
+func (r *runtime) LoadModel(
+	ctx context.Context,
+	providerID pkgProvider.ID,
+	request pkgProvider.ModelLoadRequest,
+) error {
+	provider, err := r.Resolve(providerID)
+	if err != nil {
+		return fmt.Errorf(
+			"load model with provider %q: %w",
+			providerID,
+			err,
+		)
+	}
+
+	loader, ok := provider.(pkgProvider.ModelLoader)
+	if !ok {
+		return unsupportedCapability(provider.ID(), "model loading")
+	}
+
+	if err := loader.LoadModel(ctx, request); err != nil {
+		return fmt.Errorf(
+			"load model with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	return nil
+}
+
+func (r *runtime) UnloadModel(
+	ctx context.Context,
+	providerID pkgProvider.ID,
+	request pkgProvider.ModelUnloadRequest,
+) error {
+	provider, err := r.Resolve(providerID)
+	if err != nil {
+		return fmt.Errorf(
+			"unload model with provider %q: %w",
+			providerID,
+			err,
+		)
+	}
+
+	unloader, ok := provider.(pkgProvider.ModelUnloader)
+	if !ok {
+		return unsupportedCapability(provider.ID(), "model unloading")
+	}
+
+	if err := unloader.UnloadModel(ctx, request); err != nil {
+		return fmt.Errorf(
+			"unload model with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	return nil
+}
+
 func (r *runtime) resolveLocked(
 	providerID pkgProvider.ID,
 ) (pkgProvider.Provider, error) {

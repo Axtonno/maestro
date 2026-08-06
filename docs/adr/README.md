@@ -5,3 +5,4 @@
 - [ADR-0006 – Capability-Based Provider Runtime](ADR-0006.md)
 - [ADR-0007 – Component-Based In-Process Plugin Runtime](ADR-0007.md)
 - [ADR-0008 – Trusted In-Process Plugin Catalog](ADR-0008.md)
+- [ADR-0009 – Capability-Based Model Discovery and Lifecycle](ADR-0009.md)

@@ -32,4 +32,7 @@ type Runtime interface {
 	) (EmbeddingResponse, error)
 
 	Models(context.Context, ID) ([]Model, error)
+	DiscoverModels(context.Context, ID) ([]ModelInfo, error)
+	LoadModel(context.Context, ID, ModelLoadRequest) error
+	UnloadModel(context.Context, ID, ModelUnloadRequest) error
 }

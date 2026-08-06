@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-05
+Ultimo aggiornamento: 2026-08-06
 
 ---
 
@@ -29,12 +29,34 @@ L'adapter implementa:
 * `Completer` tramite `POST /api/chat` con `stream: false`;
 * `Streamer` tramite `POST /api/chat` con `stream: true`;
 * `Embedder` tramite `POST /api/embed`;
-* `ModelLister` tramite `GET /api/tags`.
+* `ModelLister` tramite `GET /api/tags`;
+* `ModelDiscoverer` unendo `GET /api/tags` e `GET /api/ps`;
+* `ModelLoader` e `ModelUnloader` tramite `POST /api/generate` e `keep_alive`.
 
 Gli endpoint e i payload seguono la documentazione ufficiale di
 [chat](https://docs.ollama.com/api/chat),
 [embedding](https://docs.ollama.com/api/embed) e
 [model listing](https://docs.ollama.com/api/tags).
+
+Discovery e lifecycle seguono inoltre la documentazione ufficiale di
+[running models](https://docs.ollama.com/api/ps) e delle regole di
+[preload/unload](https://docs.ollama.com/faq#how-can-i-preload-a-model-into-ollama-to-get-faster-response-times).
+
+---
+
+# Discovery e lifecycle dei modelli
+
+`DiscoverModels` mantiene l'ordine di `/api/tags`, marca come `loaded` i
+modelli presenti anche in `/api/ps` e aggiunge in coda eventuali modelli
+visibili soltanto nello snapshot runtime.
+
+I metadati neutrali includono, quando disponibili, digest, dimensioni, VRAM,
+context length, formato, famiglia, parameter size, quantizzazione e timestamp.
+
+`LoadModel` usa una richiesta vuota non-streaming con `keep_alive: -1`; il
+modello rimane quindi caricato fino a `UnloadModel`, che usa `keep_alive: 0`.
+Entrambe le operazioni accettano il modello esplicito o il modello predefinito
+dell'adapter.
 
 ---
 
@@ -149,14 +171,17 @@ I test d'integrazione sono protetti dal build tag `integration`:
 MAESTRO_OLLAMA_BASE_URL=http://localhost:11434 \
 MAESTRO_OLLAMA_CHAT_MODEL=gemma4 \
 MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma \
+MAESTRO_OLLAMA_LIFECYCLE_MODEL=gemma4 \
 go test -tags=integration ./pkg/provider/ollama
 ```
 
 Senza `MAESTRO_OLLAMA_BASE_URL` il test viene saltato.
 
-Lo smoke test verifica listing, completion non-streaming, streaming fino a
-`io.EOF`, embedding e cancellazione di uno stream con successiva chiusura
-esplicita. Non misura prestazioni e non esercita retry o resilienza.
+Lo smoke test verifica listing, discovery, completion non-streaming, streaming
+fino a `io.EOF`, embedding e cancellazione di uno stream con successiva chiusura
+esplicita. Load e unload vengono eseguiti soltanto quando è configurata
+`MAESTRO_OLLAMA_LIFECYCLE_MODEL`. Il test non misura prestazioni e non esercita
+retry o resilienza.
 
 ---
 

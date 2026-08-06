@@ -37,6 +37,12 @@ func TestOllamaIntegration(t *testing.T) {
 		}
 	})
 
+	t.Run("model discovery", func(t *testing.T) {
+		if _, err := provider.DiscoverModels(ctx); err != nil {
+			t.Fatalf("discover models: %v", err)
+		}
+	})
+
 	chatModel := os.Getenv("MAESTRO_OLLAMA_CHAT_MODEL")
 	if chatModel == "" {
 		t.Log("MAESTRO_OLLAMA_CHAT_MODEL is not configured; skipping chat tests")
@@ -119,6 +125,24 @@ func TestOllamaIntegration(t *testing.T) {
 			})
 			if err != nil {
 				t.Fatalf("embed: %v", err)
+			}
+		})
+	}
+
+	lifecycleModel := os.Getenv("MAESTRO_OLLAMA_LIFECYCLE_MODEL")
+	if lifecycleModel == "" {
+		t.Log("MAESTRO_OLLAMA_LIFECYCLE_MODEL is not configured; skipping lifecycle test")
+	} else {
+		t.Run("model lifecycle", func(t *testing.T) {
+			if err := provider.LoadModel(ctx, pkgProvider.ModelLoadRequest{
+				Model: lifecycleModel,
+			}); err != nil {
+				t.Fatalf("load model: %v", err)
+			}
+			if err := provider.UnloadModel(ctx, pkgProvider.ModelUnloadRequest{
+				Model: lifecycleModel,
+			}); err != nil {
+				t.Fatalf("unload model: %v", err)
 			}
 		})
 	}

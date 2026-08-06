@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Implementato — smoke test live pendente
+Stato: Implementato
 
 Ultimo aggiornamento: 2026-08-06
 
@@ -26,7 +26,10 @@ L'adapter implementa:
 * `Completer` tramite `POST /v1/chat/completions`;
 * `Streamer` tramite `POST /v1/chat/completions` con risposta SSE;
 * `Embedder` tramite `POST /v1/embeddings`;
-* `ModelLister` tramite `GET /v1/models`.
+* `ModelLister` tramite `GET /v1/models`;
+* `ModelDiscoverer` tramite `GET /models` in router mode;
+* `ModelLoader` e `ModelUnloader` tramite gli endpoint `/models/load` e
+  `/models/unload` del router.
 
 Gli endpoint seguono la documentazione ufficiale di
 [`llama-server`](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#openai-compatible-api-endpoints).
@@ -143,16 +146,33 @@ variabili d'ambiente dedicate. La verifica live non fa parte della suite
 ordinaria perché disponibilità e capability dipendono dal processo e dal
 modello caricati.
 
+---
+
+# Discovery e lifecycle dei modelli
+
+`DiscoverModels` usa il catalogo del router e traduce gli stati `unloaded`,
+`downloading`, `loading`, `loaded` e `sleeping` nei valori neutrali di Maestro.
+Un processo fallito viene riportato come `failed`; stati futuri non riconosciuti
+rimangono `unknown`.
+
+Load e unload sono operazioni sincrone e richiedono `llama-server` in router
+mode. Un adapter collegato a un processo single-model continua a supportare
+completion, streaming, embedding e listing minimale, ma il server può rifiutare
+le capability router con un errore HTTP.
+
 ```bash
 MAESTRO_LLAMACPP_BASE_URL=http://localhost:8080 \
 MAESTRO_LLAMACPP_CHAT_MODEL=local-chat \
 MAESTRO_LLAMACPP_EMBED_MODEL=local-embed \
+MAESTRO_LLAMACPP_LIFECYCLE_MODEL=local-chat \
 go test -tags=integration ./pkg/provider/llamacpp
 ```
 
 `MAESTRO_LLAMACPP_API_KEY` è opzionale. Senza
 `MAESTRO_LLAMACPP_BASE_URL` il test viene saltato; chat ed embedding vengono
 verificati soltanto quando è configurato il relativo modello.
+Discovery router, load e unload vengono eseguiti soltanto quando è configurata
+`MAESTRO_LLAMACPP_LIFECYCLE_MODEL`.
 
 ---
 
@@ -166,8 +186,7 @@ Non sono ancora tradotti:
 * output strutturati;
 * opzioni di sampling specifiche;
 * endpoint nativi non compatibili con OpenAI;
-* lifecycle del processo `llama-server`;
-* caricamento, download e rimozione dei modelli;
+* download e rimozione dei modelli;
 * retry, backoff o circuit breaker.
 
 Queste estensioni verranno introdotte soltanto quando esisteranno contratti

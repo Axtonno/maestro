@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-05
+Ultimo aggiornamento: 2026-08-06
 
 ---
 
@@ -28,7 +28,10 @@ capability indipendenti:
 * `Completer` produce una risposta a partire da una sequenza di messaggi;
 * `Streamer` apre uno stream incrementale;
 * `Embedder` calcola embedding per uno o più input;
-* `ModelLister` elenca i modelli visibili al provider.
+* `ModelLister` elenca i modelli visibili al provider;
+* `ModelDiscoverer` restituisce snapshot arricchiti e stato dei modelli;
+* `ModelLoader` carica un modello nelle risorse runtime del provider;
+* `ModelUnloader` rilascia un modello caricato.
 
 Un provider può implementare qualsiasi combinazione di queste capability. Il
 Runtime non richiede metodi fittizi per operazioni non disponibili.
@@ -47,6 +50,10 @@ Il Provider Runtime espone:
 * risoluzione per ID;
 * configurazione e risoluzione del provider predefinito;
 * routing delle capability operative.
+
+Il routing comprende anche discovery avanzata, load e unload dei modelli. Il
+Runtime non mantiene uno stato modello proprio: risolve il provider, verifica
+la capability e inoltra l'operazione.
 
 Un ID vuoto nelle operazioni di routing richiede il provider predefinito. Il
 default deve essere esplicito: può essere configurato tramite
@@ -118,6 +125,13 @@ La prima implementazione non introduce:
 * caching di risposte, modelli o embedding;
 * traduzione di opzioni specifiche dei singoli SDK;
 * implementazioni concrete diverse dall'adapter Ollama.
+
+Discovery e lifecycle dei modelli sono introdotti dalla Fase 2 della Provider
+Layer e descritti in:
+
+```
+docs/provider-model-lifecycle.md
+```
 
 Queste funzionalità verranno aggiunte sopra i contratti correnti quando i
 relativi requisiti saranno concreti.

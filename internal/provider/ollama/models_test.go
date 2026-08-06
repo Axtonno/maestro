@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 )
@@ -106,5 +107,151 @@ func TestModelsHandlesMalformedAndPayloadErrors(t *testing.T) {
 				t.Fatalf("expected %v, got %v", test.target, err)
 			}
 		})
+	}
+}
+
+func TestDiscoverModelsMergesAvailableAndRunningModels(t *testing.T) {
+	modifiedAt := time.Date(2026, 8, 1, 12, 0, 0, 0, time.UTC)
+	expiresAt := time.Date(2026, 8, 6, 18, 0, 0, 0, time.UTC)
+	provider := newTestProvider(t, "", func(
+		writer http.ResponseWriter,
+		request *http.Request,
+	) {
+		switch request.URL.Path {
+		case "/api/tags":
+			writeJSON(t, writer, tagsResponse{Models: []modelResponse{
+				{
+					Name:       "qwen:latest",
+					Model:      "qwen:latest",
+					ModifiedAt: modifiedAt,
+					Size:       100,
+					Digest:     "sha256:qwen",
+					Details: modelDetails{
+						Format:        "gguf",
+						Family:        "qwen",
+						ParameterSize: "8B",
+						Quantization:  "Q4_K_M",
+					},
+				},
+				{Name: "embed:latest", Model: "embed:latest", Size: 50},
+			}})
+		case "/api/ps":
+			writeJSON(t, writer, tagsResponse{Models: []modelResponse{
+				{
+					Name:          "qwen:latest",
+					Model:         "qwen:latest",
+					ExpiresAt:     expiresAt,
+					SizeVRAM:      80,
+					ContextLength: 8192,
+				},
+				{
+					Name:          "runtime-only",
+					Model:         "runtime-only",
+					Size:          25,
+					SizeVRAM:      20,
+					ContextLength: 4096,
+				},
+			}})
+		default:
+			t.Errorf("unexpected path %q", request.URL.Path)
+		}
+	})
+
+	infos, err := provider.DiscoverModels(context.Background())
+	if err != nil {
+		t.Fatalf("discover models: %v", err)
+	}
+
+	want := []pkgProvider.ModelInfo{
+		{
+			Model:         pkgProvider.Model{ID: "qwen:latest", Name: "qwen:latest"},
+			State:         pkgProvider.ModelStateLoaded,
+			Digest:        "sha256:qwen",
+			SizeBytes:     100,
+			VRAMBytes:     80,
+			ContextLength: 8192,
+			Format:        "gguf",
+			Family:        "qwen",
+			ParameterSize: "8B",
+			Quantization:  "Q4_K_M",
+			ModifiedAt:    modifiedAt,
+			ExpiresAt:     expiresAt,
+		},
+		{
+			Model:     pkgProvider.Model{ID: "embed:latest", Name: "embed:latest"},
+			State:     pkgProvider.ModelStateAvailable,
+			SizeBytes: 50,
+		},
+		{
+			Model:         pkgProvider.Model{ID: "runtime-only", Name: "runtime-only"},
+			State:         pkgProvider.ModelStateLoaded,
+			SizeBytes:     25,
+			VRAMBytes:     20,
+			ContextLength: 4096,
+		},
+	}
+	if !reflect.DeepEqual(infos, want) {
+		t.Fatalf("expected model info %#v, got %#v", want, infos)
+	}
+}
+
+func TestDiscoverModelsRejectsDuplicateRunningModels(t *testing.T) {
+	provider := newTestProvider(t, "", func(
+		writer http.ResponseWriter,
+		request *http.Request,
+	) {
+		if request.URL.Path == "/api/tags" {
+			writeJSON(t, writer, tagsResponse{})
+			return
+		}
+
+		writeJSON(t, writer, tagsResponse{Models: []modelResponse{
+			{Name: "qwen"},
+			{Name: "qwen"},
+		}})
+	})
+
+	_, err := provider.DiscoverModels(context.Background())
+	if !errors.Is(err, pkgProvider.ErrInvalidResponse) {
+		t.Fatalf("expected ErrInvalidResponse, got %v", err)
+	}
+}
+
+func TestDiscoverModelsRejectsNegativeMetadata(t *testing.T) {
+	provider := newTestProvider(t, "", func(
+		writer http.ResponseWriter,
+		request *http.Request,
+	) {
+		if request.URL.Path == "/api/tags" {
+			writeJSON(t, writer, tagsResponse{Models: []modelResponse{{
+				Name: "qwen", Size: -1,
+			}}})
+			return
+		}
+		writeJSON(t, writer, tagsResponse{})
+	})
+
+	_, err := provider.DiscoverModels(context.Background())
+	if !errors.Is(err, pkgProvider.ErrInvalidResponse) {
+		t.Fatalf("expected ErrInvalidResponse, got %v", err)
+	}
+}
+
+func TestDiscoverModelsPropagatesRunningListFailure(t *testing.T) {
+	provider := newTestProvider(t, "", func(
+		writer http.ResponseWriter,
+		request *http.Request,
+	) {
+		if request.URL.Path == "/api/tags" {
+			writeJSON(t, writer, tagsResponse{})
+			return
+		}
+
+		writer.WriteHeader(http.StatusInternalServerError)
+		writeJSON(t, writer, errorResponse{Error: "ps failed"})
+	})
+
+	if _, err := provider.DiscoverModels(context.Background()); err == nil {
+		t.Fatal("expected discovery error")
 	}
 }
