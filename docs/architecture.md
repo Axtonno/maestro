@@ -107,12 +107,13 @@ Responsabilità:
 - comunicazione con i modelli;
 - rappresentazione delle richieste conversazionali;
 - streaming;
-- embedding.
-- discovery e lifecycle dei modelli.
+- embedding;
+- discovery e lifecycle dei modelli;
+- acquisizione con progresso e rimozione dei modelli.
 
 Il contratto del layer è capability-based. L'identità del provider è separata
 dalle capability di completion, streaming, embedding, model listing, discovery,
-load e unload.
+load, unload, pull e remove.
 
 Il Provider Runtime mantiene un registry thread-safe, applica una selezione
 esplicita del provider predefinito e inoltra le operazioni senza mantenere lock

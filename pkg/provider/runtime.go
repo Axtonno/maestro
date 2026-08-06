@@ -35,4 +35,6 @@ type Runtime interface {
 	DiscoverModels(context.Context, ID) ([]ModelInfo, error)
 	LoadModel(context.Context, ID, ModelLoadRequest) error
 	UnloadModel(context.Context, ID, ModelUnloadRequest) error
+	PullModel(context.Context, ID, ModelPullRequest) (ModelPullStream, error)
+	RemoveModel(context.Context, ID, ModelRemoveRequest) error
 }

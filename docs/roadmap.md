@@ -175,10 +175,15 @@ Il piano dettagliato, le dipendenze e i criteri di uscita sono definiti in
 
 ### Fase 3 — Model Acquisition & Removal
 
-Stato: Pianificata
+Stato: Conclusa
 
 Capability opzionali e cancellabili per pull, avanzamento e rimozione dei
 modelli, senza accesso diretto del Provider Runtime ai file gestiti dai server.
+
+Contratti `ModelPuller`, `ModelRemover` e `ModelPullStream`, routing, adapter
+Ollama e llama.cpp, test isolati, ADR-0010 e documentazione sono completati.
+Gli smoke test live che modificano il catalogo restano consolidati nella Fase
+10.
 
 ### Fase 4 — Model Residency Policies
 

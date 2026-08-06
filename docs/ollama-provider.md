@@ -31,7 +31,9 @@ L'adapter implementa:
 * `Embedder` tramite `POST /api/embed`;
 * `ModelLister` tramite `GET /api/tags`;
 * `ModelDiscoverer` unendo `GET /api/tags` e `GET /api/ps`;
-* `ModelLoader` e `ModelUnloader` tramite `POST /api/generate` e `keep_alive`.
+* `ModelLoader` e `ModelUnloader` tramite `POST /api/generate` e `keep_alive`;
+* `ModelPuller` tramite `POST /api/pull` con stream NDJSON;
+* `ModelRemover` tramite `DELETE /api/delete`.
 
 Gli endpoint e i payload seguono la documentazione ufficiale di
 [chat](https://docs.ollama.com/api/chat),
@@ -41,6 +43,10 @@ Gli endpoint e i payload seguono la documentazione ufficiale di
 Discovery e lifecycle seguono inoltre la documentazione ufficiale di
 [running models](https://docs.ollama.com/api/ps) e delle regole di
 [preload/unload](https://docs.ollama.com/faq#how-can-i-preload-a-model-into-ollama-to-get-faster-response-times).
+
+Acquisizione e rimozione seguono la documentazione ufficiale di
+[pull](https://docs.ollama.com/api/pull) e
+[delete](https://docs.ollama.com/api/delete).
 
 ---
 
@@ -57,6 +63,23 @@ context length, formato, famiglia, parameter size, quantizzazione e timestamp.
 modello rimane quindi caricato fino a `UnloadModel`, che usa `keep_alive: 0`.
 Entrambe le operazioni accettano il modello esplicito o il modello predefinito
 dell'adapter.
+
+---
+
+# Acquisizione e rimozione
+
+`PullModel` traduce gli status Ollama negli stage neutrali `resolving`,
+`downloading`, `verifying`, `finalizing` e `completed`. Digest, totale e byte
+completati sono riportati quando presenti. Il testo Ollama originale rimane in
+`Detail` a solo scopo informativo.
+
+Il chunk `success` è l'evento terminale; la chiamata successiva restituisce
+`io.EOF`. EOF anticipato, JSON malformato e conteggi incoerenti producono
+`provider.ErrInvalidResponse`. `Close` è idempotente e interrompe la richiesta
+HTTP.
+
+`RemoveModel` invia il modello nel body JSON e accetta una risposta HTTP 2xx
+vuota. L'adapter non accede alla directory dei modelli.
 
 ---
 
@@ -181,7 +204,8 @@ Lo smoke test verifica listing, discovery, completion non-streaming, streaming
 fino a `io.EOF`, embedding e cancellazione di uno stream con successiva chiusura
 esplicita. Load e unload vengono eseguiti soltanto quando è configurata
 `MAESTRO_OLLAMA_LIFECYCLE_MODEL`. Il test non misura prestazioni e non esercita
-retry o resilienza.
+retry o resilienza. Pull e remove live rimangono nel gate finale della
+Milestone 2 e richiederanno un modello dedicato.
 
 ---
 

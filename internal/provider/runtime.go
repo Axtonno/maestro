@@ -324,6 +324,75 @@ func (r *runtime) UnloadModel(
 	return nil
 }
 
+func (r *runtime) PullModel(
+	ctx context.Context,
+	providerID pkgProvider.ID,
+	request pkgProvider.ModelPullRequest,
+) (pkgProvider.ModelPullStream, error) {
+	provider, err := r.Resolve(providerID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"pull model with provider %q: %w",
+			providerID,
+			err,
+		)
+	}
+
+	puller, ok := provider.(pkgProvider.ModelPuller)
+	if !ok {
+		return nil, unsupportedCapability(provider.ID(), "model pulling")
+	}
+
+	stream, err := puller.PullModel(ctx, request)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"pull model with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	if nilModelPullStream(stream) {
+		return nil, fmt.Errorf(
+			"pull model with provider %q: provider returned a nil stream: %w",
+			provider.ID(),
+			pkgProvider.ErrInvalidStream,
+		)
+	}
+
+	return stream, nil
+}
+
+func (r *runtime) RemoveModel(
+	ctx context.Context,
+	providerID pkgProvider.ID,
+	request pkgProvider.ModelRemoveRequest,
+) error {
+	provider, err := r.Resolve(providerID)
+	if err != nil {
+		return fmt.Errorf(
+			"remove model with provider %q: %w",
+			providerID,
+			err,
+		)
+	}
+
+	remover, ok := provider.(pkgProvider.ModelRemover)
+	if !ok {
+		return unsupportedCapability(provider.ID(), "model removal")
+	}
+
+	if err := remover.RemoveModel(ctx, request); err != nil {
+		return fmt.Errorf(
+			"remove model with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	return nil
+}
+
 func (r *runtime) resolveLocked(
 	providerID pkgProvider.ID,
 ) (pkgProvider.Provider, error) {
@@ -378,6 +447,10 @@ func nilProvider(provider pkgProvider.Provider) bool {
 }
 
 func nilStream(stream pkgProvider.Stream) bool {
+	return nilInterface(stream)
+}
+
+func nilModelPullStream(stream pkgProvider.ModelPullStream) bool {
 	return nilInterface(stream)
 }
 

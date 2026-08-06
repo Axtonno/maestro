@@ -20,6 +20,8 @@ var (
 	_ pkgProvider.ModelDiscoverer = (*Provider)(nil)
 	_ pkgProvider.ModelLoader     = (*Provider)(nil)
 	_ pkgProvider.ModelUnloader   = (*Provider)(nil)
+	_ pkgProvider.ModelPuller     = (*Provider)(nil)
+	_ pkgProvider.ModelRemover    = (*Provider)(nil)
 )
 
 type adapter interface {
@@ -30,6 +32,8 @@ type adapter interface {
 	pkgProvider.ModelDiscoverer
 	pkgProvider.ModelLoader
 	pkgProvider.ModelUnloader
+	pkgProvider.ModelPuller
+	pkgProvider.ModelRemover
 }
 
 // Provider is a public facade over Maestro's internal llama.cpp adapter.
@@ -126,4 +130,18 @@ func (p *Provider) UnloadModel(
 	request pkgProvider.ModelUnloadRequest,
 ) error {
 	return p.adapter.UnloadModel(ctx, request)
+}
+
+func (p *Provider) PullModel(
+	ctx context.Context,
+	request pkgProvider.ModelPullRequest,
+) (pkgProvider.ModelPullStream, error) {
+	return p.adapter.PullModel(ctx, request)
+}
+
+func (p *Provider) RemoveModel(
+	ctx context.Context,
+	request pkgProvider.ModelRemoveRequest,
+) error {
+	return p.adapter.RemoveModel(ctx, request)
 }

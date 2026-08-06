@@ -31,7 +31,9 @@ capability indipendenti:
 * `ModelLister` elenca i modelli visibili al provider;
 * `ModelDiscoverer` restituisce snapshot arricchiti e stato dei modelli;
 * `ModelLoader` carica un modello nelle risorse runtime del provider;
-* `ModelUnloader` rilascia un modello caricato.
+* `ModelUnloader` rilascia un modello caricato;
+* `ModelPuller` acquisisce un modello con progresso pull-based;
+* `ModelRemover` rimuove un modello dal catalogo gestito dal provider.
 
 Un provider può implementare qualsiasi combinazione di queste capability. Il
 Runtime non richiede metodi fittizi per operazioni non disponibili.
@@ -51,9 +53,9 @@ Il Provider Runtime espone:
 * configurazione e risoluzione del provider predefinito;
 * routing delle capability operative.
 
-Il routing comprende anche discovery avanzata, load e unload dei modelli. Il
-Runtime non mantiene uno stato modello proprio: risolve il provider, verifica
-la capability e inoltra l'operazione.
+Il routing comprende anche discovery avanzata, load, unload, pull e remove dei
+modelli. Il Runtime non mantiene uno stato modello o un progresso proprio:
+risolve il provider, verifica la capability e inoltra l'operazione.
 
 Un ID vuoto nelle operazioni di routing richiede il provider predefinito. Il
 default deve essere esplicito: può essere configurato tramite
@@ -71,7 +73,9 @@ Lo streaming è pull-based.
 
 `Streamer.Stream` restituisce uno `Stream`; il chiamante riceve i chunk tramite
 `Recv`, interpreta `io.EOF` come completamento e invoca sempre `Close` quando
-interrompe o conclude il consumo.
+interrompe o conclude il consumo. `ModelPuller.PullModel` applica la stessa
+ownership esplicita attraverso `ModelPullStream`, restituendo prima lo stage
+terminale `completed` e poi `io.EOF`.
 
 Il contesto passato all'apertura dello stream definisce cancellazione e
 deadline. L'implementazione del provider è responsabile di propagarle al
@@ -131,6 +135,13 @@ Layer e descritti in:
 
 ```
 docs/provider-model-lifecycle.md
+```
+
+Acquisizione e rimozione dei modelli sono introdotte dalla Fase 3 e descritte
+in:
+
+```
+docs/provider-model-acquisition.md
 ```
 
 Queste funzionalità verranno aggiunte sopra i contratti correnti quando i

@@ -71,6 +71,23 @@ type modelLifecycleResponse struct {
 	Error string `json:"error"`
 }
 
+type modelPullRequest struct {
+	Model  string `json:"model"`
+	Stream bool   `json:"stream"`
+}
+
+type modelPullResponse struct {
+	Status    string `json:"status"`
+	Digest    string `json:"digest"`
+	Total     int64  `json:"total"`
+	Completed int64  `json:"completed"`
+	Error     string `json:"error"`
+}
+
+type modelRemoveRequest struct {
+	Model string `json:"model"`
+}
+
 type errorResponse struct {
 	Error string `json:"error"`
 }

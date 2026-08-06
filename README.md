@@ -56,9 +56,10 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 10. `ollama-provider.md`
 11. `llamacpp-provider.md`
 12. `provider-model-lifecycle.md`
-13. `provider-layer-plan.md`
-14. `plugin-runtime.md`
-15. `laravel-plugin.md`
+13. `provider-model-acquisition.md`
+14. `provider-layer-plan.md`
+15. `plugin-runtime.md`
+16. `laravel-plugin.md`
 
 ---
 
@@ -90,6 +91,12 @@ modelli, policy di residenza, capability introspection, semantica degli errori,
 resilienza, osservabilità, contratti avanzati di generazione e hardening finale.
 Il piano e i gate di ogni incremento sono descritti in
 `provider-layer-plan.md`.
+
+La Fase 3 è completata: `ModelPuller` e `ModelRemover` aggiungono pull con
+progresso, cancellazione e rimozione attraverso il Provider Runtime. Ollama usa
+le API native `/api/pull` e `/api/delete`; il router llama.cpp usa gli endpoint
+`/models` e lo stream globale `/models/sse`. Nessun adapter accede direttamente
+ai file della cache.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento

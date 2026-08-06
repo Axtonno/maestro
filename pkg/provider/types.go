@@ -97,3 +97,33 @@ type ModelLoadRequest struct {
 type ModelUnloadRequest struct {
 	Model string
 }
+
+type ModelPullRequest struct {
+	Model string
+}
+
+type ModelRemoveRequest struct {
+	Model string
+}
+
+type ModelPullStage string
+
+const (
+	ModelPullStageUnknown     ModelPullStage = "unknown"
+	ModelPullStageResolving   ModelPullStage = "resolving"
+	ModelPullStageDownloading ModelPullStage = "downloading"
+	ModelPullStageVerifying   ModelPullStage = "verifying"
+	ModelPullStageFinalizing  ModelPullStage = "finalizing"
+	ModelPullStageCompleted   ModelPullStage = "completed"
+)
+
+// ModelPullProgress is a provider-neutral snapshot of an acquisition. Detail
+// is informational and must not be used to make control-flow decisions.
+type ModelPullProgress struct {
+	Model          string
+	Stage          ModelPullStage
+	Detail         string
+	Digest         string
+	TotalBytes     int64
+	CompletedBytes int64
+}

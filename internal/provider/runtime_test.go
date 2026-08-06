@@ -29,7 +29,10 @@ type capableProvider struct {
 	modelInfos         []pkgProvider.ModelInfo
 	loadedModel        string
 	unloadedModel      string
+	pulledModel        string
+	removedModel       string
 	stream             pkgProvider.Stream
+	pullStream         pkgProvider.ModelPullStream
 	err                error
 }
 
@@ -98,10 +101,51 @@ func (p *capableProvider) UnloadModel(
 	return p.err
 }
 
+func (p *capableProvider) PullModel(
+	_ context.Context,
+	request pkgProvider.ModelPullRequest,
+) (pkgProvider.ModelPullStream, error) {
+	p.pulledModel = request.Model
+
+	return p.pullStream, p.err
+}
+
+func (p *capableProvider) RemoveModel(
+	_ context.Context,
+	request pkgProvider.ModelRemoveRequest,
+) error {
+	p.removedModel = request.Model
+
+	return p.err
+}
+
 type testStream struct {
 	chunks []pkgProvider.StreamChunk
 	index  int
 	closed bool
+}
+
+type testModelPullStream struct {
+	progress []pkgProvider.ModelPullProgress
+	index    int
+	closed   bool
+}
+
+func (s *testModelPullStream) Recv() (pkgProvider.ModelPullProgress, error) {
+	if s.index == len(s.progress) {
+		return pkgProvider.ModelPullProgress{}, io.EOF
+	}
+
+	progress := s.progress[s.index]
+	s.index++
+
+	return progress, nil
+}
+
+func (s *testModelPullStream) Close() error {
+	s.closed = true
+
+	return nil
 }
 
 func (s *testStream) Recv() (pkgProvider.StreamChunk, error) {
@@ -230,6 +274,9 @@ func TestRuntimeRequiresExplicitDefaultProvider(t *testing.T) {
 
 func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 	stream := &testStream{chunks: []pkgProvider.StreamChunk{{Content: "hello"}}}
+	pullStream := &testModelPullStream{progress: []pkgProvider.ModelPullProgress{{
+		Model: "qwen", Stage: pkgProvider.ModelPullStageCompleted,
+	}}}
 	registered := &capableProvider{
 		identityProvider: identityProvider{id: "ollama"},
 		completionResponse: pkgProvider.CompletionResponse{
@@ -243,7 +290,8 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 			Model: pkgProvider.Model{ID: "qwen"},
 			State: pkgProvider.ModelStateLoaded,
 		}},
-		stream: stream,
+		stream:     stream,
+		pullStream: pullStream,
 	}
 	providerRuntime := NewRuntime("ollama")
 
@@ -334,6 +382,36 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 	if registered.unloadedModel != "qwen" {
 		t.Fatalf("unexpected unloaded model %q", registered.unloadedModel)
 	}
+
+	acquiredPullStream, err := providerRuntime.PullModel(
+		context.Background(),
+		"",
+		pkgProvider.ModelPullRequest{Model: "qwen"},
+	)
+	if err != nil {
+		t.Fatalf("pull model: %v", err)
+	}
+	progress, err := acquiredPullStream.Recv()
+	if err != nil || progress.Stage != pkgProvider.ModelPullStageCompleted {
+		t.Fatalf("unexpected pull progress %#v, error %v", progress, err)
+	}
+	if err := acquiredPullStream.Close(); err != nil {
+		t.Fatalf("close model pull stream: %v", err)
+	}
+	if !pullStream.closed || registered.pulledModel != "qwen" {
+		t.Fatalf("model pull was not routed correctly")
+	}
+
+	if err := providerRuntime.RemoveModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelRemoveRequest{Model: "qwen"},
+	); err != nil {
+		t.Fatalf("remove model: %v", err)
+	}
+	if registered.removedModel != "qwen" {
+		t.Fatalf("unexpected removed model %q", registered.removedModel)
+	}
 }
 
 func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
@@ -395,6 +473,20 @@ func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
 		pkgProvider.ModelUnloadRequest{},
 	)
 	assertUnsupported("model unloading", err)
+
+	_, err = providerRuntime.PullModel(
+		context.Background(),
+		"identity-only",
+		pkgProvider.ModelPullRequest{},
+	)
+	assertUnsupported("model pulling", err)
+
+	err = providerRuntime.RemoveModel(
+		context.Background(),
+		"identity-only",
+		pkgProvider.ModelRemoveRequest{},
+	)
+	assertUnsupported("model removal", err)
 }
 
 func TestRuntimeRejectsNilStream(t *testing.T) {
@@ -411,6 +503,26 @@ func TestRuntimeRejectsNilStream(t *testing.T) {
 		context.Background(),
 		"ollama",
 		pkgProvider.CompletionRequest{},
+	)
+	if !errors.Is(err, pkgProvider.ErrInvalidStream) {
+		t.Fatalf("expected ErrInvalidStream, got %v", err)
+	}
+}
+
+func TestRuntimeRejectsNilModelPullStream(t *testing.T) {
+	providerRuntime := NewRuntime("")
+	registered := &capableProvider{
+		identityProvider: identityProvider{id: "ollama"},
+	}
+
+	if err := providerRuntime.Register(registered); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+
+	_, err := providerRuntime.PullModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelPullRequest{},
 	)
 	if !errors.Is(err, pkgProvider.ErrInvalidStream) {
 		t.Fatalf("expected ErrInvalidStream, got %v", err)
@@ -459,6 +571,24 @@ func TestRuntimePreservesProviderError(t *testing.T) {
 	)
 	if !errors.Is(err, cause) {
 		t.Fatalf("expected unload provider cause, got %v", err)
+	}
+
+	_, err = providerRuntime.PullModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelPullRequest{},
+	)
+	if !errors.Is(err, cause) {
+		t.Fatalf("expected pull provider cause, got %v", err)
+	}
+
+	err = providerRuntime.RemoveModel(
+		context.Background(),
+		"ollama",
+		pkgProvider.ModelRemoveRequest{},
+	)
+	if !errors.Is(err, cause) {
+		t.Fatalf("expected removal provider cause, got %v", err)
 	}
 }
 

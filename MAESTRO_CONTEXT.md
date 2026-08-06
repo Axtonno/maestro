@@ -28,6 +28,7 @@ Completati:
 * ollama-provider.md
 * llamacpp-provider.md
 * provider-model-lifecycle.md
+* provider-model-acquisition.md
 * provider-layer-plan.md
 * plugin-runtime.md
 * laravel-plugin.md
@@ -651,6 +652,7 @@ Copertura funzionale:
 * Adapter Ollama
 * Adapter llama.cpp
 * Model discovery e lifecycle provider
+* Model acquisition, progress e removal provider
 
 Verifica effettuata con:
 
@@ -686,6 +688,12 @@ indipendenti per discovery, load e unload. Il Provider Runtime espone il routing
 senza possedere stato modello. Ollama unisce `/api/tags` e `/api/ps` e governa
 il lifecycle tramite `keep_alive`; llama.cpp usa il catalogo e gli endpoint del
 router mode.
+
+La Fase 3 aggiunge pull con progresso e rimozione attraverso capability
+indipendenti. Ollama usa gli endpoint nativi `/api/pull` e `/api/delete`;
+llama.cpp avvia il download con `/models`, osserva `/models/sse`, usa
+`/models/unload` per la cancellazione remota e rimuove soltanto dalla cache del
+router. Il Provider Runtime non possiede trasferimenti né accede al filesystem.
 
 ---
 
@@ -783,12 +791,28 @@ Completati:
 * test isolati e d'integrazione opzionali;
 * ADR-0009 e documentazione dedicata.
 
-## Fasi 3–10 pianificate
+## ✅ Fase 3 — Model Acquisition & Removal
+
+Completati:
+
+* capability `ModelPuller` e `ModelRemover`;
+* `ModelPullStream` pull-based con stage neutrali;
+* routing tramite `provider.Runtime`;
+* pull Ollama tramite `/api/pull` e remove tramite `/api/delete`;
+* pull llama.cpp tramite `/models` e `/models/sse`;
+* cancellazione remota llama.cpp tramite `/models/unload`;
+* remove llama.cpp tramite `DELETE /models`;
+* validazione del progresso, chiusura delle risorse e test isolati;
+* ADR-0010 e documentazione dedicata.
+
+Gli smoke test live che modificano il catalogo restano nel gate finale della
+Milestone 2.
+
+## Fasi 4–10 pianificate
 
 Il completamento della Provider Layer è scomposto in incrementi con dipendenze
 e gate espliciti:
 
-* Fase 3 — Model Acquisition & Removal;
 * Fase 4 — Model Residency Policies;
 * Fase 5 — Capability Introspection;
 * Fase 6 — Error Semantics;

@@ -29,7 +29,9 @@ L'adapter implementa:
 * `ModelLister` tramite `GET /v1/models`;
 * `ModelDiscoverer` tramite `GET /models` in router mode;
 * `ModelLoader` e `ModelUnloader` tramite gli endpoint `/models/load` e
-  `/models/unload` del router.
+  `/models/unload` del router;
+* `ModelPuller` tramite `POST /models` e `GET /models/sse`;
+* `ModelRemover` tramite `DELETE /models`.
 
 Gli endpoint seguono la documentazione ufficiale di
 [`llama-server`](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#openai-compatible-api-endpoints).
@@ -160,6 +162,16 @@ mode. Un adapter collegato a un processo single-model continua a supportare
 completion, streaming, embedding e listing minimale, ma il server può rifiutare
 le capability router con un errore HTTP.
 
+Il pull avvia il download sul router e filtra lo stream SSE globale sul modello
+richiesto. I progressi di più file vengono aggregati; `download_finished`
+aggiorna il catalogo e produce lo stage terminale `completed`. Una chiusura
+anticipata o la cancellazione del context usa `/models/unload` per interrompere
+anche il download remoto con un cleanup temporalmente limitato.
+
+La rimozione usa il nome del modello come query parameter. Il router consente di
+rimuovere soltanto modelli presenti nella propria cache, non preset o file
+gestiti attraverso directory esterne.
+
 ```bash
 MAESTRO_LLAMACPP_BASE_URL=http://localhost:8080 \
 MAESTRO_LLAMACPP_CHAT_MODEL=local-chat \
@@ -186,7 +198,6 @@ Non sono ancora tradotti:
 * output strutturati;
 * opzioni di sampling specifiche;
 * endpoint nativi non compatibili con OpenAI;
-* download e rimozione dei modelli;
 * retry, backoff o circuit breaker.
 
 Queste estensioni verranno introdotte soltanto quando esisteranno contratti

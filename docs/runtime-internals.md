@@ -117,13 +117,14 @@ collezione dei provider registrati e la selezione del default.
 * impedire registrazioni duplicate;
 * risolvere provider espliciti o il default configurato;
 * verificare le capability richieste;
-* inoltrare completion, streaming, embedding, model listing, discovery e
-  lifecycle dei modelli;
+* inoltrare completion, streaming, embedding, model listing, discovery,
+  lifecycle, acquisizione e rimozione dei modelli;
 * proteggere registry e default durante l'accesso concorrente;
 * non mantenere lock interni durante l'esecuzione di codice del provider.
 
 Richieste, risposte e stream appartengono al chiamante e al provider. Il router
-non ne modifica o copia il contenuto.
+non ne modifica o copia il contenuto e non possiede stato o progresso dei
+trasferimenti.
 
 ### Plugin Runtime
 

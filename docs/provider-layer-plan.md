@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Pianificato
+Stato: In esecuzione
 
 Ultimo aggiornamento: 2026-08-06
 
@@ -31,16 +31,16 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 
 # Sequenza di lavoro
 
-| Fase | Incremento | Dipendenza principale | Criterio sintetico di uscita |
-|---|---|---|---|
-| 3 | Model Acquisition & Removal | Discovery e lifecycle | Pull e rimozione opzionali, cancellabili e sicuri |
-| 4 | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
-| 5 | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
-| 6 | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
-| 7 | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
-| 8 | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
-| 9 | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
-| 10 | Hardening & Milestone Gate | Fasi 3–9 | Matrice isolata e live completata, documentazione allineata |
+| Fase | Stato | Incremento | Dipendenza principale | Criterio sintetico di uscita |
+|---|---|---|---|---|
+| 3 | Conclusa | Model Acquisition & Removal | Discovery e lifecycle | Pull e rimozione opzionali, cancellabili e sicuri |
+| 4 | Pianificata | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
+| 5 | Pianificata | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
+| 6 | Pianificata | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
+| 7 | Pianificata | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
+| 8 | Pianificata | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
+| 9 | Pianificata | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
+| 10 | Pianificata | Hardening & Milestone Gate | Fasi 3–9 | Matrice isolata e live completata, documentazione allineata |
 
 L'ordine rappresenta le dipendenze architetturali, non soltanto la priorità.
 In particolare, le policy di resilienza non devono interpretare stringhe di
@@ -66,8 +66,9 @@ Runtime la proprietà dei file o dello stato dei modelli.
 - Stabilire semantica di idempotenza per modello già presente, trasferimento in
   corso e modello assente durante la rimozione.
 - Implementare pull e delete tramite le API native di Ollama.
-- Implementare la capability llama.cpp soltanto dove il router offre un'API
-  stabile e sicura; in caso contrario restituire capability non supportata.
+- Implementare pull, progresso e rimozione tramite gli endpoint documentati del
+  router llama.cpp; processi single-model o versioni prive degli endpoint
+  conservano l'errore remoto senza fallback sul filesystem.
 - Impedire che l'assenza di un endpoint venga aggirata cancellando direttamente
   file scelti dall'utente o dal provider.
 
@@ -75,8 +76,8 @@ Runtime la proprietà dei file o dello stato dei modelli.
 
 - Contratti e ADR approvati.
 - Test di progresso, cancellazione, errori intermedi e idempotenza.
-- Implementazione Ollama coperta da server HTTP in-memory.
-- Comportamento llama.cpp supportato oppure esplicitamente dichiarato assente.
+- Implementazioni Ollama e llama.cpp coperte da server HTTP in-memory.
+- Modalità e versioni del server che possono rifiutare gli endpoint documentate.
 - Nessuna goroutine o risposta HTTP lasciata aperta.
 
 ---

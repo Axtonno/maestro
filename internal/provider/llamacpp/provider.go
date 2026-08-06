@@ -20,6 +20,8 @@ var (
 	_ pkgProvider.ModelDiscoverer = (*Provider)(nil)
 	_ pkgProvider.ModelLoader     = (*Provider)(nil)
 	_ pkgProvider.ModelUnloader   = (*Provider)(nil)
+	_ pkgProvider.ModelPuller     = (*Provider)(nil)
+	_ pkgProvider.ModelRemover    = (*Provider)(nil)
 )
 
 type Provider struct {

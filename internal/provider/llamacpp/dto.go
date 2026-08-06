@@ -87,6 +87,17 @@ type modelLifecycleResponse struct {
 	Error   json.RawMessage `json:"error"`
 }
 
+type modelEvent struct {
+	Model string          `json:"model"`
+	Event string          `json:"event"`
+	Data  json.RawMessage `json:"data"`
+}
+
+type modelDownloadProgress struct {
+	Done  int64 `json:"done"`
+	Total int64 `json:"total"`
+}
+
 type errorDetail struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
