@@ -41,6 +41,49 @@ type reentrantProvider struct {
 	runtime pkgProvider.Runtime
 }
 
+type capabilityProvider struct {
+	identityProvider
+	report  pkgProvider.CapabilityReport
+	request pkgProvider.CapabilityRequest
+	calls   int
+	err     error
+}
+
+func (p *capabilityProvider) InspectCapabilities(
+	_ context.Context,
+	request pkgProvider.CapabilityRequest,
+) (pkgProvider.CapabilityReport, error) {
+	p.request = request
+	p.calls++
+
+	return p.report, p.err
+}
+
+func testCapabilityReport(
+	providerID pkgProvider.ID,
+	request pkgProvider.CapabilityRequest,
+) pkgProvider.CapabilityReport {
+	descriptors := make(
+		[]pkgProvider.CapabilityDescriptor,
+		0,
+		len(pkgProvider.KnownCapabilities()),
+	)
+	for _, capability := range pkgProvider.KnownCapabilities() {
+		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{
+			Capability:   capability,
+			Support:      pkgProvider.CapabilitySupported,
+			Availability: pkgProvider.CapabilityAvailabilityUnknown,
+		})
+	}
+
+	return pkgProvider.CapabilityReport{
+		Provider:     providerID,
+		Target:       request.Target,
+		Model:        request.Model,
+		Capabilities: descriptors,
+	}
+}
+
 func (p *reentrantProvider) Complete(
 	_ context.Context,
 	_ pkgProvider.CompletionRequest,
@@ -490,6 +533,65 @@ func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
 		pkgProvider.ModelRemoveRequest{},
 	)
 	assertUnsupported("model removal", err)
+
+	_, err = providerRuntime.Capabilities(
+		context.Background(),
+		"identity-only",
+		pkgProvider.CapabilityRequest{
+			Target: pkgProvider.CapabilityTargetAdapter,
+		},
+	)
+	assertUnsupported("capability introspection", err)
+}
+
+func TestRuntimeRoutesAndValidatesCapabilityIntrospection(t *testing.T) {
+	request := pkgProvider.CapabilityRequest{
+		Target: pkgProvider.CapabilityTargetModel,
+		Model:  "qwen",
+	}
+	registered := &capabilityProvider{
+		identityProvider: identityProvider{id: "inspector"},
+		report:           testCapabilityReport("inspector", request),
+	}
+	providerRuntime := NewRuntime("inspector")
+	if err := providerRuntime.Register(registered); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+
+	report, err := providerRuntime.Capabilities(
+		context.Background(),
+		"",
+		request,
+	)
+	if err != nil {
+		t.Fatalf("inspect capabilities: %v", err)
+	}
+	if !reflect.DeepEqual(report, registered.report) ||
+		registered.request != request || registered.calls != 1 {
+		t.Fatalf("capability introspection was not routed correctly: %#v", report)
+	}
+
+	_, err = providerRuntime.Capabilities(
+		context.Background(),
+		"inspector",
+		pkgProvider.CapabilityRequest{},
+	)
+	if !errors.Is(err, pkgProvider.ErrInvalidRequest) {
+		t.Fatalf("expected ErrInvalidRequest, got %v", err)
+	}
+	if registered.calls != 1 {
+		t.Fatal("invalid request reached the provider")
+	}
+
+	registered.report.Capabilities = registered.report.Capabilities[:1]
+	_, err = providerRuntime.Capabilities(
+		context.Background(),
+		"inspector",
+		request,
+	)
+	if !errors.Is(err, pkgProvider.ErrInvalidResponse) {
+		t.Fatalf("expected ErrInvalidResponse, got %v", err)
+	}
 }
 
 func TestRuntimeRejectsNilStream(t *testing.T) {

@@ -121,6 +121,7 @@ collezione dei provider registrati e la selezione del default.
   lifecycle, acquisizione e rimozione dei modelli;
 * coordinare policy opt-in di residenza attraverso lease, timer e ownership
   delle transizioni avviate da Maestro;
+* inoltrare e validare report canonici di capability introspection senza cache;
 * proteggere registry e default durante l'accesso concorrente;
 * non mantenere lock interni durante l'esecuzione di codice del provider.
 
@@ -229,10 +230,11 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 11. L'Event Bus non mantiene lock interni durante l'esecuzione degli handler.
 12. Il Provider Runtime non mantiene lock interni durante l'esecuzione dei provider.
 13. Il Provider Runtime scarica tramite policy soltanto residenze caricate da Maestro.
-14. Il Plugin Runtime indicizza un plugin soltanto dopo che il Runtime Core ne ha accettato la registrazione.
-15. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
-16. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
-17. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
+14. Il Provider Runtime non memorizza report operativi di capability introspection.
+15. Il Plugin Runtime indicizza un plugin soltanto dopo che il Runtime Core ne ha accettato la registrazione.
+16. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
+17. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
+18. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
 
 ## Evoluzione futura
 

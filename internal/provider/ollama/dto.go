@@ -88,6 +88,16 @@ type modelRemoveRequest struct {
 	Model string `json:"model"`
 }
 
+type modelShowRequest struct {
+	Model   string `json:"model"`
+	Verbose bool   `json:"verbose"`
+}
+
+type modelShowResponse struct {
+	Capabilities []string `json:"capabilities"`
+	Error        string   `json:"error"`
+}
+
 type errorResponse struct {
 	Error string `json:"error"`
 }

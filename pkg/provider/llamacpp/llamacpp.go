@@ -12,16 +12,17 @@ import (
 const ID pkgProvider.ID = "llama.cpp"
 
 var (
-	_ pkgProvider.Provider        = (*Provider)(nil)
-	_ pkgProvider.Completer       = (*Provider)(nil)
-	_ pkgProvider.Streamer        = (*Provider)(nil)
-	_ pkgProvider.Embedder        = (*Provider)(nil)
-	_ pkgProvider.ModelLister     = (*Provider)(nil)
-	_ pkgProvider.ModelDiscoverer = (*Provider)(nil)
-	_ pkgProvider.ModelLoader     = (*Provider)(nil)
-	_ pkgProvider.ModelUnloader   = (*Provider)(nil)
-	_ pkgProvider.ModelPuller     = (*Provider)(nil)
-	_ pkgProvider.ModelRemover    = (*Provider)(nil)
+	_ pkgProvider.Provider            = (*Provider)(nil)
+	_ pkgProvider.Completer           = (*Provider)(nil)
+	_ pkgProvider.Streamer            = (*Provider)(nil)
+	_ pkgProvider.Embedder            = (*Provider)(nil)
+	_ pkgProvider.ModelLister         = (*Provider)(nil)
+	_ pkgProvider.ModelDiscoverer     = (*Provider)(nil)
+	_ pkgProvider.ModelLoader         = (*Provider)(nil)
+	_ pkgProvider.ModelUnloader       = (*Provider)(nil)
+	_ pkgProvider.ModelPuller         = (*Provider)(nil)
+	_ pkgProvider.ModelRemover        = (*Provider)(nil)
+	_ pkgProvider.CapabilityInspector = (*Provider)(nil)
 )
 
 type adapter interface {
@@ -34,6 +35,7 @@ type adapter interface {
 	pkgProvider.ModelUnloader
 	pkgProvider.ModelPuller
 	pkgProvider.ModelRemover
+	pkgProvider.CapabilityInspector
 }
 
 // Provider is a public facade over Maestro's internal llama.cpp adapter.
@@ -144,4 +146,11 @@ func (p *Provider) RemoveModel(
 	request pkgProvider.ModelRemoveRequest,
 ) error {
 	return p.adapter.RemoveModel(ctx, request)
+}
+
+func (p *Provider) InspectCapabilities(
+	ctx context.Context,
+	request pkgProvider.CapabilityRequest,
+) (pkgProvider.CapabilityReport, error) {
+	return p.adapter.InspectCapabilities(ctx, request)
 }

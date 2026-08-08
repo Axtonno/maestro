@@ -33,7 +33,8 @@ L'adapter implementa:
 * `ModelDiscoverer` unendo `GET /api/tags` e `GET /api/ps`;
 * `ModelLoader` e `ModelUnloader` tramite `POST /api/generate` e `keep_alive`;
 * `ModelPuller` tramite `POST /api/pull` con stream NDJSON;
-* `ModelRemover` tramite `DELETE /api/delete`.
+* `ModelRemover` tramite `DELETE /api/delete`;
+* `CapabilityInspector` tramite `GET /api/tags` e `POST /api/show`.
 
 Gli endpoint e i payload seguono la documentazione ufficiale di
 [chat](https://docs.ollama.com/api/chat),
@@ -47,6 +48,24 @@ Discovery e lifecycle seguono inoltre la documentazione ufficiale di
 Acquisizione e rimozione seguono la documentazione ufficiale di
 [pull](https://docs.ollama.com/api/pull) e
 [delete](https://docs.ollama.com/api/delete).
+
+L'introspection model-specific segue
+[Show model details](https://docs.ollama.com/api-reference/show-model-details)
+e il campo `capabilities` restituito dal server.
+
+---
+
+# Capability introspection
+
+Il target adapter è offline. Il target instance verifica il catalogo e dichiara
+disponibili le capability di gestione, lasciando inference `unknown` senza un
+modello. Il target model usa `/api/show`: `completion` abilita completion e
+streaming, mentre `embedding` abilita embedding.
+
+Tool calling e structured output restano non supportati dall'adapter Maestro
+anche quando compaiono nei metadata Ollama. Un modello assente viene riportato
+come non disponibile senza effettuare `/api/show`; pull resta disponibile.
+Ogni query legge un nuovo snapshot e non mantiene cache.
 
 ---
 

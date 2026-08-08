@@ -58,10 +58,11 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 12. `provider-model-lifecycle.md`
 13. `provider-model-acquisition.md`
 14. `provider-model-residency.md`
-15. `provider-layer-plan.md`
-16. `benchmark-evaluation-plan.md`
-17. `plugin-runtime.md`
-18. `laravel-plugin.md`
+15. `provider-capability-introspection.md`
+16. `provider-layer-plan.md`
+17. `benchmark-evaluation-plan.md`
+18. `plugin-runtime.md`
+19. `laravel-plugin.md`
 
 ---
 
@@ -107,6 +108,12 @@ La Fase 4 è completata: `ModelResidencyPolicy` abilita autoload opt-in e rilasc
 immediato, a TTL o allo shutdown. Il Provider Runtime coordina lease concorrenti
 senza duplicare lo stato remoto e scarica soltanto i modelli caricati dalla
 policy. Il comportamento senza policy rimane invariato.
+
+La Fase 5 è completata: `CapabilityInspector` produce snapshot ordinati per
+adapter, istanza o modello, separando supporto strutturale e disponibilità
+operativa. Ollama e llama.cpp interrogano soltanto metadata ufficiali e non
+mantengono cache; `unknown` rappresenta configurazioni non osservabili senza
+indurre routing o selezione automatica.
 
 La nuova Milestone 3 introduce il Benchmark & Evaluation Layer. Gli smoke test
 live diventano il primo di tre livelli, seguito da benchmark del runtime e da

@@ -62,6 +62,17 @@ type ModelRemover interface {
 	RemoveModel(context.Context, ModelRemoveRequest) error
 }
 
+// CapabilityInspector reports structural adapter support and, when requested,
+// probes the configured instance or one exact model.
+type CapabilityInspector interface {
+	Provider
+
+	InspectCapabilities(
+		context.Context,
+		CapabilityRequest,
+	) (CapabilityReport, error)
+}
+
 // Stream is a pull-based completion stream. Recv returns io.EOF when the
 // stream has completed. Callers must close streams they acquire.
 type Stream interface {

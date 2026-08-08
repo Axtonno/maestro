@@ -31,7 +31,8 @@ L'adapter implementa:
 * `ModelLoader` e `ModelUnloader` tramite gli endpoint `/models/load` e
   `/models/unload` del router;
 * `ModelPuller` tramite `POST /models` e `GET /models/sse`;
-* `ModelRemover` tramite `DELETE /models`.
+* `ModelRemover` tramite `DELETE /models`;
+* `CapabilityInspector` tramite `GET /models`.
 
 Gli endpoint seguono la documentazione ufficiale di
 [`llama-server`](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#openai-compatible-api-endpoints).
@@ -40,6 +41,21 @@ La capability di embedding richiede che `llama-server` sia avviato con un
 modello e un pooling compatibili. La presenza dell'interfaccia indica il
 supporto del protocollo da parte dell'adapter, non che ogni processo o modello
 caricato possa eseguire embedding.
+
+---
+
+# Capability introspection
+
+Il target adapter non effettua I/O. I target instance e model leggono
+`/models`: la presenza dello stato router rende osservabili le capability di
+load, unload, pull e remove; una risposta single-model le rende indisponibili e
+un catalogo vuoto mantiene il valore `unknown`.
+
+Per un modello, gli argomenti espliciti `--embedding` e `--no-embedding`
+distinguono processo embedding e processo chat. Quando la configurazione può
+derivare da environment ereditato e non è presente nello snapshot, Maestro
+restituisce `unknown`. Tool calling e structured output rimangono non supportati
+dall'adapter fino ai contratti neutrali della Fase 9.
 
 ---
 

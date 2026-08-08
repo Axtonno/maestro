@@ -69,8 +69,9 @@ type modelData struct {
 }
 
 type modelStatusData struct {
-	Value  string `json:"value"`
-	Failed bool   `json:"failed"`
+	Value  string   `json:"value"`
+	Failed bool     `json:"failed"`
+	Args   []string `json:"args"`
 }
 
 type modelMeta struct {

@@ -35,6 +35,7 @@ func TestNewBuildsLlamaCPPProviderWithDefaults(t *testing.T) {
 	var _ pkgProvider.ModelDiscoverer = provider
 	var _ pkgProvider.ModelLoader = provider
 	var _ pkgProvider.ModelUnloader = provider
+	var _ pkgProvider.CapabilityInspector = provider
 }
 
 func TestNewRejectsInvalidConfiguration(t *testing.T) {

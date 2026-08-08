@@ -35,7 +35,7 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 |---|---|---|---|---|
 | 3 | Conclusa | Model Acquisition & Removal | Discovery e lifecycle | Pull e rimozione opzionali, cancellabili e sicuri |
 | 4 | Conclusa | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
-| 5 | Pianificata | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
+| 5 | Conclusa | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
 | 6 | Pianificata | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
 | 7 | Pianificata | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
 | 8 | Pianificata | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
@@ -135,6 +135,8 @@ il Provider Runtime in una seconda fonte di verità sullo stato dei modelli.
 
 # Fase 5 — Capability Introspection
 
+Stato: Conclusa
+
 ## Obiettivo
 
 Rendere interrogabile ciò che un adapter, una specifica istanza e un singolo
@@ -161,6 +163,21 @@ modello possono realmente eseguire.
 - Le capability non supportate falliscono prima di inviare richieste remote.
 - Test di concorrenza e variazione del catalogo superati.
 - Nessuna selezione automatica del provider viene introdotta in questa fase.
+
+## Esito
+
+- `CapabilityInspector` e il routing `Capabilities` espongono report neutrali
+  nei target adapter, instance e model.
+- Supporto strutturale e disponibilità operativa sono distinti; `unknown` evita
+  inferenze quando il protocollo non rende osservabile la configurazione.
+- I report contengono tutte le capability note in ordine canonico e vengono
+  validati dal Provider Runtime.
+- Ollama usa il catalogo e `/api/show`; llama.cpp usa `/models`, stato router e
+  argomenti del processo modello.
+- Nessun report viene memorizzato: variazioni e concorrenza sono verificate con
+  test deterministici e race detector.
+- Capability non supportate, richieste non valide e report incoerenti falliscono
+  prima di I/O operativo ulteriore; non è introdotta selezione automatica.
 
 ---
 

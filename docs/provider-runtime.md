@@ -33,7 +33,9 @@ capability indipendenti:
 * `ModelLoader` carica un modello nelle risorse runtime del provider;
 * `ModelUnloader` rilascia un modello caricato;
 * `ModelPuller` acquisisce un modello con progresso pull-based;
-* `ModelRemover` rimuove un modello dal catalogo gestito dal provider.
+* `ModelRemover` rimuove un modello dal catalogo gestito dal provider;
+* `CapabilityInspector` descrive supporto e disponibilità per adapter, istanza
+  o modello.
 
 Un provider può implementare qualsiasi combinazione di queste capability. Il
 Runtime non richiede metodi fittizi per operazioni non disponibili.
@@ -51,7 +53,7 @@ Il Provider Runtime espone:
 * registrazione atomica, con errore per ID duplicati;
 * risoluzione per ID;
 * configurazione e risoluzione del provider predefinito;
-* routing delle capability operative.
+* routing delle capability operative e dell'introspection.
 
 Il routing comprende anche discovery avanzata, load, unload, pull e remove dei
 modelli. Il Runtime non mantiene uno snapshot autorevole del modello o un
@@ -70,6 +72,19 @@ L'ordine di registrazione non modifica implicitamente la selezione.
 
 Il registry è thread-safe. Il lock protegge soltanto provider e selezione del
 default; non viene mantenuto durante le chiamate a codice del provider.
+
+---
+
+# Capability introspection
+
+`Capabilities` inoltra `CapabilityRequest` soltanto a provider che implementano
+`CapabilityInspector`. Il target adapter non effettua I/O; instance e model
+producono un nuovo snapshot remoto. Il Runtime valida identità, ordine
+canonico, supporto e disponibilità prima di restituire il report.
+
+L'introspection non viene eseguita implicitamente prima delle operazioni e non
+sceglie provider o modello. Contratti e semantica sono descritti in
+`provider-capability-introspection.md`.
 
 ---
 
@@ -175,8 +190,14 @@ Le policy di residenza sono introdotte dalla Fase 4 e descritte in:
 docs/provider-model-residency.md
 ```
 
-Capability introspection, error semantics e resilienza rimangono incrementi
-successivi della Provider Layer.
+La capability introspection è introdotta dalla Fase 5 e descritta in:
+
+```
+docs/provider-capability-introspection.md
+```
+
+Error semantics e resilienza rimangono incrementi successivi della Provider
+Layer.
 
 La prima implementazione concreta è descritta in:
 

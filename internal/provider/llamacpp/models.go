@@ -51,6 +51,17 @@ func (p *Provider) Models(
 func (p *Provider) DiscoverModels(
 	ctx context.Context,
 ) ([]pkgProvider.ModelInfo, error) {
+	models, err := p.modelCatalog(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return translateModelInfos(models)
+}
+
+func (p *Provider) modelCatalog(
+	ctx context.Context,
+) ([]modelData, error) {
 	response := modelsResponse{}
 	if err := p.doJSON(
 		ctx,
@@ -66,9 +77,15 @@ func (p *Provider) DiscoverModels(
 		return nil, &apiError{message: message}
 	}
 
-	infos := make([]pkgProvider.ModelInfo, 0, len(response.Data))
-	seen := make(map[string]struct{}, len(response.Data))
-	for index, model := range response.Data {
+	return response.Data, nil
+}
+
+func translateModelInfos(
+	models []modelData,
+) ([]pkgProvider.ModelInfo, error) {
+	infos := make([]pkgProvider.ModelInfo, 0, len(models))
+	seen := make(map[string]struct{}, len(models))
+	for index, model := range models {
 		if strings.TrimSpace(model.ID) == "" ||
 			strings.TrimSpace(model.ID) != model.ID {
 			return nil, fmt.Errorf(

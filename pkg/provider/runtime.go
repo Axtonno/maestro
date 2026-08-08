@@ -37,6 +37,7 @@ type Runtime interface {
 	UnloadModel(context.Context, ID, ModelUnloadRequest) error
 	PullModel(context.Context, ID, ModelPullRequest) (ModelPullStream, error)
 	RemoveModel(context.Context, ID, ModelRemoveRequest) error
+	Capabilities(context.Context, ID, CapabilityRequest) (CapabilityReport, error)
 
 	SetModelResidencyPolicy(context.Context, ID, ModelResidencyPolicy) error
 	ResidencyPolicy(ID, string) (ModelResidencyPolicy, bool, error)

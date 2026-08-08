@@ -30,6 +30,7 @@ Completati:
 * provider-model-lifecycle.md
 * provider-model-acquisition.md
 * provider-model-residency.md
+* provider-capability-introspection.md
 * provider-layer-plan.md
 * benchmark-evaluation-plan.md
 * plugin-runtime.md
@@ -656,6 +657,8 @@ Copertura funzionale:
 * Adapter llama.cpp
 * Model discovery e lifecycle provider
 * Model acquisition, progress e removal provider
+* Model residency policies provider
+* Provider capability introspection
 
 Verifica effettuata con:
 
@@ -703,6 +706,13 @@ opt-in; il rilascio può essere immediato, a TTL o allo shutdown. Discovery rest
 la fonte osservabile dello stato remoto, mentre il Runtime coordina lease e
 timer soltanto per le residenze caricate da Maestro. Completion, stream ed
 embedding sono coperti da test deterministici, inclusa la concorrenza.
+
+La Fase 5 aggiunge `CapabilityInspector` e report neutrali per adapter, istanza
+e modello. `Support` descrive il contratto implementato da Maestro;
+`Availability` descrive lo snapshot operativo come available, unavailable o
+unknown. Ollama usa `/api/tags` e `/api/show`; llama.cpp usa `/models`, stato
+router e argomenti del processo. I report non sono memorizzati e non effettuano
+selezione automatica.
 
 ---
 
@@ -834,12 +844,28 @@ Completati:
 Gli smoke test live delle policy confluiscono nello Smoke Benchmark della
 Milestone 3.
 
-## Fasi 5–10 pianificate
+## ✅ Fase 5 — Capability Introspection
+
+Completati:
+
+* capability neutrali per completion, streaming, embedding, catalogo,
+  lifecycle, acquisition, structured output e tool calling;
+* target espliciti adapter, instance e model;
+* separazione tra supporto strutturale e disponibilità operativa;
+* routing e validazione canonica dei report nel Provider Runtime;
+* introspection Ollama tramite catalogo e `/api/show`;
+* introspection llama.cpp tramite `/models`, modalità router e argomenti;
+* test di assenza I/O, variazione del catalogo e concorrenza;
+* ADR-0012 e documentazione dedicata.
+
+Gli smoke test live dell'introspection confluiscono nello Smoke Benchmark della
+Milestone 3.
+
+## Fasi 6–10 pianificate
 
 Il completamento della Provider Layer è scomposto in incrementi con dipendenze
 e gate espliciti:
 
-* Fase 5 — Capability Introspection;
 * Fase 6 — Error Semantics;
 * Fase 7 — Resilience Policies;
 * Fase 8 — Provider Observability;

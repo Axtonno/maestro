@@ -196,10 +196,12 @@ stream, concorrenza e shutdown sono verificati in modo deterministico.
 
 ### Fase 5 — Capability Introspection
 
-Stato: Pianificata
+Stato: Conclusa
 
-Descrittori neutrali per distinguere capability dell'adapter, dell'istanza
-configurata e del singolo modello.
+Descrittori neutrali per adapter, istanza e modello distinguono supporto
+strutturale da disponibilità operativa. Ollama usa catalogo e `/api/show`;
+llama.cpp usa `/models`, modalità router e argomenti del processo. I report sono
+ordinati, validati, senza cache e non introducono selezione automatica.
 
 ### Fase 6 — Error Semantics
 
