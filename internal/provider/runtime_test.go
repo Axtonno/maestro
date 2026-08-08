@@ -468,11 +468,22 @@ func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
 		t.Fatalf("register provider: %v", err)
 	}
 
-	assertUnsupported := func(name string, err error) {
+	assertUnsupported := func(
+		name string,
+		operation pkgProvider.Operation,
+		err error,
+	) {
 		t.Helper()
 
 		if !errors.Is(err, pkgProvider.ErrUnsupportedCapability) {
 			t.Fatalf("%s: expected ErrUnsupportedCapability, got %v", name, err)
+		}
+		var classified *pkgProvider.ProviderError
+		if !errors.As(err, &classified) ||
+			classified.Kind != pkgProvider.ErrorKindCapabilityNotFound ||
+			classified.Operation != operation ||
+			classified.Provider != "identity-only" {
+			t.Fatalf("%s: unexpected classification: %#v", name, classified)
 		}
 	}
 
@@ -481,58 +492,58 @@ func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
 		"identity-only",
 		pkgProvider.CompletionRequest{},
 	)
-	assertUnsupported("complete", err)
+	assertUnsupported("complete", pkgProvider.OperationCompletion, err)
 
 	_, err = providerRuntime.Stream(
 		context.Background(),
 		"identity-only",
 		pkgProvider.CompletionRequest{},
 	)
-	assertUnsupported("stream", err)
+	assertUnsupported("stream", pkgProvider.OperationStreaming, err)
 
 	_, err = providerRuntime.Embed(
 		context.Background(),
 		"identity-only",
 		pkgProvider.EmbeddingRequest{},
 	)
-	assertUnsupported("embed", err)
+	assertUnsupported("embed", pkgProvider.OperationEmbedding, err)
 
 	_, err = providerRuntime.Models(context.Background(), "identity-only")
-	assertUnsupported("models", err)
+	assertUnsupported("models", pkgProvider.OperationModelListing, err)
 
 	_, err = providerRuntime.DiscoverModels(
 		context.Background(),
 		"identity-only",
 	)
-	assertUnsupported("model discovery", err)
+	assertUnsupported("model discovery", pkgProvider.OperationModelDiscovery, err)
 
 	err = providerRuntime.LoadModel(
 		context.Background(),
 		"identity-only",
 		pkgProvider.ModelLoadRequest{},
 	)
-	assertUnsupported("model loading", err)
+	assertUnsupported("model loading", pkgProvider.OperationModelLoad, err)
 
 	err = providerRuntime.UnloadModel(
 		context.Background(),
 		"identity-only",
 		pkgProvider.ModelUnloadRequest{},
 	)
-	assertUnsupported("model unloading", err)
+	assertUnsupported("model unloading", pkgProvider.OperationModelUnload, err)
 
 	_, err = providerRuntime.PullModel(
 		context.Background(),
 		"identity-only",
 		pkgProvider.ModelPullRequest{},
 	)
-	assertUnsupported("model pulling", err)
+	assertUnsupported("model pulling", pkgProvider.OperationModelPull, err)
 
 	err = providerRuntime.RemoveModel(
 		context.Background(),
 		"identity-only",
 		pkgProvider.ModelRemoveRequest{},
 	)
-	assertUnsupported("model removal", err)
+	assertUnsupported("model removal", pkgProvider.OperationModelRemove, err)
 
 	_, err = providerRuntime.Capabilities(
 		context.Background(),
@@ -541,7 +552,11 @@ func TestRuntimeRejectsUnsupportedCapabilities(t *testing.T) {
 			Target: pkgProvider.CapabilityTargetAdapter,
 		},
 	)
-	assertUnsupported("capability introspection", err)
+	assertUnsupported(
+		"capability introspection",
+		pkgProvider.OperationCapabilityIntrospection,
+		err,
+	)
 }
 
 func TestRuntimeRoutesAndValidatesCapabilityIntrospection(t *testing.T) {

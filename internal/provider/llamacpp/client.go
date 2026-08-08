@@ -14,21 +14,25 @@ import (
 )
 
 const maxErrorBodySize = 64 << 10
+const maxRemoteErrorDetailBytes = 512
 
 type apiError struct {
 	statusCode int
 	message    string
+	errorType  string
+	errorCode  string
 }
 
 func (e *apiError) Error() string {
+	message := boundedRemoteErrorDetail(e.message)
 	if e.statusCode == 0 {
-		return fmt.Sprintf("llama.cpp API error: %s", e.message)
+		return fmt.Sprintf("llama.cpp API error: %s", message)
 	}
 
 	return fmt.Sprintf(
 		"llama.cpp API error (status %d): %s",
 		e.statusCode,
-		e.message,
+		message,
 	)
 }
 
@@ -112,7 +116,10 @@ func (p *Provider) request(
 			return nil, contextError
 		}
 
-		return nil, fmt.Errorf("send llama.cpp request: %w", err)
+		return nil, fmt.Errorf(
+			"send llama.cpp request: %w",
+			&transportError{cause: err},
+		)
 	}
 
 	return response, nil
@@ -141,10 +148,19 @@ func decodeAPIError(statusCode int, body io.Reader) error {
 		encoded = encoded[:maxErrorBodySize]
 	}
 
-	message := errorMessageFromEnvelope(encoded)
-	if message == "" {
-		message = strings.TrimSpace(string(encoded))
+	var envelope struct {
+		Error json.RawMessage `json:"error"`
 	}
+	if json.Unmarshal(encoded, &envelope) == nil && len(envelope.Error) > 0 {
+		decoded := newLlamaCPPAPIError(statusCode, envelope.Error)
+		if decoded.message == "" {
+			decoded.message = http.StatusText(statusCode)
+		}
+
+		return decoded
+	}
+
+	message := strings.TrimSpace(string(encoded))
 	if message == "" {
 		message = http.StatusText(statusCode)
 	}

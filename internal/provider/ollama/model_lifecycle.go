@@ -11,15 +11,45 @@ import (
 func (p *Provider) LoadModel(
 	ctx context.Context,
 	request pkgProvider.ModelLoadRequest,
-) error {
-	return p.changeModelLifecycle(ctx, request.Model, -1, "load")
+) (operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationModelLoad,
+			operationModel,
+			operationError,
+		)
+	}()
+
+	model, err := p.model(request.Model)
+	if err != nil {
+		return err
+	}
+	operationModel = model
+
+	return p.changeModelLifecycle(ctx, model, -1, "load")
 }
 
 func (p *Provider) UnloadModel(
 	ctx context.Context,
 	request pkgProvider.ModelUnloadRequest,
-) error {
-	return p.changeModelLifecycle(ctx, request.Model, 0, "unload")
+) (operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationModelUnload,
+			operationModel,
+			operationError,
+		)
+	}()
+
+	model, err := p.model(request.Model)
+	if err != nil {
+		return err
+	}
+	operationModel = model
+
+	return p.changeModelLifecycle(ctx, model, 0, "unload")
 }
 
 func (p *Provider) changeModelLifecycle(

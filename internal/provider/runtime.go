@@ -130,6 +130,7 @@ func (r *runtime) Complete(
 	if !ok {
 		return pkgProvider.CompletionResponse{}, unsupportedCapability(
 			provider.ID(),
+			pkgProvider.OperationCompletion,
 			"completion",
 		)
 	}
@@ -172,7 +173,11 @@ func (r *runtime) Stream(
 
 	streamer, ok := provider.(pkgProvider.Streamer)
 	if !ok {
-		return nil, unsupportedCapability(provider.ID(), "streaming")
+		return nil, unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationStreaming,
+			"streaming",
+		)
 	}
 
 	release, err := r.acquireModelResidency(ctx, provider, request.Model)
@@ -236,6 +241,7 @@ func (r *runtime) Embed(
 	if !ok {
 		return pkgProvider.EmbeddingResponse{}, unsupportedCapability(
 			provider.ID(),
+			pkgProvider.OperationEmbedding,
 			"embedding",
 		)
 	}
@@ -277,7 +283,11 @@ func (r *runtime) Models(
 
 	modelLister, ok := provider.(pkgProvider.ModelLister)
 	if !ok {
-		return nil, unsupportedCapability(provider.ID(), "model listing")
+		return nil, unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationModelListing,
+			"model listing",
+		)
 	}
 
 	models, err := modelLister.Models(ctx)
@@ -307,7 +317,11 @@ func (r *runtime) DiscoverModels(
 
 	discoverer, ok := provider.(pkgProvider.ModelDiscoverer)
 	if !ok {
-		return nil, unsupportedCapability(provider.ID(), "model discovery")
+		return nil, unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationModelDiscovery,
+			"model discovery",
+		)
 	}
 
 	models, err := discoverer.DiscoverModels(ctx)
@@ -338,7 +352,11 @@ func (r *runtime) LoadModel(
 
 	loader, ok := provider.(pkgProvider.ModelLoader)
 	if !ok {
-		return unsupportedCapability(provider.ID(), "model loading")
+		return unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationModelLoad,
+			"model loading",
+		)
 	}
 
 	if err := loader.LoadModel(ctx, request); err != nil {
@@ -368,7 +386,11 @@ func (r *runtime) UnloadModel(
 
 	unloader, ok := provider.(pkgProvider.ModelUnloader)
 	if !ok {
-		return unsupportedCapability(provider.ID(), "model unloading")
+		return unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationModelUnload,
+			"model unloading",
+		)
 	}
 
 	if err := unloader.UnloadModel(ctx, request); err != nil {
@@ -398,7 +420,11 @@ func (r *runtime) PullModel(
 
 	puller, ok := provider.(pkgProvider.ModelPuller)
 	if !ok {
-		return nil, unsupportedCapability(provider.ID(), "model pulling")
+		return nil, unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationModelPull,
+			"model pulling",
+		)
 	}
 
 	stream, err := puller.PullModel(ctx, request)
@@ -437,7 +463,11 @@ func (r *runtime) RemoveModel(
 
 	remover, ok := provider.(pkgProvider.ModelRemover)
 	if !ok {
-		return unsupportedCapability(provider.ID(), "model removal")
+		return unsupportedCapability(
+			provider.ID(),
+			pkgProvider.OperationModelRemove,
+			"model removal",
+		)
 	}
 
 	if err := remover.RemoveModel(ctx, request); err != nil {
@@ -484,12 +514,16 @@ func (r *runtime) resolveLocked(
 
 func unsupportedCapability(
 	providerID pkgProvider.ID,
+	operation pkgProvider.Operation,
 	capability string,
 ) error {
-	return fmt.Errorf(
-		"provider %q does not support %s: %w",
-		providerID,
-		capability,
+	return pkgProvider.NewProviderError(
+		pkgProvider.ProviderErrorDetails{
+			Kind:      pkgProvider.ErrorKindCapabilityNotFound,
+			Operation: operation,
+			Provider:  providerID,
+			Message:   fmt.Sprintf("%s is not supported", capability),
+		},
 		pkgProvider.ErrUnsupportedCapability,
 	)
 }

@@ -11,11 +11,21 @@ import (
 func (p *Provider) Complete(
 	ctx context.Context,
 	request pkgProvider.CompletionRequest,
-) (pkgProvider.CompletionResponse, error) {
+) (responseValue pkgProvider.CompletionResponse, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationCompletion,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return pkgProvider.CompletionResponse{}, err
 	}
+	operationModel = model
 
 	response := chatResponse{}
 	if err := p.doJSON(
@@ -31,8 +41,8 @@ func (p *Provider) Complete(
 		)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return pkgProvider.CompletionResponse{}, &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return pkgProvider.CompletionResponse{}, newLlamaCPPAPIError(0, response.Error)
 	}
 
 	if len(response.Choices) != 1 {

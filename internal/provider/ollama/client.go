@@ -21,14 +21,15 @@ type apiError struct {
 }
 
 func (e *apiError) Error() string {
+	message := boundedRemoteErrorDetail(e.message)
 	if e.statusCode == 0 {
-		return fmt.Sprintf("Ollama API error: %s", e.message)
+		return fmt.Sprintf("Ollama API error: %s", message)
 	}
 
 	return fmt.Sprintf(
 		"Ollama API error (status %d): %s",
 		e.statusCode,
-		e.message,
+		message,
 	)
 }
 
@@ -108,7 +109,10 @@ func (p *Provider) request(
 			return nil, contextError
 		}
 
-		return nil, fmt.Errorf("send Ollama request: %w", err)
+		return nil, fmt.Errorf(
+			"send Ollama request: %w",
+			&transportError{cause: err},
+		)
 	}
 
 	return response, nil

@@ -12,7 +12,15 @@ import (
 
 func (p *Provider) Models(
 	ctx context.Context,
-) ([]pkgProvider.Model, error) {
+) (modelsValue []pkgProvider.Model, operationError error) {
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationModelListing,
+			"",
+			operationError,
+		)
+	}()
+
 	response := modelsResponse{}
 	if err := p.doJSON(
 		ctx,
@@ -24,8 +32,8 @@ func (p *Provider) Models(
 		return nil, fmt.Errorf("list llama.cpp models: %w", err)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return nil, &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return nil, newLlamaCPPAPIError(0, response.Error)
 	}
 
 	models := make([]pkgProvider.Model, 0, len(response.Data))
@@ -50,7 +58,15 @@ func (p *Provider) Models(
 
 func (p *Provider) DiscoverModels(
 	ctx context.Context,
-) ([]pkgProvider.ModelInfo, error) {
+) (modelsValue []pkgProvider.ModelInfo, operationError error) {
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationModelDiscovery,
+			"",
+			operationError,
+		)
+	}()
+
 	models, err := p.modelCatalog(ctx)
 	if err != nil {
 		return nil, err
@@ -73,8 +89,8 @@ func (p *Provider) modelCatalog(
 		return nil, fmt.Errorf("discover llama.cpp models: %w", err)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return nil, &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return nil, newLlamaCPPAPIError(0, response.Error)
 	}
 
 	return response.Data, nil

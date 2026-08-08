@@ -36,11 +36,21 @@ type modelPullStream struct {
 func (p *Provider) PullModel(
 	ctx context.Context,
 	request pkgProvider.ModelPullRequest,
-) (pkgProvider.ModelPullStream, error) {
+) (streamValue pkgProvider.ModelPullStream, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationModelPull,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return nil, err
 	}
+	operationModel = model
 
 	if err := p.startModelPull(ctx, model); err != nil {
 		return nil, err
@@ -80,11 +90,21 @@ func (p *Provider) PullModel(
 func (p *Provider) RemoveModel(
 	ctx context.Context,
 	request pkgProvider.ModelRemoveRequest,
-) error {
+) (operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationModelRemove,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return err
 	}
+	operationModel = model
 
 	response := modelLifecycleResponse{}
 	path := "/models?model=" + url.QueryEscape(model)
@@ -98,8 +118,8 @@ func (p *Provider) RemoveModel(
 		return fmt.Errorf("remove llama.cpp model: %w", err)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return newLlamaCPPAPIError(0, response.Error)
 	}
 	if !response.Success {
 		return fmt.Errorf(
@@ -123,8 +143,8 @@ func (p *Provider) startModelPull(ctx context.Context, model string) error {
 		return fmt.Errorf("start llama.cpp model pull: %w", err)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return newLlamaCPPAPIError(0, response.Error)
 	}
 	if !response.Success {
 		return fmt.Errorf(
@@ -136,7 +156,18 @@ func (p *Provider) startModelPull(ctx context.Context, model string) error {
 	return nil
 }
 
-func (s *modelPullStream) Recv() (pkgProvider.ModelPullProgress, error) {
+func (s *modelPullStream) Recv() (
+	progress pkgProvider.ModelPullProgress,
+	receiveError error,
+) {
+	defer func() {
+		receiveError = classifyLlamaCPPError(
+			pkgProvider.OperationModelPull,
+			s.model,
+			receiveError,
+		)
+	}()
+
 	s.recvMu.Lock()
 	defer s.recvMu.Unlock()
 
@@ -228,19 +259,27 @@ func (s *modelPullStream) Recv() (pkgProvider.ModelPullProgress, error) {
 		case "download_failed":
 			_ = s.finish(false)
 
-			message := errorMessage(event.Data)
-			if message == "" {
-				message = "model download failed"
+			remote := newLlamaCPPAPIError(0, event.Data)
+			if remote.message == "" {
+				remote.message = "model download failed"
 			}
 
-			return pkgProvider.ModelPullProgress{}, &apiError{message: message}
+			return pkgProvider.ModelPullProgress{}, remote
 		default:
 			continue
 		}
 	}
 }
 
-func (s *modelPullStream) Close() error {
+func (s *modelPullStream) Close() (closeError error) {
+	defer func() {
+		closeError = classifyLlamaCPPError(
+			pkgProvider.OperationModelPull,
+			s.model,
+			closeError,
+		)
+	}()
+
 	return s.finish(true)
 }
 

@@ -204,8 +204,11 @@ Le risposte vengono rifiutate quando:
 * un modello elencato non possiede alcuna identità.
 
 I body degli errori HTTP vengono letti con un limite di 64 KiB. Il campo JSON
-`error` viene preferito al testo grezzo. Cancellazione e deadline del context
-restano riconoscibili tramite `errors.Is`.
+`error` viene preferito al testo grezzo. `ProviderError` classifica HTTP,
+trasporto, context e fallimenti mid-stream; i dettagli pubblici sono
+normalizzati e limitati a 512 byte. Cancellazione e deadline del context
+restano riconoscibili tramite `errors.Is`. La matrice comune è documentata in
+`provider-error-semantics.md`.
 
 ---
 

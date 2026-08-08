@@ -182,6 +182,12 @@ func TestStreamRejectsInvalidEventSequences(t *testing.T) {
 			if errors.Is(receiveError, io.EOF) {
 				t.Fatalf("expected stream failure, got EOF")
 			}
+			var classified *pkgProvider.ProviderError
+			if !errors.As(receiveError, &classified) ||
+				classified.Operation != pkgProvider.OperationStreaming ||
+				classified.Model != "local" {
+				t.Fatalf("expected classified streaming error, got %v", receiveError)
+			}
 			if test.target != nil && !errors.Is(receiveError, test.target) {
 				t.Fatalf("expected %v, got %v", test.target, receiveError)
 			}
@@ -207,6 +213,12 @@ func TestStreamPreservesCancellation(t *testing.T) {
 
 	if _, err := stream.Recv(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context cancellation, got %v", err)
+	} else {
+		var classified *pkgProvider.ProviderError
+		if !errors.As(err, &classified) ||
+			classified.Kind != pkgProvider.ErrorKindCanceled {
+			t.Fatalf("expected classified cancellation, got %v", err)
+		}
 	}
 	if err := stream.Close(); err != nil {
 		t.Fatalf("close canceled stream: %v", err)

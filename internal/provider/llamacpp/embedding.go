@@ -11,11 +11,21 @@ import (
 func (p *Provider) Embed(
 	ctx context.Context,
 	request pkgProvider.EmbeddingRequest,
-) (pkgProvider.EmbeddingResponse, error) {
+) (responseValue pkgProvider.EmbeddingResponse, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationEmbedding,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return pkgProvider.EmbeddingResponse{}, err
 	}
+	operationModel = model
 
 	if len(request.Inputs) == 0 {
 		return pkgProvider.EmbeddingResponse{}, fmt.Errorf(
@@ -42,8 +52,8 @@ func (p *Provider) Embed(
 		)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return pkgProvider.EmbeddingResponse{}, &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return pkgProvider.EmbeddingResponse{}, newLlamaCPPAPIError(0, response.Error)
 	}
 
 	if len(response.Data) != len(request.Inputs) {

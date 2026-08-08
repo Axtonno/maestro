@@ -11,7 +11,15 @@ import (
 
 func (p *Provider) Models(
 	ctx context.Context,
-) ([]pkgProvider.Model, error) {
+) (result []pkgProvider.Model, operationError error) {
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationModelListing,
+			"",
+			operationError,
+		)
+	}()
+
 	response := tagsResponse{}
 	if err := p.doJSON(
 		ctx,
@@ -42,7 +50,15 @@ func (p *Provider) Models(
 
 func (p *Provider) DiscoverModels(
 	ctx context.Context,
-) ([]pkgProvider.ModelInfo, error) {
+) (result []pkgProvider.ModelInfo, operationError error) {
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationModelDiscovery,
+			"",
+			operationError,
+		)
+	}()
+
 	available := tagsResponse{}
 	if err := p.doJSON(
 		ctx,

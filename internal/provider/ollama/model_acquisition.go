@@ -30,11 +30,21 @@ type modelPullStream struct {
 func (p *Provider) PullModel(
 	ctx context.Context,
 	request pkgProvider.ModelPullRequest,
-) (pkgProvider.ModelPullStream, error) {
+) (result pkgProvider.ModelPullStream, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationModelPull,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return nil, err
 	}
+	operationModel = model
 
 	response, err := p.request(
 		ctx,
@@ -63,11 +73,21 @@ func (p *Provider) PullModel(
 func (p *Provider) RemoveModel(
 	ctx context.Context,
 	request pkgProvider.ModelRemoveRequest,
-) error {
+) (operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationModelRemove,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return err
 	}
+	operationModel = model
 
 	response, err := p.request(
 		ctx,
@@ -87,7 +107,18 @@ func (p *Provider) RemoveModel(
 	return nil
 }
 
-func (s *modelPullStream) Recv() (pkgProvider.ModelPullProgress, error) {
+func (s *modelPullStream) Recv() (
+	progress pkgProvider.ModelPullProgress,
+	receiveError error,
+) {
+	defer func() {
+		receiveError = classifyOllamaError(
+			pkgProvider.OperationModelPull,
+			s.model,
+			receiveError,
+		)
+	}()
+
 	s.recvMu.Lock()
 	defer s.recvMu.Unlock()
 
@@ -136,7 +167,7 @@ func (s *modelPullStream) Recv() (pkgProvider.ModelPullProgress, error) {
 		)
 	}
 
-	progress := pkgProvider.ModelPullProgress{
+	progress = pkgProvider.ModelPullProgress{
 		Model:          s.model,
 		Stage:          stage,
 		Detail:         response.Status,
@@ -162,7 +193,11 @@ func (s *modelPullStream) Close() error {
 	s.closed = true
 	s.stateMu.Unlock()
 
-	return s.body.Close()
+	return classifyOllamaError(
+		pkgProvider.OperationModelPull,
+		s.model,
+		s.body.Close(),
+	)
 }
 
 func (s *modelPullStream) currentState() error {

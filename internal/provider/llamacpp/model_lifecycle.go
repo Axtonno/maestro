@@ -11,17 +11,49 @@ import (
 func (p *Provider) LoadModel(
 	ctx context.Context,
 	request pkgProvider.ModelLoadRequest,
-) error {
-	return p.changeModelLifecycle(ctx, request.Model, "/models/load", "load")
+) (operationError error) {
+	model, err := p.model(request.Model)
+	if err != nil {
+		return classifyLlamaCPPError(
+			pkgProvider.OperationModelLoad,
+			request.Model,
+			err,
+		)
+	}
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationModelLoad,
+			model,
+			operationError,
+		)
+	}()
+
+	return p.changeModelLifecycle(ctx, model, "/models/load", "load")
 }
 
 func (p *Provider) UnloadModel(
 	ctx context.Context,
 	request pkgProvider.ModelUnloadRequest,
-) error {
+) (operationError error) {
+	model, err := p.model(request.Model)
+	if err != nil {
+		return classifyLlamaCPPError(
+			pkgProvider.OperationModelUnload,
+			request.Model,
+			err,
+		)
+	}
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationModelUnload,
+			model,
+			operationError,
+		)
+	}()
+
 	return p.changeModelLifecycle(
 		ctx,
-		request.Model,
+		model,
 		"/models/unload",
 		"unload",
 	)
@@ -49,8 +81,8 @@ func (p *Provider) changeModelLifecycle(
 		return fmt.Errorf("%s llama.cpp model: %w", operation, err)
 	}
 
-	if message := errorMessage(response.Error); message != "" {
-		return &apiError{message: message}
+	if hasLlamaCPPAPIError(response.Error) {
+		return newLlamaCPPAPIError(0, response.Error)
 	}
 	if !response.Success {
 		return fmt.Errorf(

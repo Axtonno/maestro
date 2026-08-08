@@ -59,10 +59,11 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 13. `provider-model-acquisition.md`
 14. `provider-model-residency.md`
 15. `provider-capability-introspection.md`
-16. `provider-layer-plan.md`
-17. `benchmark-evaluation-plan.md`
-18. `plugin-runtime.md`
-19. `laravel-plugin.md`
+16. `provider-error-semantics.md`
+17. `provider-layer-plan.md`
+18. `benchmark-evaluation-plan.md`
+19. `plugin-runtime.md`
+20. `laravel-plugin.md`
 
 ---
 
@@ -114,6 +115,11 @@ adapter, istanza o modello, separando supporto strutturale e disponibilità
 operativa. Ollama e llama.cpp interrogano soltanto metadata ufficiali e non
 mantengono cache; `unknown` rappresenta configurazioni non osservabili senza
 indurre routing o selezione automatica.
+
+La Fase 6 è completata: `ProviderError` uniforma kind, operazione, identità,
+status e ritentabilità conservativa mantenendo `errors.Is`/`errors.As`, cause,
+context ed EOF idiomatici. Gli adapter classificano anche errori di trasporto e
+mid-stream; retry e circuit breaker restano separati per la Fase 7.
 
 La nuova Milestone 3 introduce il Benchmark & Evaluation Layer. Gli smoke test
 live diventano il primo di tre livelli, seguito da benchmark del runtime e da

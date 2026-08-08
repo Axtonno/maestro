@@ -185,6 +185,6 @@ La suite verifica:
 - query concorrenti con race detector;
 - rifiuto pre-I/O di richieste e capability non supportate.
 
-Un report non garantisce l'esito della richiesta successiva. Error semantics,
-retry e osservabilità appartengono alle Fasi 6–8; gli scenari live confluiscono
-nello Smoke Benchmark della Milestone 3.
+Un report non garantisce l'esito della richiesta successiva. La semantica degli
+errori è completata nella Fase 6; retry e osservabilità appartengono alle Fasi
+7–8. Gli scenari live confluiscono nello Smoke Benchmark della Milestone 3.

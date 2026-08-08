@@ -18,6 +18,7 @@ var _ pkgProvider.Stream = (*stream)(nil)
 
 type stream struct {
 	context context.Context
+	model   string
 	body    io.ReadCloser
 	reader  *bufio.Reader
 
@@ -31,11 +32,21 @@ type stream struct {
 func (p *Provider) Stream(
 	ctx context.Context,
 	request pkgProvider.CompletionRequest,
-) (pkgProvider.Stream, error) {
+) (streamValue pkgProvider.Stream, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyLlamaCPPError(
+			pkgProvider.OperationStreaming,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return nil, err
 	}
+	operationModel = model
 
 	response, err := p.request(
 		ctx,
@@ -56,12 +67,24 @@ func (p *Provider) Stream(
 
 	return &stream{
 		context: ctx,
+		model:   model,
 		body:    response.Body,
 		reader:  bufio.NewReader(response.Body),
 	}, nil
 }
 
-func (s *stream) Recv() (pkgProvider.StreamChunk, error) {
+func (s *stream) Recv() (
+	chunk pkgProvider.StreamChunk,
+	receiveError error,
+) {
+	defer func() {
+		receiveError = classifyLlamaCPPError(
+			pkgProvider.OperationStreaming,
+			s.model,
+			receiveError,
+		)
+	}()
+
 	s.recvMu.Lock()
 	defer s.recvMu.Unlock()
 
@@ -123,10 +146,10 @@ func (s *stream) Recv() (pkgProvider.StreamChunk, error) {
 			)
 		}
 
-		if message := errorMessage(response.Error); message != "" {
+		if hasLlamaCPPAPIError(response.Error) {
 			s.finish()
 
-			return pkgProvider.StreamChunk{}, &apiError{message: message}
+			return pkgProvider.StreamChunk{}, newLlamaCPPAPIError(0, response.Error)
 		}
 
 		if len(response.Choices) == 0 {
@@ -180,7 +203,15 @@ func (s *stream) Recv() (pkgProvider.StreamChunk, error) {
 	}
 }
 
-func (s *stream) Close() error {
+func (s *stream) Close() (closeError error) {
+	defer func() {
+		closeError = classifyLlamaCPPError(
+			pkgProvider.OperationStreaming,
+			s.model,
+			closeError,
+		)
+	}()
+
 	s.stateMu.Lock()
 	if s.closed {
 		s.stateMu.Unlock()

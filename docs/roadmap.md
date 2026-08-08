@@ -205,10 +205,12 @@ ordinati, validati, senza cache e non introducono selezione automatica.
 
 ### Fase 6 — Error Semantics
 
-Stato: Pianificata
+Stato: Conclusa
 
-Classificazione uniforme degli errori provider, compatibile con gli errori Go e
-utilizzabile dalle policy senza analizzare stringhe o payload proprietari.
+`ProviderError` fornisce kind neutrali, operazione, identità, status e
+ritentabilità conservativa preservando cause e sentinel Go. Ollama e llama.cpp
+condividono la baseline HTTP e classificano anche trasporto, context, risposte
+malformate ed errori mid-stream. La classificazione non applica retry.
 
 ### Fase 7 — Resilience Policies
 

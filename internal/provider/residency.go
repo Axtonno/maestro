@@ -77,13 +77,25 @@ func (r *runtime) SetModelResidencyPolicy(
 	}
 	if policy.Autoload {
 		if _, ok := selected.(pkgProvider.ModelDiscoverer); !ok {
-			return unsupportedCapability(selected.ID(), "model discovery")
+			return unsupportedCapability(
+				selected.ID(),
+				pkgProvider.OperationResidencyPolicy,
+				"model discovery",
+			)
 		}
 		if _, ok := selected.(pkgProvider.ModelLoader); !ok {
-			return unsupportedCapability(selected.ID(), "model loading")
+			return unsupportedCapability(
+				selected.ID(),
+				pkgProvider.OperationResidencyPolicy,
+				"model loading",
+			)
 		}
 		if _, ok := selected.(pkgProvider.ModelUnloader); !ok {
-			return unsupportedCapability(selected.ID(), "model unloading")
+			return unsupportedCapability(
+				selected.ID(),
+				pkgProvider.OperationResidencyPolicy,
+				"model unloading",
+			)
 		}
 	}
 

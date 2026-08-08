@@ -209,6 +209,12 @@ verificati soltanto quando è configurato il relativo modello.
 Discovery router, load e unload vengono eseguiti soltanto quando è configurata
 `MAESTRO_LLAMACPP_LIFECYCLE_MODEL`.
 
+Gli errori OpenAI-like del server conservano `type` e `code` nel
+`ProviderError` neutrale. Il tipo strutturato ha precedenza sullo status HTTP;
+trasporto, context, risposte malformate e fallimenti mid-stream usano la stessa
+tassonomia descritta in `provider-error-semantics.md`. Cause e sentinel restano
+ispezionabili con `errors.Is`/`errors.As` e i dettagli remoti sono limitati.
+
 ---
 
 # Limiti della prima versione

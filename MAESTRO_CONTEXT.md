@@ -861,12 +861,30 @@ Completati:
 Gli smoke test live dell'introspection confluiscono nello Smoke Benchmark della
 Milestone 3.
 
-## Fasi 6–10 pianificate
+## ✅ Fase 6 — Error Semantics
+
+Completati:
+
+* envelope pubblico `ProviderError` con kind, operazione, provider, modello,
+  status, ritentabilità e dettagli remoti strutturati;
+* sentinel neutrali e compatibilità con `ErrInvalidRequest`,
+  `ErrInvalidResponse` ed `ErrUnsupportedCapability`;
+* preservation di cause, `context.Canceled`, `context.DeadlineExceeded` e
+  `io.EOF` tramite semantica idiomatica `errors.Is`/`errors.As`;
+* mapping HTTP comune e mapping del `type` OpenAI-like di llama.cpp;
+* classificazione di operazioni sincrone, trasporto e stream per Ollama e
+  llama.cpp;
+* normalizzazione e limite dei dettagli remoti;
+* ADR-0013 e documentazione dedicata.
+
+La classificazione non effettua retry: idempotenza, backoff e circuit breaker
+appartengono alla Fase 7.
+
+## Fasi 7–10 pianificate
 
 Il completamento della Provider Layer è scomposto in incrementi con dipendenze
 e gate espliciti:
 
-* Fase 6 — Error Semantics;
 * Fase 7 — Resilience Policies;
 * Fase 8 — Provider Observability;
 * Fase 9 — Advanced Generation Baseline;

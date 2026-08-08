@@ -36,7 +36,7 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 | 3 | Conclusa | Model Acquisition & Removal | Discovery e lifecycle | Pull e rimozione opzionali, cancellabili e sicuri |
 | 4 | Conclusa | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
 | 5 | Conclusa | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
-| 6 | Pianificata | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
+| 6 | Conclusa | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
 | 7 | Pianificata | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
 | 8 | Pianificata | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
 | 9 | Pianificata | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
@@ -183,6 +183,8 @@ modello possono realmente eseguire.
 
 # Fase 6 — Error Semantics
 
+Stato: Conclusa
+
 ## Obiettivo
 
 Fornire alle policy e ai consumer una classificazione stabile degli errori,
@@ -207,6 +209,23 @@ indipendente dai payload e dagli status specifici dei provider.
 - Test per status HTTP, errori di trasporto, context e payload malformati.
 - Nessun consumer deve analizzare stringhe per prendere decisioni operative.
 - Le API esistenti continuano a restituire errori idiomatici Go.
+
+## Esito
+
+- `ProviderError` espone kind, operazione, provider, modello, status,
+  ritentabilità e dettagli strutturati remoti con causa preservata.
+- Sentinel nuovi e preesistenti restano interrogabili con `errors.Is`; il
+  dettaglio tipizzato è accessibile con `errors.As`.
+- Ollama e llama.cpp classificano errori HTTP, trasporto, context, risposte
+  invalide e fallimenti che emergono durante gli stream.
+- llama.cpp conserva `type` e `code` OpenAI-like; Ollama applica la stessa
+  tassonomia ai payload `error`, inclusi quelli mid-stream.
+- I dettagli remoti sono normalizzati e limitati; nessun contenuto di richiesta
+  viene incluso nell'envelope.
+- `Retryable` è metadata conservativo: retry, backoff, idempotenza e circuit
+  breaker restano responsabilità della Fase 7.
+- Matrice, limiti e modalità d'uso sono descritti in
+  `provider-error-semantics.md`; ADR-0013 registra la decisione.
 
 ---
 

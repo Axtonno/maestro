@@ -11,7 +11,15 @@ import (
 func (p *Provider) InspectCapabilities(
 	ctx context.Context,
 	request pkgProvider.CapabilityRequest,
-) (pkgProvider.CapabilityReport, error) {
+) (result pkgProvider.CapabilityReport, operationError error) {
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationCapabilityIntrospection,
+			request.Model,
+			operationError,
+		)
+	}()
+
 	if err := request.Validate(); err != nil {
 		return pkgProvider.CapabilityReport{}, fmt.Errorf(
 			"inspect Ollama capabilities: %w",

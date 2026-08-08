@@ -38,6 +38,7 @@ func (r *runtime) Capabilities(
 	if !ok {
 		return pkgProvider.CapabilityReport{}, unsupportedCapability(
 			selected.ID(),
+			pkgProvider.OperationCapabilityIntrospection,
 			"capability introspection",
 		)
 	}

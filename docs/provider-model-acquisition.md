@@ -185,5 +185,6 @@ Questa fase non introduce:
 * cancellazione o rimozione diretta di file.
 
 Residenza e autoload sono completate nella Fase 4 e descritte in
-`provider-model-residency.md`. Error semantics e resilienza
-appartengono alle Fasi 6 e 7.
+`provider-model-residency.md`. La semantica degli errori è completata nella
+Fase 6 e descritta in `provider-error-semantics.md`; la resilienza appartiene
+alla Fase 7.

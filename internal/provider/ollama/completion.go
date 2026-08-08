@@ -11,11 +11,21 @@ import (
 func (p *Provider) Complete(
 	ctx context.Context,
 	request pkgProvider.CompletionRequest,
-) (pkgProvider.CompletionResponse, error) {
+) (result pkgProvider.CompletionResponse, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationCompletion,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return pkgProvider.CompletionResponse{}, err
 	}
+	operationModel = model
 
 	response := chatResponse{}
 	if err := p.doJSON(

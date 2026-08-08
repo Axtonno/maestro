@@ -11,11 +11,21 @@ import (
 func (p *Provider) Embed(
 	ctx context.Context,
 	request pkgProvider.EmbeddingRequest,
-) (pkgProvider.EmbeddingResponse, error) {
+) (result pkgProvider.EmbeddingResponse, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationEmbedding,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return pkgProvider.EmbeddingResponse{}, err
 	}
+	operationModel = model
 
 	if len(request.Inputs) == 0 {
 		return pkgProvider.EmbeddingResponse{}, fmt.Errorf(

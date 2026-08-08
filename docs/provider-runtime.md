@@ -151,10 +151,10 @@ modificarli concorrentemente durante un'operazione.
 
 Gli errori pubblici distinguono provider non valido, registrazione duplicata,
 provider non trovato, default assente, capability non supportata e stream non
-valido. `ErrInvalidRequest` e `ErrInvalidResponse` permettono inoltre agli
-adapter di segnalare errori neutrali di validazione. Gli errori dei provider
-vengono arricchiti con operazione e ID e restano ispezionabili tramite
-`errors.Is`.
+valido. Gli errori operativi degli adapter usano `ProviderError`, che espone
+kind, operazione, provider, modello, status e ritentabilità conservativa.
+Cause, context e sentinel vecchi e nuovi restano ispezionabili tramite
+`errors.Is`/`errors.As`; nessun consumer deve interpretare `Error()`.
 
 ---
 
@@ -196,7 +196,13 @@ La capability introspection è introdotta dalla Fase 5 e descritta in:
 docs/provider-capability-introspection.md
 ```
 
-Error semantics e resilienza rimangono incrementi successivi della Provider
+La semantica degli errori è introdotta dalla Fase 6 e descritta in:
+
+```
+docs/provider-error-semantics.md
+```
+
+Le policy di resilienza rimangono un incremento successivo della Provider
 Layer.
 
 La prima implementazione concreta è descritta in:

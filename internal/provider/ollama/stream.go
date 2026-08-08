@@ -16,6 +16,7 @@ var _ pkgProvider.Stream = (*stream)(nil)
 
 type stream struct {
 	context context.Context
+	model   string
 	body    io.ReadCloser
 	decoder *json.Decoder
 
@@ -28,11 +29,21 @@ type stream struct {
 func (p *Provider) Stream(
 	ctx context.Context,
 	request pkgProvider.CompletionRequest,
-) (pkgProvider.Stream, error) {
+) (result pkgProvider.Stream, operationError error) {
+	operationModel := request.Model
+	defer func() {
+		operationError = classifyOllamaError(
+			pkgProvider.OperationStreaming,
+			operationModel,
+			operationError,
+		)
+	}()
+
 	model, err := p.model(request.Model)
 	if err != nil {
 		return nil, err
 	}
+	operationModel = model
 
 	response, err := p.request(
 		ctx,
@@ -52,12 +63,24 @@ func (p *Provider) Stream(
 
 	return &stream{
 		context: ctx,
+		model:   model,
 		body:    response.Body,
 		decoder: json.NewDecoder(response.Body),
 	}, nil
 }
 
-func (s *stream) Recv() (pkgProvider.StreamChunk, error) {
+func (s *stream) Recv() (
+	chunk pkgProvider.StreamChunk,
+	receiveError error,
+) {
+	defer func() {
+		receiveError = classifyOllamaError(
+			pkgProvider.OperationStreaming,
+			s.model,
+			receiveError,
+		)
+	}()
+
 	s.recvMu.Lock()
 	defer s.recvMu.Unlock()
 
@@ -97,7 +120,7 @@ func (s *stream) Recv() (pkgProvider.StreamChunk, error) {
 		}
 	}
 
-	chunk := pkgProvider.StreamChunk{
+	chunk = pkgProvider.StreamChunk{
 		Model:        response.Model,
 		Content:      response.Message.Content,
 		FinishReason: response.DoneReason,
@@ -124,7 +147,11 @@ func (s *stream) Close() error {
 	s.closed = true
 	s.stateMu.Unlock()
 
-	return s.body.Close()
+	return classifyOllamaError(
+		pkgProvider.OperationStreaming,
+		s.model,
+		s.body.Close(),
+	)
 }
 
 func (s *stream) currentState() error {
