@@ -147,7 +147,7 @@ func (r *runtime) SetModelResidencyPolicy(
 		signalResidencyLocked(entry)
 		r.residencyMu.Unlock()
 
-		err := unloadResidency(ctx, entry.provider, key.model)
+		err := r.unloadResidency(ctx, entry.provider, key.model)
 		r.finishResidencyUnload(key, entry, err)
 
 		if err != nil {
@@ -243,7 +243,7 @@ func (r *runtime) acquireModelResidency(
 		previouslyOwned := entry.owned
 		r.residencyMu.Unlock()
 
-		loaded, err := ensureModelResident(ctx, entry.provider, key.model)
+		loaded, err := r.ensureModelResident(ctx, entry.provider, key.model)
 
 		r.residencyMu.Lock()
 		current := r.residencies[key]
@@ -323,7 +323,7 @@ func (r *runtime) releaseModelResidency(key residencyKey) error {
 	)
 	defer cancel()
 
-	err := unloadResidency(ctx, entry.provider, key.model)
+	err := r.unloadResidency(ctx, entry.provider, key.model)
 	r.finishResidencyUnload(key, entry, err)
 
 	if err != nil {
@@ -374,7 +374,7 @@ func (r *runtime) expireModelResidency(
 	)
 	defer cancel()
 
-	err := unloadResidency(ctx, entry.provider, key.model)
+	err := r.unloadResidency(ctx, entry.provider, key.model)
 	r.finishResidencyUnload(key, entry, err)
 }
 
@@ -479,7 +479,7 @@ func (r *runtime) shutdownResidency(
 		signalResidencyLocked(entry)
 		r.residencyMu.Unlock()
 
-		err := unloadResidency(ctx, entry.provider, key.model)
+		err := r.unloadResidency(ctx, entry.provider, key.model)
 		r.finishResidencyUnload(key, entry, err)
 
 		if err != nil {
@@ -495,13 +495,28 @@ func (r *runtime) shutdownResidency(
 	}
 }
 
-func ensureModelResident(
+func (r *runtime) ensureModelResident(
 	ctx context.Context,
 	provider pkgProvider.Provider,
 	model string,
 ) (bool, error) {
 	discoverer := provider.(pkgProvider.ModelDiscoverer)
-	models, err := discoverer.DiscoverModels(ctx)
+	discoveryExecution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelDiscovery,
+		"",
+	)
+	if err != nil {
+		return false, err
+	}
+	models, err := executeWithResilience(
+		ctx,
+		discoveryExecution,
+		func() ([]pkgProvider.ModelInfo, error) {
+			return discoverer.DiscoverModels(ctx)
+		},
+	)
 	if err != nil {
 		return false, err
 	}
@@ -517,27 +532,49 @@ func ensureModelResident(
 	}
 
 	loader := provider.(pkgProvider.ModelLoader)
-	if err := loader.LoadModel(
+	loadExecution, err := r.beginResilience(
 		ctx,
-		pkgProvider.ModelLoadRequest{Model: model},
-	); err != nil {
+		provider.ID(),
+		pkgProvider.OperationModelLoad,
+		model,
+	)
+	if err != nil {
+		return false, err
+	}
+	if err := executeErrorWithResilience(ctx, loadExecution, func() error {
+		return loader.LoadModel(
+			ctx,
+			pkgProvider.ModelLoadRequest{Model: model},
+		)
+	}); err != nil {
 		return false, err
 	}
 
 	return true, nil
 }
 
-func unloadResidency(
+func (r *runtime) unloadResidency(
 	ctx context.Context,
 	provider pkgProvider.Provider,
 	model string,
 ) error {
 	unloader := provider.(pkgProvider.ModelUnloader)
-
-	return unloader.UnloadModel(
+	execution, err := r.beginResilience(
 		ctx,
-		pkgProvider.ModelUnloadRequest{Model: model},
+		provider.ID(),
+		pkgProvider.OperationModelUnload,
+		model,
 	)
+	if err != nil {
+		return err
+	}
+
+	return executeErrorWithResilience(ctx, execution, func() error {
+		return unloader.UnloadModel(
+			ctx,
+			pkgProvider.ModelUnloadRequest{Model: model},
+		)
+	})
 }
 
 func modelStateIsResident(state pkgProvider.ModelState) bool {

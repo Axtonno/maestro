@@ -248,7 +248,8 @@ Non sono ancora tradotti:
 * structured output;
 * opzioni di generazione specifiche di Ollama;
 * autenticazione per i modelli cloud;
-* retry, backoff o circuit breaker.
+* retry, backoff o circuit breaker interni all'adapter; le policy comuni
+  appartengono al Provider Runtime.
 
 Queste estensioni richiederanno prima contratti neutrali condivisibili con
 almeno un secondo provider.

@@ -23,6 +23,12 @@ type runtime struct {
 	residencies           map[residencyKey]*residencyEntry
 	residencyScheduler    residencyScheduler
 	residencyShuttingDown bool
+
+	resilienceMu       sync.RWMutex
+	resiliencePolicies map[resilienceKey]pkgProvider.ResiliencePolicy
+	circuits           map[resilienceKey]*circuitBreaker
+	resilienceClock    resilienceClock
+	resilienceJitter   resilienceJitter
 }
 
 func NewRuntime(defaultID pkgProvider.ID) pkgProvider.Runtime {
@@ -33,11 +39,29 @@ func newRuntimeWithResidencyScheduler(
 	defaultID pkgProvider.ID,
 	scheduler residencyScheduler,
 ) *runtime {
+	return newRuntimeWithDependencies(
+		defaultID,
+		scheduler,
+		realResilienceClock{},
+		newLockedResilienceJitter(),
+	)
+}
+
+func newRuntimeWithDependencies(
+	defaultID pkgProvider.ID,
+	scheduler residencyScheduler,
+	clock resilienceClock,
+	jitter resilienceJitter,
+) *runtime {
 	return &runtime{
 		providers:          make(map[pkgProvider.ID]pkgProvider.Provider),
 		defaultID:          defaultID,
 		residencies:        make(map[residencyKey]*residencyEntry),
 		residencyScheduler: scheduler,
+		resiliencePolicies: make(map[resilienceKey]pkgProvider.ResiliencePolicy),
+		circuits:           make(map[resilienceKey]*circuitBreaker),
+		resilienceClock:    clock,
+		resilienceJitter:   jitter,
 	}
 }
 
@@ -134,9 +158,19 @@ func (r *runtime) Complete(
 			"completion",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationCompletion,
+		request.Model,
+	)
+	if err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
 
 	release, err := r.acquireModelResidency(ctx, provider, request.Model)
 	if err != nil {
+		execution.finish(err)
 		return pkgProvider.CompletionResponse{}, fmt.Errorf(
 			"complete with provider %q: %w",
 			provider.ID(),
@@ -144,7 +178,13 @@ func (r *runtime) Complete(
 		)
 	}
 
-	response, operationErr := completer.Complete(ctx, request)
+	response, operationErr := executeWithResilience(
+		ctx,
+		execution,
+		func() (pkgProvider.CompletionResponse, error) {
+			return completer.Complete(ctx, request)
+		},
+	)
 	err = errors.Join(operationErr, releaseResidency(release))
 	if err != nil {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf(
@@ -179,9 +219,19 @@ func (r *runtime) Stream(
 			"streaming",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationStreaming,
+		request.Model,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	release, err := r.acquireModelResidency(ctx, provider, request.Model)
 	if err != nil {
+		execution.finish(err)
 		return nil, fmt.Errorf(
 			"stream with provider %q: %w",
 			provider.ID(),
@@ -189,7 +239,13 @@ func (r *runtime) Stream(
 		)
 	}
 
-	stream, operationErr := streamer.Stream(ctx, request)
+	stream, operationErr := openStreamWithResilience(
+		ctx,
+		execution,
+		func() (pkgProvider.Stream, error) {
+			return streamer.Stream(ctx, request)
+		},
+	)
 	if operationErr != nil {
 		err = errors.Join(operationErr, releaseResidency(release))
 
@@ -201,6 +257,7 @@ func (r *runtime) Stream(
 	}
 
 	if nilStream(stream) {
+		execution.finish(pkgProvider.ErrInvalidStream)
 		err = errors.Join(
 			fmt.Errorf(
 				"provider returned a nil stream: %w",
@@ -245,9 +302,19 @@ func (r *runtime) Embed(
 			"embedding",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationEmbedding,
+		request.Model,
+	)
+	if err != nil {
+		return pkgProvider.EmbeddingResponse{}, err
+	}
 
 	release, err := r.acquireModelResidency(ctx, provider, request.Model)
 	if err != nil {
+		execution.finish(err)
 		return pkgProvider.EmbeddingResponse{}, fmt.Errorf(
 			"embed with provider %q: %w",
 			provider.ID(),
@@ -255,7 +322,13 @@ func (r *runtime) Embed(
 		)
 	}
 
-	response, operationErr := embedder.Embed(ctx, request)
+	response, operationErr := executeWithResilience(
+		ctx,
+		execution,
+		func() (pkgProvider.EmbeddingResponse, error) {
+			return embedder.Embed(ctx, request)
+		},
+	)
 	err = errors.Join(operationErr, releaseResidency(release))
 	if err != nil {
 		return pkgProvider.EmbeddingResponse{}, fmt.Errorf(
@@ -289,8 +362,23 @@ func (r *runtime) Models(
 			"model listing",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelListing,
+		"",
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	models, err := modelLister.Models(ctx)
+	models, err := executeWithResilience(
+		ctx,
+		execution,
+		func() ([]pkgProvider.Model, error) {
+			return modelLister.Models(ctx)
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"list models with provider %q: %w",
@@ -323,8 +411,23 @@ func (r *runtime) DiscoverModels(
 			"model discovery",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelDiscovery,
+		"",
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	models, err := discoverer.DiscoverModels(ctx)
+	models, err := executeWithResilience(
+		ctx,
+		execution,
+		func() ([]pkgProvider.ModelInfo, error) {
+			return discoverer.DiscoverModels(ctx)
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"discover models with provider %q: %w",
@@ -358,8 +461,19 @@ func (r *runtime) LoadModel(
 			"model loading",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelLoad,
+		request.Model,
+	)
+	if err != nil {
+		return err
+	}
 
-	if err := loader.LoadModel(ctx, request); err != nil {
+	if err := executeErrorWithResilience(ctx, execution, func() error {
+		return loader.LoadModel(ctx, request)
+	}); err != nil {
 		return fmt.Errorf(
 			"load model with provider %q: %w",
 			provider.ID(),
@@ -392,8 +506,19 @@ func (r *runtime) UnloadModel(
 			"model unloading",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelUnload,
+		request.Model,
+	)
+	if err != nil {
+		return err
+	}
 
-	if err := unloader.UnloadModel(ctx, request); err != nil {
+	if err := executeErrorWithResilience(ctx, execution, func() error {
+		return unloader.UnloadModel(ctx, request)
+	}); err != nil {
 		return fmt.Errorf(
 			"unload model with provider %q: %w",
 			provider.ID(),
@@ -426,9 +551,19 @@ func (r *runtime) PullModel(
 			"model pulling",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelPull,
+		request.Model,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	stream, err := puller.PullModel(ctx, request)
 	if err != nil {
+		execution.finish(err)
 		return nil, fmt.Errorf(
 			"pull model with provider %q: %w",
 			provider.ID(),
@@ -437,6 +572,7 @@ func (r *runtime) PullModel(
 	}
 
 	if nilModelPullStream(stream) {
+		execution.finish(pkgProvider.ErrInvalidStream)
 		return nil, fmt.Errorf(
 			"pull model with provider %q: provider returned a nil stream: %w",
 			provider.ID(),
@@ -444,7 +580,13 @@ func (r *runtime) PullModel(
 		)
 	}
 
-	return stream, nil
+	if execution == nil {
+		return stream, nil
+	}
+
+	return &resilienceModelPullStream{
+		stream: stream, execution: execution,
+	}, nil
 }
 
 func (r *runtime) RemoveModel(
@@ -469,8 +611,19 @@ func (r *runtime) RemoveModel(
 			"model removal",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		provider.ID(),
+		pkgProvider.OperationModelRemove,
+		request.Model,
+	)
+	if err != nil {
+		return err
+	}
 
-	if err := remover.RemoveModel(ctx, request); err != nil {
+	if err := executeErrorWithResilience(ctx, execution, func() error {
+		return remover.RemoveModel(ctx, request)
+	}); err != nil {
 		return fmt.Errorf(
 			"remove model with provider %q: %w",
 			provider.ID(),

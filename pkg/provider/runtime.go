@@ -38,6 +38,9 @@ type Runtime interface {
 	PullModel(context.Context, ID, ModelPullRequest) (ModelPullStream, error)
 	RemoveModel(context.Context, ID, ModelRemoveRequest) error
 	Capabilities(context.Context, ID, CapabilityRequest) (CapabilityReport, error)
+	SetResiliencePolicy(context.Context, ID, ResiliencePolicy) error
+	ResiliencePolicy(ID, Operation, string) (ResiliencePolicy, bool, error)
+	CircuitState(ID, Operation, string) (CircuitSnapshot, bool, error)
 
 	SetModelResidencyPolicy(context.Context, ID, ModelResidencyPolicy) error
 	ResidencyPolicy(ID, string) (ModelResidencyPolicy, bool, error)

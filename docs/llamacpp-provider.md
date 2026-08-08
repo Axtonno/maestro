@@ -227,7 +227,8 @@ Non sono ancora tradotti:
 * output strutturati;
 * opzioni di sampling specifiche;
 * endpoint nativi non compatibili con OpenAI;
-* retry, backoff o circuit breaker.
+* retry, backoff o circuit breaker interni all'adapter; le policy comuni
+  appartengono al Provider Runtime.
 
 Queste estensioni verranno introdotte soltanto quando esisteranno contratti
 neutrali o requisiti operativi concreti.

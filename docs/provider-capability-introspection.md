@@ -186,5 +186,6 @@ La suite verifica:
 - rifiuto pre-I/O di richieste e capability non supportate.
 
 Un report non garantisce l'esito della richiesta successiva. La semantica degli
-errori è completata nella Fase 6; retry e osservabilità appartengono alle Fasi
-7–8. Gli scenari live confluiscono nello Smoke Benchmark della Milestone 3.
+errori è completata nella Fase 6 e la resilienza nella Fase 7; l'osservabilità
+appartiene alla Fase 8. Gli scenari live confluiscono nello Smoke Benchmark
+della Milestone 3.

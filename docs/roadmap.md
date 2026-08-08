@@ -214,10 +214,12 @@ malformate ed errori mid-stream. La classificazione non applica retry.
 
 ### Fase 7 — Resilience Policies
 
-Stato: Pianificata
+Stato: Conclusa
 
-Retry/backoff e circuit breaker opt-in, limitati dal context e applicati in base
-all'idempotenza delle operazioni.
+Policy opt-in per retry, backoff, jitter, budget temporale e circuit breaker
+per provider, operazione e modello. La matrice di ripetibilità impedisce retry
+di pull/remove e di stream dopo il primo chunk; context e comportamento senza
+policy rimangono invariati.
 
 ### Fase 8 — Provider Observability
 

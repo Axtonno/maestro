@@ -149,6 +149,7 @@ Queste funzioni sono assegnate alle fasi successive descritte in
 `provider-layer-plan.md`. Acquisizione e rimozione sono state completate nella
 Fase 3 e sono descritte in `provider-model-acquisition.md`; residenza e autoload
 sono completate nella Fase 4 e descritte in
-`provider-model-residency.md`, mentre errori e resilienza sono separate nelle
-Fasi 6 e 7. Caching della discovery e selezione automatica del modello non sono
-requisiti di chiusura della Milestone 2.
+`provider-model-residency.md`. Errori e resilienza sono completati nelle Fasi 6
+e 7 e descritti in `provider-error-semantics.md` e `provider-resilience.md`.
+Caching della discovery e selezione automatica del modello non sono requisiti
+di chiusura della Milestone 2.

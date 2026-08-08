@@ -42,8 +42,23 @@ func (r *runtime) Capabilities(
 			"capability introspection",
 		)
 	}
+	execution, err := r.beginResilience(
+		ctx,
+		selected.ID(),
+		pkgProvider.OperationCapabilityIntrospection,
+		request.Model,
+	)
+	if err != nil {
+		return pkgProvider.CapabilityReport{}, err
+	}
 
-	report, err := inspector.InspectCapabilities(ctx, request)
+	report, err := executeWithResilience(
+		ctx,
+		execution,
+		func() (pkgProvider.CapabilityReport, error) {
+			return inspector.InspectCapabilities(ctx, request)
+		},
+	)
 	if err != nil {
 		return pkgProvider.CapabilityReport{}, fmt.Errorf(
 			"inspect capabilities with provider %q: %w",

@@ -15,9 +15,9 @@ provider-neutral. I consumer possono decidere in base a campi tipizzati e a
 `errors.Is`/`errors.As`, senza interpretare messaggi, payload proprietari o
 status HTTP.
 
-La classificazione descrive il fallimento osservato. Non esegue retry e non
-stabilisce da sola se ripetere un'operazione: idempotenza, budget, backoff,
-jitter e stato del circuit breaker appartengono alla Fase 7.
+La classificazione descrive il fallimento osservato e non esegue retry. La Fase
+7 usa questi metadata insieme a idempotenza, budget, backoff, jitter e stato del
+circuit breaker, come descritto in `provider-resilience.md`.
 
 ---
 

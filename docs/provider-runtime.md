@@ -103,8 +103,9 @@ deadline. L'implementazione del provider è responsabile di propagarle al
 trasporto sottostante.
 
 Il Runtime non crea goroutine, canali, buffer o retry impliciti per lo streaming
-ordinario. Quando è configurata una policy di residenza, avvolge lo stream per
-mantenere il lease fino a EOF, errore terminale o `Close`.
+ordinario. Una policy di resilienza esplicita può riaprire lo stream soltanto
+prima del primo chunk. Quando è configurata una policy di residenza, il Runtime
+mantiene inoltre il lease fino a EOF, errore terminale o `Close`.
 
 ---
 
@@ -158,12 +159,11 @@ Cause, context e sentinel vecchi e nuovi restano ispezionabili tramite
 
 ---
 
-# Estensioni escluse dalla prima versione
+# Estensioni ancora escluse
 
-La prima implementazione non introduce:
+Il Provider Runtime non introduce:
 
 * fallback automatico tra provider;
-* retry o circuit breaker;
 * load balancing;
 * persistenza delle conversazioni;
 * caching di risposte, modelli o embedding;
@@ -202,8 +202,11 @@ La semantica degli errori è introdotta dalla Fase 6 e descritta in:
 docs/provider-error-semantics.md
 ```
 
-Le policy di resilienza rimangono un incremento successivo della Provider
-Layer.
+Le policy di resilienza opt-in sono introdotte dalla Fase 7 e descritte in:
+
+```
+docs/provider-resilience.md
+```
 
 La prima implementazione concreta è descritta in:
 

@@ -878,14 +878,30 @@ Completati:
 * ADR-0013 e documentazione dedicata.
 
 La classificazione non effettua retry: idempotenza, backoff e circuit breaker
-appartengono alla Fase 7.
+sono applicati separatamente dalla Fase 7.
 
-## Fasi 7–10 pianificate
+## ✅ Fase 7 — Resilience Policies
+
+Completati:
+
+* `ResiliencePolicy` per provider, operazione e modello opzionale;
+* retry finiti con backoff esponenziale saturato, jitter e budget temporale;
+* matrice esplicita di ripetibilità delle operazioni;
+* retry dello streaming soltanto prima del primo chunk consegnato;
+* circuit breaker closed/open/half-open con probe concorrenti limitati;
+* snapshot tipizzati tramite `CircuitState`;
+* composizione con discovery, load e unload delle policy di residenza;
+* clock, attesa e jitter sostituibili nei test;
+* ADR-0014 e documentazione dedicata.
+
+Le policy sono opt-in e usano esclusivamente `ProviderError.Retryable`; fallback
+e routing multi-provider rimangono fuori scope.
+
+## Fasi 8–10 pianificate
 
 Il completamento della Provider Layer è scomposto in incrementi con dipendenze
 e gate espliciti:
 
-* Fase 7 — Resilience Policies;
 * Fase 8 — Provider Observability;
 * Fase 9 — Advanced Generation Baseline;
 * Fase 10 — Hardening & Provider Handoff.

@@ -37,7 +37,7 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 | 4 | Conclusa | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
 | 5 | Conclusa | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
 | 6 | Conclusa | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
-| 7 | Pianificata | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
+| 7 | Conclusa | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
 | 8 | Pianificata | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
 | 9 | Pianificata | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
 | 10 | Pianificata | Hardening & Provider Handoff | Fasi 3–9 | Suite deterministica completa e scenari live consegnati alla Milestone 3 |
@@ -231,6 +231,8 @@ indipendente dai payload e dagli status specifici dei provider.
 
 # Fase 7 — Resilience Policies
 
+Stato: Conclusa
+
 ## Obiettivo
 
 Applicare retry, backoff e circuit breaker sopra gli adapter, con policy
@@ -256,6 +258,25 @@ esplicite e senza alterare il comportamento predefinito.
 - Budget di retry sempre limitato dal context del chiamante.
 - Comportamento senza policy invariato rispetto alle fasi precedenti.
 - Fallback, load balancing e routing multi-provider restano fuori scope.
+
+## Esito
+
+- `ResiliencePolicy` configura per provider, operazione e modello opzionale
+  tentativi, backoff, jitter, budget temporale e circuit breaker.
+- Le policy model-specific hanno precedenza su quelle generali della stessa
+  operazione; in assenza di policy il percorso rimane invariato.
+- Retry e breaker usano esclusivamente `ProviderError.Retryable`, context e la
+  matrice di ripetibilità documentata.
+- Completion streaming può riaprire lo stream soltanto prima del primo chunk;
+  pull e remove non vengono ritentati automaticamente.
+- Il circuit breaker espone snapshot closed/open/half-open e limita i probe
+  concorrenti senza mantenere lock durante I/O o attese.
+- Discovery, load e unload invocati dalle policy di residenza compongono le
+  rispettive policy di resilienza.
+- Clock, attesa e jitter sostituibili coprono backoff, budget, apertura,
+  half-open, recupero e concorrenza con test deterministici.
+- Contratti, matrice e limiti sono descritti in `provider-resilience.md`;
+  ADR-0014 registra la decisione.
 
 ---
 

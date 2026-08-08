@@ -125,7 +125,9 @@ modelli e non sostituiscono il routing capability-based.
 
 Gli adapter classificano gli errori al proprio confine tramite un envelope
 tipizzato comune. La ritentabilità è metadata; le decisioni di retry restano
-responsabilità delle policy di resilienza.
+responsabilità delle policy di resilienza opt-in del Provider Runtime. Retry e
+circuit breaker sono isolati per operazione e modello opzionale e non
+introducono fallback.
 
 Il Provider Runtime mantiene un registry thread-safe, applica una selezione
 esplicita del provider predefinito e inoltra le operazioni senza mantenere lock

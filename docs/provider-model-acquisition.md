@@ -186,5 +186,6 @@ Questa fase non introduce:
 
 Residenza e autoload sono completate nella Fase 4 e descritte in
 `provider-model-residency.md`. La semantica degli errori è completata nella
-Fase 6 e descritta in `provider-error-semantics.md`; la resilienza appartiene
-alla Fase 7.
+Fase 6 e descritta in `provider-error-semantics.md`; la resilienza è completata
+nella Fase 7 ed è descritta in `provider-resilience.md`. Pull e remove non
+vengono ritentati automaticamente.

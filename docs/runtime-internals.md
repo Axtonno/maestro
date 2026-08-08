@@ -124,6 +124,8 @@ collezione dei provider registrati e la selezione del default.
 * inoltrare e validare report canonici di capability introspection senza cache;
 * produrre errori tipizzati per capability strutturali assenti e preservare gli
   envelope classificati dagli adapter;
+* applicare policy opt-in di retry e circuit breaker senza mantenere lock
+  durante backoff o codice del provider;
 * proteggere registry e default durante l'accesso concorrente;
 * non mantenere lock interni durante l'esecuzione di codice del provider.
 

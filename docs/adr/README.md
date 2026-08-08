@@ -10,3 +10,4 @@
 - [ADR-0011 – Runtime-Managed Model Residency Policies](ADR-0011.md)
 - [ADR-0012 – Three-Level Provider Capability Introspection](ADR-0012.md)
 - [ADR-0013 – Provider-Neutral Typed Error Envelope](ADR-0013.md)
+- [ADR-0014 – Runtime-Owned Opt-In Provider Resilience](ADR-0014.md)
