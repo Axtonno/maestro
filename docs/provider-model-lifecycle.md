@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 ---
 
@@ -148,6 +148,7 @@ Questa fase non include:
 Queste funzioni sono assegnate alle fasi successive descritte in
 `provider-layer-plan.md`. Acquisizione e rimozione sono state completate nella
 Fase 3 e sono descritte in `provider-model-acquisition.md`; residenza e autoload
-appartengono alla Fase 4, mentre errori e resilienza sono separate nelle Fasi 6
-e 7. Caching della discovery e selezione automatica del modello non sono
+sono completate nella Fase 4 e descritte in
+`provider-model-residency.md`, mentre errori e resilienza sono separate nelle
+Fasi 6 e 7. Caching della discovery e selezione automatica del modello non sono
 requisiti di chiusura della Milestone 2.

@@ -7,3 +7,4 @@
 - [ADR-0008 – Trusted In-Process Plugin Catalog](ADR-0008.md)
 - [ADR-0009 – Capability-Based Model Discovery and Lifecycle](ADR-0009.md)
 - [ADR-0010 – Capability-Based Model Acquisition and Removal](ADR-0010.md)
+- [ADR-0011 – Runtime-Managed Model Residency Policies](ADR-0011.md)

@@ -278,10 +278,19 @@ func (r *runtime) Stop(ctx context.Context) error {
 		}
 	}
 
+	providerErr := r.providerRuntime.Shutdown(ctx)
+
 	r.mu.Lock()
 	r.stopping = false
 	r.started = false
 	r.mu.Unlock()
+
+	if providerErr != nil {
+		return fmt.Errorf(
+			"stop runtime: shutdown providers: %w",
+			providerErr,
+		)
+	}
 
 	return nil
 }

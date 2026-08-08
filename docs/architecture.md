@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Draft
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 Autori:
 - Antonio Cafeo
@@ -110,10 +110,13 @@ Responsabilità:
 - embedding;
 - discovery e lifecycle dei modelli;
 - acquisizione con progresso e rimozione dei modelli.
+- policy opt-in per residenza, lease e rilascio dei modelli.
 
 Il contratto del layer è capability-based. L'identità del provider è separata
 dalle capability di completion, streaming, embedding, model listing, discovery,
-load, unload, pull e remove.
+load, unload, pull e remove. Le policy di residenza coordinano soltanto
+transizioni avviate da Maestro; discovery rimane la fonte osservabile dello
+stato effettivo del provider.
 
 Il Provider Runtime mantiene un registry thread-safe, applica una selezione
 esplicita del provider predefinito e inoltra le operazioni senza mantenere lock

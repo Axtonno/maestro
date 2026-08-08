@@ -57,10 +57,11 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 11. `llamacpp-provider.md`
 12. `provider-model-lifecycle.md`
 13. `provider-model-acquisition.md`
-14. `provider-layer-plan.md`
-15. `benchmark-evaluation-plan.md`
-16. `plugin-runtime.md`
-17. `laravel-plugin.md`
+14. `provider-model-residency.md`
+15. `provider-layer-plan.md`
+16. `benchmark-evaluation-plan.md`
+17. `plugin-runtime.md`
+18. `laravel-plugin.md`
 
 ---
 
@@ -101,6 +102,11 @@ progresso, cancellazione e rimozione attraverso il Provider Runtime. Ollama usa
 le API native `/api/pull` e `/api/delete`; il router llama.cpp usa gli endpoint
 `/models` e lo stream globale `/models/sse`. Nessun adapter accede direttamente
 ai file della cache.
+
+La Fase 4 è completata: `ModelResidencyPolicy` abilita autoload opt-in e rilascio
+immediato, a TTL o allo shutdown. Il Provider Runtime coordina lease concorrenti
+senza duplicare lo stato remoto e scarica soltanto i modelli caricati dalla
+policy. Il comportamento senza policy rimane invariato.
 
 La nuova Milestone 3 introduce il Benchmark & Evaluation Layer. Gli smoke test
 live diventano il primo di tre livelli, seguito da benchmark del runtime e da

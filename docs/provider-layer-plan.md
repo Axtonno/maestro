@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: In esecuzione
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 Autori:
 - Antonio Cafeo
@@ -34,7 +34,7 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 | Fase | Stato | Incremento | Dipendenza principale | Criterio sintetico di uscita |
 |---|---|---|---|---|
 | 3 | Conclusa | Model Acquisition & Removal | Discovery e lifecycle | Pull e rimozione opzionali, cancellabili e sicuri |
-| 4 | Pianificata | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
+| 4 | Conclusa | Model Residency Policies | Lifecycle e acquisizione | Keep-alive e autoload espliciti, senza duplicare lo stato remoto |
 | 5 | Pianificata | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
 | 6 | Pianificata | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
 | 7 | Pianificata | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
@@ -84,6 +84,8 @@ Runtime la proprietà dei file o dello stato dei modelli.
 
 # Fase 4 — Model Residency Policies
 
+Stato: Conclusa
+
 ## Obiettivo
 
 Rendere configurabili permanenza e caricamento su richiesta senza trasformare
@@ -113,6 +115,21 @@ il Provider Runtime in una seconda fonte di verità sullo stato dei modelli.
   rispettive capability.
 - Discovery rimane la fonte osservabile dello stato effettivo del provider.
 - Selezione hardware-aware e scelta automatica del modello restano fuori scope.
+
+## Esito
+
+- `ModelResidencyPolicy` configura per provider e model ID autoload, rilascio
+  immediato, TTL o permanenza fino allo shutdown.
+- Completion, stream ed embedding acquisiscono lease soltanto per policy
+  esplicite; senza policy il percorso operativo rimane invariato.
+- Discovery decide se sia necessario un load e Maestro scarica soltanto le
+  residenze che ha caricato direttamente.
+- Richieste concorrenti condividono la transizione; stream e shutdown
+  conservano ownership e rilascio deterministici.
+- Ollama usa i propri comandi `keep_alive`, llama.cpp usa le capability del
+  router; la semantica comune rimane nel Provider Runtime.
+- Clock, concorrenza e shutdown sono coperti da test isolati; gli scenari live
+  restano assegnati alla Milestone 3.
 
 ---
 

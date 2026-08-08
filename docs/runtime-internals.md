@@ -119,12 +119,16 @@ collezione dei provider registrati e la selezione del default.
 * verificare le capability richieste;
 * inoltrare completion, streaming, embedding, model listing, discovery,
   lifecycle, acquisizione e rimozione dei modelli;
+* coordinare policy opt-in di residenza attraverso lease, timer e ownership
+  delle transizioni avviate da Maestro;
 * proteggere registry e default durante l'accesso concorrente;
 * non mantenere lock interni durante l'esecuzione di codice del provider.
 
 Richieste, risposte e stream appartengono al chiamante e al provider. Il router
-non ne modifica o copia il contenuto e non possiede stato o progresso dei
-trasferimenti.
+non ne modifica o copia il contenuto e non possiede snapshot autorevoli o
+progresso dei trasferimenti. Discovery rimane la fonte osservabile dello stato
+dei modelli; il coordinamento di residenza conserva soltanto stato locale della
+policy.
 
 ### Plugin Runtime
 
@@ -224,10 +228,11 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 10. Nuove ottimizzazioni interne non devono richiedere modifiche ai contratti pubblici.
 11. L'Event Bus non mantiene lock interni durante l'esecuzione degli handler.
 12. Il Provider Runtime non mantiene lock interni durante l'esecuzione dei provider.
-13. Il Plugin Runtime indicizza un plugin soltanto dopo che il Runtime Core ne ha accettato la registrazione.
-14. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
-15. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
-16. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
+13. Il Provider Runtime scarica tramite policy soltanto residenze caricate da Maestro.
+14. Il Plugin Runtime indicizza un plugin soltanto dopo che il Runtime Core ne ha accettato la registrazione.
+15. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
+16. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
+17. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
 
 ## Evoluzione futura
 

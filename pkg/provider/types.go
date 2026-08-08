@@ -98,6 +98,15 @@ type ModelUnloadRequest struct {
 	Model string
 }
 
+// ModelResidencyPolicy configures runtime-managed autoload and release for one
+// exact model ID. An absent policy leaves provider behavior unchanged.
+type ModelResidencyPolicy struct {
+	Model      string
+	Autoload   bool
+	KeepAlive  time.Duration
+	Persistent bool
+}
+
 type ModelPullRequest struct {
 	Model string
 }

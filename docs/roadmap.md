@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Living Document
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 Autori:
 - Antonio Cafeo
@@ -186,10 +186,13 @@ Benchmark della Milestone 3.
 
 ### Fase 4 — Model Residency Policies
 
-Stato: Pianificata
+Stato: Conclusa
 
-Keep-alive e autoload configurabili, coordinati senza duplicare lo stato
-osservabile posseduto dai provider.
+Policy opt-in per autoload, rilascio immediato, TTL e permanenza fino allo
+shutdown. Discovery resta la fonte osservabile dello stato remoto; Maestro
+coordina lease concorrenti e scarica soltanto le residenze che ha caricato.
+Ollama usa `keep_alive`, mentre llama.cpp usa load/unload del router. Timer,
+stream, concorrenza e shutdown sono verificati in modo deterministico.
 
 ### Fase 5 — Capability Introspection
 

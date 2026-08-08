@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 ---
 
@@ -54,8 +54,14 @@ Il Provider Runtime espone:
 * routing delle capability operative.
 
 Il routing comprende anche discovery avanzata, load, unload, pull e remove dei
-modelli. Il Runtime non mantiene uno stato modello o un progresso proprio:
-risolve il provider, verifica la capability e inoltra l'operazione.
+modelli. Il Runtime non mantiene uno snapshot autorevole del modello o un
+progresso proprio: risolve il provider, verifica la capability e inoltra
+l'operazione.
+
+Le policy di residenza sono l'unica eccezione di coordinamento locale. Per una
+coppia provider–model configurata il Runtime conserva lease, timer e ownership
+delle sole transizioni di load avviate da Maestro. Discovery rimane la fonte
+osservabile dello stato remoto.
 
 Un ID vuoto nelle operazioni di routing richiede il provider predefinito. Il
 default deve essere esplicito: può essere configurato tramite
@@ -81,7 +87,26 @@ Il contesto passato all'apertura dello stream definisce cancellazione e
 deadline. L'implementazione del provider è responsabile di propagarle al
 trasporto sottostante.
 
-Il Runtime non crea goroutine, canali, buffer o retry impliciti.
+Il Runtime non crea goroutine, canali, buffer o retry impliciti per lo streaming
+ordinario. Quando è configurata una policy di residenza, avvolge lo stream per
+mantenere il lease fino a EOF, errore terminale o `Close`.
+
+---
+
+# Model residency
+
+`SetModelResidencyPolicy` configura autoload opt-in e rilascio immediato, a TTL
+o allo shutdown per un model ID esatto. Prima di completion, streaming o
+embedding, il Runtime usa discovery e carica il modello soltanto se non risulta
+già residente. Richieste concorrenti condividono la transizione.
+
+Solo un load eseguito dal Runtime assegna ownership alla policy. Un modello già
+residente non viene scaricato. `LoadModel` e `UnloadModel` restano comandi
+espliciti indipendenti e non installano una policy.
+
+`Shutdown` annulla i timer, attende i lease attivi e rilascia le residenze
+possedute. Il Runtime Core lo invoca durante `Stop`. Contratto, semantica e limiti
+sono descritti in `provider-model-residency.md`.
 
 ---
 
@@ -144,8 +169,14 @@ in:
 docs/provider-model-acquisition.md
 ```
 
-Queste funzionalità verranno aggiunte sopra i contratti correnti quando i
-relativi requisiti saranno concreti.
+Le policy di residenza sono introdotte dalla Fase 4 e descritte in:
+
+```
+docs/provider-model-residency.md
+```
+
+Capability introspection, error semantics e resilienza rimangono incrementi
+successivi della Provider Layer.
 
 La prima implementazione concreta è descritta in:
 

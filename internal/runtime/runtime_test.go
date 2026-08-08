@@ -6,8 +6,49 @@ import (
 	"reflect"
 	"testing"
 
+	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
+
+type runtimeResidencyProvider struct {
+	unloads int
+}
+
+func (*runtimeResidencyProvider) ID() pkgProvider.ID {
+	return "residency"
+}
+
+func (*runtimeResidencyProvider) DiscoverModels(
+	context.Context,
+) ([]pkgProvider.ModelInfo, error) {
+	return []pkgProvider.ModelInfo{{
+		Model: pkgProvider.Model{ID: "qwen"},
+		State: pkgProvider.ModelStateAvailable,
+	}}, nil
+}
+
+func (*runtimeResidencyProvider) LoadModel(
+	context.Context,
+	pkgProvider.ModelLoadRequest,
+) error {
+	return nil
+}
+
+func (p *runtimeResidencyProvider) UnloadModel(
+	context.Context,
+	pkgProvider.ModelUnloadRequest,
+) error {
+	p.unloads++
+
+	return nil
+}
+
+func (*runtimeResidencyProvider) Complete(
+	context.Context,
+	pkgProvider.CompletionRequest,
+) (pkgProvider.CompletionResponse, error) {
+	return pkgProvider.CompletionResponse{}, nil
+}
 
 func TestRuntimeRegisterComponent(t *testing.T) {
 	rt := newRuntime()
@@ -407,5 +448,38 @@ func TestRuntimeRejectsRegistrationAfterStart(t *testing.T) {
 			"expected ErrAlreadyStarted, got %v",
 			err,
 		)
+	}
+}
+
+func TestRuntimeStopShutsDownProviderResidencies(t *testing.T) {
+	rt := newRuntime()
+	provider := &runtimeResidencyProvider{}
+	if err := rt.Providers().Register(provider); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+	if err := rt.Providers().SetModelResidencyPolicy(
+		context.Background(),
+		"residency",
+		pkgProvider.ModelResidencyPolicy{
+			Model: "qwen", Autoload: true, Persistent: true,
+		},
+	); err != nil {
+		t.Fatalf("set residency policy: %v", err)
+	}
+	if _, err := rt.Providers().Complete(
+		context.Background(),
+		"residency",
+		pkgProvider.CompletionRequest{Model: "qwen"},
+	); err != nil {
+		t.Fatalf("complete: %v", err)
+	}
+	if err := rt.Start(context.Background()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+	if err := rt.Stop(context.Background()); err != nil {
+		t.Fatalf("stop runtime: %v", err)
+	}
+	if provider.unloads != 1 {
+		t.Fatalf("expected one provider unload at shutdown, got %d", provider.unloads)
 	}
 }

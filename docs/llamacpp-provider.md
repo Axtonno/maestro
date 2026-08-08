@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 ---
 
@@ -162,6 +162,12 @@ Load e unload sono operazioni sincrone e richiedono `llama-server` in router
 mode. Un adapter collegato a un processo single-model continua a supportare
 completion, streaming, embedding e listing minimale, ma il server può rifiutare
 le capability router con un errore HTTP.
+
+Le policy di residenza del Provider Runtime compongono discovery, load e
+unload per offrire autoload opt-in, rilascio immediato, TTL o permanenza fino
+allo shutdown. Maestro attribuisce ownership soltanto ai load che avvia e non
+scarica modelli già residenti. Il coordinamento è descritto in
+`provider-model-residency.md`.
 
 Il pull avvia il download sul router e filtra lo stream SSE globale sul modello
 richiesto. I progressi di più file vengono aggregati; `download_finished`

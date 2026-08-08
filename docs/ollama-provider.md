@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 ---
 
@@ -63,6 +63,13 @@ context length, formato, famiglia, parameter size, quantizzazione e timestamp.
 modello rimane quindi caricato fino a `UnloadModel`, che usa `keep_alive: 0`.
 Entrambe le operazioni accettano il modello esplicito o il modello predefinito
 dell'adapter.
+
+Le policy di residenza del Provider Runtime compongono queste capability:
+autoload usa discovery e `LoadModel`, mentre rilascio immediato, TTL e shutdown
+usano `UnloadModel` soltanto per modelli caricati dalla policy. Il TTL comune è
+coordinato dal Runtime; Ollama riceve `keep_alive: -1` al load e `keep_alive: 0`
+all'unload. La semantica completa è descritta in
+`provider-model-residency.md`.
 
 ---
 

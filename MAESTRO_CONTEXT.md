@@ -29,6 +29,7 @@ Completati:
 * llamacpp-provider.md
 * provider-model-lifecycle.md
 * provider-model-acquisition.md
+* provider-model-residency.md
 * provider-layer-plan.md
 * benchmark-evaluation-plan.md
 * plugin-runtime.md
@@ -697,6 +698,12 @@ llama.cpp avvia il download con `/models`, osserva `/models/sse`, usa
 `/models/unload` per la cancellazione remota e rimuove soltanto dalla cache del
 router. Il Provider Runtime non possiede trasferimenti né accede al filesystem.
 
+La Fase 4 aggiunge `ModelResidencyPolicy` per coppia provider–model. Autoload è
+opt-in; il rilascio può essere immediato, a TTL o allo shutdown. Discovery resta
+la fonte osservabile dello stato remoto, mentre il Runtime coordina lease e
+timer soltanto per le residenze caricate da Maestro. Completion, stream ed
+embedding sono coperti da test deterministici, inclusa la concorrenza.
+
 ---
 
 # Roadmap corrente
@@ -810,12 +817,28 @@ Completati:
 Gli smoke test live che modificano il catalogo confluiscono nello Smoke
 Benchmark della Milestone 3.
 
-## Fasi 4–10 pianificate
+## ✅ Fase 4 — Model Residency Policies
+
+Completati:
+
+* contratto pubblico `ModelResidencyPolicy` e configurazione per provider e
+  model ID esatto;
+* autoload opt-in prima di completion, streaming ed embedding;
+* rilascio immediato, TTL deterministico e permanenza fino allo shutdown;
+* coalescing dei load concorrenti e lease mantenuto fino alla fine degli stream;
+* ownership limitata ai modelli caricati dalla policy;
+* integrazione dello shutdown del Provider Runtime nel Runtime Core;
+* semantica comune sui loader/unloader Ollama e llama.cpp;
+* ADR-0011 e documentazione dedicata.
+
+Gli smoke test live delle policy confluiscono nello Smoke Benchmark della
+Milestone 3.
+
+## Fasi 5–10 pianificate
 
 Il completamento della Provider Layer è scomposto in incrementi con dipendenze
 e gate espliciti:
 
-* Fase 4 — Model Residency Policies;
 * Fase 5 — Capability Introspection;
 * Fase 6 — Error Semantics;
 * Fase 7 — Resilience Policies;

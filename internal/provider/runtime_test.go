@@ -319,6 +319,9 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stream: %v", err)
 	}
+	if acquiredStream != stream {
+		t.Fatal("stream without residency policy was unexpectedly wrapped")
+	}
 	chunk, err := acquiredStream.Recv()
 	if err != nil || chunk.Content != "hello" {
 		t.Fatalf("unexpected stream chunk %#v, error %v", chunk, err)

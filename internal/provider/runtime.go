@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -17,12 +18,26 @@ type runtime struct {
 
 	providers map[pkgProvider.ID]pkgProvider.Provider
 	defaultID pkgProvider.ID
+
+	residencyMu           sync.Mutex
+	residencies           map[residencyKey]*residencyEntry
+	residencyScheduler    residencyScheduler
+	residencyShuttingDown bool
 }
 
 func NewRuntime(defaultID pkgProvider.ID) pkgProvider.Runtime {
+	return newRuntimeWithResidencyScheduler(defaultID, realResidencyScheduler{})
+}
+
+func newRuntimeWithResidencyScheduler(
+	defaultID pkgProvider.ID,
+	scheduler residencyScheduler,
+) *runtime {
 	return &runtime{
-		providers: make(map[pkgProvider.ID]pkgProvider.Provider),
-		defaultID: defaultID,
+		providers:          make(map[pkgProvider.ID]pkgProvider.Provider),
+		defaultID:          defaultID,
+		residencies:        make(map[residencyKey]*residencyEntry),
+		residencyScheduler: scheduler,
 	}
 }
 
@@ -119,7 +134,17 @@ func (r *runtime) Complete(
 		)
 	}
 
-	response, err := completer.Complete(ctx, request)
+	release, err := r.acquireModelResidency(ctx, provider, request.Model)
+	if err != nil {
+		return pkgProvider.CompletionResponse{}, fmt.Errorf(
+			"complete with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	response, operationErr := completer.Complete(ctx, request)
+	err = errors.Join(operationErr, releaseResidency(release))
 	if err != nil {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf(
 			"complete with provider %q: %w",
@@ -150,7 +175,7 @@ func (r *runtime) Stream(
 		return nil, unsupportedCapability(provider.ID(), "streaming")
 	}
 
-	stream, err := streamer.Stream(ctx, request)
+	release, err := r.acquireModelResidency(ctx, provider, request.Model)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"stream with provider %q: %w",
@@ -159,15 +184,38 @@ func (r *runtime) Stream(
 		)
 	}
 
-	if nilStream(stream) {
+	stream, operationErr := streamer.Stream(ctx, request)
+	if operationErr != nil {
+		err = errors.Join(operationErr, releaseResidency(release))
+
 		return nil, fmt.Errorf(
-			"stream with provider %q: provider returned a nil stream: %w",
+			"stream with provider %q: %w",
 			provider.ID(),
-			pkgProvider.ErrInvalidStream,
+			err,
 		)
 	}
 
-	return stream, nil
+	if nilStream(stream) {
+		err = errors.Join(
+			fmt.Errorf(
+				"provider returned a nil stream: %w",
+				pkgProvider.ErrInvalidStream,
+			),
+			releaseResidency(release),
+		)
+
+		return nil, fmt.Errorf(
+			"stream with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	if release == nil {
+		return stream, nil
+	}
+
+	return &residencyStream{stream: stream, release: release}, nil
 }
 
 func (r *runtime) Embed(
@@ -192,7 +240,17 @@ func (r *runtime) Embed(
 		)
 	}
 
-	response, err := embedder.Embed(ctx, request)
+	release, err := r.acquireModelResidency(ctx, provider, request.Model)
+	if err != nil {
+		return pkgProvider.EmbeddingResponse{}, fmt.Errorf(
+			"embed with provider %q: %w",
+			provider.ID(),
+			err,
+		)
+	}
+
+	response, operationErr := embedder.Embed(ctx, request)
+	err = errors.Join(operationErr, releaseResidency(release))
 	if err != nil {
 		return pkgProvider.EmbeddingResponse{}, fmt.Errorf(
 			"embed with provider %q: %w",

@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 ---
 
@@ -184,5 +184,6 @@ Questa fase non introduce:
 * supervisione dei processi provider;
 * cancellazione o rimozione diretta di file.
 
-Residenza e autoload appartengono alla Fase 4. Error semantics e resilienza
+Residenza e autoload sono completate nella Fase 4 e descritte in
+`provider-model-residency.md`. Error semantics e resilienza
 appartengono alle Fasi 6 e 7.
