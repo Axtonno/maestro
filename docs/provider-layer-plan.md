@@ -38,7 +38,7 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 | 5 | Conclusa | Capability Introspection | Superficie operativa completa | Supporto del provider e del modello interrogabile a runtime |
 | 6 | Conclusa | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
 | 7 | Conclusa | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
-| 8 | Pianificata | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
+| 8 | Conclusa | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
 | 9 | Pianificata | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
 | 10 | Pianificata | Hardening & Provider Handoff | Fasi 3–9 | Suite deterministica completa e scenari live consegnati alla Milestone 3 |
 
@@ -282,6 +282,8 @@ esplicite e senza alterare il comportamento predefinito.
 
 # Fase 8 — Provider Observability
 
+Stato: Conclusa
+
 ## Obiettivo
 
 Rendere osservabili richieste e lifecycle provider senza legare il package a
@@ -311,6 +313,26 @@ un sistema di telemetria specifico.
 - Retry e circuit breaker sono correlabili alla richiesta originaria.
 - Il percorso senza observer non introduce allocazioni o lavoro significativo
   non necessario.
+
+## Esito
+
+- `ProviderObserver`, `ProviderObserverFunc` e `ProviderEvent` formano un
+  contratto pubblico neutrale e privo di dipendenze da SDK telemetrici.
+- Start, tentativi, retry, transizioni del circuito e terminale condividono un
+  `OperationID` locale e un ordine deterministico per ogni operazione.
+- Completion, stream, embedding, listing, discovery, lifecycle, acquisition,
+  removal e introspection sono osservati al solo confine pubblico del Runtime.
+- Gli stream producono un unico terminale per EOF, errore, cancellazione, stage
+  pull completato o chiusura anticipata, conservando usage e progresso noti.
+- Error kind, status e ritentabilità sono esposti senza messaggi remoti; prompt,
+  risposte, chunk, embedding, credenziali e payload non appartengono al tipo
+  evento.
+- Gli observer sono sostituibili in concorrenza, vengono invocati senza lock
+  interni e non possono modificare il risultato tramite errori o panic.
+- Il fast path disabilitato non crea tracker, eventi o operation ID e una
+  verifica di allocazione ne protegge il comportamento.
+- Contratto, ordering, cardinalità e limiti sono descritti in
+  `provider-observability.md`; ADR-0015 registra la decisione.
 
 ---
 

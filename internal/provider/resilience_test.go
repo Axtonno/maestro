@@ -64,11 +64,12 @@ type resilienceProvider struct {
 
 	mu sync.Mutex
 
-	completionErrors []error
-	completionCalls  int
-	completionStart  chan struct{}
-	completionBlock  <-chan struct{}
-	cancel           context.CancelFunc
+	completionErrors   []error
+	completionCalls    int
+	completionResponse pkgProvider.CompletionResponse
+	completionStart    chan struct{}
+	completionBlock    <-chan struct{}
+	cancel             context.CancelFunc
 
 	streams      []pkgProvider.Stream
 	streamErrors []error
@@ -108,7 +109,12 @@ func (p *resilienceProvider) Complete(
 		}
 	}
 
-	return pkgProvider.CompletionResponse{Model: request.Model}, err
+	response := p.completionResponse
+	if response.Model == "" {
+		response.Model = request.Model
+	}
+
+	return response, err
 }
 
 func (p *resilienceProvider) Stream(

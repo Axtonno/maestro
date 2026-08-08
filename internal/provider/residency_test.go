@@ -93,7 +93,8 @@ type residencyProvider struct {
 	completionEntry chan struct{}
 	allowCompletion <-chan struct{}
 
-	stream pkgProvider.Stream
+	stream      pkgProvider.Stream
+	unloadError error
 }
 
 func (p *residencyProvider) DiscoverModels(
@@ -148,9 +149,10 @@ func (p *residencyProvider) UnloadModel(
 	p.mu.Lock()
 	p.unloads++
 	p.state = pkgProvider.ModelStateAvailable
+	err := p.unloadError
 	p.mu.Unlock()
 
-	return nil
+	return err
 }
 
 func (p *residencyProvider) Complete(

@@ -61,10 +61,11 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 15. `provider-capability-introspection.md`
 16. `provider-error-semantics.md`
 17. `provider-resilience.md`
-18. `provider-layer-plan.md`
-19. `benchmark-evaluation-plan.md`
-20. `plugin-runtime.md`
-21. `laravel-plugin.md`
+18. `provider-observability.md`
+19. `provider-layer-plan.md`
+20. `benchmark-evaluation-plan.md`
+21. `plugin-runtime.md`
+22. `laravel-plugin.md`
 
 ---
 
@@ -126,6 +127,11 @@ La Fase 7 è completata: `ResiliencePolicy` abilita retry, backoff, jitter,
 budget temporale e circuit breaker closed/open/half-open per provider,
 operazione e modello. Le policy sono opt-in, usano gli errori tipizzati e non
 riaprono stream dopo il primo chunk; pull e remove non vengono ritentati.
+
+La Fase 8 è completata: `ProviderObserver` espone eventi redatti e correlati per
+inizio, tentativi, retry, transizioni del circuito e completamento. Gli stream
+emettono un solo terminale anche in caso di cancellazione o chiusura anticipata;
+il core resta indipendente dagli SDK di logging, metriche e tracing.
 
 La nuova Milestone 3 introduce il Benchmark & Evaluation Layer. Gli smoke test
 live diventano il primo di tre livelli, seguito da benchmark del runtime e da

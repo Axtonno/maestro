@@ -11,7 +11,7 @@ func (r *runtime) Capabilities(
 	ctx context.Context,
 	providerID pkgProvider.ID,
 	request pkgProvider.CapabilityRequest,
-) (pkgProvider.CapabilityReport, error) {
+) (reportValue pkgProvider.CapabilityReport, operationError error) {
 	if ctx == nil {
 		return pkgProvider.CapabilityReport{}, fmt.Errorf(
 			"inspect provider capabilities: context is nil: %w",
@@ -42,11 +42,20 @@ func (r *runtime) Capabilities(
 			"capability introspection",
 		)
 	}
+	observation := r.startProviderOperation(
+		selected.ID(),
+		pkgProvider.OperationCapabilityIntrospection,
+		request.Model,
+	)
+	if observation != nil {
+		defer func() { observation.finish(operationError) }()
+	}
 	execution, err := r.beginResilience(
 		ctx,
 		selected.ID(),
 		pkgProvider.OperationCapabilityIntrospection,
 		request.Model,
+		observation,
 	)
 	if err != nil {
 		return pkgProvider.CapabilityReport{}, err
@@ -55,6 +64,7 @@ func (r *runtime) Capabilities(
 	report, err := executeWithResilience(
 		ctx,
 		execution,
+		observation,
 		func() (pkgProvider.CapabilityReport, error) {
 			return inspector.InspectCapabilities(ctx, request)
 		},

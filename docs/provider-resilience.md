@@ -145,6 +145,10 @@ riapre. Le operazioni eccedenti il limite half-open vengono rifiutate senza I/O
 remoto. `CircuitSnapshot` espone contatori, probe in corso, istante di apertura
 e prossimo istante ammesso, senza consentire mutazioni esterne.
 
+La Fase 8 espone tentativi, retry pianificati e transizioni
+closed/open/half-open attraverso lo stesso operation ID dell'invocazione
+originaria. L'osservazione non modifica policy o stato del breaker.
+
 ---
 
 # Concorrenza e ownership
@@ -168,8 +172,9 @@ Questa fase non introduce:
 - resume o deduplicazione dei trasferimenti;
 - fallback verso altri provider;
 - circuit breaker distribuiti o persistenti;
-- observer, metriche, tracing o logging delle transizioni;
+- backend obbligatori di metriche, tracing o logging;
 - timeout autonomi che sostituiscono il context del chiamante.
 
-Gli observer e la correlazione dei tentativi appartengono alla Fase 8. Gli
-scenari live confluiscono nello Smoke Benchmark della Milestone 3.
+Observer e correlazione dei tentativi sono descritti in
+`provider-observability.md`. Gli scenari live confluiscono nello Smoke Benchmark
+della Milestone 3.

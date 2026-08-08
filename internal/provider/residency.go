@@ -506,6 +506,7 @@ func (r *runtime) ensureModelResident(
 		provider.ID(),
 		pkgProvider.OperationModelDiscovery,
 		"",
+		nil,
 	)
 	if err != nil {
 		return false, err
@@ -513,6 +514,7 @@ func (r *runtime) ensureModelResident(
 	models, err := executeWithResilience(
 		ctx,
 		discoveryExecution,
+		nil,
 		func() ([]pkgProvider.ModelInfo, error) {
 			return discoverer.DiscoverModels(ctx)
 		},
@@ -537,16 +539,18 @@ func (r *runtime) ensureModelResident(
 		provider.ID(),
 		pkgProvider.OperationModelLoad,
 		model,
+		nil,
 	)
 	if err != nil {
 		return false, err
 	}
-	if err := executeErrorWithResilience(ctx, loadExecution, func() error {
+	err = executeErrorWithResilience(ctx, loadExecution, nil, func() error {
 		return loader.LoadModel(
 			ctx,
 			pkgProvider.ModelLoadRequest{Model: model},
 		)
-	}); err != nil {
+	})
+	if err != nil {
 		return false, err
 	}
 
@@ -564,17 +568,20 @@ func (r *runtime) unloadResidency(
 		provider.ID(),
 		pkgProvider.OperationModelUnload,
 		model,
+		nil,
 	)
 	if err != nil {
 		return err
 	}
 
-	return executeErrorWithResilience(ctx, execution, func() error {
+	err = executeErrorWithResilience(ctx, execution, nil, func() error {
 		return unloader.UnloadModel(
 			ctx,
 			pkgProvider.ModelUnloadRequest{Model: model},
 		)
 	})
+
+	return err
 }
 
 func modelStateIsResident(state pkgProvider.ModelState) bool {
@@ -648,8 +655,9 @@ func releaseResidency(release func() error) error {
 }
 
 type residencyStream struct {
-	stream  pkgProvider.Stream
-	release func() error
+	stream      pkgProvider.Stream
+	release     func() error
+	observation *operationObservation
 
 	once sync.Once
 	err  error
@@ -662,6 +670,15 @@ func (s *residencyStream) Recv() (pkgProvider.StreamChunk, error) {
 	}
 
 	releaseError := s.releaseOnce()
+	operationError := err
+	if releaseError != nil {
+		if errors.Is(err, io.EOF) {
+			operationError = releaseError
+		} else {
+			operationError = errors.Join(err, releaseError)
+		}
+	}
+	s.observation.finish(operationError)
 	if releaseError == nil {
 		return chunk, err
 	}
@@ -673,7 +690,10 @@ func (s *residencyStream) Recv() (pkgProvider.StreamChunk, error) {
 }
 
 func (s *residencyStream) Close() error {
-	return errors.Join(s.stream.Close(), s.releaseOnce())
+	err := errors.Join(s.stream.Close(), s.releaseOnce())
+	s.observation.finishClosed(err)
+
+	return err
 }
 
 func (s *residencyStream) releaseOnce() error {

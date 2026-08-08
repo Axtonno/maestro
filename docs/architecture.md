@@ -113,6 +113,7 @@ Responsabilità:
 - policy opt-in per residenza, lease e rilascio dei modelli;
 - introspection di supporto e disponibilità per adapter, istanza e modello.
 - classificazione provider-neutral degli errori operativi.
+- eventi operativi redatti per logging, metriche e tracing applicativi.
 
 Il contratto del layer è capability-based. L'identità del provider è separata
 dalle capability di completion, streaming, embedding, model listing, discovery,
@@ -128,6 +129,11 @@ tipizzato comune. La ritentabilità è metadata; le decisioni di retry restano
 responsabilità delle policy di resilienza opt-in del Provider Runtime. Retry e
 circuit breaker sono isolati per operazione e modello opzionale e non
 introducono fallback.
+
+Un observer opzionale del Provider Runtime correla start, tentativi, retry,
+transizioni del circuito e terminale senza osservare i payload. Gli stream
+mantengono il confine aperto fino a EOF, errore o chiusura; il core non dipende
+da SDK telemetrici e non esegue callback mantenendo lock interni.
 
 Il Provider Runtime mantiene un registry thread-safe, applica una selezione
 esplicita del provider predefinito e inoltra le operazioni senza mantenere lock

@@ -223,10 +223,14 @@ policy rimangono invariati.
 
 ### Fase 8 — Provider Observability
 
-Stato: Pianificata
+Stato: Conclusa
 
-Hook neutrali per metriche, tracing e logging, con redazione dei contenuti
-sensibili e senza dipendenze obbligatorie da SDK esterni.
+`ProviderObserver` riceve eventi neutrali e correlati per start, tentativi,
+retry, transizioni del circuito e un unico terminale. Completion, stream,
+embedding, catalogo, lifecycle e introspection espongono durata, esito, usage o
+progresso disponibili senza contenuti sensibili. Gli stream chiusi o cancellati
+terminano deterministicamente; errori e panic dell'observer sono isolati e
+nessun SDK telemetrico entra nel core.
 
 ### Fase 9 — Advanced Generation Baseline
 

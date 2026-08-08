@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
@@ -81,13 +82,20 @@ type circuitPermit struct {
 	halfOpen   bool
 }
 
+type circuitStateTransition struct {
+	from pkgProvider.CircuitState
+	to   pkgProvider.CircuitState
+	ok   bool
+}
+
 type resilienceExecution struct {
 	runtime *runtime
 	policy  pkgProvider.ResiliencePolicy
 	permit  circuitPermit
 	started time.Time
+	observe *operationObservation
 
-	finishOnce sync.Once
+	finished atomic.Bool
 }
 
 func (r *runtime) SetResiliencePolicy(
@@ -197,6 +205,7 @@ func (r *runtime) beginResilience(
 	providerID pkgProvider.ID,
 	operation pkgProvider.Operation,
 	model string,
+	observation *operationObservation,
 ) (*resilienceExecution, error) {
 	_, policy, breaker, ok := r.lookupResilience(
 		providerID,
@@ -206,6 +215,7 @@ func (r *runtime) beginResilience(
 	if !ok {
 		return nil, nil
 	}
+	observation.setMaxAttempts(policy.MaxAttempts)
 	if ctx == nil {
 		return nil, fmt.Errorf(
 			"execute resilient provider operation: context is nil: %w",
@@ -216,7 +226,13 @@ func (r *runtime) beginResilience(
 		return nil, err
 	}
 
-	permit, allowed := breaker.allow(r.resilienceClock.Now(), policy.CircuitBreaker)
+	permit, allowed, transition := breaker.allow(
+		r.resilienceClock.Now(),
+		policy.CircuitBreaker,
+	)
+	if transition.ok {
+		observation.circuitTransition(transition.from, transition.to)
+	}
 	if !allowed {
 		return nil, pkgProvider.NewProviderError(
 			pkgProvider.ProviderErrorDetails{
@@ -236,6 +252,7 @@ func (r *runtime) beginResilience(
 		policy:  policy,
 		permit:  permit,
 		started: r.resilienceClock.Now(),
+		observe: observation,
 	}, nil
 }
 
@@ -268,20 +285,23 @@ func (r *runtime) lookupResilience(
 func executeWithResilience[T any](
 	ctx context.Context,
 	execution *resilienceExecution,
+	observation *operationObservation,
 	call func() (T, error),
 ) (T, error) {
 	if execution == nil {
+		observation.attempt(1)
 		return call()
 	}
 
 	var value T
 	var err error
 	for attempt := uint(1); attempt <= execution.policy.MaxAttempts; attempt++ {
+		observation.attempt(attempt)
 		value, err = call()
 		if err == nil || !execution.canRetry(attempt, err) {
 			break
 		}
-		if waitError := execution.waitBeforeRetry(ctx, attempt); waitError != nil {
+		if waitError := execution.waitBeforeRetry(ctx, attempt, err); waitError != nil {
 			if !errors.Is(waitError, errRetryBudgetExhausted) {
 				err = waitError
 			}
@@ -296,9 +316,10 @@ func executeWithResilience[T any](
 func executeErrorWithResilience(
 	ctx context.Context,
 	execution *resilienceExecution,
+	observation *operationObservation,
 	call func() error,
 ) error {
-	_, err := executeWithResilience(ctx, execution, func() (struct{}, error) {
+	_, err := executeWithResilience(ctx, execution, observation, func() (struct{}, error) {
 		return struct{}{}, call()
 	})
 
@@ -314,12 +335,14 @@ func (e *resilienceExecution) canRetry(attempt uint, err error) bool {
 func (e *resilienceExecution) waitBeforeRetry(
 	ctx context.Context,
 	attempt uint,
+	err error,
 ) error {
 	delay := retryBackoff(e.policy, attempt, e.runtime.resilienceJitter)
 	if e.policy.MaxElapsedTime > 0 &&
 		e.runtime.resilienceClock.Now().Sub(e.started)+delay > e.policy.MaxElapsedTime {
 		return errRetryBudgetExhausted
 	}
+	e.observe.retry(attempt, delay, err)
 
 	return e.runtime.resilienceClock.Wait(ctx, delay)
 }
@@ -329,14 +352,18 @@ func (e *resilienceExecution) finish(err error) {
 		return
 	}
 
-	e.finishOnce.Do(func() {
-		e.permit.breaker.finish(
-			e.permit,
-			circuitOutcomeForError(err),
-			e.runtime.resilienceClock.Now(),
-			e.policy.CircuitBreaker,
-		)
-	})
+	if !e.finished.CompareAndSwap(false, true) {
+		return
+	}
+	transition := e.permit.breaker.finish(
+		e.permit,
+		circuitOutcomeForError(err),
+		e.runtime.resilienceClock.Now(),
+		e.policy.CircuitBreaker,
+	)
+	if transition.ok {
+		e.observe.circuitTransition(transition.from, transition.to)
+	}
 }
 
 var errRetryBudgetExhausted = errors.New("provider retry time budget exhausted")
@@ -522,9 +549,9 @@ func operationIsRetryable(operation pkgProvider.Operation) bool {
 func (b *circuitBreaker) allow(
 	now time.Time,
 	policy pkgProvider.CircuitBreakerPolicy,
-) (circuitPermit, bool) {
+) (circuitPermit, bool, circuitStateTransition) {
 	if policy.FailureThreshold == 0 {
-		return circuitPermit{breaker: b}, true
+		return circuitPermit{breaker: b}, true, circuitStateTransition{}
 	}
 
 	b.mu.Lock()
@@ -534,24 +561,36 @@ func (b *circuitBreaker) allow(
 	}
 	if b.state == pkgProvider.CircuitStateOpen {
 		if now.Before(b.openedAt.Add(policy.OpenDuration)) {
-			return circuitPermit{}, false
+			return circuitPermit{}, false, circuitStateTransition{}
+		}
+		transition := circuitStateTransition{
+			from: b.state, to: pkgProvider.CircuitStateHalfOpen, ok: true,
 		}
 		b.state = pkgProvider.CircuitStateHalfOpen
 		b.halfOpenInFlight = 0
 		b.generation++
-	}
-	if b.state == pkgProvider.CircuitStateHalfOpen {
 		if b.halfOpenInFlight >= policy.HalfOpenMaxAttempts {
-			return circuitPermit{}, false
+			return circuitPermit{}, false, transition
 		}
 		b.halfOpenInFlight++
 
 		return circuitPermit{
 			breaker: b, generation: b.generation, halfOpen: true,
-		}, true
+		}, true, transition
+	}
+	if b.state == pkgProvider.CircuitStateHalfOpen {
+		if b.halfOpenInFlight >= policy.HalfOpenMaxAttempts {
+			return circuitPermit{}, false, circuitStateTransition{}
+		}
+		b.halfOpenInFlight++
+
+		return circuitPermit{
+			breaker: b, generation: b.generation, halfOpen: true,
+		}, true, circuitStateTransition{}
 	}
 
-	return circuitPermit{breaker: b, generation: b.generation}, true
+	return circuitPermit{breaker: b, generation: b.generation}, true,
+		circuitStateTransition{}
 }
 
 func (b *circuitBreaker) finish(
@@ -559,15 +598,15 @@ func (b *circuitBreaker) finish(
 	outcome circuitOutcome,
 	now time.Time,
 	policy pkgProvider.CircuitBreakerPolicy,
-) {
+) circuitStateTransition {
 	if policy.FailureThreshold == 0 {
-		return
+		return circuitStateTransition{}
 	}
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if permit.generation != b.generation {
-		return
+		return circuitStateTransition{}
 	}
 	if permit.halfOpen && b.halfOpenInFlight > 0 {
 		b.halfOpenInFlight--
@@ -575,27 +614,42 @@ func (b *circuitBreaker) finish(
 
 	switch outcome {
 	case circuitOutcomeNeutral:
-		return
+		return circuitStateTransition{}
 	case circuitOutcomeSuccess:
 		wasHalfOpen := b.state == pkgProvider.CircuitStateHalfOpen
+		from := b.state
 		b.state = pkgProvider.CircuitStateClosed
 		b.consecutiveFailures = 0
 		b.openedAt = time.Time{}
 		b.halfOpenInFlight = 0
 		if wasHalfOpen {
 			b.generation++
+
+			return circuitStateTransition{
+				from: from, to: pkgProvider.CircuitStateClosed, ok: true,
+			}
 		}
 	case circuitOutcomeFailure:
 		if b.state == pkgProvider.CircuitStateHalfOpen {
+			from := b.state
 			b.open(now)
 
-			return
+			return circuitStateTransition{
+				from: from, to: pkgProvider.CircuitStateOpen, ok: true,
+			}
 		}
 		b.consecutiveFailures++
 		if b.consecutiveFailures >= policy.FailureThreshold {
+			from := b.state
 			b.open(now)
+
+			return circuitStateTransition{
+				from: from, to: pkgProvider.CircuitStateOpen, ok: true,
+			}
 		}
 	}
+
+	return circuitStateTransition{}
 }
 
 func (b *circuitBreaker) open(now time.Time) {

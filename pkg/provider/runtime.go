@@ -41,6 +41,7 @@ type Runtime interface {
 	SetResiliencePolicy(context.Context, ID, ResiliencePolicy) error
 	ResiliencePolicy(ID, Operation, string) (ResiliencePolicy, bool, error)
 	CircuitState(ID, Operation, string) (CircuitSnapshot, bool, error)
+	SetObserver(ProviderObserver)
 
 	SetModelResidencyPolicy(context.Context, ID, ModelResidencyPolicy) error
 	ResidencyPolicy(ID, string) (ModelResidencyPolicy, bool, error)

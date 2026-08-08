@@ -126,6 +126,8 @@ collezione dei provider registrati e la selezione del default.
   envelope classificati dagli adapter;
 * applicare policy opt-in di retry e circuit breaker senza mantenere lock
   durante backoff o codice del provider;
+* emettere eventi provider redatti e correlati attraverso un observer opzionale
+  senza mantenere lock né permettere ai callback di alterare l'operazione;
 * proteggere registry e default durante l'accesso concorrente;
 * non mantenere lock interni durante l'esecuzione di codice del provider.
 
@@ -239,6 +241,7 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 16. Il Plugin Runtime non duplica dependency graph, stato o lifecycle dei componenti.
 17. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
 18. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
+19. Il Provider Runtime non invoca observer mentre mantiene lock interni e ne isola errori e panic.
 
 ## Evoluzione futura
 

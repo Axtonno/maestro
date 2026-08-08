@@ -159,6 +159,24 @@ Cause, context e sentinel vecchi e nuovi restano ispezionabili tramite
 
 ---
 
+# Osservabilità
+
+`SetObserver` installa opzionalmente un `ProviderObserver` sul Runtime.
+Completion, streaming, embedding, catalogo, lifecycle, acquisition, removal e
+capability introspection emettono eventi redatti per start, tentativi, retry,
+transizioni del circuito e un unico terminale.
+
+Gli eventi della stessa invocazione condividono un operation ID locale. Gli
+stream restano aperti dal punto di vista osservabile fino a EOF, errore, stage
+pull completato o `Close`. Gli observer vengono invocati senza lock interni;
+errori e panic non cambiano il risultato provider. Senza observer non vengono
+creati tracker né eventi.
+
+Contratto, ordering, redazione e indicazioni di cardinalità sono descritti in
+`provider-observability.md`.
+
+---
+
 # Estensioni ancora escluse
 
 Il Provider Runtime non introduce:
@@ -206,6 +224,12 @@ Le policy di resilienza opt-in sono introdotte dalla Fase 7 e descritte in:
 
 ```
 docs/provider-resilience.md
+```
+
+L'osservabilità provider è introdotta dalla Fase 8 e descritta in:
+
+```
+docs/provider-observability.md
 ```
 
 La prima implementazione concreta è descritta in:

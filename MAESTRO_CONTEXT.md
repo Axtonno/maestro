@@ -897,12 +897,32 @@ Completati:
 Le policy sono opt-in e usano esclusivamente `ProviderError.Retryable`; fallback
 e routing multi-provider rimangono fuori scope.
 
-## Fasi 8–10 pianificate
+## ✅ Fase 8 — Provider Observability
+
+Completati:
+
+* contratti pubblici `ProviderObserver`, `ProviderObserverFunc` e
+  `ProviderEvent` senza dipendenze da SDK telemetrici;
+* correlazione tramite operation ID di start, tentativi, retry, transizioni del
+  circuito e terminale;
+* copertura dei confini pubblici per completion, stream, embedding, catalogo,
+  lifecycle, acquisition, removal e capability introspection;
+* terminale unico per EOF, errore, cancellazione, pull completato e chiusura
+  anticipata degli stream;
+* redazione strutturale di prompt, risposte, chunk, embedding, credenziali e
+  payload remoti;
+* isolamento di errori e panic degli observer e invocazione senza lock interni;
+* fast path senza observer privo di tracker, eventi e allocazioni;
+* ADR-0015 e documentazione dedicata.
+
+Gli adapter verso logging, metriche e tracing restano applicativi; le misure
+live e di risorse appartengono alla Milestone 3.
+
+## Fasi 9–10 pianificate
 
 Il completamento della Provider Layer è scomposto in incrementi con dipendenze
 e gate espliciti:
 
-* Fase 8 — Provider Observability;
 * Fase 9 — Advanced Generation Baseline;
 * Fase 10 — Hardening & Provider Handoff.
 
