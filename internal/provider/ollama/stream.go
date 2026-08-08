@@ -1,6 +1,7 @@
 package ollama
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -19,6 +20,8 @@ type stream struct {
 	model   string
 	body    io.ReadCloser
 	decoder *json.Decoder
+	output  *pkgProvider.StructuredOutput
+	content bytes.Buffer
 
 	recvMu  sync.Mutex
 	stateMu sync.Mutex
@@ -38,6 +41,9 @@ func (p *Provider) Stream(
 			operationError,
 		)
 	}()
+	if err := validateOllamaCompletionRequest(request); err != nil {
+		return nil, err
+	}
 
 	model, err := p.model(request.Model)
 	if err != nil {
@@ -49,7 +55,7 @@ func (p *Provider) Stream(
 		ctx,
 		http.MethodPost,
 		"/api/chat",
-		newChatRequest(model, request.Messages, true),
+		newChatRequest(model, request, true),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("stream with Ollama: %w", err)
@@ -66,6 +72,7 @@ func (p *Provider) Stream(
 		model:   model,
 		body:    response.Body,
 		decoder: json.NewDecoder(response.Body),
+		output:  request.Output,
 	}, nil
 }
 
@@ -119,10 +126,27 @@ func (s *stream) Recv() (
 			message: response.Error,
 		}
 	}
+	toolCalls, err := ollamaToolCallDeltas(response.Message.ToolCalls)
+	if err != nil {
+		s.finish()
+
+		return pkgProvider.StreamChunk{}, err
+	}
+	if s.output != nil {
+		_, _ = s.content.WriteString(response.Message.Content)
+		if response.Done {
+			if err := validateStructuredContent(s.output, s.content.Bytes()); err != nil {
+				s.finish()
+
+				return pkgProvider.StreamChunk{}, err
+			}
+		}
+	}
 
 	chunk = pkgProvider.StreamChunk{
 		Model:        response.Model,
 		Content:      response.Message.Content,
+		ToolCalls:    toolCalls,
 		FinishReason: response.DoneReason,
 		Usage: pkgProvider.Usage{
 			InputTokens:  response.PromptEvalCount,

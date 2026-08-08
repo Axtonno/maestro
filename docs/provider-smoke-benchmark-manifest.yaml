@@ -1,0 +1,107 @@
+version: 1
+owner: milestone-3-smoke-benchmark
+source_milestone: provider-layer
+report_redaction:
+  exclude:
+    - prompts
+    - responses
+    - tool_arguments
+    - tool_results
+    - credentials
+    - user_paths
+
+providers:
+  ollama:
+    required_environment:
+      - MAESTRO_OLLAMA_BASE_URL
+    model_environment:
+      chat: MAESTRO_OLLAMA_CHAT_MODEL
+      embedding: MAESTRO_OLLAMA_EMBED_MODEL
+      lifecycle: MAESTRO_OLLAMA_LIFECYCLE_MODEL
+      acquisition_fixture: MAESTRO_OLLAMA_ACQUISITION_MODEL
+    optional_environment:
+      - MAESTRO_ALLOW_CATALOG_MUTATION
+    version_sensitive_limits:
+      - structured outputs are unavailable on Ollama Cloud
+      - required and named tool choice are unsupported by the native chat adapter
+      - tool calling depends on model capability metadata
+  llama.cpp:
+    required_environment:
+      - MAESTRO_LLAMACPP_BASE_URL
+    model_environment:
+      chat: MAESTRO_LLAMACPP_CHAT_MODEL
+      embedding: MAESTRO_LLAMACPP_EMBED_MODEL
+      lifecycle: MAESTRO_LLAMACPP_LIFECYCLE_MODEL
+      acquisition_fixture: MAESTRO_LLAMACPP_ACQUISITION_MODEL
+    optional_environment:
+      - MAESTRO_LLAMACPP_API_KEY
+      - MAESTRO_ALLOW_CATALOG_MUTATION
+    version_sensitive_limits:
+      - tool calling requires jinja and a compatible chat template
+      - router lifecycle and acquisition endpoints are unavailable in single-model mode
+      - JSON Schema keyword coverage follows llama.cpp grammar conversion
+
+scenarios:
+  - id: capability-instance
+    capability: capability_introspection
+    model_role: none
+    cleanup: none
+  - id: catalog-list-discover
+    capability: model_discovery
+    model_role: none
+    cleanup: none
+  - id: completion-simple
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: stream-terminal-close
+    capability: streaming
+    model_role: chat
+    cleanup: close_stream
+  - id: stream-cancel-deadline
+    capability: streaming
+    model_role: chat
+    cleanup: cancel_context_and_close_stream
+  - id: embedding
+    capability: embedding
+    model_role: embedding
+    cleanup: none
+  - id: lifecycle-load-unload
+    capability: model_load
+    model_role: lifecycle
+    cleanup: unload_fixture_model
+  - id: acquisition-pull-remove
+    capability: model_pull
+    model_role: acquisition_fixture
+    mutation_guard: MAESTRO_ALLOW_CATALOG_MUTATION=true
+    cleanup: remove_fixture_model
+  - id: structured-json
+    capability: structured_output
+    model_role: chat
+    cleanup: none
+  - id: structured-json-schema
+    capability: structured_output
+    model_role: chat
+    cleanup: none
+  - id: tool-call-result
+    capability: tool_calling
+    model_role: chat
+    cleanup: none
+  - id: tool-call-stream
+    capability: tool_calling
+    model_role: chat
+    cleanup: close_stream
+  - id: resilience-controlled-error
+    capability: completion
+    model_role: chat
+    cleanup: reset_runtime_policy
+  - id: observability-redaction
+    capability: completion
+    model_role: chat
+    cleanup: clear_observer
+
+result_states:
+  - passed
+  - failed
+  - skipped
+  - unsupported

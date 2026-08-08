@@ -62,16 +62,19 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 16. `provider-error-semantics.md`
 17. `provider-resilience.md`
 18. `provider-observability.md`
-19. `provider-layer-plan.md`
-20. `benchmark-evaluation-plan.md`
-21. `plugin-runtime.md`
-22. `laravel-plugin.md`
+19. `provider-advanced-generation.md`
+20. `provider-layer-plan.md`
+21. `provider-api-compatibility-audit.md`
+22. `provider-smoke-benchmark-manifest.yaml`
+23. `benchmark-evaluation-plan.md`
+24. `plugin-runtime.md`
+25. `laravel-plugin.md`
 
 ---
 
 ## Stato del progetto
 
-🚧 Provider Layer
+✅ Provider Layer
 
 Il Runtime Core, il lifecycle e l'Event System sono implementati. Il primo
 incremento del Provider Runtime introduce registry, routing capability-based,
@@ -81,7 +84,8 @@ Il primo adapter concreto per Ollama implementa completion, streaming,
 embedding e model listing. La Fase 5 del Runtime Core è conclusa; lo smoke test
 contro un'istanza Ollama reale confluisce nello Smoke Benchmark della Milestone
 3.
-Provider e policy ulteriori proseguono senza bloccare il Plugin Runtime.
+Evoluzioni provider ulteriori potranno proseguire senza bloccare il Plugin
+Runtime.
 
 La Fase 1 della Provider Layer aggiunge l'adapter llama.cpp sulle API
 OpenAI-compatible di `llama-server`, con completion, streaming SSE, embedding,
@@ -94,10 +98,10 @@ capability opzionali. Ollama e llama.cpp espongono ora snapshot di stato, load e
 unload attraverso lo stesso Provider Runtime, mantenendo i dettagli di
 protocollo nei rispettivi adapter.
 
-Il completamento della Milestone 2 è suddiviso nelle Fasi 3–10: acquisizione dei
-modelli, policy di residenza, capability introspection, semantica degli errori,
+La Milestone 2 è stata completata nelle Fasi 3–10: acquisizione dei modelli,
+policy di residenza, capability introspection, semantica degli errori,
 resilienza, osservabilità, contratti avanzati di generazione e hardening finale.
-La Fase 10 chiude con verifiche deterministiche e handoff degli scenari live.
+La Fase 10 ha chiuso le verifiche deterministiche e l'handoff degli scenari live.
 Il piano e i gate di ogni incremento sono descritti in
 `provider-layer-plan.md`.
 
@@ -132,6 +136,16 @@ La Fase 8 è completata: `ProviderObserver` espone eventi redatti e correlati pe
 inizio, tentativi, retry, transizioni del circuito e completamento. Gli stream
 emettono un solo terminale anche in caso di cancellazione o chiusura anticipata;
 il core resta indipendente dagli SDK di logging, metriche e tracing.
+
+La Fase 9 è completata: sampling comune, output JSON/JSON Schema, tool calling e
+delta tool streaming fanno parte del contratto neutrale. Ollama e llama.cpp
+traducono la baseline sui rispettivi protocolli, con validazione locale e
+capability introspection per le differenze operative.
+
+La Fase 10 chiude la Milestone 2: suite deterministica, race detector, vet,
+audit di compatibilità e documentazione sono allineati. Il manifest degli
+scenari live è consegnato allo Smoke Benchmark della Milestone 3, insieme ai
+requisiti di cleanup, redazione e configurazione.
 
 La nuova Milestone 3 introduce il Benchmark & Evaluation Layer. Gli smoke test
 live diventano il primo di tre livelli, seguito da benchmark del runtime e da

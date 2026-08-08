@@ -41,8 +41,9 @@ Un provider può implementare qualsiasi combinazione di queste capability. Il
 Runtime non richiede metodi fittizi per operazioni non disponibili.
 
 I tipi condivisi modellano messaggi, richieste, risposte, utilizzo dei token,
-chunk dello stream, embedding e descrittori dei modelli. I dettagli specifici
-di un SDK non entrano nei contratti del core.
+chunk dello stream, embedding, descrittori dei modelli, opzioni comuni di
+generazione, output JSON e tool call/result. I dettagli specifici di un SDK non
+entrano nei contratti del core.
 
 ---
 
@@ -106,6 +107,12 @@ Il Runtime non crea goroutine, canali, buffer o retry impliciti per lo streaming
 ordinario. Una policy di resilienza esplicita può riaprire lo stream soltanto
 prima del primo chunk. Quando è configurata una policy di residenza, il Runtime
 mantiene inoltre il lease fino a EOF, errore terminale o `Close`.
+
+Gli stream di generazione avanzata espongono `ToolCallDelta` indicizzati. Gli
+arguments sono frammenti da concatenare per indice; ID e nome possono comparire
+soltanto nel primo chunk. Gli adapter validano la call ricostruita prima del
+terminale. Structured output viene consegnato incrementalmente e validato come
+JSON al finish reason.
 
 ---
 
@@ -230,6 +237,12 @@ L'osservabilità provider è introdotta dalla Fase 8 e descritta in:
 
 ```
 docs/provider-observability.md
+```
+
+La baseline di generazione avanzata è introdotta dalla Fase 9 e descritta in:
+
+```
+docs/provider-advanced-generation.md
 ```
 
 La prima implementazione concreta è descritta in:

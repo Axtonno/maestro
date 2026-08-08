@@ -59,13 +59,15 @@ e il campo `capabilities` restituito dal server.
 
 Il target adapter è offline. Il target instance verifica il catalogo e dichiara
 disponibili le capability di gestione, lasciando inference `unknown` senza un
-modello. Il target model usa `/api/show`: `completion` abilita completion e
-streaming, mentre `embedding` abilita embedding.
+modello. Il target model usa `/api/show`: `completion` abilita completion,
+streaming e structured output, `embedding` abilita embedding e `tools` abilita
+tool calling.
 
-Tool calling e structured output restano non supportati dall'adapter Maestro
-anche quando compaiono nei metadata Ollama. Un modello assente viene riportato
-come non disponibile senza effettuare `/api/show`; pull resta disponibile.
-Ogni query legge un nuovo snapshot e non mantiene cache.
+Tool calling e structured output sono supportati strutturalmente dall'adapter;
+per il target instance rimangono `unknown` finché non viene scelto un modello.
+Un modello assente viene riportato come non disponibile senza effettuare
+`/api/show`; pull resta disponibile. Ogni query legge un nuovo snapshot e non
+mantiene cache.
 
 ---
 
@@ -168,6 +170,25 @@ tramite l'ID vuoto quando è configurato come default.
 
 ---
 
+# Generazione avanzata
+
+`GenerationOptions` viene tradotto nelle opzioni native `num_predict`,
+`temperature`, `top_p` e `stop`. Structured output usa `format: "json"` o uno
+schema JSON. Tool definitions, chiamate assistant e risultati tool vengono
+tradotti nei campi nativi di `/api/chat`.
+
+L'endpoint nativo applica scelta automatica quando sono presenti tool e li
+disabilita con `ToolChoiceNone`. Le modalità `required` e `named` non hanno una
+traduzione nativa affidabile e falliscono localmente con
+`ErrUnsupportedCapability`.
+
+Le tool call non-streaming diventano `Message.ToolCalls`; quelle NDJSON
+diventano `StreamChunk.ToolCalls`. Gli arguments devono essere oggetti JSON
+validi. Il contratto comune è descritto in
+`provider-advanced-generation.md`.
+
+---
+
 # Streaming
 
 Ollama restituisce oggetti NDJSON. Ogni `Recv` decodifica esattamente un
@@ -191,8 +212,8 @@ indicato dalla [specifica ufficiale degli errori](https://docs.ollama.com/api/er
 
 # Validazione ed errori
 
-L'adapter valida localmente configurazione, modello richiesto e input degli
-embedding.
+L'adapter valida localmente configurazione, modello richiesto, contratti di
+generazione avanzata e input degli embedding.
 
 Le risposte vengono rifiutate quando:
 
@@ -201,7 +222,9 @@ Le risposte vengono rifiutate quando:
 * uno stream termina senza il chunk finale;
 * la cardinalità degli embedding non coincide con gli input;
 * un embedding è vuoto;
-* un modello elencato non possiede alcuna identità.
+* un modello elencato non possiede alcuna identità;
+* structured output terminale non è JSON valido;
+* una tool call non possiede nome o arguments JSON validi.
 
 I body degli errori HTTP vengono letti con un limite di 64 KiB. Il campo JSON
 `error` viene preferito al testo grezzo. `ProviderError` classifica HTTP,
@@ -238,18 +261,17 @@ Milestone 3 e richiederanno un modello dedicato.
 
 ---
 
-# Limiti della prima versione
+# Limiti
 
-Non sono ancora tradotti:
+Non sono tradotti:
 
-* tool calling;
 * immagini e input multimodali;
 * thinking;
-* structured output;
-* opzioni di generazione specifiche di Ollama;
+* tool choice `required` o `named` sull'endpoint nativo;
+* opzioni di generazione specifiche di Ollama fuori dalla baseline comune;
 * autenticazione per i modelli cloud;
 * retry, backoff o circuit breaker interni all'adapter; le policy comuni
   appartengono al Provider Runtime.
 
-Queste estensioni richiederanno prima contratti neutrali condivisibili con
-almeno un secondo provider.
+Structured output e tool calling dipendono dal modello e dalla versione del
+server e vengono verificati live dalla Milestone 3.

@@ -20,6 +20,9 @@ func (p *Provider) Complete(
 			operationError,
 		)
 	}()
+	if err := validateLlamaCPPCompletionRequest(request); err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
 
 	model, err := p.model(request.Model)
 	if err != nil {
@@ -32,7 +35,7 @@ func (p *Provider) Complete(
 		ctx,
 		http.MethodPost,
 		"/v1/chat/completions",
-		newChatRequest(model, request.Messages, false),
+		newChatRequest(model, request, false),
 		&response,
 	); err != nil {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf(
@@ -60,42 +63,27 @@ func (p *Provider) Complete(
 			pkgProvider.ErrInvalidResponse,
 		)
 	}
+	toolCalls, err := translateLlamaCPPToolCalls(choice.Message.ToolCalls)
+	if err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
+	if err := validateStructuredContent(
+		request.Output,
+		[]byte(choice.Message.Content),
+	); err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
 
 	return pkgProvider.CompletionResponse{
 		Model: response.Model,
 		Message: pkgProvider.Message{
-			Role:    pkgProvider.Role(choice.Message.Role),
-			Content: choice.Message.Content,
+			Role:      pkgProvider.Role(choice.Message.Role),
+			Content:   choice.Message.Content,
+			ToolCalls: toolCalls,
 		},
 		FinishReason: *choice.FinishReason,
 		Usage:        providerUsage(response.Usage),
 	}, nil
-}
-
-func newChatRequest(
-	model string,
-	messages []pkgProvider.Message,
-	stream bool,
-) chatRequest {
-	translated := make([]chatMessage, 0, len(messages))
-	for _, message := range messages {
-		translated = append(translated, chatMessage{
-			Role:    string(message.Role),
-			Content: message.Content,
-		})
-	}
-
-	request := chatRequest{
-		Model:    model,
-		Messages: translated,
-		Stream:   stream,
-		N:        1,
-	}
-	if stream {
-		request.StreamOptions = &streamOptions{IncludeUsage: true}
-	}
-
-	return request
 }
 
 func providerUsage(value *usage) pkgProvider.Usage {

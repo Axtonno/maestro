@@ -53,8 +53,8 @@ func TestLlamaCPPAdapterCapabilitiesRequireNoIO(t *testing.T) {
 		report,
 		pkgProvider.CapabilityStructuredOutput,
 	)
-	if structured.Support != pkgProvider.CapabilityUnsupported ||
-		structured.Availability != pkgProvider.CapabilityAvailabilityUnavailable {
+	if structured.Support != pkgProvider.CapabilitySupported ||
+		structured.Availability != pkgProvider.CapabilityAvailabilityUnknown {
 		t.Fatalf("unexpected structured output descriptor %#v", structured)
 	}
 }
@@ -128,24 +128,28 @@ func TestLlamaCPPModelCapabilitiesUseEffectiveArguments(t *testing.T) {
 		args       []string
 		completion pkgProvider.CapabilityAvailability
 		embedding  pkgProvider.CapabilityAvailability
+		tools      pkgProvider.CapabilityAvailability
 	}{
 		{
 			name:       "embedding process",
 			args:       []string{"llama-server", "--embedding"},
 			completion: pkgProvider.CapabilityAvailabilityUnavailable,
 			embedding:  pkgProvider.CapabilityAvailabilityAvailable,
+			tools:      pkgProvider.CapabilityAvailabilityUnavailable,
 		},
 		{
 			name:       "chat process",
-			args:       []string{"llama-server", "--no-embedding"},
+			args:       []string{"llama-server", "--no-embedding", "--jinja"},
 			completion: pkgProvider.CapabilityAvailabilityAvailable,
 			embedding:  pkgProvider.CapabilityAvailabilityUnavailable,
+			tools:      pkgProvider.CapabilityAvailabilityAvailable,
 		},
 		{
 			name:       "unobservable mode",
 			args:       []string{"llama-server", "-ctx", "4096"},
 			completion: pkgProvider.CapabilityAvailabilityUnknown,
 			embedding:  pkgProvider.CapabilityAvailabilityUnknown,
+			tools:      pkgProvider.CapabilityAvailabilityUnavailable,
 		},
 	}
 
@@ -185,6 +189,20 @@ func TestLlamaCPPModelCapabilitiesUseEffectiveArguments(t *testing.T) {
 				pkgProvider.CapabilityEmbedding,
 			); descriptor.Availability != test.embedding {
 				t.Fatalf("unexpected embedding descriptor %#v", descriptor)
+			}
+			if descriptor := llamaCPPDescriptor(
+				t,
+				report,
+				pkgProvider.CapabilityToolCalling,
+			); descriptor.Availability != test.tools {
+				t.Fatalf("unexpected tool descriptor %#v", descriptor)
+			}
+			if descriptor := llamaCPPDescriptor(
+				t,
+				report,
+				pkgProvider.CapabilityStructuredOutput,
+			); descriptor.Availability != test.completion {
+				t.Fatalf("unexpected structured output descriptor %#v", descriptor)
 			}
 		})
 	}

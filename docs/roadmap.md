@@ -121,7 +121,7 @@ modificare registry e lifecycle.
 
 # Milestone 2 — Provider Layer
 
-Stato: Evoluzione incrementale
+Stato: Conclusa
 
 ## Fase 1 — Adapter llama.cpp
 
@@ -167,7 +167,7 @@ Contratti, routing, implementazioni Ollama e llama.cpp, test e documentazione
 sono completati. Gli smoke test live delle capability provider confluiscono
 nello Smoke Benchmark della Milestone 3.
 
-## Fasi successive
+## Completamento della milestone
 
 Il piano dettagliato, le dipendenze e i criteri di uscita sono definiti in
 `provider-layer-plan.md`.
@@ -234,24 +234,30 @@ nessun SDK telemetrico entra nel core.
 
 ### Fase 9 — Advanced Generation Baseline
 
-Stato: Pianificata
+Stato: Conclusa
 
 Opzioni comuni di generazione, output strutturati e tool calling validati sugli
-adapter Ollama e llama.cpp.
+adapter Ollama e llama.cpp. Il Runtime applica validazione preflight; messaggi e
+stream rappresentano chiamate tool in modo neutrale e la capability
+introspection dichiara disponibilità e limiti operativi.
 
 ### Fase 10 — Hardening & Provider Handoff
 
-Stato: Pianificata
+Stato: Conclusa
 
 Audit di compatibilità, verifica concorrente, suite deterministica e handoff
-degli scenari live al Benchmark Layer.
+degli scenari live al Benchmark Layer sono completati. Il manifest assegna
+modelli fixture, protezioni delle mutazioni, cleanup e redazione alla Milestone
+3 senza rendere i servizi live un prerequisito della Provider Layer.
 
-Output atteso:
+Output consegnato:
 
 Una Provider Layer capace di evolvere indipendentemente dalla progressione del
 Runtime Core e del Plugin Runtime.
 
 Gate finale della milestone:
+
+Stato: Superato
 
 - contratti pubblici sottoposti ad audit di compatibilità;
 - capability e routing coperti da test deterministici;
@@ -275,7 +281,7 @@ di chiusura della Milestone 2.
 
 # Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: Pianificata
+Stato: Pronta all'avvio
 
 Obiettivo:
 

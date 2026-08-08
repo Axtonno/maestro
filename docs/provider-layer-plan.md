@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In esecuzione
+Stato: Concluso
 
 Ultimo aggiornamento: 2026-08-08
 
@@ -39,8 +39,8 @@ adapter viene introdotto soltanto se serve a dimostrare una nuova astrazione.
 | 6 | Conclusa | Error Semantics | Tassonomia delle operazioni | Errori neutrali, classificati e compatibili con `errors.Is` |
 | 7 | Conclusa | Resilience Policies | Errori classificati | Retry/backoff e circuit breaker opt-in e deterministici |
 | 8 | Conclusa | Provider Observability | Confini operativi e resilienza | Segnali neutrali, senza contenuti sensibili né dipendenze SDK |
-| 9 | Pianificata | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
-| 10 | Pianificata | Hardening & Provider Handoff | Fasi 3–9 | Suite deterministica completa e scenari live consegnati alla Milestone 3 |
+| 9 | Conclusa | Advanced Generation Baseline | Capability introspection | Opzioni comuni, output strutturati e tool calling sui due adapter |
+| 10 | Conclusa | Hardening & Provider Handoff | Fasi 3–9 | Suite deterministica completa e scenari live consegnati alla Milestone 3 |
 
 L'ordine rappresenta le dipendenze architetturali, non soltanto la priorità.
 In particolare, le policy di resilienza non devono interpretare stringhe di
@@ -338,6 +338,8 @@ un sistema di telemetria specifico.
 
 # Fase 9 — Advanced Generation Baseline
 
+Stato: Conclusa
+
 ## Obiettivo
 
 Stabilire la superficie comune necessaria al futuro Agent System, evitando di
@@ -365,9 +367,29 @@ trasferire nel core tutte le opzioni proprietarie dei provider.
 Multimodalità, audio, reasoning/thinking, prompt caching, speculative decoding e
 opzioni di sampling esclusivamente proprietarie restano fuori dalla milestone.
 
+## Esito
+
+- `CompletionRequest` espone opzioni comuni di sampling, output JSON o JSON
+  Schema, definizioni tool e tool choice senza introdurre tipi specifici degli
+  adapter.
+- I messaggi neutrali rappresentano chiamate e risultati tool; gli stream
+  espongono delta incrementali con indici stabili.
+- Il Runtime valida richieste e combinazioni incompatibili prima del routing e
+  dell'I/O remoto.
+- Ollama traduce la superficie sulle API native e supporta tool choice `auto` e
+  `none`; llama.cpp traduce la superficie Chat Completions e supporta anche
+  `required` e named choice quando il server usa Jinja e un template compatibile.
+- JSON terminale e chiamate tool ricostruite dagli stream vengono validati
+  prima del completamento.
+- Capability introspection, fixture HTTP, test di compatibilità e ADR-0016
+  coprono entrambi gli adapter. Limiti e contratto sono descritti in
+  `provider-advanced-generation.md`.
+
 ---
 
 # Fase 10 — Hardening & Provider Handoff
+
+Stato: Conclusa
 
 ## Obiettivo
 
@@ -406,6 +428,21 @@ La Milestone 2 è conclusa soltanto quando:
 Processi, hardware e modelli locali non sono prerequisiti del gate della
 Provider Layer. Gli smoke test live sono responsabilità del Livello 1 — Smoke
 Benchmark della Milestone 3.
+
+## Esito
+
+- Suite completa, race detector, vet e compilazione delle suite protette dal
+  tag `integration` costituiscono il gate ripetibile senza servizi live.
+- `provider-api-compatibility-audit.md` registra modifiche additive, vincoli sui
+  composite literal e rischi residui con destinazione esplicita.
+- `provider-smoke-benchmark-manifest.yaml` consegna alla Milestone 3 provider,
+  ruoli dei modelli, variabili d'ambiente, cleanup, protezioni delle mutazioni,
+  redazione e stati di risultato.
+- Roadmap, contesto, ADR e documentazione degli adapter sono allineati alla
+  superficie implementata.
+- Tutte le attività live o dipendenti da versione, modelli e hardware hanno un
+  owner nel Benchmark & Evaluation Layer; non restano requisiti obbligatori
+  senza destinazione.
 
 ---
 

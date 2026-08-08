@@ -104,10 +104,10 @@ dal protocollo.
 10. `structured_output`;
 11. `tool_calling`.
 
-Ollama e llama.cpp implementano oggi le prime nove capability nell'adapter.
-`structured_output` e `tool_calling` restano `unsupported` anche quando il
-server o il modello sottostante le offre: i contratti neutrali Maestro verranno
-aggiunti nella Fase 9.
+Ollama e llama.cpp implementano tutte le capability note nell'adapter. Per
+`structured_output` e `tool_calling`, il supporto strutturale non implica che
+ogni modello o configurazione sia disponibile: la Fase 9 conserva questa
+distinzione nel report.
 
 ---
 
@@ -119,7 +119,8 @@ embedding restano `unknown` senza un modello esplicito.
 
 Il target `model` verifica prima la presenza nel catalogo e poi usa
 `POST /api/show`. Le capability Ollama `completion` ed `embedding` determinano
-rispettivamente completion/streaming ed embedding nel report. La
+rispettivamente completion/streaming/structured output ed embedding nel report;
+`tools` determina tool calling. La
 documentazione ufficiale di [Show model details](https://docs.ollama.com/api-reference/show-model-details)
 definisce il campo `capabilities` model-specific.
 
@@ -146,6 +147,8 @@ Semantica:
 - `--embedding` o `--embeddings` rende disponibile embedding e indisponibili
   completion e streaming;
 - una disabilitazione embedding esplicita produce la semantica inversa;
+- structured output segue la disponibilità completion;
+- tool calling è disponibile soltanto con completion e `--jinja` osservabile;
 - se la modalità può dipendere da environment ereditato e non è osservabile
   dagli argomenti, entrambe rimangono `unknown`.
 

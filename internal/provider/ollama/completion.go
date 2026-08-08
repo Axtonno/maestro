@@ -20,6 +20,9 @@ func (p *Provider) Complete(
 			operationError,
 		)
 	}()
+	if err := validateOllamaCompletionRequest(request); err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
 
 	model, err := p.model(request.Model)
 	if err != nil {
@@ -32,7 +35,7 @@ func (p *Provider) Complete(
 		ctx,
 		http.MethodPost,
 		"/api/chat",
-		newChatRequest(model, request.Messages, false),
+		newChatRequest(model, request, false),
 		&response,
 	); err != nil {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf(
@@ -53,12 +56,23 @@ func (p *Provider) Complete(
 			pkgProvider.ErrInvalidResponse,
 		)
 	}
+	toolCalls, err := translateOllamaToolCalls(response.Message.ToolCalls)
+	if err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
+	if err := validateStructuredContent(
+		request.Output,
+		[]byte(response.Message.Content),
+	); err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
 
 	return pkgProvider.CompletionResponse{
 		Model: response.Model,
 		Message: pkgProvider.Message{
-			Role:    pkgProvider.Role(response.Message.Role),
-			Content: response.Message.Content,
+			Role:      pkgProvider.Role(response.Message.Role),
+			Content:   response.Message.Content,
+			ToolCalls: toolCalls,
 		},
 		FinishReason: response.DoneReason,
 		Usage: pkgProvider.Usage{
@@ -66,24 +80,4 @@ func (p *Provider) Complete(
 			OutputTokens: response.EvalCount,
 		},
 	}, nil
-}
-
-func newChatRequest(
-	model string,
-	messages []pkgProvider.Message,
-	stream bool,
-) chatRequest {
-	translated := make([]chatMessage, 0, len(messages))
-	for _, message := range messages {
-		translated = append(translated, chatMessage{
-			Role:    string(message.Role),
-			Content: message.Content,
-		})
-	}
-
-	return chatRequest{
-		Model:    model,
-		Messages: translated,
-		Stream:   stream,
-	}
 }

@@ -14,13 +14,20 @@ const (
 )
 
 type Message struct {
-	Role    Role
-	Content string
+	Role       Role
+	Content    string
+	ToolCallID string
+	ToolName   string
+	ToolCalls  []ToolCall
 }
 
 type CompletionRequest struct {
-	Model    string
-	Messages []Message
+	Model      string
+	Messages   []Message
+	Options    GenerationOptions
+	Output     *StructuredOutput
+	Tools      []Tool
+	ToolChoice ToolChoice
 }
 
 type CompletionResponse struct {
@@ -38,6 +45,7 @@ type Usage struct {
 type StreamChunk struct {
 	Model        string
 	Content      string
+	ToolCalls    []ToolCallDelta
 	FinishReason string
 	Usage        Usage
 }

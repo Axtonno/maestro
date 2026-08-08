@@ -117,6 +117,8 @@ collezione dei provider registrati e la selezione del default.
 * impedire registrazioni duplicate;
 * risolvere provider espliciti o il default configurato;
 * verificare le capability richieste;
+* validare opzioni di generazione, output strutturati e messaggi tool prima del
+  routing e dell'I/O remoto;
 * inoltrare completion, streaming, embedding, model listing, discovery,
   lifecycle, acquisizione e rimozione dei modelli;
 * coordinare policy opt-in di residenza attraverso lease, timer e ownership

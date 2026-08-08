@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"reflect"
@@ -457,6 +458,29 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 	}
 	if registered.removedModel != "qwen" {
 		t.Fatalf("unexpected removed model %q", registered.removedModel)
+	}
+}
+
+func TestRuntimeValidatesAdvancedCompletionBeforeResolvingProvider(t *testing.T) {
+	providerRuntime := NewRuntime("missing")
+	request := pkgProvider.CompletionRequest{
+		Tools: []pkgProvider.Tool{{
+			Name: "weather", Parameters: json.RawMessage(`{}`),
+		}},
+		ToolChoice: pkgProvider.ToolChoice{
+			Mode: pkgProvider.ToolChoiceNamed, Name: "undeclared",
+		},
+	}
+
+	if _, err := providerRuntime.Complete(
+		context.Background(), "", request,
+	); !errors.Is(err, pkgProvider.ErrInvalidRequest) {
+		t.Fatalf("complete should validate before resolution, got %v", err)
+	}
+	if _, err := providerRuntime.Stream(
+		context.Background(), "", request,
+	); !errors.Is(err, pkgProvider.ErrInvalidRequest) {
+		t.Fatalf("stream should validate before resolution, got %v", err)
 	}
 }
 

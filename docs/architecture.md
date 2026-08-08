@@ -114,6 +114,7 @@ Responsabilità:
 - introspection di supporto e disponibilità per adapter, istanza e modello.
 - classificazione provider-neutral degli errori operativi.
 - eventi operativi redatti per logging, metriche e tracing applicativi.
+- sampling comune, output strutturati e tool calling provider-neutral.
 
 Il contratto del layer è capability-based. L'identità del provider è separata
 dalle capability di completion, streaming, embedding, model listing, discovery,
@@ -138,6 +139,10 @@ da SDK telemetrici e non esegue callback mantenendo lock interni.
 Il Provider Runtime mantiene un registry thread-safe, applica una selezione
 esplicita del provider predefinito e inoltra le operazioni senza mantenere lock
 durante l'esecuzione di codice esterno.
+
+La baseline avanzata conserva nel core soltanto opzioni condivise da Ollama e
+llama.cpp. Tool execution, reasoning e opzioni proprietarie appartengono a
+layer superiori o a evoluzioni successive.
 
 Implementazioni disponibili:
 

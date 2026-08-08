@@ -2,9 +2,9 @@
 
 Versione: 0.1.0
 
-Stato: Pianificato
+Stato: Pronto all'avvio
 
-Ultimo aggiornamento: 2026-08-06
+Ultimo aggiornamento: 2026-08-08
 
 Autori:
 - Antonio Cafeo
@@ -45,6 +45,10 @@ particolare da:
 
 Il Benchmark Layer consuma questi contratti e non introduce semantiche provider
 nel Runtime Core.
+
+La Provider Layer è conclusa e i prerequisiti sono soddisfatti. Il manifest
+`provider-smoke-benchmark-manifest.yaml` costituisce l'handoff iniziale del
+Livello 1 e definisce scenari, configurazione, cleanup e redazione.
 
 ---
 

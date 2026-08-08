@@ -12,3 +12,4 @@
 - [ADR-0013 – Provider-Neutral Typed Error Envelope](ADR-0013.md)
 - [ADR-0014 – Runtime-Owned Opt-In Provider Resilience](ADR-0014.md)
 - [ADR-0015 – Runtime-Owned Redacted Provider Observability](ADR-0015.md)
+- [ADR-0016 – Additive Provider-Neutral Advanced Generation Baseline](ADR-0016.md)

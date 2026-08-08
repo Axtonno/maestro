@@ -50,8 +50,8 @@ func TestOllamaAdapterCapabilitiesRequireNoIO(t *testing.T) {
 		t.Fatalf("unexpected completion descriptor %#v", completion)
 	}
 	tools := ollamaDescriptor(t, report, pkgProvider.CapabilityToolCalling)
-	if tools.Support != pkgProvider.CapabilityUnsupported ||
-		tools.Availability != pkgProvider.CapabilityAvailabilityUnavailable {
+	if tools.Support != pkgProvider.CapabilitySupported ||
+		tools.Availability != pkgProvider.CapabilityAvailabilityUnknown {
 		t.Fatalf("unexpected tool descriptor %#v", tools)
 	}
 }
@@ -127,8 +127,13 @@ func TestOllamaModelCapabilitiesUseShowMetadata(t *testing.T) {
 	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityEmbedding); descriptor.Availability != pkgProvider.CapabilityAvailabilityUnavailable {
 		t.Fatalf("unexpected embedding descriptor %#v", descriptor)
 	}
-	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityToolCalling); descriptor.Support != pkgProvider.CapabilityUnsupported {
-		t.Fatalf("upstream metadata changed adapter support %#v", descriptor)
+	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityToolCalling); descriptor.Support != pkgProvider.CapabilitySupported ||
+		descriptor.Availability != pkgProvider.CapabilityAvailabilityAvailable {
+		t.Fatalf("unexpected tool descriptor %#v", descriptor)
+	}
+	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityStructuredOutput); descriptor.Support != pkgProvider.CapabilitySupported ||
+		descriptor.Availability != pkgProvider.CapabilityAvailabilityAvailable {
+		t.Fatalf("unexpected structured output descriptor %#v", descriptor)
 	}
 }
 

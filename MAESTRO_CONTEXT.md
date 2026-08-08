@@ -918,19 +918,36 @@ Completati:
 Gli adapter verso logging, metriche e tracing restano applicativi; le misure
 live e di risorse appartengono alla Milestone 3.
 
-## Fasi 9–10 pianificate
+## ✅ Fase 9 — Advanced Generation Baseline
 
-Il completamento della Provider Layer è scomposto in incrementi con dipendenze
-e gate espliciti:
+Completati:
 
-* Fase 9 — Advanced Generation Baseline;
-* Fase 10 — Hardening & Provider Handoff.
+* opzioni comuni per limite token, temperatura, `top_p` e stop sequence;
+* output strutturati JSON e JSON Schema;
+* definizioni tool, choice, chiamate, risultati e storia conversazionale;
+* delta tool negli stream e validazione del risultato terminale;
+* traduzione e test isolati per Ollama e llama.cpp;
+* capability introspection aggiornata con disponibilità e limiti operativi;
+* ADR-0016 e documentazione dedicata.
 
-Il piano completo è descritto in `docs/provider-layer-plan.md`. Nuovi adapter,
-fallback multi-provider, selezione hardware-aware, supervisione dei processi,
-multimodalità e reasoning non sono requisiti di chiusura della Milestone 2.
+Multimodalità, reasoning e opzioni proprietarie restano fuori scope.
+
+## ✅ Fase 10 — Hardening & Provider Handoff
+
+La Milestone 2 — Provider Layer è conclusa. Il gate comprende suite completa,
+race detector, vet, audit delle API e della documentazione e compilazione delle
+suite di integrazione senza servizi live. Il manifest
+`docs/provider-smoke-benchmark-manifest.yaml` assegna gli scenari live alla
+Milestone 3 con modelli fixture, configurazione, protezioni delle mutazioni,
+cleanup e redazione espliciti.
+
+Nuovi adapter, fallback multi-provider, selezione hardware-aware, supervisione
+dei processi, multimodalità e reasoning non sono requisiti di chiusura della
+Milestone 2.
 
 ## Gate deterministico della Milestone 2
+
+Stato: Superato.
 
 * audit di compatibilità delle API pubbliche;
 * routing e capability coperti da test isolati;
@@ -944,7 +961,7 @@ multimodalità e reasoning non sono requisiti di chiusura della Milestone 2.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: Pianificata.
+Stato: Pronta all'avvio.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

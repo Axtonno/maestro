@@ -110,6 +110,20 @@ func (p *Provider) InspectCapabilities(
 		pkgProvider.CapabilityEmbedding,
 		availabilityFromOllamaCapability(observed, "embedding"),
 	)
+	completionAvailability := availabilityFromOllamaCapability(
+		observed,
+		"completion",
+	)
+	setOllamaAvailability(
+		&report,
+		pkgProvider.CapabilityStructuredOutput,
+		completionAvailability,
+	)
+	setOllamaAvailability(
+		&report,
+		pkgProvider.CapabilityToolCalling,
+		availabilityFromOllamaCapability(observed, "tools"),
+	)
 	setOllamaAvailability(
 		&report,
 		pkgProvider.CapabilityModelLoad,
@@ -140,11 +154,6 @@ func newOllamaCapabilityReport(
 	for _, capability := range pkgProvider.KnownCapabilities() {
 		support := pkgProvider.CapabilitySupported
 		availability := pkgProvider.CapabilityAvailabilityUnknown
-		if capability == pkgProvider.CapabilityStructuredOutput ||
-			capability == pkgProvider.CapabilityToolCalling {
-			support = pkgProvider.CapabilityUnsupported
-			availability = pkgProvider.CapabilityAvailabilityUnavailable
-		}
 		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{
 			Capability: capability, Support: support, Availability: availability,
 		})
@@ -178,6 +187,8 @@ func markMissingOllamaModel(report *pkgProvider.CapabilityReport) {
 		pkgProvider.CapabilityCompletion,
 		pkgProvider.CapabilityStreaming,
 		pkgProvider.CapabilityEmbedding,
+		pkgProvider.CapabilityStructuredOutput,
+		pkgProvider.CapabilityToolCalling,
 		pkgProvider.CapabilityModelLoad,
 		pkgProvider.CapabilityModelUnload,
 		pkgProvider.CapabilityModelRemove,

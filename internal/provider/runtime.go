@@ -145,6 +145,9 @@ func (r *runtime) Complete(
 	providerID pkgProvider.ID,
 	request pkgProvider.CompletionRequest,
 ) (responseValue pkgProvider.CompletionResponse, operationError error) {
+	if err := request.Validate(); err != nil {
+		return pkgProvider.CompletionResponse{}, err
+	}
 	provider, err := r.Resolve(providerID)
 	if err != nil {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf(
@@ -217,6 +220,9 @@ func (r *runtime) Stream(
 	providerID pkgProvider.ID,
 	request pkgProvider.CompletionRequest,
 ) (streamValue pkgProvider.Stream, operationError error) {
+	if err := request.Validate(); err != nil {
+		return nil, err
+	}
 	provider, err := r.Resolve(providerID)
 	if err != nil {
 		return nil, fmt.Errorf(

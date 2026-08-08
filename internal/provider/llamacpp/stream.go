@@ -2,6 +2,7 @@ package llamacpp
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -21,12 +22,21 @@ type stream struct {
 	model   string
 	body    io.ReadCloser
 	reader  *bufio.Reader
+	output  *pkgProvider.StructuredOutput
+	content bytes.Buffer
+	tools   map[int]*streamToolCall
 
 	recvMu   sync.Mutex
 	stateMu  sync.Mutex
 	closed   bool
 	done     bool
 	terminal bool
+}
+
+type streamToolCall struct {
+	id        string
+	name      string
+	arguments strings.Builder
 }
 
 func (p *Provider) Stream(
@@ -41,6 +51,9 @@ func (p *Provider) Stream(
 			operationError,
 		)
 	}()
+	if err := validateLlamaCPPCompletionRequest(request); err != nil {
+		return nil, err
+	}
 
 	model, err := p.model(request.Model)
 	if err != nil {
@@ -52,7 +65,7 @@ func (p *Provider) Stream(
 		ctx,
 		http.MethodPost,
 		"/v1/chat/completions",
-		newChatRequest(model, request.Messages, true),
+		newChatRequest(model, request, true),
 		"text/event-stream",
 	)
 	if err != nil {
@@ -70,6 +83,8 @@ func (p *Provider) Stream(
 		model:   model,
 		body:    response.Body,
 		reader:  bufio.NewReader(response.Body),
+		output:  request.Output,
+		tools:   make(map[int]*streamToolCall),
 	}, nil
 }
 
@@ -189,18 +204,94 @@ func (s *stream) Recv() (
 		}
 
 		finishReason := ""
+		toolCalls, err := llamaCPPToolCallDeltas(choice.Delta.ToolCalls)
+		if err != nil {
+			s.finish()
+
+			return pkgProvider.StreamChunk{}, err
+		}
+		if err := s.recordToolCalls(toolCalls); err != nil {
+			s.finish()
+
+			return pkgProvider.StreamChunk{}, err
+		}
+		if s.output != nil {
+			_, _ = s.content.WriteString(choice.Delta.Content)
+		}
 		if choice.FinishReason != nil {
 			finishReason = *choice.FinishReason
+			if err := validateStructuredContent(s.output, s.content.Bytes()); err != nil {
+				s.finish()
+
+				return pkgProvider.StreamChunk{}, err
+			}
+			if err := s.validateToolCalls(finishReason); err != nil {
+				s.finish()
+
+				return pkgProvider.StreamChunk{}, err
+			}
 			s.terminal = true
 		}
 
 		return pkgProvider.StreamChunk{
 			Model:        response.Model,
 			Content:      choice.Delta.Content,
+			ToolCalls:    toolCalls,
 			FinishReason: finishReason,
 			Usage:        providerUsage(response.Usage),
 		}, nil
 	}
+}
+
+func (s *stream) recordToolCalls(calls []pkgProvider.ToolCallDelta) error {
+	for _, call := range calls {
+		current := s.tools[call.Index]
+		if current == nil {
+			current = &streamToolCall{}
+			s.tools[call.Index] = current
+		}
+		if call.ID != "" {
+			if current.id != "" && current.id != call.ID {
+				return fmt.Errorf(
+					"llama.cpp changed a streaming tool call ID: %w",
+					pkgProvider.ErrInvalidResponse,
+				)
+			}
+			current.id = call.ID
+		}
+		if call.Name != "" {
+			if current.name != "" && current.name != call.Name {
+				return fmt.Errorf(
+					"llama.cpp changed a streaming tool name: %w",
+					pkgProvider.ErrInvalidResponse,
+				)
+			}
+			current.name = call.Name
+		}
+		_, _ = current.arguments.WriteString(call.Arguments)
+	}
+
+	return nil
+}
+
+func (s *stream) validateToolCalls(finishReason string) error {
+	if finishReason == "tool_calls" && len(s.tools) == 0 {
+		return fmt.Errorf(
+			"llama.cpp ended for tool calls without a call: %w",
+			pkgProvider.ErrInvalidResponse,
+		)
+	}
+	for _, call := range s.tools {
+		if call.id == "" || call.name == "" ||
+			!jsonObject(json.RawMessage(call.arguments.String())) {
+			return fmt.Errorf(
+				"llama.cpp returned an incomplete streaming tool call: %w",
+				pkgProvider.ErrInvalidResponse,
+			)
+		}
+	}
+
+	return nil
 }
 
 func (s *stream) Close() (closeError error) {

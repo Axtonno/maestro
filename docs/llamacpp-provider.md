@@ -54,8 +54,8 @@ un catalogo vuoto mantiene il valore `unknown`.
 Per un modello, gli argomenti espliciti `--embedding` e `--no-embedding`
 distinguono processo embedding e processo chat. Quando la configurazione può
 derivare da environment ereditato e non è presente nello snapshot, Maestro
-restituisce `unknown`. Tool calling e structured output rimangono non supportati
-dall'adapter fino ai contratti neutrali della Fase 9.
+restituisce `unknown`. Structured output segue la disponibilità chat; tool
+calling richiede inoltre `--jinja` osservabile negli argomenti effettivi.
 
 ---
 
@@ -113,11 +113,31 @@ viene propagato alla richiesta HTTP.
 
 ---
 
+# Generazione avanzata
+
+`GenerationOptions` usa `max_tokens`, `temperature`, `top_p` e `stop` della
+Chat Completions API. Structured output usa `response_format` in modalità
+`json_object`, con schema opzionale. Maestro verifica il JSON terminale ma non
+duplica il convertitore JSON Schema → grammar di llama.cpp.
+
+Tool definitions e choice `auto`, `none`, `required` o funzione nominata sono
+tradotte nel formato OpenAI-compatible. Messaggi assistant conservano ID, nome
+e arguments delle chiamate; i risultati tool richiedono sempre il relativo
+call ID. Il server deve essere avviato con `--jinja` e un chat template
+compatibile.
+
+Durante SSE, gli arguments possono arrivare in frammenti. Ogni
+`ToolCallDelta.Index` viene ricostruito internamente e il terminale è accettato
+soltanto quando ID, nome e oggetto JSON risultano completi. Il contratto comune
+è descritto in `provider-advanced-generation.md`.
+
+---
+
 # Traduzione e validazione
 
-La prima versione traduce soltanto messaggi testuali con i ruoli neutrali di
-Maestro. Tool call, contenuti multimodali e reasoning non entrano ancora nei
-contratti pubblici.
+L'adapter traduce messaggi testuali, tool call e risultati tool con i ruoli
+neutrali di Maestro. Contenuti multimodali e reasoning non entrano nei contratti
+pubblici della milestone.
 
 Per completion e streaming viene richiesto un solo risultato (`n: 1`). Le
 risposte sincrone devono contenere esattamente una choice. Gli embedding vengono
@@ -217,18 +237,16 @@ ispezionabili con `errors.Is`/`errors.As` e i dettagli remoti sono limitati.
 
 ---
 
-# Limiti della prima versione
+# Limiti
 
-Non sono ancora tradotti:
+Non sono tradotti:
 
-* tool calling;
 * contenuti multimodali;
 * reasoning;
-* output strutturati;
-* opzioni di sampling specifiche;
+* opzioni di sampling specifiche fuori dalla baseline comune;
 * endpoint nativi non compatibili con OpenAI;
 * retry, backoff o circuit breaker interni all'adapter; le policy comuni
   appartengono al Provider Runtime.
 
-Queste estensioni verranno introdotte soltanto quando esisteranno contratti
-neutrali o requisiti operativi concreti.
+Tool calling e keyword JSON Schema effettive dipendono da versione, modello e
+chat template e vengono verificate live dalla Milestone 3.

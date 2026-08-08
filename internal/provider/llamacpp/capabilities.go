@@ -99,6 +99,28 @@ func (p *Provider) InspectCapabilities(
 			pkgProvider.CapabilityAvailabilityUnknown,
 		)
 	}
+	completionAvailability := llamaCPPAvailability(
+		report,
+		pkgProvider.CapabilityCompletion,
+	)
+	setLlamaCPPAvailability(
+		&report,
+		pkgProvider.CapabilityStructuredOutput,
+		completionAvailability,
+	)
+	toolAvailability := pkgProvider.CapabilityAvailabilityUnavailable
+	if completionAvailability != pkgProvider.CapabilityAvailabilityUnavailable {
+		if enabled, known := llamaCPPJinjaMode(model.Status.Args); known && enabled {
+			toolAvailability = pkgProvider.CapabilityAvailabilityAvailable
+		} else if !known {
+			toolAvailability = pkgProvider.CapabilityAvailabilityUnknown
+		}
+	}
+	setLlamaCPPAvailability(
+		&report,
+		pkgProvider.CapabilityToolCalling,
+		toolAvailability,
+	)
 
 	for _, capability := range []pkgProvider.Capability{
 		pkgProvider.CapabilityModelLoad,
@@ -122,11 +144,6 @@ func newLlamaCPPCapabilityReport(
 	for _, capability := range pkgProvider.KnownCapabilities() {
 		support := pkgProvider.CapabilitySupported
 		availability := pkgProvider.CapabilityAvailabilityUnknown
-		if capability == pkgProvider.CapabilityStructuredOutput ||
-			capability == pkgProvider.CapabilityToolCalling {
-			support = pkgProvider.CapabilityUnsupported
-			availability = pkgProvider.CapabilityAvailabilityUnavailable
-		}
 		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{
 			Capability: capability, Support: support, Availability: availability,
 		})
@@ -182,6 +199,8 @@ func markMissingLlamaCPPModel(report *pkgProvider.CapabilityReport) {
 		pkgProvider.CapabilityCompletion,
 		pkgProvider.CapabilityStreaming,
 		pkgProvider.CapabilityEmbedding,
+		pkgProvider.CapabilityStructuredOutput,
+		pkgProvider.CapabilityToolCalling,
 		pkgProvider.CapabilityModelLoad,
 		pkgProvider.CapabilityModelUnload,
 		pkgProvider.CapabilityModelRemove,
@@ -225,6 +244,40 @@ func llamaCPPEmbeddingMode(args []string) (bool, bool) {
 	}
 
 	return false, false
+}
+
+func llamaCPPJinjaMode(args []string) (bool, bool) {
+	for _, argument := range args {
+		switch argument {
+		case "--jinja":
+			return true, true
+		case "--no-jinja":
+			return false, true
+		}
+		if strings.HasPrefix(argument, "--jinja=") {
+			switch argument[strings.IndexByte(argument, '=')+1:] {
+			case "1", "true":
+				return true, true
+			case "0", "false":
+				return false, true
+			}
+		}
+	}
+
+	return false, true
+}
+
+func llamaCPPAvailability(
+	report pkgProvider.CapabilityReport,
+	capability pkgProvider.Capability,
+) pkgProvider.CapabilityAvailability {
+	for _, descriptor := range report.Capabilities {
+		if descriptor.Capability == capability {
+			return descriptor.Availability
+		}
+	}
+
+	return pkgProvider.CapabilityAvailabilityUnknown
 }
 
 func setLlamaCPPAvailability(
