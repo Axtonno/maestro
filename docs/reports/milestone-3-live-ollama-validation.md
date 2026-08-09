@@ -231,6 +231,11 @@ nel campo strutturato previsto dall'API. Questa conclusione riguarda la fixture
 `qwen2.5-coder:7b` verificata e non dimostra un limite universale della famiglia
 Qwen.
 
+La fixture `qwen2.5-coder:7b` viene conservata come caso negativo documentato:
+con il payload Smoke e temperatura 0 produce la rappresentazione semanticamente
+corretta della chiamata, ma nel canale testuale anziché in
+`message.tool_calls`.
+
 ---
 
 # Gate deterministico
@@ -256,15 +261,19 @@ Il test d'integrazione Ollama richiesto è superato e il gate deterministico è
 verde. Il gate Smoke live completo non è però superato a causa dei due failure
 di tool calling. Di conseguenza la Milestone 3 **non viene dichiarata chiusa**.
 
-Per una nuova verifica di chiusura servono:
+Prima della prossima esecuzione Smoke servono soltanto:
 
 1. l'ID embedding esatto `embeddinggemma:latest`;
-2. una configurazione modello/template Ollama che produca tool call strutturate
-   non-stream e stream, oppure un modello fixture che le supporti in modo
-   affidabile; la diagnostica diretta esclude l'adapter Maestro come origine dei
-   due failure osservati;
-3. una nuova esecuzione di `bench smoke --fail-on-failure` senza scenari
-   `failed`.
+2. la prova di un'altra fixture modello/template direttamente su
+   `POST /api/chat`, prima non-stream e poi stream;
+3. la conferma che la nuova fixture produca `message.tool_calls` strutturate;
+4. solo dopo tale conferma, una nuova esecuzione di
+   `bench smoke --fail-on-failure` con
+   `MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest`.
+
+Se la prova diretta non produce `message.tool_calls`, lo Smoke completo non va
+rieseguito e la fixture va valutata come ulteriore caso negativo. Il riferimento
+negativo già acquisito resta `qwen2.5-coder:7b`.
 
 Gli skip lifecycle e acquisition restano accettabili finché le relative fixture
 opzionali e la mutation guard non sono configurate.

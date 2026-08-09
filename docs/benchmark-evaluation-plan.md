@@ -301,6 +301,11 @@ stream: per la fixture verificata il limite precede l'adapter Maestro. Dettagli
 e azioni richieste sono in
 `reports/milestone-3-live-ollama-validation.md`.
 
+Il prossimo Smoke live è subordinato a una prova diretta positiva di una nuova
+fixture modello/template su `/api/chat` e userà
+`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest`. La fixture
+`qwen2.5-coder:7b` resta il caso negativo documentato.
+
 ---
 
 # Output della milestone

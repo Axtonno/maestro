@@ -340,6 +340,12 @@ fixture l'adapter Maestro non è l'origine della perdita. La milestone resta
 aperta. Il report è in
 `reports/milestone-3-live-ollama-validation.md`.
 
+La prossima run richiede l'ID embedding esatto
+`embeddinggemma:latest` e una fixture modello/template alternativa verificata
+prima direttamente su `/api/chat`. Lo Smoke completo sarà ripetuto solo se tale
+prova produce `message.tool_calls`; `qwen2.5-coder:7b` resta il caso negativo
+documentato.
+
 ---
 
 # Milestone 4 — Gestor

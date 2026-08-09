@@ -188,6 +188,12 @@ sia non-stream sia stream; l'adapter Maestro non perde quindi il campo per
 questa fixture. La milestone resta aperta; il dettaglio è nel report
 `docs/reports/milestone-3-live-ollama-validation.md`.
 
+La prossima esecuzione completa richiede
+`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest` e una fixture
+modello/template alternativa che abbia prima prodotto `message.tool_calls`
+direttamente su `/api/chat`. `qwen2.5-coder:7b` resta documentato come caso
+negativo.
+
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
 cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin

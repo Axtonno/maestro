@@ -1051,6 +1051,12 @@ Validazione live Ollama del 2026-08-09:
 
 La Milestone 3 resta aperta fino a una run Smoke live senza scenari failed.
 
+Prima di ripeterla, occorre configurare
+`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest` e verificare una fixture
+modello/template alternativa direttamente su `/api/chat`. Lo Smoke completo va
+eseguito soltanto se la prova diretta restituisce `message.tool_calls` native;
+`qwen2.5-coder:7b` resta il caso negativo documentato.
+
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.
 
