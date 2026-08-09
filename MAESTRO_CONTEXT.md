@@ -1032,6 +1032,20 @@ La Fase 5 — Reporting & Hardware Profiles consegna:
 Il completamento della Fase 5 non chiude la Milestone 3. La milestone resta in
 corso fino a una decisione esplicita e alle eventuali verifiche live richieste.
 
+Validazione live Ollama del 2026-08-09:
+
+* integration test provider superato per listing, discovery, completion,
+  streaming, cancellazione ed embedding;
+* Smoke Benchmark: 9 passed, 3 skipped, 2 failed;
+* failure: `tool_call_missing` e `tool_stream_terminal_missing` con
+  `qwen2.5-coder:7b`;
+* embedding Smoke saltato perché l'introspection richiede l'ID catalogo esatto
+  `embeddinggemma:latest`, mentre era configurato l'alias `embeddinggemma`;
+* gate deterministico, race detector, vet e tre manifest superati;
+* report in `docs/reports/milestone-3-live-ollama-validation.md`.
+
+La Milestone 3 resta aperta fino a una run Smoke live senza scenari failed.
+
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.
 

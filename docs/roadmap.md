@@ -331,6 +331,11 @@ assolute tra modelli. Piano, metriche, rubriche e gate sono descritti in
 Le cinque fasi pianificate sono implementate, ma la milestone resta aperta in
 attesa di una decisione esplicita e delle eventuali verifiche live desiderate.
 
+Validazione live Ollama del 2026-08-09: integration test superato; Smoke
+Benchmark con 9 passed, 3 skipped e 2 failed (`tool_call_missing` e
+`tool_stream_terminal_missing`). La milestone resta aperta. Il report è in
+`reports/milestone-3-live-ollama-validation.md`.
+
 ---
 
 # Milestone 4 — Gestor

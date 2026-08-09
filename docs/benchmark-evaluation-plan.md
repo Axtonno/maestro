@@ -293,6 +293,11 @@ Rendering, profili hardware e gate della Fase 5 sono descritti in
 Il completamento delle cinque fasi non chiude automaticamente la milestone: lo
 stato resta in corso fino a una decisione esplicita.
 
+La validazione live Ollama del 2026-08-09 ha superato i test di integrazione ma
+non il gate Smoke completo: 9 scenari passed, 3 skipped e 2 failed sul tool
+calling. Dettagli e azioni richieste sono in
+`reports/milestone-3-live-ollama-validation.md`.
+
 ---
 
 # Output della milestone

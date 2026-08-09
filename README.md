@@ -180,6 +180,11 @@ dal JSON canonico, `maestro bench render` rigenera la vista offline e il profilo
 hardware comune registra CPU/RAM Linux e metadata GPU opt-in. La Milestone 3
 resta comunque in corso e non è considerata chiusa.
 
+La prima validazione live Ollama ha superato gli integration test ma non il
+gate Smoke completo: due scenari tool calling sono falliti con
+`qwen2.5-coder:7b`. La milestone resta aperta; il dettaglio è nel report
+`docs/reports/milestone-3-live-ollama-validation.md`.
+
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
 cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin
