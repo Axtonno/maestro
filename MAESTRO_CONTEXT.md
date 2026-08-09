@@ -1051,11 +1051,15 @@ Validazione live Ollama del 2026-08-09:
 
 La Milestone 3 resta aperta fino a una run Smoke live senza scenari failed.
 
-Prima di ripeterla, occorre configurare
-`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest` e verificare una fixture
-modello/template alternativa direttamente su `/api/chat`. Lo Smoke completo va
-eseguito soltanto se la prova diretta restituisce `message.tool_calls` native;
-`qwen2.5-coder:7b` resta il caso negativo documentato.
+La seconda fixture `llama3.1:8b` supera la prova diretta: non-stream restituisce
+una tool call nativa e lo stream la emette nel primo chunk, seguito da un chunk
+terminale con `done_reason: stop`. Integration test, embedding con ID catalogo
+esatto e lifecycle passano. Il nuovo Smoke completo produce 12 passed, 1
+skipped e 1 failed: resta solo `tool-call-stream` con
+`tool_stream_terminal_missing`. L'adapter propaga `stop`, mentre il gate
+richiede il terminale neutrale `tool_calls`; occorre normalizzare e testare
+questa sequenza prima della prossima run. `qwen2.5-coder:7b` resta il caso
+negativo documentato.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

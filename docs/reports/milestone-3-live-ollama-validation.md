@@ -236,6 +236,101 @@ con il payload Smoke e temperatura 0 produce la rappresentazione semanticamente
 corretta della chiamata, ma nel canale testuale anziché in
 `message.tool_calls`.
 
+## Seconda fixture: `llama3.1:8b`
+
+La discovery di `/api/tags` espone letteralmente:
+
+- chat e lifecycle: `llama3.1:8b`;
+- embedding: `embeddinggemma:latest`.
+
+Il gate diretto è stato ripetuto con lo stesso tool `echo_message`, il prompt
+`Call echo_message exactly once with message set to Maestro smoke.`,
+`num_predict: 128` e `temperature: 0`.
+
+### Gate diretto non-stream
+
+Esito: **PASS**.
+
+- `message.tool_calls` è presente;
+- contiene una sola chiamata a `echo_message`;
+- gli argomenti sono `{"message":"Maestro smoke"}`;
+- `message.content` è vuoto;
+- la risposta termina con `done: true` e `done_reason: "stop"`.
+
+### Gate diretto stream
+
+Esito: **PASS** secondo i criteri del gate diretto.
+
+La risposta contiene due chunk:
+
+1. chunk non terminale con `message.tool_calls`, chiamata valida a
+   `echo_message`, argomenti corretti e `message.content` vuoto;
+2. chunk terminale con `done: true`, nessuna duplicazione testuale e
+   `done_reason: "stop"`.
+
+Il risultato è stato confermato anche con il prompt esatto dello scenario
+Smoke streaming, `Call echo_message with message set to Maestro smoke.`: tool
+call nel primo chunk e terminale `stop` nel secondo.
+
+### Integration test
+
+Configurazione:
+
+```text
+MAESTRO_OLLAMA_BASE_URL=http://localhost:11434
+MAESTRO_OLLAMA_CHAT_MODEL=llama3.1:8b
+MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest
+MAESTRO_OLLAMA_LIFECYCLE_MODEL=llama3.1:8b
+GOCACHE=/tmp/maestro-go-build
+```
+
+Comando:
+
+```text
+go test -v -count=1 -tags=integration ./pkg/provider/ollama
+```
+
+Esito: **PASS**, durata package 10,564 secondi. Sono passati listing,
+discovery, completion, stream, cancellazione, embedding e lifecycle.
+
+### Smoke Benchmark completo
+
+Run ID: `bc0075d09580fed3074187fd5c7d6c50`.
+
+Durata complessiva osservata: 114.901,518 ms.
+
+Esito: **FAIL**, exit status 1.
+
+| Stato | Scenari |
+|---|---:|
+| `passed` | 12 |
+| `skipped` | 1 |
+| `failed` | 1 |
+
+Embedding, lifecycle e `tool-call-result` passano. Lo scenario acquisition
+resta saltato con `catalog_mutation_not_allowed`, come previsto dalla mutation
+guard. L'unico failure è:
+
+| Scenario | Durata | Error code |
+|---|---:|---|
+| `tool-call-stream` | 8.700,185 ms | `tool_stream_terminal_missing` |
+
+### Diagnosi del terminale streaming
+
+La fixture soddisfa il gate diretto e dimostra che Ollama emette una tool call
+strutturata nei chunk. La divergenza riguarda la semantica terminale:
+
+- Ollama invia la tool call in un chunk con `done: false`;
+- chiude poi con `done: true` e `done_reason: "stop"`;
+- l'adapter copia `done_reason` in `StreamChunk.FinishReason`;
+- lo scenario Smoke riconosce il terminale tool-call soltanto quando
+  `FinishReason == "tool_calls"`.
+
+Il percorso streaming Maestro non normalizza quindi la sequenza multi-chunk
+Ollama in un terminale `tool_calls`. `llama3.1:8b` non è un secondo caso
+negativo del modello: è la fixture positiva che espone un'incompatibilità tra
+la terminazione Ollama e il contratto/gate Maestro.
+
 ---
 
 # Gate deterministico
@@ -258,22 +353,16 @@ I manifest contengono rispettivamente 14, 11 e 6 scenari.
 # Conclusione
 
 Il test d'integrazione Ollama richiesto è superato e il gate deterministico è
-verde. Il gate Smoke live completo non è però superato a causa dei due failure
-di tool calling. Di conseguenza la Milestone 3 **non viene dichiarata chiusa**.
+verde. `llama3.1:8b` supera il gate diretto sia non-stream sia stream; questo ha
+autorizzato correttamente la nuova esecuzione Smoke completa. Lo Smoke migliora
+da 9 passed, 3 skipped e 2 failed a 12 passed, 1 skipped e 1 failed, ma non è
+ancora verde a causa della semantica terminale di `tool-call-stream`.
 
-Prima della prossima esecuzione Smoke servono soltanto:
-
-1. l'ID embedding esatto `embeddinggemma:latest`;
-2. la prova di un'altra fixture modello/template direttamente su
-   `POST /api/chat`, prima non-stream e poi stream;
-3. la conferma che la nuova fixture produca `message.tool_calls` strutturate;
-4. solo dopo tale conferma, una nuova esecuzione di
-   `bench smoke --fail-on-failure` con
-   `MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest`.
-
-Se la prova diretta non produce `message.tool_calls`, lo Smoke completo non va
-rieseguito e la fixture va valutata come ulteriore caso negativo. Il riferimento
-negativo già acquisito resta `qwen2.5-coder:7b`.
+Di conseguenza la Milestone 3 **non viene dichiarata chiusa**. Prima della
+prossima esecuzione occorre risolvere e coprire con test la normalizzazione della
+sequenza Ollama `tool_calls` non terminale seguita da terminale `stop`, quindi
+rieseguire lo Smoke con la stessa fixture positiva. `qwen2.5-coder:7b` resta il
+caso negativo documentato.
 
 Gli skip lifecycle e acquisition restano accettabili finché le relative fixture
 opzionali e la mutation guard non sono configurate.

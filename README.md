@@ -188,10 +188,11 @@ sia non-stream sia stream; l'adapter Maestro non perde quindi il campo per
 questa fixture. La milestone resta aperta; il dettaglio è nel report
 `docs/reports/milestone-3-live-ollama-validation.md`.
 
-La prossima esecuzione completa richiede
-`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest` e una fixture
-modello/template alternativa che abbia prima prodotto `message.tool_calls`
-direttamente su `/api/chat`. `qwen2.5-coder:7b` resta documentato come caso
+La fixture alternativa `llama3.1:8b` produce `message.tool_calls` native
+direttamente su `/api/chat`. Il nuovo Smoke con
+`embeddinggemma:latest` raggiunge 12 passed, 1 skipped e 1 failed: resta da
+normalizzare il terminale streaming Ollama `stop` nel terminale neutrale
+`tool_calls` atteso dal gate. `qwen2.5-coder:7b` resta documentato come caso
 negativo.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di

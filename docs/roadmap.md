@@ -340,11 +340,14 @@ fixture l'adapter Maestro non è l'origine della perdita. La milestone resta
 aperta. Il report è in
 `reports/milestone-3-live-ollama-validation.md`.
 
-La prossima run richiede l'ID embedding esatto
-`embeddinggemma:latest` e una fixture modello/template alternativa verificata
-prima direttamente su `/api/chat`. Lo Smoke completo sarà ripetuto solo se tale
-prova produce `message.tool_calls`; `qwen2.5-coder:7b` resta il caso negativo
-documentato.
+La fixture alternativa `llama3.1:8b` supera il gate diretto e produce
+`message.tool_calls` native non-stream e stream. Con
+`embeddinggemma:latest`, integration test, embedding e lifecycle passano; il
+nuovo Smoke completo chiude con 12 passed, 1 skipped e 1 failed. Resta
+`tool-call-stream`: Ollama emette la tool call in un chunk non terminale e
+chiude con `done_reason: stop`, mentre il gate Maestro richiede il terminale
+`tool_calls`. La milestone resta aperta in attesa della normalizzazione di
+questa sequenza. `qwen2.5-coder:7b` resta il caso negativo documentato.
 
 ---
 
