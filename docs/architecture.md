@@ -1,10 +1,10 @@
 # Maestro Architecture
 
-Versione: 0.1.0
+Versione: 0.2.0
 
 Stato: Draft
 
-Ultimo aggiornamento: 2026-08-08
+Ultimo aggiornamento: 2026-08-09
 
 Autori:
 - Antonio Cafeo
@@ -85,6 +85,11 @@ senza conoscere le implementazioni concrete.
 Il composition root pubblico compone anche un Plugin Runtime. La registrazione
 di un plugin confluisce nel Registry dei componenti, così dependency graph,
 stato e lifecycle rimangono unici.
+
+Lo stesso composition root espone `Gestor()`: Registry delle capability,
+sorgenti Runtime/Provider e Resolver condividono snapshot e generazioni con una
+vista read-only del dependency graph. Il contratto `pkg/runtime.Runtime` resta
+invariato; Gestor è un servizio additivo del Runtime pubblico di Maestro.
 
 La configurazione viene iniettata nel composition root e consegnata ai
 componenti come snapshot a chiavi esatte. Il core non decide come leggere file,
@@ -208,18 +213,29 @@ Gestor rappresenta il registro centrale delle capability.
 
 Responsabilità:
 
-- registrazione dei componenti;
-- discovery;
-- dependency resolution;
-- capability lookup.
+- indicizzazione delle dichiarazioni di capability;
+- discovery atomica dalle sorgenti autorevoli;
+- distinzione tra dichiarazione e disponibilità operativa;
+- query, filtri e preferenze target esatte;
+- risoluzioni spiegabili con dependency plan topologico;
+- eventi redatti di refresh e resolution.
 
 Gestor non esegue codice.
 
-Coordina il sistema.
+Il Runtime Registry continua a possedere i componenti, il Provider Runtime i
+provider e il Runtime Core l'unico dependency graph. Gestor conserva soltanto
+descriptor e indici immutabili e consulta il grafo in lettura. Le registrazioni
+invalidano lo snapshot senza avviare discovery o I/O; il refresh resta
+esplicito e all-or-nothing.
 
-Il design iniziale della Milestone 4 è descritto in `gestor-design.md`. Gestor
-riusa Registry e dependency graph del Runtime Core, indicizza snapshot delle
-capability e distingue dichiarazione da disponibilità operativa.
+Il composition root registra le sorgenti built-in component e provider e
+pubblica uno snapshot iniziale current. `Resolve` non esegue capability o probe
+e non sceglie un vincitore tramite ordine lessicografico. Gli eventi sul bus
+condiviso espongono soltanto metadata redatti e vengono emessi senza lock.
+
+Il design e i contratti della Milestone 4 sono descritti in
+`gestor-design.md`; i gate conclusivi sono in
+`reports/milestone-4-final.md`.
 
 ---
 

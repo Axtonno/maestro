@@ -1,8 +1,8 @@
 # Gestor — Design iniziale
 
-Versione: 0.5.0
+Versione: 0.6.0
 
-Stato: Resolver e integrazione read-only del grafo implementati — Milestone 4 aperta
+Stato: Implementato — Milestone 4 completata
 
 Data: 2026-08-09
 
@@ -400,7 +400,14 @@ Il concrete Provider Runtime espone inoltre un hook interno di invalidazione.
 Le registrazioni riuscite di componenti, plugin e provider invocano lo stesso
 invalidatore dopo il rilascio dei rispettivi lock. Le registrazioni fallite non
 invalidano. L'hook resta fuori dalle interfacce pubbliche Runtime, Provider e
-Plugin e verrà composto con il Registry Gestor nella Fase 5.
+Plugin ed è collegato al Registry Gestor dal composition root.
+
+Il bootstrap registra le sorgenti `runtime.components` e
+`provider.capabilities`, quindi pubblica uno snapshot iniziale current anche
+quando i cataloghi sono vuoti. La sorgente provider built-in interroga target
+adapter e instance. Nessun model ID viene inferito dal default o dal catalogo:
+target model ulteriori richiedono dichiarazioni esatte attraverso il confine
+pubblico `Source`.
 
 ---
 
@@ -421,7 +428,7 @@ Il contratto distingue almeno:
 Gli errori devono preservare cause e identificatori tecnici, senza includere
 prompt, risposte, secret o configurazioni sensibili.
 
-Eventi candidati:
+Topic pubblici stabili:
 
 ```text
 gestor.refresh.started
@@ -431,8 +438,12 @@ gestor.resolution.completed
 gestor.resolution.failed
 ```
 
-Gli eventi vengono pubblicati dopo il rilascio dei lock e non contengono
-contenuti operativi sensibili.
+Gli eventi vengono pubblicati prima o dopo l'operazione, mai mantenendo lock
+Gestor. Il payload pubblico contiene soltanto capability, generazione, conteggi,
+kind/scope, reason e una categoria d'errore. Non contiene messaggi d'errore,
+source detail, target o model ID, prompt, risposte o credenziali. Errori e panic
+degli observer non modificano refresh o resolution; callback sincroni lenti
+possono aggiungere latenza ma osservano già lo stato pubblicato.
 
 ---
 
@@ -457,11 +468,18 @@ type Resolver interface {
     Candidates(Query) ([]Descriptor, error)
     Resolve(Query) (Resolution, error)
 }
+
+type Service interface {
+    Registry
+    Resolver
+}
 ```
 
 `Source` è il confine di estensione, `Registry` espone deliberatamente refresh e
 invalidazione espliciti, e `Resolver` consuma soltanto query validate. Le
-implementazioni concrete resteranno in `internal/gestor`.
+implementazioni concrete restano in `internal/gestor`. Il composition root
+pubblico di Maestro espone `Gestor() gestor.Service`; `pkg/runtime.Runtime` non
+è stato ampliato, preservando il contratto del Runtime Core.
 
 ---
 
@@ -508,6 +526,9 @@ Runtime autorevole, senza ranking implicito né esecuzione del candidato.
 - eventi redatti;
 - test end-to-end e documentazione d'uso.
 
+Completata. Il bootstrap, il refresh iniziale, l'invalidazione coordinata, gli
+eventi stabili e i test pubblici chiudono la Milestone 4.
+
 Ogni fase produce un report dedicato in `docs/reports/`; la Fase 5 produce
 anche il report conclusivo della milestone.
 
@@ -515,7 +536,7 @@ anche il report conclusivo della milestone.
 
 # Gate di accettazione
 
-La Milestone 4 richiederà almeno:
+La Milestone 4 ha superato:
 
 - test unitari per invarianti e algoritmi;
 - test di concorrenza e race detector;
@@ -551,10 +572,10 @@ La Milestone 4 richiederà almeno:
 2. Le preferenze sono target esatti e ordinati in `QueryOptions`. Non esiste
    ancora configurazione globale; una configurazione futura dovrà tradursi
    nello stesso valore esplicito.
-3. `Refresh` e `Invalidate` sono esposti dal `Registry`; il composition root ne
-   coordinerà la policy iniziale nella Fase 5.
+3. `Refresh` e `Invalidate` sono esposti dal `Registry`; il composition root
+   pubblica lo snapshot iniziale e lascia i refresh successivi espliciti.
 4. La vista del dependency graph è soltanto interna e read-only. Il confine
    concreto è implementato senza esporre `internal/runtime.graph` e restituisce
    soltanto generazione, eleggibilità e piano topologico.
-5. I topic stabili verranno esposti con il wiring della Fase 5; cause, dettagli
-   di introspection e diagnostica sensibile resteranno interni e redatti.
+5. I topic stabili sono esposti in `pkg/gestor`; cause, dettagli di
+   introspection e diagnostica sensibile restano interni e redatti.

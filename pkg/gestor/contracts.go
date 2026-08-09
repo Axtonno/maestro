@@ -22,3 +22,11 @@ type Resolver interface {
 	Candidates(Query) ([]Descriptor, error)
 	Resolve(Query) (Resolution, error)
 }
+
+// Service is the public Gestor facade composed by Maestro. Registry and
+// Resolver remain separate contracts so consumers can depend on the narrower
+// interface when appropriate.
+type Service interface {
+	Registry
+	Resolver
+}

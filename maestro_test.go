@@ -5,7 +5,9 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
+	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
@@ -23,6 +25,65 @@ type lifecyclePlugin struct {
 	metadata pkgRuntime.Metadata
 	calls    *[]string
 	context  pkgRuntime.Context
+}
+
+type gestorComponent struct {
+	metadata pkgRuntime.Metadata
+}
+
+func (component *gestorComponent) Metadata() pkgRuntime.Metadata {
+	return component.metadata
+}
+
+type gestorInspectorProvider struct {
+	id pkgProvider.ID
+}
+
+func (provider *gestorInspectorProvider) ID() pkgProvider.ID {
+	return provider.id
+}
+
+func (provider *gestorInspectorProvider) InspectCapabilities(
+	_ context.Context,
+	request pkgProvider.CapabilityRequest,
+) (pkgProvider.CapabilityReport, error) {
+	descriptors := make(
+		[]pkgProvider.CapabilityDescriptor,
+		0,
+		len(pkgProvider.KnownCapabilities()),
+	)
+	for _, capability := range pkgProvider.KnownCapabilities() {
+		descriptor := pkgProvider.CapabilityDescriptor{
+			Capability:   capability,
+			Support:      pkgProvider.CapabilityUnsupported,
+			Availability: pkgProvider.CapabilityAvailabilityUnavailable,
+		}
+		if capability == pkgProvider.CapabilityCompletion {
+			descriptor.Support = pkgProvider.CapabilitySupported
+			descriptor.Availability = pkgProvider.CapabilityAvailabilityUnknown
+			if request.Target == pkgProvider.CapabilityTargetInstance {
+				descriptor.Availability = pkgProvider.CapabilityAvailabilityAvailable
+			}
+		}
+		descriptors = append(descriptors, descriptor)
+	}
+
+	return pkgProvider.CapabilityReport{
+		Provider:     provider.id,
+		Target:       request.Target,
+		Model:        request.Model,
+		Capabilities: descriptors,
+	}, nil
+}
+
+type failingGestorSource struct{}
+
+func (failingGestorSource) ID() pkgGestor.SourceID {
+	return "test.failure"
+}
+
+func (failingGestorSource) Discover(context.Context) ([]pkgGestor.Descriptor, error) {
+	return nil, errors.New("secret remote response")
 }
 
 func newLifecyclePlugin(
@@ -257,6 +318,222 @@ func TestDirectComponentRegistrationDoesNotClassifyPlugin(t *testing.T) {
 		pkgPlugin.ErrNotFound,
 	) {
 		t.Fatalf("expected plugin ErrNotFound, got %v", err)
+	}
+}
+
+func TestGestorCompositionRootRefreshesAndResolvesComponentsProvidersAndPlugins(t *testing.T) {
+	runtime := New()
+	initial := runtime.Gestor().Snapshot().Metadata()
+	if !initial.Current || initial.Generation != 1 || initial.DescriptorCount != 0 {
+		t.Fatalf("unexpected initial Gestor snapshot: %#v", initial)
+	}
+	if got := initial.Sources(); !reflect.DeepEqual(got, []pkgGestor.SourceID{
+		"provider.capabilities",
+		"runtime.components",
+	}) {
+		t.Fatalf("unexpected built-in sources: %v", got)
+	}
+
+	config := &gestorComponent{metadata: pkgRuntime.Metadata{
+		ID:           "config",
+		Name:         "Config",
+		Version:      "1.0.0",
+		Capabilities: []pkgRuntime.Capability{"app.configuration"},
+	}}
+	worker := &gestorComponent{metadata: pkgRuntime.Metadata{
+		ID:      "worker",
+		Name:    "Worker",
+		Version: "1.0.0",
+		Dependencies: []pkgRuntime.Dependency{
+			{ID: "config", Required: true},
+			{ID: "optional-missing", Required: false},
+		},
+		Capabilities: []pkgRuntime.Capability{"app.execute"},
+	}}
+	if err := runtime.Register(worker); err != nil {
+		t.Fatalf("register worker: %v", err)
+	}
+	if runtime.Gestor().Snapshot().Metadata().Current {
+		t.Fatal("component registration did not invalidate composed Gestor")
+	}
+	if err := runtime.Register(config); err != nil {
+		t.Fatalf("register config: %v", err)
+	}
+
+	plugin := newLifecyclePlugin("laravel", new([]string))
+	if err := runtime.Plugins().Register(plugin); err != nil {
+		t.Fatalf("register plugin: %v", err)
+	}
+	provider := &gestorInspectorProvider{id: "fixture"}
+	if err := runtime.Providers().Register(provider); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+
+	completed := make(chan pkgGestor.EventPayload, 4)
+	if err := runtime.EventBus().Subscribe(
+		pkgGestor.EventResolutionCompleted,
+		func(event pkgRuntime.Event) {
+			completed <- event.Payload().(pkgGestor.EventPayload)
+		},
+	); err != nil {
+		t.Fatalf("subscribe Gestor resolution event: %v", err)
+	}
+
+	if err := runtime.Start(t.Context()); err != nil {
+		t.Fatalf("start runtime: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := runtime.Stop(context.Background()); err != nil {
+			t.Errorf("stop runtime: %v", err)
+		}
+	})
+	if err := runtime.Gestor().Refresh(t.Context()); err != nil {
+		t.Fatalf("refresh composed Gestor: %v", err)
+	}
+
+	componentQuery, err := pkgGestor.NewQuery("app.execute", pkgGestor.QueryOptions{})
+	if err != nil {
+		t.Fatalf("new component query: %v", err)
+	}
+	componentResolution, err := runtime.Gestor().Resolve(componentQuery)
+	if err != nil {
+		t.Fatalf("resolve component capability: %v", err)
+	}
+	if componentResolution.Descriptor().Target.ID != "worker" ||
+		!reflect.DeepEqual(componentResolution.Dependencies(), []pkgGestor.Target{{
+			Kind: pkgGestor.TargetKindComponent, ID: "config", Scope: pkgGestor.ScopeComponent,
+		}}) {
+		t.Fatalf("unexpected component resolution: %#v", componentResolution)
+	}
+
+	providerQuery, err := pkgGestor.NewQuery(
+		pkgGestor.CapabilityProviderCompletion,
+		pkgGestor.QueryOptions{
+			TargetKind:       pkgGestor.TargetKindProvider,
+			Scope:            pkgGestor.ScopeInstance,
+			RequireAvailable: true,
+		},
+	)
+	if err != nil {
+		t.Fatalf("new provider query: %v", err)
+	}
+	providerResolution, err := runtime.Gestor().Resolve(providerQuery)
+	if err != nil {
+		t.Fatalf("resolve provider capability: %v", err)
+	}
+	if providerResolution.Descriptor().Target.ID != "fixture" {
+		t.Fatalf("unexpected provider resolution: %#v", providerResolution)
+	}
+
+	pluginDescriptors := 0
+	for _, descriptor := range runtime.Gestor().Snapshot().Descriptors() {
+		if descriptor.Target.ID == "laravel" &&
+			descriptor.Capability == pkgGestor.CapabilityRuntimeConfigure {
+			pluginDescriptors++
+		}
+	}
+	if pluginDescriptors != 1 {
+		t.Fatalf("expected plugin once through component source, got %d", pluginDescriptors)
+	}
+
+	for range 2 {
+		select {
+		case event := <-completed:
+			if event.Generation != runtime.Gestor().Snapshot().Metadata().Generation ||
+				event.Failure != pkgGestor.EventFailureNone {
+				t.Fatalf("unexpected resolution event: %#v", event)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("missing composed Gestor resolution event")
+		}
+	}
+}
+
+func TestGestorObserversRunAfterStateChangesAndCannotCorruptThem(t *testing.T) {
+	runtime := New()
+	entered := make(chan struct{})
+	release := make(chan struct{})
+	if err := runtime.EventBus().Subscribe(
+		pkgGestor.EventRefreshCompleted,
+		func(pkgRuntime.Event) {
+			close(entered)
+			<-release
+		},
+	); err != nil {
+		t.Fatalf("subscribe slow observer: %v", err)
+	}
+
+	refreshed := make(chan error, 1)
+	go func() {
+		refreshed <- runtime.Gestor().Refresh(t.Context())
+	}()
+	select {
+	case <-entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("slow observer was not called")
+	}
+	metadataRead := make(chan pkgGestor.SnapshotMetadata, 1)
+	go func() {
+		metadataRead <- runtime.Gestor().Snapshot().Metadata()
+	}()
+	select {
+	case metadata := <-metadataRead:
+		if !metadata.Current || metadata.Generation != 2 {
+			t.Fatalf("observer saw an uncommitted snapshot: %#v", metadata)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("slow observer appears to run under the Gestor lock")
+	}
+	close(release)
+	if err := <-refreshed; err != nil {
+		t.Fatalf("slow observer changed refresh result: %v", err)
+	}
+
+	if err := runtime.EventBus().Unsubscribe(pkgGestor.EventRefreshCompleted); err != nil {
+		t.Fatalf("unsubscribe slow observer: %v", err)
+	}
+	if err := runtime.EventBus().Subscribe(
+		pkgGestor.EventRefreshCompleted,
+		func(pkgRuntime.Event) { panic("observer panic") },
+	); err != nil {
+		t.Fatalf("subscribe panic observer: %v", err)
+	}
+	if err := runtime.Gestor().Refresh(t.Context()); err != nil {
+		t.Fatalf("panic observer changed refresh result: %v", err)
+	}
+	if metadata := runtime.Gestor().Snapshot().Metadata(); !metadata.Current || metadata.Generation != 3 {
+		t.Fatalf("panic observer corrupted snapshot: %#v", metadata)
+	}
+}
+
+func TestGestorCompositionPublishesRedactedRefreshFailure(t *testing.T) {
+	runtime := New()
+	failed := make(chan pkgGestor.EventPayload, 1)
+	if err := runtime.EventBus().Subscribe(
+		pkgGestor.EventRefreshFailed,
+		func(event pkgRuntime.Event) {
+			failed <- event.Payload().(pkgGestor.EventPayload)
+		},
+	); err != nil {
+		t.Fatalf("subscribe refresh failure: %v", err)
+	}
+	if err := runtime.Gestor().RegisterSource(failingGestorSource{}); err != nil {
+		t.Fatalf("register failing source: %v", err)
+	}
+	if err := runtime.Gestor().Refresh(t.Context()); !errors.Is(err, pkgGestor.ErrSourceFailure) {
+		t.Fatalf("expected source failure, got %v", err)
+	}
+	select {
+	case event := <-failed:
+		if event.Failure != pkgGestor.EventFailureSource ||
+			event.Generation != 1 || event.DescriptorCount != 0 {
+			t.Fatalf("unexpected failure payload: %#v", event)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("missing refresh failure event")
+	}
+	if metadata := runtime.Gestor().Snapshot().Metadata(); metadata.Current || metadata.Generation != 1 {
+		t.Fatalf("failed refresh corrupted snapshot: %#v", metadata)
 	}
 }
 

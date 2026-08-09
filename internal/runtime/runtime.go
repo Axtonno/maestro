@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	internalGestor "github.com/antonio-cafeo/maestro/internal/gestor"
 	internalPlugin "github.com/antonio-cafeo/maestro/internal/plugin"
 	internalProvider "github.com/antonio-cafeo/maestro/internal/provider"
+	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
@@ -18,10 +20,20 @@ type providerRegistrationInvalidator interface {
 	SetRegistrationInvalidator(func())
 }
 
+type gestorProviderRuntime interface {
+	Registered() []pkgProvider.ID
+	Capabilities(
+		context.Context,
+		pkgProvider.ID,
+		pkgProvider.CapabilityRequest,
+	) (pkgProvider.CapabilityReport, error)
+}
+
 // Runtime extends the Runtime Core contract with the services composed by the
 // Maestro entry point.
 type Runtime interface {
 	pkgRuntime.Runtime
+	Gestor() pkgGestor.Service
 	Plugins() pkgPlugin.Runtime
 }
 
@@ -39,6 +51,7 @@ type runtime struct {
 	lifecycleManager  *lifecycleManager
 	pluginRuntime     pkgPlugin.Runtime
 	providerRuntime   pkgProvider.Runtime
+	gestorService     pkgGestor.Service
 	gestorInvalidator func()
 
 	dependencyGraph          *graph
@@ -104,6 +117,7 @@ func newRuntimeWithServices(
 		componentStates,
 		runtimeContext,
 	)
+	rt.composeGestor()
 
 	return rt
 }
@@ -342,6 +356,55 @@ func (r *runtime) Providers() pkgProvider.Runtime {
 
 func (r *runtime) Plugins() pkgPlugin.Runtime {
 	return r.pluginRuntime
+}
+
+func (r *runtime) Gestor() pkgGestor.Service {
+	return r.gestorService
+}
+
+func (r *runtime) composeGestor() {
+	providerRuntime, ok := r.providerRuntime.(gestorProviderRuntime)
+	if !ok {
+		panic("compose Gestor: Provider Runtime lacks internal discovery capabilities")
+	}
+
+	componentSource, err := internalGestor.NewRuntimeComponentSource(r.registry)
+	if err != nil {
+		panic(fmt.Sprintf("compose Gestor component source: %v", err))
+	}
+	// The built-in policy probes adapter and instance targets. Model targets are
+	// never inferred; applications can add exact declarations through the
+	// public Source extension point.
+	providerSource, err := internalGestor.NewProviderCapabilitySource(
+		providerRuntime,
+		nil,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("compose Gestor provider source: %v", err))
+	}
+
+	registry := internalGestor.NewRegistry()
+	if err := registry.RegisterSource(componentSource); err != nil {
+		panic(fmt.Sprintf("compose Gestor component source registration: %v", err))
+	}
+	if err := registry.RegisterSource(providerSource); err != nil {
+		panic(fmt.Sprintf("compose Gestor provider source registration: %v", err))
+	}
+
+	resolver, err := internalGestor.NewResolver(registry, newGestorGraphView(r))
+	if err != nil {
+		panic(fmt.Sprintf("compose Gestor resolver: %v", err))
+	}
+	service, err := internalGestor.NewService(registry, resolver, r.eventBus)
+	if err != nil {
+		panic(fmt.Sprintf("compose Gestor service: %v", err))
+	}
+	if err := service.Refresh(context.Background()); err != nil {
+		panic(fmt.Sprintf("compose Gestor initial refresh: %v", err))
+	}
+
+	r.gestorService = service
+	r.setGestorInvalidator(registry.Invalidate)
 }
 
 func (r *runtime) buildDependencyGraph() error {

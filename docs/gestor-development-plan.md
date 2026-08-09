@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–4 completate, Fase 5 pronta
+Stato: Completata — Fasi 1–5 e gate finale completati
 
 Data: 2026-08-09
 
@@ -30,7 +30,7 @@ discovery remota o un secondo grafo.
 | 2 | Snapshot Registry | Completata | Fase 1 |
 | 3 | Discovery sources | Completata | Fase 2 |
 | 4 | Resolver e dependency graph | Completata | Fasi 2–3 |
-| 5 | Composition root, osservabilità e gate finale | Pronta | Fasi 1–4 |
+| 5 | Composition root, osservabilità e gate finale | Completata | Fasi 1–4 |
 
 Le fasi sono sequenziali sul contratto, ma i test di una fase devono restare
 verdi durante tutte le fasi successive.

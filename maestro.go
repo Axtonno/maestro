@@ -2,6 +2,7 @@ package maestro
 
 import (
 	internalRuntime "github.com/antonio-cafeo/maestro/internal/runtime"
+	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
@@ -10,6 +11,7 @@ import (
 // dedicated Plugin Runtime.
 type Runtime interface {
 	pkgRuntime.Runtime
+	Gestor() pkgGestor.Service
 	Plugins() pkgPlugin.Runtime
 }
 

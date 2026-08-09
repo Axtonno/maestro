@@ -1125,7 +1125,7 @@ Engine 6, Agent System 7 ed Ecosistema 8.
 
 ## Milestone 4 — Gestor
 
-Stato: in corso — Fasi 1–4 completate.
+Stato: completata — Fasi 1–5 e gate finale completati.
 
 Il documento `docs/gestor-design.md` apre formalmente la milestone.
 Il piano operativo è in `docs/gestor-development-plan.md`.
@@ -1152,7 +1152,7 @@ Stato delle fasi:
 2. Snapshot Registry — completata;
 3. Discovery sources Runtime e Provider — completata;
 4. Resolver e dependency graph — completata;
-5. Composition root, osservabilità e gate finale — pronta.
+5. Composition root, osservabilità e gate finale — completata.
 
 Ogni fase deve produrre un report in `docs/reports/`; la Fase 5 produce anche
 `docs/reports/milestone-4-final.md`. Nessuna fase viene dichiarata completata
@@ -1267,5 +1267,43 @@ Sono disponibili:
 * test con dipendenze richieste e opzionali, variazioni concorrenti e race
   detector.
 
-Il Resolver non esegue capability, probe o introspection. Il composition root,
-il refresh iniziale e gli eventi redatti appartengono alla Fase 5.
+Il Resolver non esegue capability, probe o introspection. Composition root,
+refresh iniziale ed eventi redatti sono consegnati dalla Fase 5.
+
+### Fase 5 — Composition root, osservabilità e gate finale
+
+Completata in:
+
+```text
+pkg/gestor
+internal/gestor
+internal/runtime
+maestro.go
+```
+
+Sono disponibili:
+
+* contratto additivo `gestor.Service`, composto da Registry e Resolver;
+* accesso pubblico `Runtime.Gestor()` nel composition root Maestro senza
+  modificare `pkg/runtime.Runtime`;
+* registrazione automatica delle sorgenti `runtime.components` e
+  `provider.capabilities`;
+* snapshot iniziale current a generazione 1, anche con cataloghi vuoti;
+* refresh successivi espliciti e all-or-nothing;
+* invalidazione coordinata dopo registrazioni riuscite di componenti, plugin,
+  provider o nuove sorgenti;
+* topic pubblici stabili per refresh e resolution;
+* payload redatti senza error string, source detail, target/model ID o dati
+  operativi;
+* observer invocati senza lock, con errori e panic isolati dal risultato;
+* test end-to-end dal Runtime pubblico con componenti, provider, plugin e grafo
+  reale;
+* cinque report di fase e report finale della Milestone 4.
+
+La sorgente provider built-in interroga adapter e instance. I target model non
+sono inferiti: dichiarazioni model-specific ulteriori devono arrivare da una
+`Source` esplicita. Gestor restituisce descriptor e dependency plan e non
+esegue la capability risolta.
+
+La Milestone 4 è chiusa. La Milestone 3 resta sospesa con la matrice live
+llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.

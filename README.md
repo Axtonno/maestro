@@ -205,6 +205,42 @@ cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin
 Laravel implementa detection del workspace e health. Packaging esterno,
 sandbox e unload appartengono all'evoluzione successiva dell'ecosistema.
 
+La Milestone 4 — Gestor è completata. Il Runtime pubblico compone un Registry
+di capability, le sorgenti Runtime e Provider e un Resolver che usa il
+dependency graph autorevole soltanto in lettura. Snapshot e availability sono
+espliciti; più candidati senza preferenza producono ambiguity e nessun ordine
+lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
+sull'Event Bus condiviso.
+
+Uso essenziale:
+
+```go
+runtime := maestro.New()
+
+// Registrare componenti, plugin e provider, quindi costruire il grafo.
+if err := runtime.Start(ctx); err != nil {
+    return err
+}
+defer runtime.Stop(context.Background())
+
+if err := runtime.Gestor().Refresh(ctx); err != nil {
+    return err
+}
+
+query, err := gestor.NewQuery("plugin.workspace_detection", gestor.QueryOptions{})
+if err != nil {
+    return err
+}
+resolution, err := runtime.Gestor().Resolve(query)
+if err != nil {
+    return err
+}
+
+// La risoluzione descrive target e dipendenze; non esegue la capability.
+_ = resolution.Descriptor()
+_ = resolution.Dependencies()
+```
+
 ---
 
 ## Contribuire
