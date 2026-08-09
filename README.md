@@ -182,7 +182,10 @@ resta comunque in corso e non è considerata chiusa.
 
 La prima validazione live Ollama ha superato gli integration test ma non il
 gate Smoke completo: due scenari tool calling sono falliti con
-`qwen2.5-coder:7b`. La milestone resta aperta; il dettaglio è nel report
+`qwen2.5-coder:7b`. La ripetizione diretta su `/api/chat` a temperatura 0 ha
+confermato che Ollama non restituisce `message.tool_calls`, ma JSON testuale,
+sia non-stream sia stream; l'adapter Maestro non perde quindi il campo per
+questa fixture. La milestone resta aperta; il dettaglio è nel report
 `docs/reports/milestone-3-live-ollama-validation.md`.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di

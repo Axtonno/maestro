@@ -144,6 +144,93 @@ modello non ha prodotto rispettivamente la tool call richiesta e il terminale
 tool-call previsto nello stream. Il gate non abbassa questi fallimenti a skip:
 supporto dichiarato e comportamento osservato non coincidono.
 
+## Diagnostica diretta di `/api/chat`
+
+Per separare il comportamento del modello dalla traduzione dell'adapter, le
+due richieste sono state ripetute direttamente contro
+`POST http://localhost:11434/api/chat`, senza attraversare Maestro. Payload,
+messaggi, tool e `num_predict: 128` coincidono con i rispettivi scenari Smoke;
+come controllo deterministico è stata impostata anche `temperature: 0`.
+
+Tool inviato in entrambe le richieste:
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "echo_message",
+    "description": "Return the supplied message",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" }
+      },
+      "required": ["message"],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+### Risposta non-stream
+
+Configurazione specifica:
+
+```json
+{
+  "model": "qwen2.5-coder:7b",
+  "messages": [{
+    "role": "user",
+    "content": "Call echo_message exactly once with message set to Maestro smoke."
+  }],
+  "stream": false,
+  "options": { "num_predict": 128, "temperature": 0 }
+}
+```
+
+La risposta grezza contiene `done: true` e `done_reason: "stop"`.
+`message.tool_calls` è assente. Il modello serializza invece la chiamata come
+testo ordinario in `message.content`:
+
+```json
+{
+  "name": "echo_message",
+  "arguments": {
+    "message": "Maestro smoke"
+  }
+}
+```
+
+### Risposta stream
+
+Il secondo payload usa il messaggio esatto dello scenario streaming:
+
+```text
+Call echo_message with message set to Maestro smoke.
+```
+
+La risposta è composta da 27 oggetti NDJSON:
+
+- chunk 1–26: `done: false`, frammenti del JSON testuale in
+  `message.content`, nessun campo `message.tool_calls`;
+- chunk 27: `done: true`, `done_reason: "stop"`, contenuto vuoto e nessun
+  campo `message.tool_calls`.
+
+Non esiste quindi un chunk iniziale, intermedio o terminale nel quale compaia
+una tool call strutturata.
+
+### Diagnosi
+
+Le chiamate dirette riproducono entrambi i fallimenti osservati nello Smoke
+Benchmark. L'adapter Maestro non riceve da Ollama alcun `message.tool_calls` da
+tradurre o aggregare; i due error code non sono quindi causati da perdita dei
+tool call nell'adapter. L'evidenza circoscrive il problema alla combinazione
+installata di modello, prompt/template e runtime Ollama: il modello comprende
+semanticamente la richiesta, ma emette la chiamata nel canale testuale anziché
+nel campo strutturato previsto dall'API. Questa conclusione riguarda la fixture
+`qwen2.5-coder:7b` verificata e non dimostra un limite universale della famiglia
+Qwen.
+
 ---
 
 # Gate deterministico
@@ -172,9 +259,10 @@ di tool calling. Di conseguenza la Milestone 3 **non viene dichiarata chiusa**.
 Per una nuova verifica di chiusura servono:
 
 1. l'ID embedding esatto `embeddinggemma:latest`;
-2. una configurazione chat/template che produca tool call non-stream e stream
-   coerenti con le capability dichiarate, oppure un modello fixture che le
-   supporti in modo affidabile;
+2. una configurazione modello/template Ollama che produca tool call strutturate
+   non-stream e stream, oppure un modello fixture che le supporti in modo
+   affidabile; la diagnostica diretta esclude l'adapter Maestro come origine dei
+   due failure osservati;
 3. una nuova esecuzione di `bench smoke --fail-on-failure` senza scenari
    `failed`.
 

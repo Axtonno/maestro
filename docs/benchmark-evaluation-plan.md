@@ -295,7 +295,10 @@ stato resta in corso fino a una decisione esplicita.
 
 La validazione live Ollama del 2026-08-09 ha superato i test di integrazione ma
 non il gate Smoke completo: 9 scenari passed, 3 skipped e 2 failed sul tool
-calling. Dettagli e azioni richieste sono in
+calling. Le richieste dirette a `/api/chat`, ripetute a temperatura 0, non
+contengono `message.tool_calls` né nella risposta non-stream né nei chunk
+stream: per la fixture verificata il limite precede l'adapter Maestro. Dettagli
+e azioni richieste sono in
 `reports/milestone-3-live-ollama-validation.md`.
 
 ---

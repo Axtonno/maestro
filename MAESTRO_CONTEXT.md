@@ -1039,6 +1039,11 @@ Validazione live Ollama del 2026-08-09:
 * Smoke Benchmark: 9 passed, 3 skipped, 2 failed;
 * failure: `tool_call_missing` e `tool_stream_terminal_missing` con
   `qwen2.5-coder:7b`;
+* la ripetizione diretta su `POST /api/chat`, con temperatura 0, non produce
+  `message.tool_calls` né in modalità non-stream né in alcuno dei 27 chunk
+  stream; la chiamata viene resa come JSON testuale e il terminale usa
+  `done_reason: stop`, escludendo una perdita nella traduzione o aggregazione
+  dell'adapter Maestro per questa fixture;
 * embedding Smoke saltato perché l'introspection richiede l'ID catalogo esatto
   `embeddinggemma:latest`, mentre era configurato l'alias `embeddinggemma`;
 * gate deterministico, race detector, vet e tre manifest superati;

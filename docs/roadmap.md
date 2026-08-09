@@ -333,7 +333,11 @@ attesa di una decisione esplicita e delle eventuali verifiche live desiderate.
 
 Validazione live Ollama del 2026-08-09: integration test superato; Smoke
 Benchmark con 9 passed, 3 skipped e 2 failed (`tool_call_missing` e
-`tool_stream_terminal_missing`). La milestone resta aperta. Il report è in
+`tool_stream_terminal_missing`). La verifica diretta di `/api/chat` a
+temperatura 0 riproduce entrambi i failure: nessuna risposta o chunk contiene
+`message.tool_calls`, mentre la chiamata è emessa come JSON testuale. Per questa
+fixture l'adapter Maestro non è l'origine della perdita. La milestone resta
+aperta. Il report è in
 `reports/milestone-3-live-ollama-validation.md`.
 
 ---
