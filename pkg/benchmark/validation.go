@@ -185,6 +185,14 @@ func (r IterationResult) Validate() error {
 		strings.TrimSpace(r.ReasonCode) != "" {
 		return fmt.Errorf("%s iteration has a reason code", r.State)
 	}
+	if r.Evaluation != nil {
+		if r.State != ResultPassed {
+			return fmt.Errorf("%s iteration has a quality evaluation", r.State)
+		}
+		if err := r.Evaluation.Validate(); err != nil {
+			return err
+		}
+	}
 
 	seenMeasurements := make(map[string]struct{}, len(r.Measurements))
 	for _, measurement := range r.Measurements {
@@ -200,6 +208,33 @@ func (r IterationResult) Validate() error {
 	}
 
 	return nil
+}
+
+func (e QualityEvaluation) Validate() error {
+	if !safeEvaluationIdentifier(e.Evaluator) || !safeEvaluationIdentifier(e.Method) ||
+		!safeEvaluationIdentifier(e.RationaleCode) {
+		return errors.New("quality evaluation identity or rationale is unsafe")
+	}
+	if e.MaxScore != 3 || e.Score < 0 || e.Score > e.MaxScore {
+		return errors.New("quality evaluation score is outside the 0-3 rubric")
+	}
+	return nil
+}
+
+func safeEvaluationIdentifier(value string) bool {
+	if len(value) == 0 || len(value) > 96 {
+		return false
+	}
+	for _, character := range value {
+		if (character >= 'a' && character <= 'z') ||
+			(character >= '0' && character <= '9') || character == '_' ||
+			character == '-' || character == ':' || character == '@' ||
+			character == '.' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func (m Measurement) Validate() error {
@@ -266,6 +301,7 @@ func (r Report) Validate() error {
 			result := IterationResult{
 				State: sample.State, ReasonCode: sample.ReasonCode,
 				Measurements: sample.Measurements, Error: sample.Error,
+				Evaluation: sample.Evaluation,
 			}
 			if sample.Iteration.Index < 1 || sample.StartedAt.IsZero() ||
 				sample.StartedAt.Before(r.CreatedAt) ||

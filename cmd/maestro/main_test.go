@@ -104,6 +104,55 @@ func TestBenchRuntimeCommandsWithoutProviderProduceSeparatedSkippedReports(t *te
 	}
 }
 
+func TestBenchLaravelWithoutProviderLoadsDatasetAndProducesSkippedReport(t *testing.T) {
+	t.Setenv("MAESTRO_OLLAMA_BASE_URL", "")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := run(
+		[]string{
+			"bench", "laravel", "--manifest",
+			"../../docs/developer-benchmark-manifest.yaml",
+			"--warmup", "0", "--runs", "1", "--fail-on-failure",
+		},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stderr.Len() != 0 {
+		t.Fatalf("exit=%d stderr=%q", exitCode, stderr.String())
+	}
+	var report pkgBenchmark.Report
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode report: %v\n%s", err, stdout.String())
+	}
+	if report.Metadata.Command != "bench laravel" || len(report.Scenarios) != 6 ||
+		report.Configuration.Dataset.ID != "maestro-laravel-mini" ||
+		report.Configuration.Dataset.Version != "1.0.0" ||
+		len(report.Configuration.Plugins) != 1 ||
+		report.Configuration.Plugins[0].ID != "laravel" {
+		t.Fatalf("unexpected Laravel report: %#v", report)
+	}
+	for _, scenario := range report.Scenarios {
+		if scenario.State != pkgBenchmark.ResultSkipped ||
+			scenario.Samples[0].ReasonCode != "provider_not_configured" ||
+			scenario.Samples[0].Evaluation != nil {
+			t.Fatalf("unexpected scenario: %#v", scenario)
+		}
+	}
+}
+
+func TestDeveloperMinimumScoreGateIgnoresWarmupsAndRequiresEvaluations(t *testing.T) {
+	report := pkgBenchmark.Report{Scenarios: []pkgBenchmark.ScenarioReport{{
+		Samples: []pkgBenchmark.Sample{
+			{Iteration: pkgBenchmark.Iteration{Warmup: true}, Evaluation: &pkgBenchmark.QualityEvaluation{Score: 0}},
+			{Iteration: pkgBenchmark.Iteration{}, Evaluation: nil},
+			{Iteration: pkgBenchmark.Iteration{}, Evaluation: &pkgBenchmark.QualityEvaluation{Score: 2}},
+		},
+	}}}
+	if !reportBelowMinimumScore(report, 2) || !reportBelowMinimumScore(report, 3) {
+		t.Fatal("unexpected minimum score gate result")
+	}
+}
+
 func TestBenchHelpAndUnknownCommandHaveStableExitCodes(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

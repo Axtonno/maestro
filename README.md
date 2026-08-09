@@ -170,6 +170,11 @@ throughput, cancellazione, embedding, lifecycle e cold/warm. Su Linux CPU e RAM
 sono raccolte con scope di processo esplicito; metriche non osservabili, inclusa
 la VRAM, restano assenti.
 
+La Fase 4 è completata: `maestro bench laravel` esegue cinque task generativi e
+un retrieval embedding sul dataset embedded `maestro-laravel-mini@1.0.0`,
+avviando realmente il plugin Laravel. Il report `1.2.0` separa successo tecnico
+e rubrica trasparente 0–3, senza conservare prompt o risposte.
+
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
 cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin

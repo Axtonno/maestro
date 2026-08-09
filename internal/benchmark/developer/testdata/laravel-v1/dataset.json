@@ -1,0 +1,75 @@
+{
+  "id": "maestro-laravel-mini",
+  "version": "1.0.0",
+  "framework": "laravel",
+  "tasks": [
+    {
+      "id": "developer-explain-controller",
+      "kind": "generation",
+      "model_role": "chat",
+      "instruction": "Explain the controller's request flow, validation, service delegation and HTTP response. Answer in English without inventing behavior.",
+      "files": ["app/Http/Controllers/OrderController.php", "app/Services/OrderService.php"],
+      "criteria": [
+        {"id": "validation", "description": "Mentions request validation", "any_terms": ["validate", "validation", "validated"]},
+        {"id": "service", "description": "Identifies OrderService delegation", "any_terms": ["orderservice", "order service"]},
+        {"id": "created", "description": "Identifies the 201 created response", "any_terms": ["201", "created response", "http created"]}
+      ]
+    },
+    {
+      "id": "developer-identify-dependencies",
+      "kind": "generation",
+      "model_role": "chat",
+      "instruction": "Identify the direct dependencies of OrderService and describe the role of each. Answer in English and distinguish constructor dependencies from method data.",
+      "files": ["app/Services/OrderService.php", "app/Repositories/OrderRepository.php", "app/Contracts/PaymentGateway.php"],
+      "criteria": [
+        {"id": "repository", "description": "Identifies OrderRepository", "any_terms": ["orderrepository", "order repository"]},
+        {"id": "gateway", "description": "Identifies PaymentGateway", "any_terms": ["paymentgateway", "payment gateway"]},
+        {"id": "events", "description": "Identifies the event dispatcher", "any_terms": ["dispatcher", "event dispatcher"]}
+      ]
+    },
+    {
+      "id": "developer-generate-phpunit-test",
+      "kind": "generation",
+      "model_role": "chat",
+      "instruction": "Generate a focused PHPUnit feature test for successful order creation. It must show the request, isolate OrderService and assert the HTTP created response. Return self-contained PHP code plus only essential notes.",
+      "files": ["routes/api.php", "app/Http/Controllers/OrderController.php", "app/Services/OrderService.php"],
+      "criteria": [
+        {"id": "phpunit", "description": "Produces a PHPUnit/Laravel test structure", "any_terms": ["phpunit", "testcase", "function test"]},
+        {"id": "request", "description": "Exercises the endpoint and created response", "any_terms": ["postjson", "assertcreated", "assertstatus(201", "201"]},
+        {"id": "isolation", "description": "Isolates or mocks OrderService", "all_terms": ["mock", "orderservice"]}
+      ]
+    },
+    {
+      "id": "developer-refactor-method",
+      "kind": "generation",
+      "model_role": "chat",
+      "instruction": "Refactor selectGateway into clearer PHP while preserving its exact preferred, fallback and no-gateway behavior. Explain why observable behavior is unchanged.",
+      "files": ["app/Services/CheckoutService.php", "app/Contracts/PaymentGateway.php"],
+      "criteria": [
+        {"id": "preferred", "description": "Preserves preferred gateway selection", "any_terms": ["preferred"]},
+        {"id": "fallback", "description": "Preserves fallback selection", "any_terms": ["fallback"]},
+        {"id": "none", "description": "Preserves the null/no-gateway result", "any_terms": ["null", "no gateway", "none available"]}
+      ]
+    },
+    {
+      "id": "developer-summarize-project",
+      "kind": "generation",
+      "model_role": "chat",
+      "instruction": "Summarize this miniature Laravel project's structure and order-creation flow. Answer in English, name the architectural layers and keep the summary concise.",
+      "files": ["README.md", "routes/api.php", "app/Http/Controllers/OrderController.php", "app/Services/OrderService.php", "app/Repositories/OrderRepository.php", "app/Contracts/PaymentGateway.php"],
+      "criteria": [
+        {"id": "route", "description": "Mentions the API route", "any_terms": ["route", "api.php", "/orders"]},
+        {"id": "layers", "description": "Connects controller, service and repository", "all_terms": ["controller", "service", "repository"]},
+        {"id": "payment", "description": "Mentions the payment abstraction", "any_terms": ["paymentgateway", "payment gateway", "payment"]}
+      ]
+    },
+    {
+      "id": "developer-retrieve-with-embeddings",
+      "kind": "retrieval",
+      "model_role": "embedding",
+      "instruction": "Which files define the order creation HTTP endpoint and its business workflow?",
+      "files": ["routes/api.php", "app/Http/Controllers/OrderController.php", "app/Services/OrderService.php", "app/Repositories/OrderRepository.php", "app/Contracts/PaymentGateway.php", "app/Services/CheckoutService.php", "README.md"],
+      "relevant_files": ["routes/api.php", "app/Http/Controllers/OrderController.php", "app/Services/OrderService.php"]
+    }
+  ]
+}

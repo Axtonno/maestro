@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–3 completate
+Stato: In corso — Fasi 1–4 completate
 
 Ultimo aggiornamento: 2026-08-09
 
@@ -268,7 +268,7 @@ aggregati, errori classificati e valutazione qualitativa.
 | 1 | Completata | Benchmark Contracts & Runner | Manifest, scenari, sample e report JSON versionati |
 | 2 | Completata | Smoke Benchmark | Matrice live provider/modello e cleanup affidabile |
 | 3 | Completata | Runtime Benchmark | Prestazioni e risorse riproducibili |
-| 4 | Da iniziare | Developer Benchmark | Dataset Laravel/PHP e rubrica 0–3 |
+| 4 | Completata | Developer Benchmark | Dataset Laravel/PHP e rubrica 0–3 |
 | 5 | Da iniziare | Reporting & Hardware Profiles | Report Markdown, profili e gate documentato |
 
 Contratti, semantica del runner e limiti della Fase 1 sono descritti in
@@ -281,6 +281,10 @@ report finale è disponibile in `reports/milestone-3-phase-2.md`.
 Scenari, metriche e perimetri della Fase 3 sono descritti in
 `benchmark-runtime.md`. Il report finale è disponibile in
 `reports/milestone-3-phase-3.md`.
+
+Dataset, rubriche e gate della Fase 4 sono descritti in
+`developer-benchmark.md`. Il report finale è disponibile in
+`reports/milestone-3-phase-4.md`.
 
 ---
 

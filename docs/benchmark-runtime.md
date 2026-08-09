@@ -117,7 +117,8 @@ L'ordine degli aggregati è deterministico.
 # Report JSON
 
 La versione iniziale dello schema era `1.0.0`. La Fase 2 lo estende in modo
-additivo a `1.1.0` con profili modello per ruolo. Il contratto corrente è pubblicato
+additivo a `1.1.0` con profili modello per ruolo; la Fase 4 introduce la sezione
+qualitativa separata e porta il contratto a `1.2.0`. Il contratto corrente è pubblicato
 in:
 
 ```text
@@ -258,10 +259,8 @@ acquisito ownership.
 
 Il Runtime Benchmark non include:
 
-- dataset PHP/Laravel;
 - raccolta VRAM portabile;
 - sampler di sistema per macOS o Windows;
 - rendering Markdown.
 
-Dataset e valutazione qualitativa appartengono alla Fase 4; il rendering
-Markdown appartiene alla Fase 5.
+Il rendering Markdown e i profili hardware completi appartengono alla Fase 5.

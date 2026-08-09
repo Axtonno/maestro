@@ -105,6 +105,10 @@ func redactReport(report pkgBenchmark.Report) pkgBenchmark.Report {
 			)
 			sample.Error = redactError(sample.Error)
 			sample.CleanupError = redactError(sample.CleanupError)
+			if sample.Evaluation != nil {
+				evaluation := *sample.Evaluation
+				sample.Evaluation = &evaluation
+			}
 		}
 	}
 

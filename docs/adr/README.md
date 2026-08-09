@@ -16,3 +16,4 @@
 - [ADR-0017 – Versioned Benchmark Contracts and Internal Deterministic Runner](ADR-0017.md)
 - [ADR-0018 – Explicit, Capability-Gated and Mutation-Safe Live Smoke Matrix](ADR-0018.md)
 - [ADR-0019 – Scoped Optional Resource Sampling and Controlled Runtime Faults](ADR-0019.md)
+- [ADR-0020 – Embedded Developer Dataset and Non-LLM Transparent Rubrics](ADR-0020.md)

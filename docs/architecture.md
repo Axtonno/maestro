@@ -188,6 +188,12 @@ transienti controllati; CPU e RAM sono opzionali e dichiarano sempre processo e
 metodo di raccolta. Lifecycle e cold/warm non lasciano policy di residency
 installate. Le decisioni sono descritte in `benchmark-runtime.md` e ADR-0019.
 
+Il Developer Benchmark incorpora un dataset Laravel/PHP versionato, avvia il
+plugin Laravel su una materializzazione temporanea e mantiene la qualità
+separata dal risultato tecnico. Checklist deterministiche e ranking embedding
+producono score 0–3 senza evaluator LLM o contenuti completi nel report. Il
+contratto è descritto in `developer-benchmark.md` e ADR-0020.
+
 ---
 
 ## Gestor

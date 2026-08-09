@@ -77,9 +77,27 @@ func TestIterationResultValidationProtectsReportSemantics(t *testing.T) {
 	valid := IterationResult{
 		State:        ResultPassed,
 		Measurements: []Measurement{{Name: "latency", Unit: "ms", Value: 1}},
+		Evaluation: &QualityEvaluation{
+			Evaluator: "rubric-v1", Method: "deterministic_checklist",
+			Score: 2, MaxScore: 3, RationaleCode: "criteria_matched_2_of_3",
+		},
 	}
 	if err := valid.Validate(); err != nil {
 		t.Fatalf("validate iteration result: %v", err)
+	}
+}
+
+func TestQualityEvaluationRequiresSeparatePassedResultAndZeroToThreeRubric(t *testing.T) {
+	invalid := []IterationResult{
+		{State: ResultSkipped, ReasonCode: "offline", Evaluation: &QualityEvaluation{Evaluator: "x", Method: "x", MaxScore: 3, RationaleCode: "x"}},
+		{State: ResultPassed, Evaluation: &QualityEvaluation{Evaluator: "x", Method: "x", Score: 4, MaxScore: 3, RationaleCode: "x"}},
+		{State: ResultPassed, Evaluation: &QualityEvaluation{Evaluator: "", Method: "x", MaxScore: 3, RationaleCode: "x"}},
+		{State: ResultPassed, Evaluation: &QualityEvaluation{Evaluator: "x", Method: "x", MaxScore: 3, RationaleCode: "response contains secret"}},
+	}
+	for index, result := range invalid {
+		if err := result.Validate(); err == nil {
+			t.Fatalf("case %d unexpectedly passed validation", index)
+		}
 	}
 }
 

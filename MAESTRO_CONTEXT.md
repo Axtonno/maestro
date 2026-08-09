@@ -963,7 +963,7 @@ Stato: Superato.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fasi 1–3 completate.
+Stato: In corso — Fasi 1–4 completate.
 
 La Fase 1 — Benchmark Contracts & Runner consegna:
 
@@ -1002,6 +1002,19 @@ La Fase 3 — Runtime Benchmark consegna:
 * assenza esplicita di metriche non osservabili, inclusa la VRAM;
 * documentazione e report finale in `docs/reports/milestone-3-phase-3.md`;
 * ADR-0019 per sampling scoped e fault controllati.
+
+La Fase 4 — Developer Benchmark consegna:
+
+* dataset embedded `maestro-laravel-mini@1.0.0` con fixture PHP/Laravel;
+* cinque task generativi e un retrieval tramite embedding;
+* lifecycle reale del plugin Laravel su workspace temporaneo privato;
+* rubriche deterministiche e trasparenti 0–3 senza evaluator LLM;
+* separazione tra stato tecnico e `QualityEvaluation` nel report `1.2.0`;
+* `rationale_code` validato senza testo libero sensibile;
+* comando `maestro bench laravel` con gate tecnici e qualitativi opt-in;
+* documentazione in `docs/developer-benchmark.md`;
+* report finale in `docs/reports/milestone-3-phase-4.md`;
+* ADR-0020 per dataset embedded e rubriche non-LLM.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

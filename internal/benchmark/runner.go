@@ -250,7 +250,18 @@ func (r *Runner) runIteration(
 		State:      result.State, ReasonCode: result.ReasonCode,
 		Measurements: append([]pkgBenchmark.Measurement(nil), result.Measurements...),
 		Error:        result.Error, CleanupError: classifiedCleanupError,
+		Evaluation: cloneEvaluation(result.Evaluation),
 	}
+}
+
+func cloneEvaluation(
+	evaluation *pkgBenchmark.QualityEvaluation,
+) *pkgBenchmark.QualityEvaluation {
+	if evaluation == nil {
+		return nil
+	}
+	cloned := *evaluation
+	return &cloned
 }
 
 func callScenario(

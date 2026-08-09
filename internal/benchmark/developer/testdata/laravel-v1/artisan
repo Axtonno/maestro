@@ -1,0 +1,4 @@
+#!/usr/bin/env php
+<?php
+
+// Marker used by the Maestro Laravel plugin during benchmark setup.

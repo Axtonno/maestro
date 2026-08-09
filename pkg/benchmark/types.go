@@ -7,7 +7,7 @@ import (
 
 const (
 	ManifestSchemaVersion = 1
-	ReportSchemaVersion   = "1.1.0"
+	ReportSchemaVersion   = "1.2.0"
 )
 
 type ResultState string
@@ -76,6 +76,17 @@ type IterationResult struct {
 	ReasonCode   string
 	Measurements []Measurement
 	Error        *ErrorRecord
+	Evaluation   *QualityEvaluation
+}
+
+// QualityEvaluation is deliberately separate from the technical result. It
+// contains only redacted rubric evidence and never the model response.
+type QualityEvaluation struct {
+	Evaluator     string `json:"evaluator"`
+	Method        string `json:"method"`
+	Score         int    `json:"score"`
+	MaxScore      int    `json:"max_score"`
+	RationaleCode string `json:"rationale_code"`
 }
 
 // Scenario is the executable unit consumed by the benchmark runner. Cleanup
@@ -137,14 +148,15 @@ type Aggregate struct {
 }
 
 type Sample struct {
-	Iteration    Iteration     `json:"iteration"`
-	StartedAt    time.Time     `json:"started_at"`
-	DurationMS   float64       `json:"duration_ms"`
-	State        ResultState   `json:"state"`
-	ReasonCode   string        `json:"reason_code,omitempty"`
-	Measurements []Measurement `json:"measurements,omitempty"`
-	Error        *ErrorRecord  `json:"error,omitempty"`
-	CleanupError *ErrorRecord  `json:"cleanup_error,omitempty"`
+	Iteration    Iteration          `json:"iteration"`
+	StartedAt    time.Time          `json:"started_at"`
+	DurationMS   float64            `json:"duration_ms"`
+	State        ResultState        `json:"state"`
+	ReasonCode   string             `json:"reason_code,omitempty"`
+	Measurements []Measurement      `json:"measurements,omitempty"`
+	Error        *ErrorRecord       `json:"error,omitempty"`
+	CleanupError *ErrorRecord       `json:"cleanup_error,omitempty"`
+	Evaluation   *QualityEvaluation `json:"evaluation,omitempty"`
 }
 
 type ScenarioReport struct {

@@ -1,0 +1,66 @@
+version: 1
+owner: milestone-3-developer-benchmark
+source_milestone: benchmark-evaluation-layer
+report_redaction:
+  exclude:
+    - prompts
+    - responses
+    - tool_arguments
+    - tool_results
+    - credentials
+    - user_paths
+
+providers:
+  ollama:
+    required_environment:
+      - MAESTRO_OLLAMA_BASE_URL
+    model_environment:
+      chat: MAESTRO_OLLAMA_CHAT_MODEL
+      embedding: MAESTRO_OLLAMA_EMBED_MODEL
+    optional_environment: []
+    version_sensitive_limits:
+      - rubric checks response content in-memory but never persists it
+      - retrieval quality depends on the configured embedding model
+  llama.cpp:
+    required_environment:
+      - MAESTRO_LLAMACPP_BASE_URL
+    model_environment:
+      chat: MAESTRO_LLAMACPP_CHAT_MODEL
+      embedding: MAESTRO_LLAMACPP_EMBED_MODEL
+    optional_environment:
+      - MAESTRO_LLAMACPP_API_KEY
+    version_sensitive_limits:
+      - rubric checks response content in-memory but never persists it
+      - embedding requires an embedding-capable endpoint and model
+
+scenarios:
+  - id: developer-explain-controller
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: developer-identify-dependencies
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: developer-generate-phpunit-test
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: developer-refactor-method
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: developer-summarize-project
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: developer-retrieve-with-embeddings
+    capability: embedding
+    model_role: embedding
+    cleanup: none
+
+result_states:
+  - passed
+  - failed
+  - skipped
+  - unsupported
