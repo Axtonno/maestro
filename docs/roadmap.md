@@ -355,9 +355,28 @@ La documentazione del gate Ollama è conclusa. La prossima verifica live della
 Milestone 3 è la matrice llama.cpp, idealmente con lo stesso modello base Llama
 3.1 per isolare le differenze del runtime dalla variabile modello.
 
+Checkpoint di sospensione della Milestone 3:
+
+| Punto | Decisione |
+|---|---|
+| Milestone 3 | In corso, sospesa dopo la validazione Ollama |
+| Ollama | Gate live superato con `llama3.1:8b` |
+| Qwen | `qwen2.5-coder:7b` conservato come caso negativo canonico |
+| llama.cpp | Matrice live rinviata e registrata come task pendente |
+| Motivo del rinvio | Non blocca Gestor; deve essere completata prima della chiusura formale della Milestone 3 o di una release pubblica importante |
+
+La Milestone 3 non trattiene lo sviluppo architetturale successivo. Il task
+pendente llama.cpp resta parte del suo criterio di chiusura.
+
 ---
 
 # Milestone 4 — Gestor
+
+Stato: Avviata — design iniziale
+
+Documento di design: `gestor-design.md`.
+
+Piano di sviluppo: `gestor-development-plan.md`.
 
 Obiettivi:
 
@@ -369,6 +388,23 @@ Obiettivi:
 Output atteso:
 
 Sistema modulare basato sulle capability.
+
+Il design iniziale stabilisce che Gestor indicizza e risolve capability senza
+eseguire codice, duplicare il Registry dei componenti o possedere un secondo
+dependency graph. Capability dichiarata e disponibilità operativa sono stati
+distinti; discovery e risoluzione lavorano su snapshot deterministici.
+
+Fasi di sviluppo:
+
+| Fase | Ambito | Stato |
+|---|---|---|
+| 1 | Contratti, modello di dominio e ADR-0022 | Pronta |
+| 2 | Snapshot Registry | Pianificata |
+| 3 | Discovery sources Runtime e Provider | Pianificata |
+| 4 | Resolver e dependency graph | Pianificata |
+| 5 | Composition root, osservabilità e gate finale | Pianificata |
+
+Ogni fase richiede un report finale prima dell'avanzamento.
 
 ---
 

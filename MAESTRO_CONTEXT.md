@@ -1081,9 +1081,24 @@ Decisione fixture del gate Ollama:
 * il gate live Ollama è superato e la relativa documentazione è conclusa;
 * non servono altre fixture Ollama per questo gate.
 
-Il prossimo passo della Milestone 3 è replicare la matrice live su llama.cpp,
+La matrice live llama.cpp resta un task pendente esplicito della Milestone 3,
 idealmente usando lo stesso modello base Llama 3.1 per isolare la differenza tra
-runtime e modello.
+runtime e modello. Il task è rinviato perché non blocca Gestor, ma deve essere
+completato prima della chiusura formale della Milestone 3 o di una release
+pubblica importante.
+
+Checkpoint di passaggio:
+
+| Punto | Decisione |
+|---|---|
+| Milestone 3 | In corso, sospesa dopo la validazione Ollama |
+| Ollama | Gate live superato con `llama3.1:8b` |
+| Qwen | `qwen2.5-coder:7b` è il caso negativo canonico |
+| llama.cpp | Matrice live rinviata e registrata come task pendente |
+| Motivo | Non blocca Gestor; resta obbligatoria prima della chiusura formale della Milestone 3 o di una release pubblica importante |
+
+Regola di avanzamento: la Milestone 3 non viene chiusa, ma non trattiene lo
+sviluppo architetturale successivo.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.
@@ -1107,3 +1122,38 @@ Output previsti:
 Il piano dettagliato è in `docs/benchmark-evaluation-plan.md`. Le milestone
 successive sono rinumerate: Gestor diventa Milestone 4, Plugin System 5, Context
 Engine 6, Agent System 7 ed Ecosistema 8.
+
+## Milestone 4 — Gestor
+
+Stato: avviata — design iniziale.
+
+Il documento `docs/gestor-design.md` apre formalmente la milestone.
+Il piano operativo è in `docs/gestor-development-plan.md`.
+
+Decisioni iniziali:
+
+* Gestor è l'indice e il risolutore centrale delle capability;
+* non esegue codice e non possiede lifecycle o stato;
+* riusa il Registry e il dependency graph autorevoli del Runtime Core senza
+  duplicarli;
+* integra component metadata e provider capability introspection attraverso
+  sorgenti esplicite;
+* distingue capability dichiarata da disponibilità operativa;
+* usa snapshot atomici, listing deterministico e preferenze esplicite;
+* non applica ranking nascosti e segnala le risoluzioni ambigue;
+* non interroga sorgenti esterne né pubblica eventi mantenendo lock interni.
+
+Le cinque fasi previste sono: contratti e ADR, Snapshot Registry, discovery
+sources, resolver con dependency graph, composition root e osservabilità.
+
+Stato delle fasi:
+
+1. Contratti, modello di dominio e ADR-0022 — pronta;
+2. Snapshot Registry — pianificata;
+3. Discovery sources Runtime e Provider — pianificata;
+4. Resolver e dependency graph — pianificata;
+5. Composition root, osservabilità e gate finale — pianificata.
+
+Ogni fase deve produrre un report in `docs/reports/`; la Fase 5 produce anche
+`docs/reports/milestone-4-final.md`. Nessuna fase viene dichiarata completata
+senza i test e i deliverable obbligatori descritti nel piano.

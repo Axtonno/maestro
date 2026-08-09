@@ -217,6 +217,10 @@ Gestor non esegue codice.
 
 Coordina il sistema.
 
+Il design iniziale della Milestone 4 è descritto in `gestor-design.md`. Gestor
+riusa Registry e dependency graph del Runtime Core, indicizza snapshot delle
+capability e distingue dichiarazione da disponibilità operativa.
+
 ---
 
 ## Plugin System
