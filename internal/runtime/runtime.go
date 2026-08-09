@@ -14,6 +14,10 @@ import (
 
 var _ pkgRuntime.Runtime = (*runtime)(nil)
 
+type providerRegistrationInvalidator interface {
+	SetRegistrationInvalidator(func())
+}
+
 // Runtime extends the Runtime Core contract with the services composed by the
 // Maestro entry point.
 type Runtime interface {
@@ -29,12 +33,13 @@ type runtime struct {
 	registry *registry
 	builder  *builder
 
-	registryView     pkgRuntime.Registry
-	eventBus         pkgRuntime.EventBus
-	stateManager     *stateManager
-	lifecycleManager *lifecycleManager
-	pluginRuntime    pkgPlugin.Runtime
-	providerRuntime  pkgProvider.Runtime
+	registryView      pkgRuntime.Registry
+	eventBus          pkgRuntime.EventBus
+	stateManager      *stateManager
+	lifecycleManager  *lifecycleManager
+	pluginRuntime     pkgPlugin.Runtime
+	providerRuntime   pkgProvider.Runtime
+	gestorInvalidator func()
 
 	dependencyGraph *graph
 
@@ -120,9 +125,9 @@ func (r *runtime) Register(
 	}
 
 	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	if r.started || r.starting {
+		r.mu.Unlock()
 		return fmt.Errorf(
 			"register component: %w",
 			pkgRuntime.ErrAlreadyStarted,
@@ -130,6 +135,7 @@ func (r *runtime) Register(
 	}
 
 	if r.stopping {
+		r.mu.Unlock()
 		return fmt.Errorf(
 			"register component while runtime is stopping: %w",
 			pkgRuntime.ErrInvalidState,
@@ -137,6 +143,7 @@ func (r *runtime) Register(
 	}
 
 	if err := r.registry.Register(component); err != nil {
+		r.mu.Unlock()
 		return fmt.Errorf(
 			"register component: %w",
 			err,
@@ -144,6 +151,7 @@ func (r *runtime) Register(
 	}
 
 	if err := r.stateManager.create(component); err != nil {
+		r.mu.Unlock()
 		return fmt.Errorf(
 			"create component state: %w",
 			err,
@@ -153,8 +161,25 @@ func (r *runtime) Register(
 	// Qualsiasi nuova registrazione rende obsoleto
 	// l'eventuale grafo costruito in precedenza.
 	r.dependencyGraph = nil
+	invalidator := r.gestorInvalidator
+	r.mu.Unlock()
+
+	if invalidator != nil {
+		invalidator()
+	}
 
 	return nil
+}
+
+func (r *runtime) setGestorInvalidator(invalidator func()) {
+	r.mu.Lock()
+	r.gestorInvalidator = invalidator
+	providerRuntime := r.providerRuntime
+	r.mu.Unlock()
+
+	if provider, ok := providerRuntime.(providerRegistrationInvalidator); ok {
+		provider.SetRegistrationInvalidator(invalidator)
+	}
 }
 
 func (r *runtime) Start(ctx context.Context) error {

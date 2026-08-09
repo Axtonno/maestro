@@ -461,6 +461,52 @@ func TestRuntimeRoutesProviderCapabilities(t *testing.T) {
 	}
 }
 
+func TestRuntimeRegisteredProvidersAreOrderedDefensiveAndInvalidateGestor(t *testing.T) {
+	providerRuntime := NewRuntime("").(*runtime)
+	invalidated := make(chan struct{}, 2)
+	providerRuntime.SetRegistrationInvalidator(func() {
+		// Re-entering a read method proves the callback runs without provider locks.
+		_ = providerRuntime.Registered()
+		invalidated <- struct{}{}
+	})
+
+	for _, providerID := range []pkgProvider.ID{"zeta", "alpha"} {
+		registered := make(chan error, 1)
+		go func() {
+			registered <- providerRuntime.Register(&identityProvider{id: providerID})
+		}()
+		select {
+		case err := <-registered:
+			if err != nil {
+				t.Fatalf("register provider %q: %v", providerID, err)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("provider invalidation callback appears to run under lock")
+		}
+		<-invalidated
+	}
+
+	providerIDs := providerRuntime.Registered()
+	want := []pkgProvider.ID{"alpha", "zeta"}
+	if !reflect.DeepEqual(providerIDs, want) {
+		t.Fatalf("expected provider IDs %v, got %v", want, providerIDs)
+	}
+	providerIDs[0] = "changed"
+	if providerRuntime.Registered()[0] != "alpha" {
+		t.Fatal("Registered exposed the provider registry backing storage")
+	}
+
+	err := providerRuntime.Register(&identityProvider{id: "alpha"})
+	if !errors.Is(err, pkgProvider.ErrAlreadyRegistered) {
+		t.Fatalf("duplicate provider: expected ErrAlreadyRegistered, got %v", err)
+	}
+	select {
+	case <-invalidated:
+		t.Fatal("failed provider registration triggered invalidation")
+	default:
+	}
+}
+
 func TestRuntimeValidatesAdvancedCompletionBeforeResolvingProvider(t *testing.T) {
 	providerRuntime := NewRuntime("missing")
 	request := pkgProvider.CompletionRequest{

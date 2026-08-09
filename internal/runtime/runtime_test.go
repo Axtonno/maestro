@@ -5,10 +5,26 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
+	internalGestor "github.com/antonio-cafeo/maestro/internal/gestor"
+	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
+	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
+
+type runtimeGestorPlugin struct {
+	metadata pkgRuntime.Metadata
+}
+
+func (plugin *runtimeGestorPlugin) Metadata() pkgRuntime.Metadata {
+	return plugin.metadata
+}
+
+func (plugin *runtimeGestorPlugin) Manifest() pkgPlugin.Manifest {
+	return pkgPlugin.Manifest{RuntimeAPIVersion: pkgPlugin.RuntimeAPIVersion}
+}
 
 type runtimeResidencyProvider struct {
 	unloads int
@@ -164,6 +180,80 @@ func TestRuntimeInvalidatesGraphAfterRegistration(t *testing.T) {
 	if dependencyGraph, exists := rt.graph(); exists ||
 		dependencyGraph != nil {
 		t.Fatal("runtime returned an invalidated graph")
+	}
+}
+
+func TestRuntimeAndPluginRegistrationInvalidateGestorAndShareComponentSource(t *testing.T) {
+	rt := newRuntime()
+	gestorRegistry := internalGestor.NewRegistry()
+	if err := gestorRegistry.Refresh(context.Background()); err != nil {
+		t.Fatalf("initial Gestor refresh: %v", err)
+	}
+	rt.setGestorInvalidator(func() {
+		// Re-entering the Runtime proves invalidation happens after its lock is released.
+		_ = rt.ready()
+		gestorRegistry.Invalidate()
+	})
+
+	registered := make(chan error, 1)
+	go func() {
+		registered <- rt.Register(newTestComponent("component"))
+	}()
+	select {
+	case err := <-registered:
+		if err != nil {
+			t.Fatalf("register component: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("component invalidation callback appears to run under Runtime lock")
+	}
+	if gestorRegistry.Snapshot().Metadata().Current {
+		t.Fatal("component registration did not invalidate Gestor")
+	}
+
+	if err := gestorRegistry.Refresh(context.Background()); err != nil {
+		t.Fatalf("refresh Gestor before plugin: %v", err)
+	}
+	plugin := &runtimeGestorPlugin{metadata: pkgRuntime.Metadata{
+		ID:           "laravel",
+		Name:         "Laravel",
+		Version:      "1.0.0",
+		Capabilities: []pkgRuntime.Capability{"plugin.workspace_detection"},
+	}}
+	if err := rt.Plugins().Register(plugin); err != nil {
+		t.Fatalf("register plugin: %v", err)
+	}
+	if gestorRegistry.Snapshot().Metadata().Current {
+		t.Fatal("plugin registration did not invalidate Gestor through the component registry")
+	}
+
+	componentSource, err := internalGestor.NewRuntimeComponentSource(rt.registry)
+	if err != nil {
+		t.Fatalf("new component source: %v", err)
+	}
+	descriptors, err := componentSource.Discover(context.Background())
+	if err != nil {
+		t.Fatalf("discover Runtime components: %v", err)
+	}
+	pluginCount := 0
+	for _, descriptor := range descriptors {
+		if descriptor.Capability == pkgGestor.CapabilityID("plugin.workspace_detection") &&
+			descriptor.Target.ID == "laravel" {
+			pluginCount++
+		}
+	}
+	if pluginCount != 1 {
+		t.Fatalf("expected plugin once through global component source, got %d", pluginCount)
+	}
+
+	if err := gestorRegistry.Refresh(context.Background()); err != nil {
+		t.Fatalf("refresh Gestor before provider: %v", err)
+	}
+	if err := rt.Providers().Register(&runtimeResidencyProvider{}); err != nil {
+		t.Fatalf("register provider: %v", err)
+	}
+	if gestorRegistry.Snapshot().Metadata().Current {
+		t.Fatal("provider registration did not invalidate Gestor")
 	}
 }
 

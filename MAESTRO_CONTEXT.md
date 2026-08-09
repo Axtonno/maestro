@@ -1125,7 +1125,7 @@ Engine 6, Agent System 7 ed Ecosistema 8.
 
 ## Milestone 4 — Gestor
 
-Stato: in corso — Fasi 1–2 completate.
+Stato: in corso — Fasi 1–3 completate.
 
 Il documento `docs/gestor-design.md` apre formalmente la milestone.
 Il piano operativo è in `docs/gestor-development-plan.md`.
@@ -1150,8 +1150,8 @@ Stato delle fasi:
 
 1. Contratti, modello di dominio e ADR-0022 — completata;
 2. Snapshot Registry — completata;
-3. Discovery sources Runtime e Provider — pronta;
-4. Resolver e dependency graph — pianificata;
+3. Discovery sources Runtime e Provider — completata;
+4. Resolver e dependency graph — pronta;
 5. Composition root, osservabilità e gate finale — pianificata.
 
 Ogni fase deve produrre un report in `docs/reports/`; la Fase 5 produce anche
@@ -1206,4 +1206,36 @@ Sono disponibili:
 Lo snapshot iniziale è stale a generazione zero. Ogni refresh riuscito, anche
 con zero sorgenti, incrementa la generazione. Registrazione e `Invalidate`
 marcano stale senza cambiare generazione. Le sorgenti Runtime e Provider reali
-appartengono alla Fase 3.
+sono implementate nella Fase 3.
+
+### Fase 3 — Discovery sources
+
+Completata in:
+
+```text
+internal/gestor
+internal/provider
+internal/runtime
+```
+
+Sono disponibili:
+
+* `RuntimeComponentSource` sulla vista autorevole `Components()`;
+* mapping delle sei capability lifecycle in ID `runtime.*`;
+* conservazione delle capability custom già namespaced;
+* plugin scoperti una sola volta come componenti del Registry globale;
+* listing interno ordinato `Registered()` nel concrete Provider Runtime;
+* `ProviderCapabilitySource` per target adapter, instance e model esatti;
+* omissione delle capability provider unsupported;
+* traduzione conservativa di availability unknown/available/unavailable;
+* model target espliciti e copiati, senza uso implicito del default;
+* invalidazione additiva dopo registrazioni riuscite di componenti, plugin e
+  provider, eseguita fuori lock;
+* propagazione di errori e cancellazione senza snapshot parziali;
+* fixture Qwen dichiarata ma non operativa e Llama 3.1 operativa;
+* test concorrenti e race detector.
+
+Le interfacce pubbliche `runtime.Runtime`, `provider.Runtime` e `plugin.Runtime`
+non sono cambiate. Il Resolver e la vista read-only del dependency graph
+appartengono alla Fase 4; il wiring effettivo delle sorgenti e dell'invalidatore
+nel composition root appartiene alla Fase 5.

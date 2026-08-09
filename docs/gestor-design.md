@@ -1,8 +1,8 @@
 # Gestor — Design iniziale
 
-Versione: 0.3.0
+Versione: 0.4.0
 
-Stato: Snapshot Registry implementato — Milestone 4 aperta
+Stato: Discovery sources implementate — Milestone 4 aperta
 
 Data: 2026-08-09
 
@@ -197,6 +197,14 @@ componenti.
 Le capability lifecycle dichiarate devono continuare a essere validate contro
 le interfacce opzionali dal Runtime Core; Gestor non duplica questa validazione.
 
+La Fase 3 implementa `RuntimeComponentSource` su una vista interna
+`Components()` del Registry autorevole. Lo snapshot dei componenti viene
+ordinato per component ID e tradotto senza conservare istanze. Le sei
+capability lifecycle note diventano ID `runtime.*`; capability custom già
+namespaced, come `plugin.workspace_detection`, vengono conservate esattamente.
+Ogni dichiarazione Runtime ha availability `unknown`, perché i metadata non
+costituiscono una prova operativa.
+
 ## Provider capability source
 
 Adatta i report di capability già prodotti dal Provider Runtime:
@@ -213,12 +221,28 @@ L'integrazione userà un'interfaccia sorgente additiva implementata internamente
 senza aggiungere metodi obbligatori all'interfaccia pubblica
 `provider.Runtime`.
 
+La Fase 3 aggiunge al concrete Provider Runtime il listing interno
+`Registered()`, ordinato e con copia difensiva. `ProviderCapabilitySource`
+interroga sempre target adapter e instance per ogni provider registrato. I
+target model sono model ID esatti forniti alla sorgente da una lista interna,
+ordinata e copiata: non vengono inferiti dal default, dal nome o da discovery
+implicita.
+
+Ogni report viene validato nuovamente al confine della sorgente. Le capability
+`supported` producono descriptor Gestor mantenendo esattamente availability
+`unknown`, `available` o `unavailable`; le capability `unsupported` non sono
+dichiarazioni Gestor e vengono omesse. Errori o cancellazione interrompono
+l'intera sorgente e impediscono al Registry di pubblicare risultati parziali.
+
 ## Plugin
 
 Non esiste una sorgente plugin separata nel primo incremento. Un plugin
 registrato correttamente è già presente nel Registry dei componenti e viene
 scoperto da quella sorgente. Il Plugin Runtime continua a possedere catalogo e
 loader.
+
+I test della Fase 3 registrano il plugin attraverso il Plugin Runtime e lo
+osservano una sola volta nella sorgente componenti globale.
 
 ## Sorgenti future
 
@@ -344,6 +368,12 @@ impliciti.
 - lo stato temporaneo di una risoluzione appartiene alla singola chiamata;
 - la cancellazione interrompe il refresh e non pubblica risultati parziali;
 - i test con race detector sono parte del gate della milestone.
+
+Il concrete Provider Runtime espone inoltre un hook interno di invalidazione.
+Le registrazioni riuscite di componenti, plugin e provider invocano lo stesso
+invalidatore dopo il rilascio dei rispettivi lock. Le registrazioni fallite non
+invalidano. L'hook resta fuori dalle interfacce pubbliche Runtime, Provider e
+Plugin e verrà composto con il Registry Gestor nella Fase 5.
 
 ---
 

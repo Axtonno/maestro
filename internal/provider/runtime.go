@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -17,8 +18,9 @@ var _ pkgProvider.Runtime = (*runtime)(nil)
 type runtime struct {
 	mu sync.RWMutex
 
-	providers map[pkgProvider.ID]pkgProvider.Provider
-	defaultID pkgProvider.ID
+	providers               map[pkgProvider.ID]pkgProvider.Provider
+	defaultID               pkgProvider.ID
+	registrationInvalidator func()
 
 	residencyMu           sync.Mutex
 	residencies           map[residencyKey]*residencyEntry
@@ -87,9 +89,9 @@ func (r *runtime) Register(provider pkgProvider.Provider) error {
 	}
 
 	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	if _, exists := r.providers[providerID]; exists {
+		r.mu.Unlock()
 		return fmt.Errorf(
 			"register provider %q: %w",
 			providerID,
@@ -98,8 +100,38 @@ func (r *runtime) Register(provider pkgProvider.Provider) error {
 	}
 
 	r.providers[providerID] = provider
+	invalidator := r.registrationInvalidator
+	r.mu.Unlock()
+
+	if invalidator != nil {
+		invalidator()
+	}
 
 	return nil
+}
+
+// Registered returns the authoritative provider IDs in lexical order. It is
+// an internal additive capability consumed by Gestor discovery and does not
+// extend pkg/provider.Runtime.
+func (r *runtime) Registered() []pkgProvider.ID {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	providerIDs := make([]pkgProvider.ID, 0, len(r.providers))
+	for providerID := range r.providers {
+		providerIDs = append(providerIDs, providerID)
+	}
+	slices.Sort(providerIDs)
+
+	return providerIDs
+}
+
+// SetRegistrationInvalidator installs the internal Gestor invalidation hook.
+// Successful registrations invoke it after releasing provider locks.
+func (r *runtime) SetRegistrationInvalidator(invalidator func()) {
+	r.mu.Lock()
+	r.registrationInvalidator = invalidator
+	r.mu.Unlock()
 }
 
 func (r *runtime) Resolve(

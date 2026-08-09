@@ -36,6 +36,14 @@ func TestRuntimeCapabilityMappingIsComplete(t *testing.T) {
 	if !errors.Is(err, pkgGestor.ErrInvalidCapabilityID) {
 		t.Fatalf("unknown runtime capability: expected ErrInvalidCapabilityID, got %v", err)
 	}
+
+	custom, err := runtimeCapabilityID("plugin.workspace_detection")
+	if err != nil {
+		t.Fatalf("map namespaced plugin capability: %v", err)
+	}
+	if custom != "plugin.workspace_detection" {
+		t.Fatalf("expected custom namespaced capability unchanged, got %q", custom)
+	}
 }
 
 func TestProviderCapabilityMappingIsComplete(t *testing.T) {

@@ -23,6 +23,11 @@ func runtimeCapabilityID(capability pkgRuntime.Capability) (pkgGestor.Capability
 	case pkgRuntime.CapabilityHealth:
 		return pkgGestor.CapabilityRuntimeHealth, nil
 	default:
+		custom := pkgGestor.CapabilityID(capability)
+		if err := custom.Validate(); err == nil {
+			return custom, nil
+		}
+
 		return "", fmt.Errorf("runtime capability %q has no Gestor mapping: %w", capability, pkgGestor.ErrInvalidCapabilityID)
 	}
 }

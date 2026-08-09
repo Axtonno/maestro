@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–2 completate, Fase 3 pronta
+Stato: In corso — Fasi 1–3 completate, Fase 4 pronta
 
 Data: 2026-08-09
 
@@ -28,8 +28,8 @@ discovery remota o un secondo grafo.
 |---|---|---|---|
 | 1 | Contratti, modello di dominio e ADR | Completata | Design iniziale |
 | 2 | Snapshot Registry | Completata | Fase 1 |
-| 3 | Discovery sources | Pronta | Fase 2 |
-| 4 | Resolver e dependency graph | Pianificata | Fasi 2–3 |
+| 3 | Discovery sources | Completata | Fase 2 |
+| 4 | Resolver e dependency graph | Pronta | Fasi 2–3 |
 | 5 | Composition root, osservabilità e gate finale | Pianificata | Fasi 1–4 |
 
 Le fasi sono sequenziali sul contratto, ma i test di una fase devono restare
