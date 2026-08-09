@@ -1125,7 +1125,7 @@ Engine 6, Agent System 7 ed Ecosistema 8.
 
 ## Milestone 4 — Gestor
 
-Stato: in corso — Fase 1 completata.
+Stato: in corso — Fasi 1–2 completate.
 
 Il documento `docs/gestor-design.md` apre formalmente la milestone.
 Il piano operativo è in `docs/gestor-development-plan.md`.
@@ -1149,8 +1149,8 @@ sources, resolver con dependency graph, composition root e osservabilità.
 Stato delle fasi:
 
 1. Contratti, modello di dominio e ADR-0022 — completata;
-2. Snapshot Registry — pronta;
-3. Discovery sources Runtime e Provider — pianificata;
+2. Snapshot Registry — completata;
+3. Discovery sources Runtime e Provider — pronta;
 4. Resolver e dependency graph — pianificata;
 5. Composition root, osservabilità e gate finale — pianificata.
 
@@ -1182,5 +1182,28 @@ Sono disponibili:
 * ADR-0022 Accepted.
 
 La generazione appartiene allo snapshot e non viene duplicata nei descriptor.
-Registry e Resolver concreti non sono ancora implementati: appartengono alle
-Fasi 2 e 4.
+Il Resolver concreto non è ancora implementato e appartiene alla Fase 4.
+
+### Fase 2 — Snapshot Registry
+
+Completata in `internal/gestor` con estensione additiva di `pkg/gestor` per le
+sorgenti consultate senza descriptor.
+
+Sono disponibili:
+
+* catalogo sorgenti thread-safe con source ID univoci;
+* esecuzione sequenziale delle sorgenti in ordine lessicografico e senza lock;
+* refresh all-or-nothing con candidato locale;
+* snapshot immutabili current/stale e generazioni monotone;
+* epoch che impedisce a refresh superati da registrazione o invalidazione di
+  pubblicare risultati obsoleti;
+* conservazione dell'ultimo snapshot valido su errori e cancellazione;
+* collision detection capability–target tra e dentro le sorgenti;
+* indici interni capability → descriptor e target → descriptor;
+* copie difensive per snapshot, metadata, listing e indici;
+* fixture in-memory e test concorrenti con race detector.
+
+Lo snapshot iniziale è stale a generazione zero. Ogni refresh riuscito, anche
+con zero sorgenti, incrementa la generazione. Registrazione e `Invalidate`
+marcano stale senza cambiare generazione. Le sorgenti Runtime e Provider reali
+appartengono alla Fase 3.

@@ -260,6 +260,36 @@ func TestSnapshotIsOrderedValidatedAndDefensive(t *testing.T) {
 	}
 }
 
+func TestSnapshotRecordsConsultedSourcesWithoutDescriptors(t *testing.T) {
+	sources := []gestor.SourceID{"z.empty", "a.empty"}
+	snapshot, err := gestor.NewSnapshotWithSources(3, true, sources, nil)
+	if err != nil {
+		t.Fatalf("new snapshot with empty sources: %v", err)
+	}
+	if snapshot.Metadata().DescriptorCount != 0 {
+		t.Fatalf("expected no descriptors, got %d", snapshot.Metadata().DescriptorCount)
+	}
+	want := []gestor.SourceID{"a.empty", "z.empty"}
+	if !slices.Equal(snapshot.Metadata().Sources(), want) {
+		t.Fatalf("expected sources %v, got %v", want, snapshot.Metadata().Sources())
+	}
+
+	sources[0] = "changed.source"
+	if snapshot.Metadata().Sources()[1] != "z.empty" {
+		t.Fatal("snapshot retained the caller's source slice")
+	}
+
+	unexpected := descriptor(
+		gestor.CapabilityRuntimeStart,
+		componentTarget("workspace"),
+		"runtime.components",
+	)
+	_, err = gestor.NewSnapshotWithSources(4, true, []gestor.SourceID{"other.source"}, []gestor.Descriptor{unexpected})
+	if !errors.Is(err, gestor.ErrInvalidSnapshot) {
+		t.Fatalf("unexpected descriptor source: expected ErrInvalidSnapshot, got %v", err)
+	}
+}
+
 func TestResolutionIsValidatedAndDefensive(t *testing.T) {
 	selected := descriptor(gestor.CapabilityRuntimeStart, componentTarget("app"), "runtime.components")
 	snapshot, err := gestor.NewSnapshot(7, true, []gestor.Descriptor{selected})

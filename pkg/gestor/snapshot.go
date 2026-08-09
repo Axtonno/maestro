@@ -20,12 +20,6 @@ func (metadata SnapshotMetadata) Validate() error {
 	if metadata.DescriptorCount < 0 {
 		return fmt.Errorf("negative descriptor count: %w", ErrInvalidSnapshot)
 	}
-	if metadata.DescriptorCount == 0 && len(metadata.sources) != 0 {
-		return fmt.Errorf("empty snapshot cannot list sources: %w", ErrInvalidSnapshot)
-	}
-	if metadata.DescriptorCount > 0 && len(metadata.sources) == 0 {
-		return fmt.Errorf("non-empty snapshot must list its sources: %w", ErrInvalidSnapshot)
-	}
 	for index, source := range metadata.sources {
 		if err := source.Validate(); err != nil {
 			return fmt.Errorf("snapshot source %d: %w: %w", index, err, ErrInvalidSnapshot)
@@ -45,10 +39,56 @@ type Snapshot struct {
 }
 
 func NewSnapshot(generation uint64, current bool, descriptors []Descriptor) (Snapshot, error) {
+	sources := make([]SourceID, 0, len(descriptors))
+	seenSources := make(map[SourceID]struct{}, len(descriptors))
+	for index, descriptor := range descriptors {
+		if err := descriptor.Validate(); err != nil {
+			return Snapshot{}, fmt.Errorf("snapshot descriptor %d: %w: %w", index, err, ErrInvalidSnapshot)
+		}
+		if _, exists := seenSources[descriptor.Source]; exists {
+			continue
+		}
+		seenSources[descriptor.Source] = struct{}{}
+		sources = append(sources, descriptor.Source)
+	}
+
+	return NewSnapshotWithSources(generation, current, sources, descriptors)
+}
+
+// NewSnapshotWithSources constructs a snapshot that also records consulted
+// sources which produced no descriptors.
+func NewSnapshotWithSources(
+	generation uint64,
+	current bool,
+	sources []SourceID,
+	descriptors []Descriptor,
+) (Snapshot, error) {
+	orderedSources := slices.Clone(sources)
+	for index, source := range orderedSources {
+		if err := source.Validate(); err != nil {
+			return Snapshot{}, fmt.Errorf("snapshot source %d: %w: %w", index, err, ErrInvalidSnapshot)
+		}
+	}
+	slices.SortFunc(orderedSources, func(left, right SourceID) int {
+		return left.Compare(right)
+	})
+	for index := 1; index < len(orderedSources); index++ {
+		if orderedSources[index-1] == orderedSources[index] {
+			return Snapshot{}, fmt.Errorf("duplicate snapshot source %q: %w", orderedSources[index], ErrInvalidSnapshot)
+		}
+	}
+	sourceSet := make(map[SourceID]struct{}, len(orderedSources))
+	for _, source := range orderedSources {
+		sourceSet[source] = struct{}{}
+	}
+
 	ordered := slices.Clone(descriptors)
 	for index, descriptor := range ordered {
 		if err := descriptor.Validate(); err != nil {
 			return Snapshot{}, fmt.Errorf("snapshot descriptor %d: %w: %w", index, err, ErrInvalidSnapshot)
+		}
+		if _, exists := sourceSet[descriptor.Source]; !exists {
+			return Snapshot{}, fmt.Errorf("snapshot descriptor %d source %q was not consulted: %w", index, descriptor.Source, ErrInvalidSnapshot)
 		}
 	}
 	slices.SortFunc(ordered, func(left, right Descriptor) int {
@@ -57,28 +97,25 @@ func NewSnapshot(generation uint64, current bool, descriptors []Descriptor) (Sna
 	for index := 1; index < len(ordered); index++ {
 		if ordered[index-1].Capability == ordered[index].Capability &&
 			ordered[index-1].Target == ordered[index].Target {
-			return Snapshot{}, fmt.Errorf("duplicate capability %q target %q: %w", ordered[index].Capability, ordered[index].Target.ID, ErrInvalidSnapshot)
+			return Snapshot{}, fmt.Errorf(
+				"duplicate capability %q target %s/%q scope %q model %q from sources %q and %q: %w",
+				ordered[index].Capability,
+				ordered[index].Target.Kind,
+				ordered[index].Target.ID,
+				ordered[index].Target.Scope,
+				ordered[index].Target.Model,
+				ordered[index-1].Source,
+				ordered[index].Source,
+				ErrInvalidSnapshot,
+			)
 		}
 	}
-
-	sources := make([]SourceID, 0, len(ordered))
-	seenSources := make(map[SourceID]struct{}, len(ordered))
-	for _, descriptor := range ordered {
-		if _, exists := seenSources[descriptor.Source]; exists {
-			continue
-		}
-		seenSources[descriptor.Source] = struct{}{}
-		sources = append(sources, descriptor.Source)
-	}
-	slices.SortFunc(sources, func(left, right SourceID) int {
-		return left.Compare(right)
-	})
 
 	metadata := SnapshotMetadata{
 		Generation:      generation,
 		Current:         current,
 		DescriptorCount: len(ordered),
-		sources:         sources,
+		sources:         orderedSources,
 	}
 
 	return Snapshot{metadata: metadata, descriptors: ordered}, nil

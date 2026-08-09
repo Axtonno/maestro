@@ -1,8 +1,8 @@
 # Gestor — Design iniziale
 
-Versione: 0.2.0
+Versione: 0.3.0
 
-Stato: Contratto Fase 1 approvato — Milestone 4 aperta
+Stato: Snapshot Registry implementato — Milestone 4 aperta
 
 Data: 2026-08-09
 
@@ -174,10 +174,15 @@ namespace invalidi e whitespace ai bordi vengono rifiutati.
 
 ## Immutabilità dei value object
 
-`NewQuery`, `NewSnapshot` e `NewResolution` acquisiscono copie delle slice.
+`NewQuery`, `NewSnapshot`, `NewSnapshotWithSources` e `NewResolution`
+acquisiscono copie delle slice.
 Getter di preferenze, descriptor, sorgenti e dependency plan restituiscono
 sempre copie difensive. `SnapshotMetadata` contiene generazione, stato current,
 numero di descriptor e sorgenti ordinate; non espone mappe o backing slice.
+
+`NewSnapshotWithSources` registra anche sorgenti consultate che non hanno
+prodotto descriptor. Uno snapshot vuoto può quindi dimostrare che il refresh ha
+interrogato correttamente il catalogo configurato.
 
 ---
 
@@ -251,6 +256,30 @@ Il refresh segue questo flusso:
 5. se tutte le sorgenti riescono, pubblica atomicamente lo snapshot;
 6. se una sorgente fallisce, scarta il candidato e conserva lo snapshot
    precedente.
+
+La Fase 2 implementa questo flusso in `internal/gestor.Registry`. Lo snapshot
+iniziale ha generazione zero ed è stale. Ogni refresh riuscito, incluso quello
+con zero sorgenti o zero descriptor, incrementa la generazione e pubblica uno
+snapshot current. `Invalidate` conserva descriptor e generazione, marca lo
+snapshot stale e invalida ogni refresh già in corso.
+
+Il catalogo possiede un'epoch interna. `Refresh` copia sorgenti ed epoch sotto
+read lock, ordina per source ID, rilascia il lock e solo allora chiama
+`Discover`. Prima dello swap verifica che epoch e context siano ancora validi;
+una registrazione o invalidazione concorrente produce `ErrStaleSnapshot` e il
+candidato viene scartato. Refresh concorrenti sulla stessa epoch mantengono
+stato locale separato e pubblicano ciascuno una generazione monotona al proprio
+completamento.
+
+La registrazione di una nuova sorgente invalida lo snapshot corrente senza
+incrementarne la generazione. Source ID duplicati, typed nil, descriptor con
+source incoerente, collisioni capability–target e snapshot invalidi sono
+rifiutati prima della pubblicazione.
+
+Lo snapshot interno costruisce indici immutabili per capability esatta e
+`Target` esatto. Gli indici alimenteranno il Resolver della Fase 4 e non sono
+esposti dal package pubblico; ogni lettura interna restituisce comunque una
+copia ordinata.
 
 ---
 
