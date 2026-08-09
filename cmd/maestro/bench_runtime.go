@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -24,6 +23,7 @@ func runBenchRuntime(kind runtimebench.Kind, arguments []string, stdout io.Write
 	manifestPath := flags.String("manifest", "docs/runtime-benchmark-manifest.yaml", "path to the runtime benchmark manifest")
 	providerID := flags.String("provider", smoke.ProviderOllama, "provider to benchmark")
 	outputPath := flags.String("output", "-", "JSON report path, or - for stdout")
+	markdownPath := flags.String("markdown", "", "optional Markdown report path")
 	warmup := flags.Int("warmup", 1, "number of warmup iterations")
 	runs := flags.Int("runs", 5, "number of measured iterations")
 	timeout := flags.Duration("timeout", 5*time.Minute, "timeout per scenario iteration")
@@ -45,6 +45,16 @@ func runBenchRuntime(kind runtimebench.Kind, arguments []string, stdout io.Write
 		fmt.Fprintf(stderr, "%s timeouts, sample interval and PID must be valid\n", command)
 		return 2
 	}
+	if err := validateBenchmarkReportPaths(*outputPath, *markdownPath); err != nil {
+		fmt.Fprintf(stderr, "%s output: %v\n", command, err)
+		return 2
+	}
+	hardware, err := internalBenchmark.CollectHardwareProfile()
+	if err != nil {
+		fmt.Fprintf(stderr, "collect benchmark hardware profile: %v\n", err)
+		return 1
+	}
+	version, commit := internalBenchmark.BuildMetadata()
 
 	manifest, err := internalBenchmark.LoadManifest(*manifestPath)
 	if err != nil {
@@ -79,13 +89,14 @@ func runBenchRuntime(kind runtimebench.Kind, arguments []string, stdout io.Write
 	runner, err := internalBenchmark.NewRunner(internalBenchmark.RunnerOptions{
 		Warmup: *warmup, Runs: *runs, Timeout: *timeout,
 		CleanupTimeout: *cleanupTimeout, Command: "bench " + string(kind),
+		MaestroVersion: version, MaestroCommit: commit,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "configure runtime benchmark runner: %v\n", err)
 		return 2
 	}
 	profile := config.ConfigurationProfile()
-	profile.Hardware = pkgBenchmark.HardwareProfile{OS: runtime.GOOS, Architecture: runtime.GOARCH, LogicalCPUs: runtime.NumCPU()}
+	profile.Hardware = hardware
 	profile.Generation.MaxTokens = 128
 	if model := config.Models["chat"]; model != "" {
 		profile.Model = pkgBenchmark.ModelProfile{ID: model}
@@ -105,11 +116,7 @@ func runBenchRuntime(kind runtimebench.Kind, arguments []string, stdout io.Write
 		fmt.Fprintf(stderr, "shutdown runtime benchmark: %v\n", shutdownError)
 		return 1
 	}
-	if *outputPath == "-" {
-		err = internalBenchmark.EncodeReportJSON(stdout, report)
-	} else {
-		err = internalBenchmark.WriteReportJSON(*outputPath, report)
-	}
+	err = writeBenchmarkReports(*outputPath, *markdownPath, stdout, report)
 	if err != nil {
 		fmt.Fprintf(stderr, "write runtime benchmark report: %v\n", err)
 		return 1

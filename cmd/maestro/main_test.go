@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -106,6 +108,9 @@ func TestBenchRuntimeCommandsWithoutProviderProduceSeparatedSkippedReports(t *te
 
 func TestBenchLaravelWithoutProviderLoadsDatasetAndProducesSkippedReport(t *testing.T) {
 	t.Setenv("MAESTRO_OLLAMA_BASE_URL", "")
+	t.Setenv("MAESTRO_BENCHMARK_GPU", "Fixture GPU")
+	t.Setenv("MAESTRO_BENCHMARK_BACKEND", "fixture-backend")
+	t.Setenv("MAESTRO_BENCHMARK_VRAM_MB", "4096")
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	exitCode := run(
@@ -128,7 +133,10 @@ func TestBenchLaravelWithoutProviderLoadsDatasetAndProducesSkippedReport(t *test
 		report.Configuration.Dataset.ID != "maestro-laravel-mini" ||
 		report.Configuration.Dataset.Version != "1.0.0" ||
 		len(report.Configuration.Plugins) != 1 ||
-		report.Configuration.Plugins[0].ID != "laravel" {
+		report.Configuration.Plugins[0].ID != "laravel" ||
+		report.Configuration.Hardware.GPU != "Fixture GPU" ||
+		report.Configuration.Hardware.Backend != "fixture-backend" ||
+		report.Configuration.Hardware.VRAMMB != 4096 {
 		t.Fatalf("unexpected Laravel report: %#v", report)
 	}
 	for _, scenario := range report.Scenarios {
@@ -137,6 +145,64 @@ func TestBenchLaravelWithoutProviderLoadsDatasetAndProducesSkippedReport(t *test
 			scenario.Samples[0].Evaluation != nil {
 			t.Fatalf("unexpected scenario: %#v", scenario)
 		}
+	}
+}
+
+func TestBenchLaravelWritesMarkdownAndRenderReproducesItFromJSON(t *testing.T) {
+	t.Setenv("MAESTRO_OLLAMA_BASE_URL", "")
+	directory := t.TempDir()
+	jsonPath := filepath.Join(directory, "report.json")
+	markdownPath := filepath.Join(directory, "report.md")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := run(
+		[]string{
+			"bench", "laravel", "--manifest", "../../docs/developer-benchmark-manifest.yaml",
+			"--warmup", "0", "--runs", "1", "--output", jsonPath,
+			"--markdown", markdownPath,
+		},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stdout.Len() != 0 || stderr.Len() != 0 {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+	writtenMarkdown, err := os.ReadFile(markdownPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(writtenMarkdown, []byte("# Maestro Benchmark Report")) ||
+		!bytes.Contains(writtenMarkdown, []byte("maestro-laravel-mini@1.0.0")) {
+		t.Fatalf("unexpected Markdown report:\n%s", writtenMarkdown)
+	}
+	for _, name := range []string{jsonPath, markdownPath} {
+		info, err := os.Stat(name)
+		if err != nil || info.Mode().Perm() != 0o600 {
+			t.Fatalf("report %q mode/error: %v %v", name, info, err)
+		}
+	}
+	stdout.Reset()
+	stderr.Reset()
+	exitCode = run(
+		[]string{"bench", "render", "--input", jsonPath},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stderr.Len() != 0 || !bytes.Equal(stdout.Bytes(), writtenMarkdown) {
+		t.Fatalf("render exit=%d stderr=%q\nwant:\n%s\ngot:\n%s", exitCode, stderr.String(), writtenMarkdown, stdout.String())
+	}
+}
+
+func TestBenchRenderRejectsInputOutputCollision(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := run(
+		[]string{"bench", "render", "--input", "report.json", "--output", "./report.json"},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 2 || !strings.Contains(stderr.String(), "must be different") {
+		t.Fatalf("exit=%d stderr=%q", exitCode, stderr.String())
 	}
 }
 

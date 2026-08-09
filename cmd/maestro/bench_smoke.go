@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -26,6 +25,7 @@ func runBenchSmoke(arguments []string, stdout io.Writer, stderr io.Writer) int {
 	)
 	providerID := flags.String("provider", smoke.ProviderOllama, "provider to benchmark")
 	outputPath := flags.String("output", "-", "JSON report path, or - for stdout")
+	markdownPath := flags.String("markdown", "", "optional Markdown report path")
 	warmup := flags.Int("warmup", 0, "number of warmup iterations")
 	runs := flags.Int("runs", 1, "number of measured iterations")
 	timeout := flags.Duration("timeout", 2*time.Minute, "timeout per scenario iteration")
@@ -53,9 +53,20 @@ func runBenchSmoke(arguments []string, stdout io.Writer, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "maestro bench smoke timeouts must be positive")
 		return 2
 	}
+	if err := validateBenchmarkReportPaths(*outputPath, *markdownPath); err != nil {
+		fmt.Fprintf(stderr, "maestro bench smoke output: %v\n", err)
+		return 2
+	}
+	hardware, err := internalBenchmark.CollectHardwareProfile()
+	if err != nil {
+		fmt.Fprintf(stderr, "collect benchmark hardware profile: %v\n", err)
+		return 1
+	}
+	version, commit := internalBenchmark.BuildMetadata()
 	runner, err := internalBenchmark.NewRunner(internalBenchmark.RunnerOptions{
 		Warmup: *warmup, Runs: *runs, Timeout: *timeout,
 		CleanupTimeout: *cleanupTimeout, Command: "bench smoke",
+		MaestroVersion: version, MaestroCommit: commit,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "configure smoke runner: %v\n", err)
@@ -91,10 +102,7 @@ func runBenchSmoke(arguments []string, stdout io.Writer, stderr io.Writer) int {
 		return 1
 	}
 	profile := config.ConfigurationProfile()
-	profile.Hardware = pkgBenchmark.HardwareProfile{
-		OS: runtime.GOOS, Architecture: runtime.GOARCH,
-		LogicalCPUs: runtime.NumCPU(),
-	}
+	profile.Hardware = hardware
 	runContext, stopSignals := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
@@ -121,11 +129,7 @@ func runBenchSmoke(arguments []string, stdout io.Writer, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "shutdown smoke runtime: %v\n", shutdownError)
 		return 1
 	}
-	if *outputPath == "-" {
-		err = internalBenchmark.EncodeReportJSON(stdout, report)
-	} else {
-		err = internalBenchmark.WriteReportJSON(*outputPath, report)
-	}
+	err = writeBenchmarkReports(*outputPath, *markdownPath, stdout, report)
 	if err != nil {
 		fmt.Fprintf(stderr, "write smoke report: %v\n", err)
 		return 1

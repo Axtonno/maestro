@@ -175,6 +175,11 @@ un retrieval embedding sul dataset embedded `maestro-laravel-mini@1.0.0`,
 avviando realmente il plugin Laravel. Il report `1.2.0` separa successo tecnico
 e rubrica trasparente 0–3, senza conservare prompt o risposte.
 
+La Fase 5 è completata: tutti i benchmark possono produrre Markdown derivato
+dal JSON canonico, `maestro bench render` rigenera la vista offline e il profilo
+hardware comune registra CPU/RAM Linux e metadata GPU opt-in. La Milestone 3
+resta comunque in corso e non è considerata chiusa.
+
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
 cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin

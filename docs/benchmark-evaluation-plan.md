@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–4 completate
+Stato: In corso — Fasi 1–5 completate; milestone non ancora chiusa
 
 Ultimo aggiornamento: 2026-08-09
 
@@ -269,7 +269,7 @@ aggregati, errori classificati e valutazione qualitativa.
 | 2 | Completata | Smoke Benchmark | Matrice live provider/modello e cleanup affidabile |
 | 3 | Completata | Runtime Benchmark | Prestazioni e risorse riproducibili |
 | 4 | Completata | Developer Benchmark | Dataset Laravel/PHP e rubrica 0–3 |
-| 5 | Da iniziare | Reporting & Hardware Profiles | Report Markdown, profili e gate documentato |
+| 5 | Completata | Reporting & Hardware Profiles | Report Markdown, profili e gate documentato |
 
 Contratti, semantica del runner e limiti della Fase 1 sono descritti in
 `benchmark-runtime.md`. Il relativo report finale è disponibile in
@@ -285,6 +285,13 @@ Scenari, metriche e perimetri della Fase 3 sono descritti in
 Dataset, rubriche e gate della Fase 4 sono descritti in
 `developer-benchmark.md`. Il report finale è disponibile in
 `reports/milestone-3-phase-4.md`.
+
+Rendering, profili hardware e gate della Fase 5 sono descritti in
+`benchmark-reporting.md`. Il report finale è disponibile in
+`reports/milestone-3-phase-5.md`.
+
+Il completamento delle cinque fasi non chiude automaticamente la milestone: lo
+stato resta in corso fino a una decisione esplicita.
 
 ---
 

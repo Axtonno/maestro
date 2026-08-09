@@ -194,6 +194,12 @@ separata dal risultato tecnico. Checklist deterministiche e ranking embedding
 producono score 0–3 senza evaluator LLM o contenuti completi nel report. Il
 contratto è descritto in `developer-benchmark.md` e ADR-0020.
 
+Il JSON versionato è la fonte canonica del reporting. Il Markdown usa lo stesso
+report validato e redatto e può essere derivato offline. Un collector comune
+registra runtime, procfs Linux, build info e metadata GPU opt-in senza lanciare
+probe esterni. Reporting e hardware profiles sono descritti in
+`benchmark-reporting.md` e ADR-0021.
+
 ---
 
 ## Gestor

@@ -166,6 +166,7 @@ maestro bench --help
 maestro bench validate --manifest docs/provider-smoke-benchmark-manifest.yaml
 maestro bench provider --provider ollama
 maestro bench model --provider ollama
+maestro bench render --input report.json --output report.md
 ```
 
 `validate` restituisce `0` per un manifest valido, `1` per un manifest non
@@ -255,12 +256,19 @@ acquisito ownership.
 
 ---
 
+# Reporting della Fase 5
+
+Tutti i comandi live accettano `--markdown <path>`. Il JSON rimane canonico e
+il Markdown può essere rigenerato in seguito con `bench render`. Profilo
+hardware, fonti, redazione e gate sono descritti in
+`benchmark-reporting.md` e ADR-0021.
+
+---
+
 # Limiti correnti
 
 Il Runtime Benchmark non include:
 
 - raccolta VRAM portabile;
 - sampler di sistema per macOS o Windows;
-- rendering Markdown.
-
-Il rendering Markdown e i profili hardware completi appartengono alla Fase 5.
+- migrazione automatica di report con schema storico.

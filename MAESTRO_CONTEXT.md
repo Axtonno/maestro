@@ -963,7 +963,7 @@ Stato: Superato.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fasi 1–4 completate.
+Stato: In corso — Fasi 1–5 completate; milestone non ancora chiusa.
 
 La Fase 1 — Benchmark Contracts & Runner consegna:
 
@@ -1015,6 +1015,22 @@ La Fase 4 — Developer Benchmark consegna:
 * documentazione in `docs/developer-benchmark.md`;
 * report finale in `docs/reports/milestone-3-phase-4.md`;
 * ADR-0020 per dataset embedded e rubriche non-LLM.
+
+La Fase 5 — Reporting & Hardware Profiles consegna:
+
+* JSON `1.2.0` confermato come fonte canonica;
+* renderer Markdown deterministico e redatto;
+* comando `maestro bench render` con decoder strict e protezione input/output;
+* flag `--markdown` per smoke, provider, model e laravel;
+* scrittura atomica `0600` per entrambi i formati;
+* profilo comune con runtime, procfs Linux e build metadata;
+* GPU, backend e VRAM come metadata opt-in senza probe esterni;
+* documentazione e gate in `docs/benchmark-reporting.md`;
+* report finale in `docs/reports/milestone-3-phase-5.md`;
+* ADR-0021 per JSON canonico, Markdown derivato e hardware dichiarativo.
+
+Il completamento della Fase 5 non chiude la Milestone 3. La milestone resta in
+corso fino a una decisione esplicita e alle eventuali verifiche live richieste.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

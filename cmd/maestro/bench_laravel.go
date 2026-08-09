@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -27,6 +26,7 @@ func runBenchLaravel(arguments []string, stdout io.Writer, stderr io.Writer) int
 	providerID := flags.String("provider", smoke.ProviderOllama, "provider to benchmark")
 	datasetID := flags.String("dataset", developer.DatasetID+"@"+developer.DatasetVersion, "embedded dataset identity")
 	outputPath := flags.String("output", "-", "JSON report path, or - for stdout")
+	markdownPath := flags.String("markdown", "", "optional Markdown report path")
 	warmup := flags.Int("warmup", 0, "number of warmup iterations")
 	runs := flags.Int("runs", 1, "number of measured iterations")
 	timeout := flags.Duration("timeout", 5*time.Minute, "timeout per scenario iteration")
@@ -47,6 +47,10 @@ func runBenchLaravel(arguments []string, stdout io.Writer, stderr io.Writer) int
 		fmt.Fprintln(stderr, "maestro bench laravel timeouts and minimum score are invalid")
 		return 2
 	}
+	if err := validateBenchmarkReportPaths(*outputPath, *markdownPath); err != nil {
+		fmt.Fprintf(stderr, "maestro bench laravel output: %v\n", err)
+		return 2
+	}
 	expectedDataset := developer.DatasetID + "@" + developer.DatasetVersion
 	if *datasetID != expectedDataset {
 		fmt.Fprintf(stderr, "unsupported developer dataset %q; expected %q\n", *datasetID, expectedDataset)
@@ -63,6 +67,12 @@ func runBenchLaravel(arguments []string, stdout io.Writer, stderr io.Writer) int
 		fmt.Fprintf(stderr, "load developer benchmark dataset: %v\n", err)
 		return 1
 	}
+	hardware, err := internalBenchmark.CollectHardwareProfile()
+	if err != nil {
+		fmt.Fprintf(stderr, "collect benchmark hardware profile: %v\n", err)
+		return 1
+	}
+	version, commit := internalBenchmark.BuildMetadata()
 	workspace, cleanupWorkspace, err := dataset.Materialize()
 	if err != nil {
 		fmt.Fprintf(stderr, "materialize developer benchmark dataset: %v\n", err)
@@ -114,13 +124,14 @@ func runBenchLaravel(arguments []string, stdout io.Writer, stderr io.Writer) int
 	runner, err := internalBenchmark.NewRunner(internalBenchmark.RunnerOptions{
 		Warmup: *warmup, Runs: *runs, Timeout: *timeout,
 		CleanupTimeout: *cleanupTimeout, Command: "bench laravel",
+		MaestroVersion: version, MaestroCommit: commit,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "configure developer benchmark runner: %v\n", err)
 		return 2
 	}
 	profile := config.ConfigurationProfile()
-	profile.Hardware = pkgBenchmark.HardwareProfile{OS: runtime.GOOS, Architecture: runtime.GOARCH, LogicalCPUs: runtime.NumCPU()}
+	profile.Hardware = hardware
 	profile.Dataset = pkgBenchmark.DatasetProfile{ID: dataset.ID, Version: dataset.Version}
 	profile.Plugins = []pkgBenchmark.PluginProfile{{ID: string(laravel.ID), Version: laravel.Version}}
 	profile.Generation.MaxTokens = 1024
@@ -141,11 +152,7 @@ func runBenchLaravel(arguments []string, stdout io.Writer, stderr io.Writer) int
 		fmt.Fprintf(stderr, "shutdown developer benchmark: %v\n", shutdownError)
 		return 1
 	}
-	if *outputPath == "-" {
-		err = internalBenchmark.EncodeReportJSON(stdout, report)
-	} else {
-		err = internalBenchmark.WriteReportJSON(*outputPath, report)
-	}
+	err = writeBenchmarkReports(*outputPath, *markdownPath, stdout, report)
 	if err != nil {
 		fmt.Fprintf(stderr, "write developer benchmark report: %v\n", err)
 		return 1

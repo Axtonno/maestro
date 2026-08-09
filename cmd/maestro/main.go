@@ -55,6 +55,8 @@ func runBench(arguments []string, stdout io.Writer, stderr io.Writer) int {
 		return runBenchRuntime("model", arguments[1:], stdout, stderr)
 	case "laravel":
 		return runBenchLaravel(arguments[1:], stdout, stderr)
+	case "render":
+		return runBenchRender(arguments[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown bench command %q\n", arguments[0])
 		printBenchUsage(stderr)
@@ -108,6 +110,7 @@ func printBenchUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  laravel   execute the versioned developer benchmark")
 	fmt.Fprintln(writer, "  model     benchmark model latency, streaming and lifecycle")
 	fmt.Fprintln(writer, "  provider  benchmark provider catalog and resilience")
+	fmt.Fprintln(writer, "  render    derive a Markdown report from benchmark JSON")
 	fmt.Fprintln(writer, "  smoke     execute the live provider smoke matrix")
 	fmt.Fprintln(writer, "  validate  validate a versioned benchmark manifest")
 }

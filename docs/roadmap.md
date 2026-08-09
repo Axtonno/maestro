@@ -281,7 +281,7 @@ di chiusura della Milestone 2.
 
 # Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fasi 1–4 completate
+Stato: In corso — Fasi 1–5 completate; milestone non ancora chiusa
 
 Obiettivo:
 
@@ -327,6 +327,9 @@ Output atteso:
 Il Benchmark Layer valuta il sistema completo e non produce classifiche
 assolute tra modelli. Piano, metriche, rubriche e gate sono descritti in
 `benchmark-evaluation-plan.md`.
+
+Le cinque fasi pianificate sono implementate, ma la milestone resta aperta in
+attesa di una decisione esplicita e delle eventuali verifiche live desiderate.
 
 ---
 
