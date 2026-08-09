@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Pronto all'avvio
 
-Ultimo aggiornamento: 2026-08-08
+Ultimo aggiornamento: 2026-08-09
 
 Autori:
 - Antonio Cafeo
@@ -263,13 +263,17 @@ aggregati, errori classificati e valutazione qualitativa.
 
 # Scomposizione della Milestone 3
 
-| Fase | Incremento | Criterio di uscita |
-|---|---|---|
-| 1 | Benchmark Contracts & Runner | Manifest, scenari, sample e report JSON versionati |
-| 2 | Smoke Benchmark | Matrice live provider/modello e cleanup affidabile |
-| 3 | Runtime Benchmark | Prestazioni e risorse riproducibili |
-| 4 | Developer Benchmark | Dataset Laravel/PHP e rubrica 0–3 |
-| 5 | Reporting & Hardware Profiles | Report Markdown, profili e gate documentato |
+| Fase | Stato | Incremento | Criterio di uscita |
+|---|---|---|---|
+| 1 | Completata | Benchmark Contracts & Runner | Manifest, scenari, sample e report JSON versionati |
+| 2 | Da iniziare | Smoke Benchmark | Matrice live provider/modello e cleanup affidabile |
+| 3 | Da iniziare | Runtime Benchmark | Prestazioni e risorse riproducibili |
+| 4 | Da iniziare | Developer Benchmark | Dataset Laravel/PHP e rubrica 0–3 |
+| 5 | Da iniziare | Reporting & Hardware Profiles | Report Markdown, profili e gate documentato |
+
+Contratti, semantica del runner e limiti della Fase 1 sono descritti in
+`benchmark-runtime.md`. Il relativo report finale è disponibile in
+`reports/milestone-3-phase-1.md`.
 
 ---
 

@@ -172,6 +172,11 @@ Il layer consuma capability introspection, error semantics e osservabilità dell
 Provider Layer. Non introduce classifiche assolute tra modelli, non invia
 risultati a servizi remoti e non modifica automaticamente la configurazione.
 
+I contratti versionati vivono in `pkg/benchmark`; runner, parsing, aggregazione,
+redazione e serializzazione vivono in `internal/benchmark`. Il report JSON è la
+fonte raw e il Markdown è una sua derivazione. La semantica è descritta in
+`benchmark-runtime.md` e registrata in ADR-0017.
+
 ---
 
 ## Gestor

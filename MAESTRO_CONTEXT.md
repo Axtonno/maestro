@@ -33,6 +33,7 @@ Completati:
 * provider-capability-introspection.md
 * provider-layer-plan.md
 * benchmark-evaluation-plan.md
+* benchmark-runtime.md
 * plugin-runtime.md
 * laravel-plugin.md
 
@@ -961,7 +962,19 @@ Stato: Superato.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: Pronta all'avvio.
+Stato: In corso — Fase 1 completata.
+
+La Fase 1 — Benchmark Contracts & Runner consegna:
+
+* contratti pubblici in `pkg/benchmark`;
+* manifest schema `1` con loader YAML strict;
+* runner con warmup, run, timeout, cleanup e classificazione degli errori;
+* aggregati deterministici e p95 da almeno 20 campioni;
+* report JSON schema `1.0.0` con redazione al confine di serializzazione;
+* base CLI `maestro bench` e comando `maestro bench validate`;
+* documentazione in `docs/benchmark-runtime.md`;
+* report finale in `docs/reports/milestone-3-phase-1.md`.
+* ADR-0017 per contratti versionati e runner deterministico interno.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

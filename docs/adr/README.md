@@ -13,3 +13,4 @@
 - [ADR-0014 – Runtime-Owned Opt-In Provider Resilience](ADR-0014.md)
 - [ADR-0015 – Runtime-Owned Redacted Provider Observability](ADR-0015.md)
 - [ADR-0016 – Additive Provider-Neutral Advanced Generation Baseline](ADR-0016.md)
+- [ADR-0017 – Versioned Benchmark Contracts and Internal Deterministic Runner](ADR-0017.md)

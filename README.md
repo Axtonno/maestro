@@ -67,8 +67,9 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 21. `provider-api-compatibility-audit.md`
 22. `provider-smoke-benchmark-manifest.yaml`
 23. `benchmark-evaluation-plan.md`
-24. `plugin-runtime.md`
-25. `laravel-plugin.md`
+24. `benchmark-runtime.md`
+25. `plugin-runtime.md`
+26. `laravel-plugin.md`
 
 ---
 
@@ -152,6 +153,10 @@ live diventano il primo di tre livelli, seguito da benchmark del runtime e da
 task reali di sviluppo. I risultati descrivono la combinazione completa di
 hardware, provider, modello e plugin attraverso report JSON e Markdown, senza
 produrre classifiche assolute tra modelli.
+
+La Fase 1 della Milestone 3 è completata: contratti e report versionati, runner
+deterministico, parsing strict del manifest, redazione JSON e base del comando
+`maestro bench` sono implementati. Gli scenari live iniziano con la Fase 2.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
