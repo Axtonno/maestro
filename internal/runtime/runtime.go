@@ -41,7 +41,10 @@ type runtime struct {
 	providerRuntime   pkgProvider.Runtime
 	gestorInvalidator func()
 
-	dependencyGraph *graph
+	dependencyGraph          *graph
+	componentGeneration      uint64
+	graphGeneration          uint64
+	graphComponentGeneration uint64
 
 	started  bool
 	starting bool
@@ -160,6 +163,7 @@ func (r *runtime) Register(
 
 	// Qualsiasi nuova registrazione rende obsoleto
 	// l'eventuale grafo costruito in precedenza.
+	r.componentGeneration++
 	r.dependencyGraph = nil
 	invalidator := r.gestorInvalidator
 	r.mu.Unlock()
@@ -357,6 +361,8 @@ func (r *runtime) buildDependencyGraphLocked() error {
 	}
 
 	r.dependencyGraph = dependencyGraph
+	r.graphGeneration++
+	r.graphComponentGeneration = r.componentGeneration
 
 	return nil
 }

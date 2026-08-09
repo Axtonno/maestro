@@ -191,6 +191,25 @@ func (registry *Registry) descriptorsByTarget(
 	return slices.Clone(registry.current.byTarget[target])
 }
 
+func (registry *Registry) resolutionSnapshot(
+	capability pkgGestor.CapabilityID,
+) (pkgGestor.Snapshot, []pkgGestor.Descriptor) {
+	registry.mu.RLock()
+	defer registry.mu.RUnlock()
+
+	return registry.current.value,
+		slices.Clone(registry.current.byCapability[capability])
+}
+
+func (registry *Registry) snapshotIsCurrent(generation uint64) bool {
+	registry.mu.RLock()
+	defer registry.mu.RUnlock()
+
+	metadata := registry.current.value.Metadata()
+
+	return metadata.Current && metadata.Generation == generation
+}
+
 func (registry *Registry) sourceSnapshot() ([]sourceEntry, uint64) {
 	registry.mu.RLock()
 	defer registry.mu.RUnlock()

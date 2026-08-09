@@ -372,7 +372,7 @@ pendente llama.cpp resta parte del suo criterio di chiusura.
 
 # Milestone 4 — Gestor
 
-Stato: In corso — Fasi 1–3 completate
+Stato: In corso — Fasi 1–4 completate
 
 Documento di design: `gestor-design.md`.
 
@@ -401,8 +401,8 @@ Fasi di sviluppo:
 | 1 | Contratti, modello di dominio e ADR-0022 | Completata |
 | 2 | Snapshot Registry | Completata |
 | 3 | Discovery sources Runtime e Provider | Completata |
-| 4 | Resolver e dependency graph | Pronta |
-| 5 | Composition root, osservabilità e gate finale | Pianificata |
+| 4 | Resolver e dependency graph | Completata |
+| 5 | Composition root, osservabilità e gate finale | Pronta |
 
 Ogni fase richiede un report finale prima dell'avanzamento.
 

@@ -9,6 +9,9 @@ func TestNewNode(t *testing.T) {
 	if currentNode.Component() != component {
 		t.Fatal("node contains unexpected component")
 	}
+	if currentNode.ID() != "config" {
+		t.Fatalf("expected node ID config, got %q", currentNode.ID())
+	}
 
 	if len(currentNode.Dependencies()) != 0 {
 		t.Fatal("new node unexpectedly contains dependencies")

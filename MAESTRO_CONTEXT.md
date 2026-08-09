@@ -1125,7 +1125,7 @@ Engine 6, Agent System 7 ed Ecosistema 8.
 
 ## Milestone 4 — Gestor
 
-Stato: in corso — Fasi 1–3 completate.
+Stato: in corso — Fasi 1–4 completate.
 
 Il documento `docs/gestor-design.md` apre formalmente la milestone.
 Il piano operativo è in `docs/gestor-development-plan.md`.
@@ -1151,8 +1151,8 @@ Stato delle fasi:
 1. Contratti, modello di dominio e ADR-0022 — completata;
 2. Snapshot Registry — completata;
 3. Discovery sources Runtime e Provider — completata;
-4. Resolver e dependency graph — pronta;
-5. Composition root, osservabilità e gate finale — pianificata.
+4. Resolver e dependency graph — completata;
+5. Composition root, osservabilità e gate finale — pronta.
 
 Ogni fase deve produrre un report in `docs/reports/`; la Fase 5 produce anche
 `docs/reports/milestone-4-final.md`. Nessuna fase viene dichiarata completata
@@ -1182,7 +1182,6 @@ Sono disponibili:
 * ADR-0022 Accepted.
 
 La generazione appartiene allo snapshot e non viene duplicata nei descriptor.
-Il Resolver concreto non è ancora implementato e appartiene alla Fase 4.
 
 ### Fase 2 — Snapshot Registry
 
@@ -1236,6 +1235,37 @@ Sono disponibili:
 * test concorrenti e race detector.
 
 Le interfacce pubbliche `runtime.Runtime`, `provider.Runtime` e `plugin.Runtime`
-non sono cambiate. Il Resolver e la vista read-only del dependency graph
-appartengono alla Fase 4; il wiring effettivo delle sorgenti e dell'invalidatore
-nel composition root appartiene alla Fase 5.
+non sono cambiate. Il wiring effettivo delle sorgenti e dell'invalidatore nel
+composition root appartiene alla Fase 5.
+
+### Fase 4 — Resolver e dependency graph
+
+Completata in:
+
+```text
+internal/gestor
+internal/runtime
+```
+
+Sono disponibili:
+
+* `Resolver` concreto conforme al contratto pubblico `pkg/gestor.Resolver`;
+* filtri esatti per capability, target kind, scope e model ID;
+* distinzione tra `ErrNotFound`, `ErrUnavailable`, `ErrAmbiguous` ed
+  `ErrStaleSnapshot`;
+* esclusione dei target unavailable e requisito opzionale di evidenza
+  available;
+* preferenze target esatte e ordinate, senza vincitore lessicografico
+  implicito;
+* vista read-only del dependency graph autorevole del Runtime Core;
+* verifica dell'eleggibilità dei componenti e piano transitivo dependency-first
+  in ordine topologico;
+* generazioni indipendenti per snapshot Gestor, catalogo componenti e grafo,
+  ricontrollate prima di produrre un risultato;
+* identità dei nodi acquisita alla costruzione del grafo, così `Resolve` non
+  invoca `Metadata` o codice del candidato;
+* test con dipendenze richieste e opzionali, variazioni concorrenti e race
+  detector.
+
+Il Resolver non esegue capability, probe o introspection. Il composition root,
+il refresh iniziale e gli eventi redatti appartengono alla Fase 5.

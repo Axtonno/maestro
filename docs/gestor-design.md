@@ -1,8 +1,8 @@
 # Gestor — Design iniziale
 
-Versione: 0.4.0
+Versione: 0.5.0
 
-Stato: Discovery sources implementate — Milestone 4 aperta
+Stato: Resolver e integrazione read-only del grafo implementati — Milestone 4 aperta
 
 Data: 2026-08-09
 
@@ -301,7 +301,7 @@ source incoerente, collisioni capability–target e snapshot invalidi sono
 rifiutati prima della pubblicazione.
 
 Lo snapshot interno costruisce indici immutabili per capability esatta e
-`Target` esatto. Gli indici alimenteranno il Resolver della Fase 4 e non sono
+`Target` esatto. Gli indici alimentano il Resolver e non sono
 esposti dal package pubblico; ogni lettura interna restituisce comunque una
 copia ordinata.
 
@@ -341,6 +341,18 @@ Il risultato contiene il descriptor scelto, la generazione consultata, la
 motivazione della selezione e, per un componente, le dipendenze in ordine
 topologico. Non contiene funzioni da invocare.
 
+La Fase 4 implementa questo algoritmo in `internal/gestor.Resolver`. La lettura
+di snapshot e indice capability avviene con una singola acquisizione atomica;
+`Candidates` restituisce tutti i candidati eleggibili in ordine deterministico,
+mentre soltanto `Resolve` applica le preferenze esatte nell'ordine dichiarato.
+Una preferenza assente o non eleggibile non diventa un fallback implicito: se
+restano più candidati la risoluzione è ambiguous.
+
+Snapshot Gestor e grafo Runtime hanno generazioni indipendenti. Il Resolver
+cattura quelle consultate e verifica prima di restituire che entrambe siano
+ancora current e invariate. Un cambiamento concorrente produce
+`ErrStaleSnapshot`, non un risultato composto da revisioni differenti.
+
 ---
 
 # Integrazione con il dependency graph
@@ -351,6 +363,20 @@ opzionali, cicli e ordine topologico.
 Gestor riceve una vista read-only o un collaboratore interno dedicato. Non
 espone `internal/runtime.graph`, non aggiunge archi e non conserva una copia
 mutabile del grafo.
+
+La vista introdotta nella Fase 4 espone internamente soltanto stato della
+generazione e piano delle dipendenze transitive. Il piano viene estratto dal
+grafo autorevole e filtrato dal suo ordine topologico, quindi è dependency-first
+e non muta nodi o archi. L'identità del nodo viene acquisita durante la
+costruzione del grafo: `Resolve` non richiama `Metadata` né altro codice del
+candidato.
+
+Ogni registrazione riuscita di un componente incrementa la generazione del
+catalogo e rende il grafo stale. Ogni ricostruzione riuscita incrementa la
+generazione del grafo e la associa alla generazione dei componenti usata. Una
+dipendenza richiesta mancante impedisce la costruzione; una dipendenza
+opzionale mancante viene omessa dal piano. Cicli e validazione restano nel
+Runtime Core.
 
 Se una registrazione invalida il grafo Runtime o uno snapshot Gestor, il
 composition root marca entrambi come non correnti. Nessun refresh con I/O viene
@@ -366,6 +392,7 @@ impliciti.
 - discovery, introspection, callback ed eventi avvengono senza lock Gestor;
 - `Resolve` e listing lavorano su uno snapshot immutabile;
 - lo stato temporaneo di una risoluzione appartiene alla singola chiamata;
+- snapshot e generazione del grafo vengono ricontrollati prima dell'output;
 - la cancellazione interrompe il refresh e non pubblica risultati parziali;
 - i test con race detector sono parte del gate della milestone.
 
@@ -471,6 +498,9 @@ Il piano operativo, i gate e i report obbligatori sono definiti in
 - errori not found, unavailable e ambiguous;
 - vista read-only del grafo e piano topologico.
 
+Completata. Il Resolver concreto usa esclusivamente snapshot current e il grafo
+Runtime autorevole, senza ranking implicito né esecuzione del candidato.
+
 ## Fase 5 — Composition root e osservabilità
 
 - esposizione del servizio Gestor dal Runtime;
@@ -524,6 +554,7 @@ La Milestone 4 richiederà almeno:
 3. `Refresh` e `Invalidate` sono esposti dal `Registry`; il composition root ne
    coordinerà la policy iniziale nella Fase 5.
 4. La vista del dependency graph è soltanto interna e read-only. Il confine
-   concreto sarà aggiunto in Fase 4 senza esporre `internal/runtime.graph`.
+   concreto è implementato senza esporre `internal/runtime.graph` e restituisce
+   soltanto generazione, eleggibilità e piano topologico.
 5. I topic stabili verranno esposti con il wiring della Fase 5; cause, dettagli
    di introspection e diagnostica sensibile resteranno interni e redatti.

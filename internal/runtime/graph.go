@@ -119,13 +119,13 @@ func (g *graph) visitTopological(
 	path *[]pkgRuntime.ComponentID,
 	ordered *[]*node,
 ) error {
-	componentID := currentNode.Component().Metadata().ID
+	componentID := currentNode.ID()
 
 	states[componentID] = visitStateVisiting
 	*path = append(*path, componentID)
 
 	for _, dependencyNode := range currentNode.Dependencies() {
-		dependencyID := dependencyNode.Component().Metadata().ID
+		dependencyID := dependencyNode.ID()
 
 		switch states[dependencyID] {
 		case visitStateVisiting:
