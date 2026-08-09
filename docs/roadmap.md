@@ -341,13 +341,15 @@ aperta. Il report è in
 `reports/milestone-3-live-ollama-validation.md`.
 
 La fixture alternativa `llama3.1:8b` supera il gate diretto e produce
-`message.tool_calls` native non-stream e stream. Con
-`embeddinggemma:latest`, integration test, embedding e lifecycle passano; il
-nuovo Smoke completo chiude con 12 passed, 1 skipped e 1 failed. Resta
-`tool-call-stream`: Ollama emette la tool call in un chunk non terminale e
-chiude con `done_reason: stop`, mentre il gate Maestro richiede il terminale
-`tool_calls`. La milestone resta aperta in attesa della normalizzazione di
-questa sequenza. `qwen2.5-coder:7b` resta il caso negativo documentato.
+`message.tool_calls` native non-stream e stream. L'adapter normalizza ora il
+terminale Ollama `stop` in `tool_calls` solo se nello stesso stream è stata
+tradotta una tool call; completion non-stream, altre cause terminali e stream
+senza tool call restano coerenti. Con `embeddinggemma:latest`, test mirati, gate
+Go, integration test, embedding e lifecycle passano. Il nuovo Smoke completo
+chiude con 13 passed, 1 skipped e 0 failed: il gate live Ollama è verde. La
+Milestone 3 resta aperta fino a una decisione esplicita di completamento.
+`qwen2.5-coder:7b` resta il caso negativo documentato e `llama3.1:8b` la fixture
+positiva.
 
 ---
 

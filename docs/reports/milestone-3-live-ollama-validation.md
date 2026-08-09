@@ -1,6 +1,6 @@
 # Milestone 3 — Validazione live Ollama
 
-Stato: Gate live non superato
+Stato: Gate live Ollama superato
 
 Stato Milestone 3: In corso — non chiusa
 
@@ -331,6 +331,63 @@ Ollama in un terminale `tool_calls`. `llama3.1:8b` non è un secondo caso
 negativo del modello: è la fixture positiva che espone un'incompatibilità tra
 la terminazione Ollama e il contratto/gate Maestro.
 
+## Correzione dell'adapter Ollama
+
+La correzione mantiene invariati benchmark e contratto neutrale:
+
+- ogni istanza stream conserva il proprio stato `toolCallSeen`;
+- lo stato viene impostato soltanto dopo la traduzione riuscita di almeno una
+  tool call strutturata;
+- un terminale Ollama `done: true`, `done_reason: "stop"` viene esposto come
+  `tool_calls` soltanto se quello stream ha già osservato una tool call;
+- `stop` senza tool call, `length`, cancellazioni ed errori non vengono
+  sovrascritti;
+- il chunk che contiene la tool call resta invariato e non terminale;
+- usage e metadata restano sul successivo chunk terminale.
+
+La stessa normalizzazione è applicata al percorso non-stream quando la
+completion contiene tool call tradotte, eliminando l'asimmetria osservata con
+Ollama.
+
+Le regressioni isolate coprono:
+
+1. tool call non terminale seguita da terminale `stop`;
+2. testo seguito da terminale `stop`;
+3. tool call seguita da terminale già `tool_calls`;
+4. tool call seguita da `length`;
+5. più chunk testuali senza tool call;
+6. completion non-stream con `stop`, `tool_calls` e `length`.
+
+I test mirati dei package Ollama sono superati.
+
+## Validazione live post-correzione
+
+L'integration suite con `llama3.1:8b`, `embeddinggemma:latest` e lifecycle
+configurato è superata: listing, discovery, completion, stream, cancellazione,
+embedding e lifecycle passano. Durata package: 18,815 secondi.
+
+Il successivo Smoke Benchmark completo usa la stessa configurazione.
+
+Run ID: `aead2e67f9de38b9d2e1e7d8f841435a`.
+
+Durata complessiva osservata: 124.711,328 ms.
+
+Esito: **PASS**, exit status 0.
+
+| Stato | Scenari |
+|---|---:|
+| `passed` | 13 |
+| `skipped` | 1 |
+| `failed` | 0 |
+
+Entrambi gli scenari tool calling passano con una tool call valida. L'unico
+skip è `acquisition-pull-remove` con reason code
+`catalog_mutation_not_allowed`: resta legittimo perché la mutation guard è
+disabilitata.
+
+`qwen2.5-coder:7b` resta il caso negativo documentato;
+`llama3.1:8b` è la fixture positiva del gate live Ollama.
+
 ---
 
 # Gate deterministico
@@ -338,8 +395,8 @@ la terminazione Ollama e il contratto/gate Maestro.
 Sono stati rieseguiti con successo:
 
 ```text
-GOCACHE=/tmp/maestro-go-build go test ./...
-GOCACHE=/tmp/maestro-go-build go test -race ./...
+GOCACHE=/tmp/maestro-go-build go test -count=1 ./...
+GOCACHE=/tmp/maestro-go-build go test -race -count=1 ./...
 GOCACHE=/tmp/maestro-go-build go vet ./...
 GOCACHE=/tmp/maestro-go-build go run ./cmd/maestro bench validate --manifest docs/provider-smoke-benchmark-manifest.yaml
 GOCACHE=/tmp/maestro-go-build go run ./cmd/maestro bench validate --manifest docs/runtime-benchmark-manifest.yaml
@@ -352,17 +409,15 @@ I manifest contengono rispettivamente 14, 11 e 6 scenari.
 
 # Conclusione
 
-Il test d'integrazione Ollama richiesto è superato e il gate deterministico è
-verde. `llama3.1:8b` supera il gate diretto sia non-stream sia stream; questo ha
-autorizzato correttamente la nuova esecuzione Smoke completa. Lo Smoke migliora
-da 9 passed, 3 skipped e 2 failed a 12 passed, 1 skipped e 1 failed, ma non è
-ancora verde a causa della semantica terminale di `tool-call-stream`.
+La normalizzazione conservativa dell'adapter è coperta da regressioni isolate.
+Test mirati, test repository-wide, race detector, vet e integration suite sono
+verdi. Lo Smoke live Ollama completo chiude con 13 passed, 1 skipped e 0 failed:
+il gate live Ollama è quindi **superato**.
 
-Di conseguenza la Milestone 3 **non viene dichiarata chiusa**. Prima della
-prossima esecuzione occorre risolvere e coprire con test la normalizzazione della
-sequenza Ollama `tool_calls` non terminale seguita da terminale `stop`, quindi
-rieseguire lo Smoke con la stessa fixture positiva. `qwen2.5-coder:7b` resta il
-caso negativo documentato.
+Questo risultato non chiude automaticamente l'intera Milestone 3. La milestone
+resta **in corso — non chiusa** in attesa della successiva decisione esplicita
+di completamento. `qwen2.5-coder:7b` resta il caso negativo documentato e
+`llama3.1:8b` la fixture positiva.
 
-Gli skip lifecycle e acquisition restano accettabili finché le relative fixture
-opzionali e la mutation guard non sono configurate.
+L'unico skip acquisition resta accettabile finché la mutation guard non è
+abilitata esplicitamente.

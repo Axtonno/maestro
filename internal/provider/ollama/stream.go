@@ -16,12 +16,13 @@ import (
 var _ pkgProvider.Stream = (*stream)(nil)
 
 type stream struct {
-	context context.Context
-	model   string
-	body    io.ReadCloser
-	decoder *json.Decoder
-	output  *pkgProvider.StructuredOutput
-	content bytes.Buffer
+	context      context.Context
+	model        string
+	body         io.ReadCloser
+	decoder      *json.Decoder
+	output       *pkgProvider.StructuredOutput
+	content      bytes.Buffer
+	toolCallSeen bool
 
 	recvMu  sync.Mutex
 	stateMu sync.Mutex
@@ -132,6 +133,9 @@ func (s *stream) Recv() (
 
 		return pkgProvider.StreamChunk{}, err
 	}
+	if len(toolCalls) > 0 {
+		s.toolCallSeen = true
+	}
 	if s.output != nil {
 		_, _ = s.content.WriteString(response.Message.Content)
 		if response.Done {
@@ -144,10 +148,14 @@ func (s *stream) Recv() (
 	}
 
 	chunk = pkgProvider.StreamChunk{
-		Model:        response.Model,
-		Content:      response.Message.Content,
-		ToolCalls:    toolCalls,
-		FinishReason: response.DoneReason,
+		Model:     response.Model,
+		Content:   response.Message.Content,
+		ToolCalls: toolCalls,
+		FinishReason: normalizeOllamaFinishReason(
+			response.Done,
+			response.DoneReason,
+			s.toolCallSeen,
+		),
 		Usage: pkgProvider.Usage{
 			InputTokens:  response.PromptEvalCount,
 			OutputTokens: response.EvalCount,

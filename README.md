@@ -189,11 +189,13 @@ questa fixture. La milestone resta aperta; il dettaglio è nel report
 `docs/reports/milestone-3-live-ollama-validation.md`.
 
 La fixture alternativa `llama3.1:8b` produce `message.tool_calls` native
-direttamente su `/api/chat`. Il nuovo Smoke con
-`embeddinggemma:latest` raggiunge 12 passed, 1 skipped e 1 failed: resta da
-normalizzare il terminale streaming Ollama `stop` nel terminale neutrale
-`tool_calls` atteso dal gate. `qwen2.5-coder:7b` resta documentato come caso
-negativo.
+direttamente su `/api/chat`. L'adapter normalizza in modo conservativo il
+terminale streaming Ollama `stop` in `tool_calls` quando lo stesso stream ha già
+emesso una tool call e applica la regola coerente alle completion non-stream. Il
+nuovo Smoke con `embeddinggemma:latest` raggiunge 13 passed, 1 skipped e 0
+failed: il gate live Ollama è verde, mentre la Milestone 3 resta aperta fino a
+una decisione esplicita. `qwen2.5-coder:7b` resta documentato come caso negativo
+e `llama3.1:8b` come fixture positiva.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento

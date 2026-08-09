@@ -303,11 +303,12 @@ e azioni richieste sono in
 
 La fixture alternativa `llama3.1:8b` ha superato la prova diretta e ha quindi
 autorizzato un nuovo Smoke live con
-`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest`. Il risultato è 12 passed, 1
-skipped e 1 failed: la tool call streaming è nativa, ma Ollama chiude con
-`done_reason: stop` e Maestro non normalizza la sequenza nel terminale
-`tool_calls` richiesto dal gate. `qwen2.5-coder:7b` resta il caso negativo
-documentato.
+`MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest`. L'adapter normalizza ora la
+sequenza tool call non terminale più terminale Ollama `stop` nel terminale
+neutrale `tool_calls`, senza alterare le altre cause. Il risultato post-fix è 13
+passed, 1 skipped e 0 failed: il gate live Ollama è verde. La milestone resta
+aperta fino a una decisione esplicita. `qwen2.5-coder:7b` resta il caso negativo
+documentato e `llama3.1:8b` la fixture positiva.
 
 ---
 

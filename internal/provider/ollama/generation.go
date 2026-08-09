@@ -133,6 +133,18 @@ func ollamaToolCallDeltas(
 	return deltas, nil
 }
 
+func normalizeOllamaFinishReason(
+	done bool,
+	finishReason string,
+	toolCallSeen bool,
+) string {
+	if done && finishReason == pkgProvider.FinishReasonStop && toolCallSeen {
+		return pkgProvider.FinishReasonToolCalls
+	}
+
+	return finishReason
+}
+
 func validateStructuredContent(
 	output *pkgProvider.StructuredOutput,
 	content []byte,

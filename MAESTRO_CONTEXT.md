@@ -1053,13 +1053,15 @@ La Milestone 3 resta aperta fino a una run Smoke live senza scenari failed.
 
 La seconda fixture `llama3.1:8b` supera la prova diretta: non-stream restituisce
 una tool call nativa e lo stream la emette nel primo chunk, seguito da un chunk
-terminale con `done_reason: stop`. Integration test, embedding con ID catalogo
-esatto e lifecycle passano. Il nuovo Smoke completo produce 12 passed, 1
-skipped e 1 failed: resta solo `tool-call-stream` con
-`tool_stream_terminal_missing`. L'adapter propaga `stop`, mentre il gate
-richiede il terminale neutrale `tool_calls`; occorre normalizzare e testare
-questa sequenza prima della prossima run. `qwen2.5-coder:7b` resta il caso
-negativo documentato.
+terminale con `done_reason: stop`. L'adapter Ollama normalizza ora quel terminale
+in `tool_calls` soltanto dopo aver tradotto una tool call nello stesso stream;
+le altre cause e gli stream senza tool call restano invariati. La stessa regola
+allinea le completion non-stream. Test mirati, gate Go, integration suite,
+embedding con ID catalogo esatto e lifecycle passano. Lo Smoke completo
+post-correzione produce 13 passed, 1 skipped e 0 failed: il gate live Ollama è
+verde. `qwen2.5-coder:7b` resta il caso negativo documentato e
+`llama3.1:8b` la fixture positiva. La Milestone 3 resta comunque in corso e non
+viene chiusa automaticamente.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

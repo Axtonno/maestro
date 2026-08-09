@@ -80,6 +80,108 @@ func TestStreamMapsChunksAndFinishesWithEOF(t *testing.T) {
 	}
 }
 
+func TestStreamNormalizesToolCallFinishReasonAcrossChunks(t *testing.T) {
+	tests := []struct {
+		name                 string
+		body                 string
+		expectedChunkCount   int
+		expectedFinishReason string
+		expectedToolCalls    int
+		expectedUsage        pkgProvider.Usage
+	}{
+		{
+			name: "tool call followed by stop",
+			body: `{"model":"llama","message":{"role":"assistant","tool_calls":[{"id":"call-1","function":{"index":0,"name":"weather","arguments":{"city":"Rome"}}}]},"done":false}` + "\n" +
+				`{"model":"llama","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop","prompt_eval_count":8,"eval_count":2}` + "\n",
+			expectedChunkCount:   2,
+			expectedFinishReason: pkgProvider.FinishReasonToolCalls,
+			expectedToolCalls:    1,
+			expectedUsage: pkgProvider.Usage{
+				InputTokens: 8, OutputTokens: 2,
+			},
+		},
+		{
+			name: "text followed by stop",
+			body: `{"model":"llama","message":{"role":"assistant","content":"hello"},"done":false}` + "\n" +
+				`{"model":"llama","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop"}` + "\n",
+			expectedChunkCount:   2,
+			expectedFinishReason: pkgProvider.FinishReasonStop,
+		},
+		{
+			name: "tool call followed by tool calls",
+			body: `{"model":"llama","message":{"role":"assistant","tool_calls":[{"id":"call-1","function":{"index":0,"name":"weather","arguments":{"city":"Rome"}}}]},"done":false}` + "\n" +
+				`{"model":"llama","message":{"role":"assistant","content":""},"done":true,"done_reason":"tool_calls"}` + "\n",
+			expectedChunkCount:   2,
+			expectedFinishReason: pkgProvider.FinishReasonToolCalls,
+			expectedToolCalls:    1,
+		},
+		{
+			name: "tool call followed by length",
+			body: `{"model":"llama","message":{"role":"assistant","tool_calls":[{"id":"call-1","function":{"index":0,"name":"weather","arguments":{"city":"Rome"}}}]},"done":false}` + "\n" +
+				`{"model":"llama","message":{"role":"assistant","content":""},"done":true,"done_reason":"length"}` + "\n",
+			expectedChunkCount:   2,
+			expectedFinishReason: pkgProvider.FinishReasonLength,
+			expectedToolCalls:    1,
+		},
+		{
+			name: "multiple text chunks followed by stop",
+			body: `{"model":"llama","message":{"role":"assistant","content":"hel"},"done":false}` + "\n" +
+				`{"model":"llama","message":{"role":"assistant","content":"lo"},"done":false}` + "\n" +
+				`{"model":"llama","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop"}` + "\n",
+			expectedChunkCount:   3,
+			expectedFinishReason: pkgProvider.FinishReasonStop,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			body := &trackingBody{reader: strings.NewReader(test.body)}
+			provider := newProviderWithBody(t, body)
+			active, err := provider.Stream(
+				context.Background(),
+				pkgProvider.CompletionRequest{},
+			)
+			if err != nil {
+				t.Fatalf("open stream: %v", err)
+			}
+
+			var chunks []pkgProvider.StreamChunk
+			for {
+				chunk, receiveError := active.Recv()
+				if errors.Is(receiveError, io.EOF) {
+					break
+				}
+				if receiveError != nil {
+					t.Fatalf("receive chunk: %v", receiveError)
+				}
+				chunks = append(chunks, chunk)
+			}
+
+			if len(chunks) != test.expectedChunkCount {
+				t.Fatalf("unexpected chunks: %#v", chunks)
+			}
+			terminal := chunks[len(chunks)-1]
+			if terminal.FinishReason != test.expectedFinishReason {
+				t.Fatalf("unexpected terminal chunk: %#v", terminal)
+			}
+			if terminal.Usage != test.expectedUsage {
+				t.Fatalf("terminal metadata was not preserved: %#v", terminal)
+			}
+
+			toolCallCount := 0
+			for index, chunk := range chunks {
+				toolCallCount += len(chunk.ToolCalls)
+				if index < len(chunks)-1 && chunk.FinishReason != "" {
+					t.Fatalf("non-terminal chunk was transformed: %#v", chunk)
+				}
+			}
+			if toolCallCount != test.expectedToolCalls {
+				t.Fatalf("unexpected translated tool calls: %#v", chunks)
+			}
+		})
+	}
+}
+
 func TestStreamCloseIsIdempotentAndPreventsReads(t *testing.T) {
 	body := &trackingBody{reader: strings.NewReader(
 		"{\"message\":{\"content\":\"waiting\"},\"done\":false}\n",

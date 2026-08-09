@@ -94,6 +94,67 @@ func TestCompleteUsesDefaultModel(t *testing.T) {
 	}
 }
 
+func TestCompleteNormalizesToolCallFinishReason(t *testing.T) {
+	tests := []struct {
+		name                 string
+		doneReason           string
+		expectedFinishReason string
+	}{
+		{
+			name:                 "stop becomes tool calls",
+			doneReason:           pkgProvider.FinishReasonStop,
+			expectedFinishReason: pkgProvider.FinishReasonToolCalls,
+		},
+		{
+			name:                 "tool calls remains tool calls",
+			doneReason:           pkgProvider.FinishReasonToolCalls,
+			expectedFinishReason: pkgProvider.FinishReasonToolCalls,
+		},
+		{
+			name:                 "length remains length",
+			doneReason:           pkgProvider.FinishReasonLength,
+			expectedFinishReason: pkgProvider.FinishReasonLength,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			provider := newTestProvider(t, "llama", func(
+				writer http.ResponseWriter,
+				_ *http.Request,
+			) {
+				writeJSON(t, writer, chatResponse{
+					Model:      "llama",
+					Done:       true,
+					DoneReason: test.doneReason,
+					Message: chatMessage{
+						Role: "assistant",
+						ToolCalls: []toolCall{{
+							ID: "call-1",
+							Function: toolCallFunction{
+								Name:      "weather",
+								Arguments: json.RawMessage(`{"city":"Rome"}`),
+							},
+						}},
+					},
+				})
+			})
+
+			response, err := provider.Complete(
+				context.Background(),
+				pkgProvider.CompletionRequest{},
+			)
+			if err != nil {
+				t.Fatalf("complete with tool call: %v", err)
+			}
+			if response.FinishReason != test.expectedFinishReason ||
+				len(response.Message.ToolCalls) != 1 {
+				t.Fatalf("unexpected completion: %#v", response)
+			}
+		})
+	}
+}
+
 func TestCompleteHandlesInvalidResponses(t *testing.T) {
 	tests := []struct {
 		name    string

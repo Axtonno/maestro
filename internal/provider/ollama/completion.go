@@ -74,7 +74,11 @@ func (p *Provider) Complete(
 			Content:   response.Message.Content,
 			ToolCalls: toolCalls,
 		},
-		FinishReason: response.DoneReason,
+		FinishReason: normalizeOllamaFinishReason(
+			response.Done,
+			response.DoneReason,
+			len(toolCalls) > 0,
+		),
 		Usage: pkgProvider.Usage{
 			InputTokens:  response.PromptEvalCount,
 			OutputTokens: response.EvalCount,
