@@ -6,6 +6,9 @@ Stato: Completata
 
 Data: 2026-08-09
 
+Nota successiva: la Fase 2 ha esteso additivamente lo schema report da `1.0.0`
+a `1.1.0` per registrare i modelli fixture per ruolo.
+
 ---
 
 # Obiettivo

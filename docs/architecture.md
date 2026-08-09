@@ -177,6 +177,11 @@ redazione e serializzazione vivono in `internal/benchmark`. Il report JSON è la
 fonte raw e il Markdown è una sua derivazione. La semantica è descritta in
 `benchmark-runtime.md` e registrata in ADR-0017.
 
+Lo Smoke Benchmark costruisce un provider esplicito da configurazione ambiente,
+usa introspection prima delle operazioni live e affida al runner ogni cleanup.
+Mutation guard e fixture ownership impediscono rimozioni implicite di modelli
+preesistenti. La matrice è descritta in `smoke-benchmark.md` e ADR-0018.
+
 ---
 
 ## Gestor

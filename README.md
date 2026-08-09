@@ -68,8 +68,9 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 22. `provider-smoke-benchmark-manifest.yaml`
 23. `benchmark-evaluation-plan.md`
 24. `benchmark-runtime.md`
-25. `plugin-runtime.md`
-26. `laravel-plugin.md`
+25. `smoke-benchmark.md`
+26. `plugin-runtime.md`
+27. `laravel-plugin.md`
 
 ---
 
@@ -157,6 +158,11 @@ produrre classifiche assolute tra modelli.
 La Fase 1 della Milestone 3 è completata: contratti e report versionati, runner
 deterministico, parsing strict del manifest, redazione JSON e base del comando
 `maestro bench` sono implementati. Gli scenari live iniziano con la Fase 2.
+
+La Fase 2 è completata: `maestro bench smoke` esegue la matrice live di
+quattordici scenari per Ollama o llama.cpp con capability preflight, modelli per
+ruolo, mutation guard, cleanup e report JSON atomico. In assenza di provider
+configurato produce risultati `skipped` senza I/O implicito.
 
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento

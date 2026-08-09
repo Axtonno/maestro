@@ -12,6 +12,44 @@ import (
 	pkgBenchmark "github.com/antonio-cafeo/maestro/pkg/benchmark"
 )
 
+func WriteReportJSON(path string, report pkgBenchmark.Report) (writeError error) {
+	if strings.TrimSpace(path) == "" {
+		return fmt.Errorf("write benchmark report: path is empty")
+	}
+
+	directory := filepath.Dir(path)
+	temporary, err := os.CreateTemp(directory, ".maestro-benchmark-*.json")
+	if err != nil {
+		return fmt.Errorf("create temporary benchmark report: %w", err)
+	}
+	temporaryPath := temporary.Name()
+	defer func() {
+		if writeError != nil {
+			_ = os.Remove(temporaryPath)
+		}
+	}()
+	if err := temporary.Chmod(0o600); err != nil {
+		_ = temporary.Close()
+		return fmt.Errorf("protect temporary benchmark report: %w", err)
+	}
+	if err := EncodeReportJSON(temporary, report); err != nil {
+		_ = temporary.Close()
+		return err
+	}
+	if err := temporary.Sync(); err != nil {
+		_ = temporary.Close()
+		return fmt.Errorf("sync temporary benchmark report: %w", err)
+	}
+	if err := temporary.Close(); err != nil {
+		return fmt.Errorf("close temporary benchmark report: %w", err)
+	}
+	if err := os.Rename(temporaryPath, path); err != nil {
+		return fmt.Errorf("publish benchmark report: %w", err)
+	}
+
+	return nil
+}
+
 // EncodeReportJSON is the supported serialization boundary for benchmark
 // reports. It validates and redacts a copy before writing any bytes.
 func EncodeReportJSON(writer io.Writer, report pkgBenchmark.Report) error {
@@ -38,6 +76,14 @@ func redactReport(report pkgBenchmark.Report) pkgBenchmark.Report {
 		report.Configuration.Provider.Endpoint,
 	)
 	report.Configuration.Model.ID = redactUserPath(report.Configuration.Model.ID)
+	if report.Configuration.Models != nil {
+		models := make(map[string]pkgBenchmark.ModelProfile, len(report.Configuration.Models))
+		for role, model := range report.Configuration.Models {
+			model.ID = redactUserPath(model.ID)
+			models[role] = model
+		}
+		report.Configuration.Models = models
+	}
 	report.Configuration.Dataset.ID = redactUserPath(report.Configuration.Dataset.ID)
 	report.Configuration.Plugins = append(
 		[]pkgBenchmark.PluginProfile(nil),

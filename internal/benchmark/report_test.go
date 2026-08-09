@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -31,6 +32,9 @@ func TestEncodeReportJSONRedactsCredentialsURLsAndUserPaths(t *testing.T) {
 			ID: "ollama", Endpoint: "https://user:secret@example.test/private?token=secret",
 		},
 		Model: pkgBenchmark.ModelProfile{ID: "/home/antonio-cafeo/models/private.gguf"},
+		Models: map[string]pkgBenchmark.ModelProfile{
+			"lifecycle": {ID: "/home/antonio-cafeo/models/lifecycle.gguf"},
+		},
 	}
 	report, err := runner.Run(
 		context.Background(), testManifest(definition), configuration, scenario,
@@ -56,8 +60,48 @@ func TestEncodeReportJSONRedactsCredentialsURLsAndUserPaths(t *testing.T) {
 		t.Fatalf("expected redacted report, got %s", encoded)
 	}
 	if report.Configuration.Provider.Endpoint == "https://example.test" ||
-		report.Configuration.Model.ID == "[redacted-path]" {
+		report.Configuration.Model.ID == "[redacted-path]" ||
+		report.Configuration.Models["lifecycle"].ID == "[redacted-path]" {
 		t.Fatal("encoding mutated the source report")
+	}
+}
+
+func TestWriteReportJSONPublishesProtectedAtomicFile(t *testing.T) {
+	definition := testScenarioDefinition()
+	runner := deterministicRunner(t, RunnerOptions{Runs: 1})
+	scenario := pkgBenchmark.ScenarioFuncs{
+		DefinitionValue: definition,
+		RunFunc: func(context.Context, pkgBenchmark.Iteration) (pkgBenchmark.IterationResult, error) {
+			return pkgBenchmark.IterationResult{State: pkgBenchmark.ResultPassed}, nil
+		},
+	}
+	report, err := runner.Run(
+		context.Background(), testManifest(definition),
+		pkgBenchmark.ConfigurationProfile{}, scenario,
+	)
+	if err != nil {
+		t.Fatalf("run benchmark: %v", err)
+	}
+	directory := t.TempDir()
+	path := filepath.Join(directory, "report.json")
+
+	if err := WriteReportJSON(path, report); err != nil {
+		t.Fatalf("write report: %v", err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat report: %v", err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("report mode=%o", info.Mode().Perm())
+	}
+	encoded, err := os.ReadFile(path)
+	if err != nil || !bytes.Contains(encoded, []byte(pkgBenchmark.ReportSchemaVersion)) {
+		t.Fatalf("read report: %v, %s", err, encoded)
+	}
+	entries, err := os.ReadDir(directory)
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("temporary report was not cleaned up: %v, %#v", err, entries)
 	}
 }
 
@@ -120,7 +164,10 @@ func TestProviderHandoffEndToEndProducesVersionedRedactedReport(t *testing.T) {
 	if err := EncodeReportJSON(&output, report); err != nil {
 		t.Fatalf("encode provider handoff: %v", err)
 	}
-	if !strings.Contains(output.String(), `"schema_version": "1.0.0"`) ||
+	if !strings.Contains(
+		output.String(),
+		`"schema_version": "`+pkgBenchmark.ReportSchemaVersion+`"`,
+	) ||
 		strings.Contains(output.String(), "secret") ||
 		strings.Contains(output.String(), "/private") {
 		t.Fatalf("unexpected serialized handoff: %s", output.String())

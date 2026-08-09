@@ -333,6 +333,14 @@ func (c ConfigurationProfile) Validate() error {
 	if c.Model.ContextLength < 0 {
 		return errors.New("model context length is negative")
 	}
+	for role, model := range c.Models {
+		if strings.TrimSpace(role) == "" {
+			return errors.New("model profile role is empty")
+		}
+		if model.ContextLength < 0 {
+			return fmt.Errorf("model profile role %q has a negative context length", role)
+		}
+	}
 	if c.Generation.MaxTokens < 0 || c.Generation.StopCount < 0 {
 		return errors.New("generation profile contains a negative count")
 	}

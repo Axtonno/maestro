@@ -34,6 +34,7 @@ Completati:
 * provider-layer-plan.md
 * benchmark-evaluation-plan.md
 * benchmark-runtime.md
+* smoke-benchmark.md
 * plugin-runtime.md
 * laravel-plugin.md
 
@@ -962,7 +963,7 @@ Stato: Superato.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fase 1 completata.
+Stato: In corso — Fasi 1–2 completate.
 
 La Fase 1 — Benchmark Contracts & Runner consegna:
 
@@ -973,8 +974,21 @@ La Fase 1 — Benchmark Contracts & Runner consegna:
 * report JSON schema `1.0.0` con redazione al confine di serializzazione;
 * base CLI `maestro bench` e comando `maestro bench validate`;
 * documentazione in `docs/benchmark-runtime.md`;
-* report finale in `docs/reports/milestone-3-phase-1.md`.
+* report finale in `docs/reports/milestone-3-phase-1.md`;
 * ADR-0017 per contratti versionati e runner deterministico interno.
+
+La Fase 2 — Smoke Benchmark consegna:
+
+* composition root live per Ollama e llama.cpp;
+* tutti i 14 scenari del manifest con capability preflight;
+* distinzione tra `unsupported`, `skipped` e `failed`;
+* modelli fixture per ruolo e mutation guard acquisition;
+* cleanup di stream, pull, lifecycle, resilience e observer;
+* comando `maestro bench smoke` e report JSON atomico `0600`;
+* report schema `1.1.0` con `configuration.models`;
+* documentazione in `docs/smoke-benchmark.md`;
+* report finale in `docs/reports/milestone-3-phase-2.md`;
+* ADR-0018 per matrice live esplicita e mutation-safe.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

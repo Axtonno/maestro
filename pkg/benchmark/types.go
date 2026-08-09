@@ -7,7 +7,7 @@ import (
 
 const (
 	ManifestSchemaVersion = 1
-	ReportSchemaVersion   = "1.0.0"
+	ReportSchemaVersion   = "1.1.0"
 )
 
 type ResultState string
@@ -205,13 +205,14 @@ type DatasetProfile struct {
 }
 
 type ConfigurationProfile struct {
-	Hardware   HardwareProfile   `json:"hardware"`
-	Provider   ProviderProfile   `json:"provider"`
-	Model      ModelProfile      `json:"model"`
-	Plugins    []PluginProfile   `json:"plugins,omitempty"`
-	Generation GenerationProfile `json:"generation"`
-	Execution  ExecutionProfile  `json:"execution"`
-	Dataset    DatasetProfile    `json:"dataset"`
+	Hardware   HardwareProfile         `json:"hardware"`
+	Provider   ProviderProfile         `json:"provider"`
+	Model      ModelProfile            `json:"model"`
+	Models     map[string]ModelProfile `json:"models,omitempty"`
+	Plugins    []PluginProfile         `json:"plugins,omitempty"`
+	Generation GenerationProfile       `json:"generation"`
+	Execution  ExecutionProfile        `json:"execution"`
+	Dataset    DatasetProfile          `json:"dataset"`
 }
 
 type RunMetadata struct {

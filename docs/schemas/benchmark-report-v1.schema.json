@@ -15,7 +15,7 @@
     "scenarios"
   ],
   "properties": {
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "run_id": { "type": "string", "minLength": 1 },
     "created_at": { "type": "string", "format": "date-time" },
     "completed_at": { "type": "string", "format": "date-time" },
@@ -60,6 +60,11 @@
         "hardware": { "$ref": "#/$defs/hardware" },
         "provider": { "$ref": "#/$defs/provider" },
         "model": { "$ref": "#/$defs/model" },
+        "models": {
+          "type": "object",
+          "propertyNames": { "minLength": 1 },
+          "additionalProperties": { "$ref": "#/$defs/model" }
+        },
         "plugins": {
           "type": "array",
           "items": { "$ref": "#/$defs/plugin" }

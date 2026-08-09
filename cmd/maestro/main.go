@@ -44,12 +44,19 @@ func runBench(arguments []string, stdout io.Writer, stderr io.Writer) int {
 		printBenchUsage(stdout)
 		return 0
 	}
-	if arguments[0] != "validate" {
+	switch arguments[0] {
+	case "validate":
+		return runBenchValidate(arguments[1:], stdout, stderr)
+	case "smoke":
+		return runBenchSmoke(arguments[1:], stdout, stderr)
+	default:
 		fmt.Fprintf(stderr, "unknown bench command %q\n", arguments[0])
 		printBenchUsage(stderr)
 		return 2
 	}
+}
 
+func runBenchValidate(arguments []string, stdout io.Writer, stderr io.Writer) int {
 	flags := flag.NewFlagSet("maestro bench validate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	manifestPath := flags.String(
@@ -57,7 +64,7 @@ func runBench(arguments []string, stdout io.Writer, stderr io.Writer) int {
 		"docs/provider-smoke-benchmark-manifest.yaml",
 		"path to the benchmark manifest",
 	)
-	if err := flags.Parse(arguments[1:]); err != nil {
+	if err := flags.Parse(arguments); err != nil {
 		if err == flag.ErrHelp {
 			return 0
 		}
@@ -92,5 +99,6 @@ func printBenchUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "usage: maestro bench <command>")
 	fmt.Fprintln(writer)
 	fmt.Fprintln(writer, "commands:")
+	fmt.Fprintln(writer, "  smoke     execute the live provider smoke matrix")
 	fmt.Fprintln(writer, "  validate  validate a versioned benchmark manifest")
 }

@@ -281,7 +281,7 @@ di chiusura della Milestone 2.
 
 # Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fase 1 completata
+Stato: In corso — Fasi 1–2 completate
 
 Obiettivo:
 

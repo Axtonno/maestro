@@ -116,7 +116,8 @@ L'ordine degli aggregati è deterministico.
 
 # Report JSON
 
-La versione iniziale dello schema è `1.0.0`. Il contratto completo è pubblicato
+La versione iniziale dello schema era `1.0.0`. La Fase 2 lo estende in modo
+additivo a `1.1.0` con profili modello per ruolo. Il contratto corrente è pubblicato
 in:
 
 ```text
