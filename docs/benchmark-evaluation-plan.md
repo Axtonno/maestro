@@ -310,6 +310,10 @@ passed, 1 skipped e 0 failed: il gate live Ollama è verde. La milestone resta
 aperta fino a una decisione esplicita. `qwen2.5-coder:7b` resta il caso negativo
 documentato e `llama3.1:8b` la fixture positiva.
 
+Il gate Ollama non richiede ulteriori modelli. La prossima matrice live riguarda
+llama.cpp e dovrebbe usare, se disponibile, lo stesso modello base Llama 3.1
+per rendere il confronto principalmente un confronto tra runtime.
+
 ---
 
 # Output della milestone

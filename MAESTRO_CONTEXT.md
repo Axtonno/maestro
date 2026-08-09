@@ -1049,7 +1049,9 @@ Validazione live Ollama del 2026-08-09:
 * gate deterministico, race detector, vet e tre manifest superati;
 * report in `docs/reports/milestone-3-live-ollama-validation.md`.
 
-La Milestone 3 resta aperta fino a una run Smoke live senza scenari failed.
+La run Smoke live senza scenari failed è stata ottenuta con la fixture positiva
+`llama3.1:8b`; la Milestone 3 resta aperta per la successiva matrice llama.cpp e
+fino a una decisione esplicita di completamento.
 
 La seconda fixture `llama3.1:8b` supera la prova diretta: non-stream restituisce
 una tool call nativa e lo stream la emette nel primo chunk, seguito da un chunk
@@ -1062,6 +1064,26 @@ post-correzione produce 13 passed, 1 skipped e 0 failed: il gate live Ollama è
 verde. `qwen2.5-coder:7b` resta il caso negativo documentato e
 `llama3.1:8b` la fixture positiva. La Milestone 3 resta comunque in corso e non
 viene chiusa automaticamente.
+
+Decisione fixture del gate Ollama:
+
+* `llama3.1:8b` è la fixture positiva validata per chat, streaming, structured
+  output JSON e JSON Schema, lifecycle, tool calling non-stream e tool calling
+  stream dopo la normalizzazione Maestro;
+* `embeddinggemma:latest` è la fixture embedding validata nella stessa
+  configurazione live;
+* `qwen2.5-coder:7b` è il caso negativo canonico: Ollama dichiara `tools`, il
+  modello comprende semanticamente la richiesta, ma serializza la chiamata nel
+  contenuto o non la espone come `message.tool_calls`; la capability non è
+  validata operativamente con runtime e template Ollama correnti;
+* `tool_stream_terminal_missing` con `llama3.1:8b` era un difetto di
+  normalizzazione dell'adapter Maestro, ora corretto e coperto da regressioni;
+* il gate live Ollama è superato e la relativa documentazione è conclusa;
+* non servono altre fixture Ollama per questo gate.
+
+Il prossimo passo della Milestone 3 è replicare la matrice live su llama.cpp,
+idealmente usando lo stesso modello base Llama 3.1 per isolare la differenza tra
+runtime e modello.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.

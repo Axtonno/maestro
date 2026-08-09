@@ -331,6 +331,10 @@ Ollama in un terminale `tool_calls`. `llama3.1:8b` non è un secondo caso
 negativo del modello: è la fixture positiva che espone un'incompatibilità tra
 la terminazione Ollama e il contratto/gate Maestro.
 
+Il failure `tool_stream_terminal_missing` osservato in questa run era quindi un
+difetto di normalizzazione dell'adapter Maestro, non un limite operativo di
+`llama3.1:8b`. La correzione descritta di seguito lo risolve.
+
 ## Correzione dell'adapter Ollama
 
 La correzione mantiene invariati benchmark e contratto neutrale:
@@ -388,6 +392,41 @@ disabilitata.
 `qwen2.5-coder:7b` resta il caso negativo documentato;
 `llama3.1:8b` è la fixture positiva del gate live Ollama.
 
+## Decisione sulle fixture Ollama
+
+`llama3.1:8b` è registrato come fixture positiva live validata per:
+
+| Area | Fixture | Stato |
+|---|---|---|
+| Chat | `llama3.1:8b` | Validata |
+| Streaming | `llama3.1:8b` | Validata |
+| Structured output JSON | `llama3.1:8b` | Validata |
+| Structured output JSON Schema | `llama3.1:8b` | Validata |
+| Embedding | `embeddinggemma:latest` | Validata nella stessa configurazione |
+| Lifecycle | `llama3.1:8b` | Validata |
+| Tool calling non-stream | `llama3.1:8b` | Validata |
+| Tool calling stream | `llama3.1:8b` | Validata dopo normalizzazione Maestro |
+
+`qwen2.5-coder:7b` è conservato come caso negativo canonico:
+
+- Ollama dichiara la capability `tools`;
+- il modello comprende semanticamente la richiesta;
+- la chiamata viene serializzata in `message.content` oppure non viene emessa
+  come `message.tool_calls`;
+- la capability tools non è quindi validata operativamente con la versione e
+  il template Ollama correnti.
+
+La classificazione finale separa tre fenomeni distinti:
+
+1. capability dichiarata ma non operativa: `qwen2.5-coder:7b`;
+2. capability realmente operativa: `llama3.1:8b`;
+3. difetto dell'adapter: normalizzazione del terminale tool-call streaming,
+   corretto e coperto da regressioni.
+
+Non occorre cercare altre fixture Ollama per questo gate. Il prossimo passo è
+replicare la matrice live su llama.cpp, idealmente con lo stesso modello base di
+Llama 3.1 per ridurre la variabile modello e isolare le differenze di runtime.
+
 ---
 
 # Gate deterministico
@@ -418,6 +457,9 @@ Questo risultato non chiude automaticamente l'intera Milestone 3. La milestone
 resta **in corso — non chiusa** in attesa della successiva decisione esplicita
 di completamento. `qwen2.5-coder:7b` resta il caso negativo documentato e
 `llama3.1:8b` la fixture positiva.
+
+La documentazione del gate Ollama è conclusa; il successivo gate operativo
+della milestone è la matrice llama.cpp.
 
 L'unico skip acquisition resta accettabile finché la mutation guard non è
 abilitata esplicitamente.

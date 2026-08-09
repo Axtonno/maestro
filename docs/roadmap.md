@@ -351,6 +351,10 @@ Milestone 3 resta aperta fino a una decisione esplicita di completamento.
 `qwen2.5-coder:7b` resta il caso negativo documentato e `llama3.1:8b` la fixture
 positiva.
 
+La documentazione del gate Ollama è conclusa. La prossima verifica live della
+Milestone 3 è la matrice llama.cpp, idealmente con lo stesso modello base Llama
+3.1 per isolare le differenze del runtime dalla variabile modello.
+
 ---
 
 # Milestone 4 — Gestor
