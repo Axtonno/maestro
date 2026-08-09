@@ -1,8 +1,8 @@
 # Gestor — Design iniziale
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Draft iniziale — Milestone 4 aperta
+Stato: Contratto Fase 1 approvato — Milestone 4 aperta
 
 Data: 2026-08-09
 
@@ -141,7 +141,8 @@ La presenza di un descriptor nel Registry significa soltanto che la capability
 | `available` | verificata per il target e lo scope indicati |
 | `unavailable` | verificata come non disponibile per quel target e scope |
 
-Ogni descriptor conserva inoltre la sorgente e la generazione dello snapshot.
+Ogni descriptor conserva inoltre la sorgente. La generazione appartiene allo
+`SnapshotMetadata`, non viene duplicata su ogni descriptor.
 Timestamp o scadenza dell'evidenza potranno essere aggiunti quando esisterà una
 policy reale di refresh; non fanno parte del primo contratto.
 
@@ -159,12 +160,24 @@ type Descriptor struct {
     Target      Target
     Availability Availability
     Source      SourceID
-    Generation  uint64
 }
 ```
 
-Il frammento è illustrativo. Nomi e package pubblici saranno stabilizzati nel
-primo incremento e registrati in un ADR prima dell'esposizione.
+Questa forma è il contratto approvato in ADR-0022. `CapabilityID`, `SourceID`,
+`Target`, `Availability`, `Descriptor`, `Query`, `Snapshot`, `Resolution` e le
+interfacce minime appartengono a `pkg/gestor`. Le traduzioni dai tipi Runtime e
+Provider restano in `internal/gestor`.
+
+Gli identificatori sono comparabili per uguaglianza esatta e ordinati in modo
+lessicografico. La validazione non corregge o normalizza input: valori vuoti,
+namespace invalidi e whitespace ai bordi vengono rifiutati.
+
+## Immutabilità dei value object
+
+`NewQuery`, `NewSnapshot` e `NewResolution` acquisiscono copie delle slice.
+Getter di preferenze, descriptor, sorgenti e dependency plan restituiscono
+sempre copie difensive. `SnapshotMetadata` contiene generazione, stato current,
+numero di descriptor e sorgenti ordinate; non espone mappe o backing slice.
 
 ---
 
@@ -307,7 +320,7 @@ impliciti.
 
 # Errori e diagnostica
 
-Il contratto distinguerà almeno:
+Il contratto distingue almeno:
 
 | Errore | Significato |
 |---|---|
@@ -337,9 +350,9 @@ contenuti operativi sensibili.
 
 ---
 
-# Contratti iniziali proposti
+# Contratti pubblici approvati
 
-La forma concettuale è:
+La forma pubblica minima è:
 
 ```go
 type Source interface {
@@ -350,6 +363,7 @@ type Source interface {
 type Registry interface {
     RegisterSource(Source) error
     Refresh(context.Context) error
+    Invalidate()
     Snapshot() Snapshot
 }
 
@@ -359,10 +373,9 @@ type Resolver interface {
 }
 ```
 
-Le interfacce pubbliche definitive verranno introdotte solo dove esistono
-almeno due implementazioni o un confine di consumo reale. Implementazione e
-contratti resteranno separati in `internal/gestor` e nell'eventuale package
-pubblico minimale.
+`Source` è il confine di estensione, `Registry` espone deliberatamente refresh e
+invalidazione espliciti, e `Resolver` consuma soltanto query validate. Le
+implementazioni concrete resteranno in `internal/gestor`.
 
 ---
 
@@ -442,16 +455,16 @@ La Milestone 4 richiederà almeno:
 
 ---
 
-# Domande da chiudere nella Fase 1
+# Decisioni chiuse nella Fase 1
 
-1. Quale parte dei contratti deve essere pubblica in `pkg/gestor`?
-2. Come viene rappresentata in configurazione una lista di preferenze per
-   capability?
-3. La prima versione espone `Refresh` direttamente o soltanto attraverso il
-   Runtime composition root?
-4. Qual è il confine minimo della vista read-only del dependency graph?
-5. Quali eventi devono essere pubblici e quali restare diagnostica interna?
-
-Queste domande non cambiano le decisioni di proprietà: Gestor indicizza e
-risolve, il Runtime possiede grafo e lifecycle, i Runtime specializzati
-possiedono registrazione e invocazione dei rispettivi soggetti.
+1. Il modello di dominio e i tre confini di consumo sono pubblici in
+   `pkg/gestor`; mapping e implementazioni restano interni.
+2. Le preferenze sono target esatti e ordinati in `QueryOptions`. Non esiste
+   ancora configurazione globale; una configurazione futura dovrà tradursi
+   nello stesso valore esplicito.
+3. `Refresh` e `Invalidate` sono esposti dal `Registry`; il composition root ne
+   coordinerà la policy iniziale nella Fase 5.
+4. La vista del dependency graph è soltanto interna e read-only. Il confine
+   concreto sarà aggiunto in Fase 4 senza esporre `internal/runtime.graph`.
+5. I topic stabili verranno esposti con il wiring della Fase 5; cause, dettagli
+   di introspection e diagnostica sensibile resteranno interni e redatti.

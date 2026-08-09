@@ -1125,7 +1125,7 @@ Engine 6, Agent System 7 ed Ecosistema 8.
 
 ## Milestone 4 — Gestor
 
-Stato: avviata — design iniziale.
+Stato: in corso — Fase 1 completata.
 
 Il documento `docs/gestor-design.md` apre formalmente la milestone.
 Il piano operativo è in `docs/gestor-development-plan.md`.
@@ -1148,8 +1148,8 @@ sources, resolver con dependency graph, composition root e osservabilità.
 
 Stato delle fasi:
 
-1. Contratti, modello di dominio e ADR-0022 — pronta;
-2. Snapshot Registry — pianificata;
+1. Contratti, modello di dominio e ADR-0022 — completata;
+2. Snapshot Registry — pronta;
 3. Discovery sources Runtime e Provider — pianificata;
 4. Resolver e dependency graph — pianificata;
 5. Composition root, osservabilità e gate finale — pianificata.
@@ -1157,3 +1157,30 @@ Stato delle fasi:
 Ogni fase deve produrre un report in `docs/reports/`; la Fase 5 produce anche
 `docs/reports/milestone-4-final.md`. Nessuna fase viene dichiarata completata
 senza i test e i deliverable obbligatori descritti nel piano.
+
+### Fase 1 — Contratti, modello di dominio e ADR
+
+Completata nei package:
+
+```text
+pkg/gestor
+internal/gestor
+```
+
+Sono disponibili:
+
+* ID namespaced validati e ordinabili per capability e source;
+* target `component` e `provider` con scope esplicito;
+* availability `unknown`, `available` e `unavailable` separata dalla
+  dichiarazione;
+* descriptor, query, snapshot metadata e resolution immutabili tramite copie
+  difensive;
+* preferenze esatte e ordinate senza ranking implicito;
+* sentinel compatibili con `errors.Is`;
+* contratti pubblici minimi `Source`, `Registry` e `Resolver`;
+* mapping interno esaustivo delle capability Runtime e Provider note;
+* ADR-0022 Accepted.
+
+La generazione appartiene allo snapshot e non viene duplicata nei descriptor.
+Registry e Resolver concreti non sono ancora implementati: appartengono alle
+Fasi 2 e 4.

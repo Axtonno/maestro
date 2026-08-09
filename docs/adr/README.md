@@ -18,3 +18,4 @@
 - [ADR-0019 – Scoped Optional Resource Sampling and Controlled Runtime Faults](ADR-0019.md)
 - [ADR-0020 – Embedded Developer Dataset and Non-LLM Transparent Rubrics](ADR-0020.md)
 - [ADR-0021 – Canonical JSON, Deterministic Markdown and Declarative Hardware Metadata](ADR-0021.md)
+- [ADR-0022 – Immutable Public Gestor Contracts and Internal Domain Adapters](ADR-0022.md)

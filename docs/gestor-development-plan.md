@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Approvato per l'avvio
+Stato: In corso — Fase 1 completata, Fase 2 pronta
 
 Data: 2026-08-09
 
@@ -24,10 +24,10 @@ discovery remota o un secondo grafo.
 
 # Sequenza delle fasi
 
-| Fase | Titolo | Stato iniziale | Dipende da |
+| Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | Contratti, modello di dominio e ADR | Pronta | Design iniziale |
-| 2 | Snapshot Registry | Pianificata | Fase 1 |
+| 1 | Contratti, modello di dominio e ADR | Completata | Design iniziale |
+| 2 | Snapshot Registry | Pronta | Fase 1 |
 | 3 | Discovery sources | Pianificata | Fase 2 |
 | 4 | Resolver e dependency graph | Pianificata | Fasi 2–3 |
 | 5 | Composition root, osservabilità e gate finale | Pianificata | Fasi 1–4 |
