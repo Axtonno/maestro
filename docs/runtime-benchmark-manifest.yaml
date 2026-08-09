@@ -1,0 +1,93 @@
+version: 1
+owner: milestone-3-runtime-benchmark
+source_milestone: benchmark-evaluation-layer
+report_redaction:
+  exclude:
+    - prompts
+    - responses
+    - tool_arguments
+    - tool_results
+    - credentials
+    - user_paths
+
+providers:
+  ollama:
+    required_environment:
+      - MAESTRO_OLLAMA_BASE_URL
+    model_environment:
+      chat: MAESTRO_OLLAMA_CHAT_MODEL
+      embedding: MAESTRO_OLLAMA_EMBED_MODEL
+      lifecycle: MAESTRO_OLLAMA_LIFECYCLE_MODEL
+      acquisition_fixture: MAESTRO_OLLAMA_ACQUISITION_MODEL
+    optional_environment:
+      - MAESTRO_ALLOW_CATALOG_MUTATION
+    version_sensitive_limits:
+      - resource attribution requires an explicit provider PID
+      - lifecycle support depends on the configured Ollama endpoint and model
+  llama.cpp:
+    required_environment:
+      - MAESTRO_LLAMACPP_BASE_URL
+    model_environment:
+      chat: MAESTRO_LLAMACPP_CHAT_MODEL
+      embedding: MAESTRO_LLAMACPP_EMBED_MODEL
+      lifecycle: MAESTRO_LLAMACPP_LIFECYCLE_MODEL
+      acquisition_fixture: MAESTRO_LLAMACPP_ACQUISITION_MODEL
+    optional_environment:
+      - MAESTRO_LLAMACPP_API_KEY
+      - MAESTRO_ALLOW_CATALOG_MUTATION
+    version_sensitive_limits:
+      - resource attribution requires an explicit provider PID
+      - lifecycle and acquisition require llama.cpp router mode
+
+scenarios:
+  - id: provider-capability-latency
+    capability: capability_introspection
+    model_role: none
+    cleanup: none
+  - id: provider-catalog-latency
+    capability: model_discovery
+    model_role: none
+    cleanup: none
+  - id: provider-retry-controlled
+    capability: completion
+    model_role: chat
+    cleanup: reset_runtime_policy
+  - id: provider-circuit-breaker
+    capability: completion
+    model_role: chat
+    cleanup: reset_runtime_policy
+  - id: model-completion-latency
+    capability: completion
+    model_role: chat
+    cleanup: none
+  - id: model-stream-performance
+    capability: streaming
+    model_role: chat
+    cleanup: close_stream
+  - id: model-stream-cancellation
+    capability: streaming
+    model_role: chat
+    cleanup: cancel_context_and_close_stream
+  - id: model-embedding-performance
+    capability: embedding
+    model_role: embedding
+    cleanup: none
+  - id: model-lifecycle-load-unload
+    capability: model_load
+    model_role: lifecycle
+    cleanup: unload_fixture_model
+  - id: model-cold-warm
+    capability: completion
+    model_role: lifecycle
+    cleanup: unload_fixture_model
+  - id: model-pull-cancellation
+    capability: model_pull
+    model_role: acquisition_fixture
+    mutation_guard: MAESTRO_ALLOW_CATALOG_MUTATION=true
+    cleanup: remove_fixture_model
+
+result_states:
+  - passed
+  - failed
+  - skipped
+  - unsupported

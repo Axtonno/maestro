@@ -164,6 +164,12 @@ quattordici scenari per Ollama o llama.cpp con capability preflight, modelli per
 ruolo, mutation guard, cleanup e report JSON atomico. In assenza di provider
 configurato produce risultati `skipped` senza I/O implicito.
 
+La Fase 3 è completata: `maestro bench provider` misura introspection, catalogo,
+retry e circuit breaker; `maestro bench model` misura completion, TTFT,
+throughput, cancellazione, embedding, lifecycle e cold/warm. Su Linux CPU e RAM
+sono raccolte con scope di processo esplicito; metriche non osservabili, inclusa
+la VRAM, restano assenti.
+
 La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
 compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
 cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin

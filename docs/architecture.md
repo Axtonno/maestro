@@ -182,6 +182,12 @@ usa introspection prima delle operazioni live e affida al runner ogni cleanup.
 Mutation guard e fixture ownership impediscono rimozioni implicite di modelli
 preesistenti. La matrice è descritta in `smoke-benchmark.md` e ADR-0018.
 
+Il Runtime Benchmark separa scenari provider e modello. Latenze e throughput
+sono misurati attorno alle API pubbliche; retry e circuit breaker usano fault
+transienti controllati; CPU e RAM sono opzionali e dichiarano sempre processo e
+metodo di raccolta. Lifecycle e cold/warm non lasciano policy di residency
+installate. Le decisioni sono descritte in `benchmark-runtime.md` e ADR-0019.
+
 ---
 
 ## Gestor

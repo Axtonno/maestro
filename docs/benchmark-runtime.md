@@ -1,8 +1,8 @@
 # Maestro Benchmark Runtime
 
-Versione: 0.1.0
+Versione: 0.3.0
 
-Stato: Fase 1 implementata
+Stato: Fasi 1–3 implementate
 
 Ultimo aggiornamento: 2026-08-09
 
@@ -156,31 +156,112 @@ command line completa.
 
 ---
 
-# CLI della Fase 1
+# CLI
 
 La base dei subcommand è disponibile attraverso:
 
 ```text
 maestro bench --help
 maestro bench validate --manifest docs/provider-smoke-benchmark-manifest.yaml
+maestro bench provider --provider ollama
+maestro bench model --provider ollama
 ```
 
 `validate` restituisce `0` per un manifest valido, `1` per un manifest non
 caricabile o invalido e `2` per un uso non valido della CLI.
 
-I comandi live `smoke`, `provider`, `model` e `laravel` vengono aggiunti nelle
-rispettive fasi della milestone.
+`provider` seleziona dal manifest soltanto introspection, catalogo, retry e
+circuit breaker. `model` seleziona completion, streaming, cancellazione,
+embedding, lifecycle, cold/warm e cancellazione del pull. Entrambi producono lo
+stesso report JSON versionato e supportano output atomico su file.
+
+Il manifest Runtime è:
+
+```text
+docs/runtime-benchmark-manifest.yaml
+```
+
+Per ottenere il p95 occorre configurare almeno 20 run misurate:
+
+```text
+maestro bench model --warmup 2 --runs 20 --output model-report.json
+```
+
+I default sono un warmup, cinque run, timeout di cinque minuti e cleanup di
+trenta secondi. Una run non configurata non tenta connessioni implicite a
+localhost: gli scenari risultano `skipped`.
 
 ---
 
-# Limiti della Fase 1
+# Runtime Benchmark della Fase 3
 
-La prima fase non include:
+## Scenari provider
 
-- esecuzione live di Ollama o llama.cpp;
-- raccolta di CPU, RAM o VRAM;
-- misure di streaming ed embedding;
+| Scenario | Misure principali |
+|---|---|
+| `provider-capability-latency` | latenza e numero di capability |
+| `provider-catalog-latency` | latenza listing/discovery e cardinalità |
+| `provider-retry-controlled` | latenza di recupero, tentativi e retry |
+| `provider-circuit-breaker` | tempo di apertura e chiamate bloccate |
+
+Retry e circuit breaker usano un wrapper interno che inietta soltanto errori
+transienti controllati. Il retry delega il secondo tentativo al provider live;
+il circuit breaker verifica che la chiamata successiva venga bloccata dal
+Runtime senza raggiungere l'adapter. Policy e fault mode vengono ripristinati
+nel cleanup di ogni iterazione.
+
+## Scenari modello
+
+| Scenario | Misure principali |
+|---|---|
+| `model-completion-latency` | latenza totale e token dichiarati |
+| `model-stream-performance` | TTFT, latenza totale, chunk e token/sec quando disponibili |
+| `model-stream-cancellation` | latenza di cancellazione |
+| `model-embedding-performance` | latenza, batch, dimensione ed embedding/sec |
+| `model-lifecycle-load-unload` | latenza di load e unload |
+| `model-cold-warm` | prima completion dopo unload e completion warm |
+| `model-pull-cancellation` | latenza di cancellazione del download |
+
+Il throughput generativo viene emesso soltanto quando lo stream espone usage
+provider-reported. Il lifecycle usa le capability pubbliche load/unload: non
+installa policy di residency che il Runtime non potrebbe eliminare a fine run.
+
+## Risorse e perimetro
+
+Su Linux il sampler procfs raccoglie, quando leggibili:
+
+- `peak_memory_mb`;
+- `cpu_avg_percent`;
+- `cpu_peak_percent`.
+
+Per default il perimetro è `maestro_process`. Passando `--provider-pid PID` il
+perimetro diventa `provider_process`. Metodo e scope sono registrati su ogni
+misura. Su altri sistemi le misure vengono omesse. La VRAM non viene stimata né
+rappresentata come zero, perché non è disponibile un'origine portabile e
+attribuibile senza strumenti esterni.
+
+## Sicurezza del pull cancellato
+
+`model-pull-cancellation` richiede contemporaneamente:
+
+- `MAESTRO_ALLOW_CATALOG_MUTATION=true`;
+- un modello `acquisition_fixture` esplicito;
+- fixture assente dal catalogo prima della run;
+- supporto a discovery, pull e remove.
+
+Il cleanup chiude lo stream e rimuove soltanto la fixture di cui la run ha
+acquisito ownership.
+
+---
+
+# Limiti correnti
+
+Il Runtime Benchmark non include:
+
 - dataset PHP/Laravel;
+- raccolta VRAM portabile;
+- sampler di sistema per macOS o Windows;
 - rendering Markdown.
 
-Questi incrementi appartengono alle Fasi 2–5.
+Dataset e valutazione qualitativa appartengono alla Fase 4; il rendering
+Markdown appartiene alla Fase 5.

@@ -963,7 +963,7 @@ Stato: Superato.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fasi 1–2 completate.
+Stato: In corso — Fasi 1–3 completate.
 
 La Fase 1 — Benchmark Contracts & Runner consegna:
 
@@ -989,6 +989,19 @@ La Fase 2 — Smoke Benchmark consegna:
 * documentazione in `docs/smoke-benchmark.md`;
 * report finale in `docs/reports/milestone-3-phase-2.md`;
 * ADR-0018 per matrice live esplicita e mutation-safe.
+
+La Fase 3 — Runtime Benchmark consegna:
+
+* manifest Runtime con scenari provider e modello separati;
+* comandi `maestro bench provider` e `maestro bench model`;
+* latenza completion, TTFT e throughput stream quando l'usage è disponibile;
+* cancellazione misurata di generazione e pull;
+* embedding batch, lifecycle load/unload e confronto cold/warm;
+* retry e circuit breaker attraverso fault transitori controllati;
+* sampler Linux opzionale per CPU e RAM con scope di processo dichiarato;
+* assenza esplicita di metriche non osservabili, inclusa la VRAM;
+* documentazione e report finale in `docs/reports/milestone-3-phase-3.md`;
+* ADR-0019 per sampling scoped e fault controllati.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.
