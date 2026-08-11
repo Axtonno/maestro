@@ -19,3 +19,4 @@
 - [ADR-0020 – Embedded Developer Dataset and Non-LLM Transparent Rubrics](ADR-0020.md)
 - [ADR-0021 – Canonical JSON, Deterministic Markdown and Declarative Hardware Metadata](ADR-0021.md)
 - [ADR-0022 – Immutable Public Gestor Contracts and Internal Domain Adapters](ADR-0022.md)
+- [ADR-0023 – Pre-Start Trusted In-Process Plugin System with Core-Owned Lifecycle](ADR-0023.md)

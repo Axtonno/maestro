@@ -37,6 +37,9 @@ Completati:
 * smoke-benchmark.md
 * plugin-runtime.md
 * laravel-plugin.md
+* plugin-system-design.md
+* plugin-system-development-plan.md
+* plugin-api-compatibility-audit.md
 
 ---
 
@@ -1310,7 +1313,7 @@ llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.
 
 ## Milestone 5 — Plugin System
 
-Stato: in corso — Fase 1 avviata; baseline Plugin Runtime disponibile.
+Stato: in corso — Fase 1 completata; Fase 2 pronta.
 
 Il design iniziale è definito in `docs/plugin-system-design.md` e il piano
 operativo in `docs/plugin-system-development-plan.md`.
@@ -1321,7 +1324,7 @@ sandbox, permission model o plugin di terze parti.
 
 Le cinque fasi previste sono:
 
-1. contratti, audit della baseline e ADR-0023;
+1. contratti, audit della baseline e ADR-0023 — completata;
 2. catalogo, registry e caricamento;
 3. lifecycle, dependency graph e Gestor;
 4. Laravel reference plugin;
@@ -1330,3 +1333,30 @@ Le cinque fasi previste sono:
 Ogni fase produce un report in `docs/reports/`; la Fase 5 produce anche
 `docs/reports/milestone-5-final.md`. Il codice plugin esistente è considerato
 una baseline da verificare e non rende automaticamente completate le fasi.
+
+### Fase 1 — Contratti, audit della baseline e ADR-0023
+
+Completata in:
+
+```text
+pkg/plugin
+internal/plugin
+docs/adr/ADR-0023.md
+docs/plugin-api-compatibility-audit.md
+```
+
+L'audit conferma senza modifiche breaking `Plugin`, `Manifest`, `Loader`,
+`LoaderFunc`, `Runtime`, eventi, sentinel e facade Laravel. Available indica il
+catalogo, registered il registry, loaded un'operazione riuscita e running lo
+stato posseduto dal Runtime Core. Non viene introdotto uno stato plugin
+parallelo.
+
+ADR-0023 stabilisce modello trusted in-process, registrazione pre-start,
+ownership globale di graph/stato/lifecycle e discovery Gestor attraverso il
+Registry componenti. Descriptor di catalogo e contratto workspace generico non
+vengono introdotti senza un consumer concreto.
+
+Sono stati aggiunti commenti pubblici ai sentinel, assertion di compilazione e
+regressioni sulla compatibilità esatta del manifest. Suite completa, race
+detector e vet sono verdi. Il report è disponibile in
+`docs/reports/milestone-5-phase-1.md`.

@@ -7,6 +7,10 @@ import (
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
+var _ Plugin = (*typeTestPlugin)(nil)
+var _ Loader = LoaderFunc(nil)
+var _ pkgRuntime.Event = Event{}
+
 type typeTestPlugin struct{}
 
 func (p *typeTestPlugin) Metadata() pkgRuntime.Metadata {
@@ -29,6 +33,12 @@ func TestLoaderFunc(t *testing.T) {
 	}
 	if got != want {
 		t.Fatal("loader function returned an unexpected plugin")
+	}
+}
+
+func TestRuntimeAPIVersionIsStableAndNonEmpty(t *testing.T) {
+	if RuntimeAPIVersion != "1" {
+		t.Fatalf("expected Runtime API version 1, got %q", RuntimeAPIVersion)
 	}
 }
 

@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fase 1 avviata
+Stato: In corso — Fase 1 completata; Fase 2 pronta
 
 Data: 2026-08-11
 
@@ -26,7 +26,7 @@ lifecycle.
 
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | Contratti, audit della baseline e ADR-0023 | In corso | Design iniziale |
+| 1 | Contratti, audit della baseline e ADR-0023 | Completata | Design iniziale |
 | 2 | Catalogo, registry e caricamento | Pianificata | Fase 1 |
 | 3 | Lifecycle, dependency graph e Gestor | Pianificata | Fasi 1–2 |
 | 4 | Laravel reference plugin | Pianificata | Fasi 1–3 |
@@ -222,8 +222,9 @@ successive.
 - auditare configurazione, normalizzazione della root e limiti di lettura;
 - stabilizzare la vista delle informazioni rilevate nel workspace;
 - dichiarare una capability workspace namespaced coerente con Gestor;
-- decidere e implementare l'eventuale contratto pubblico framework-neutral
-  approvato nella Fase 1;
+- applicare la decisione di Fase 1: mantenere la facade Laravel concreta e non
+  introdurre un contratto workspace framework-neutral senza il consumer del
+  Context Engine;
 - mantenere detection in `Initialize` e verifica ripetibile in `Health`;
 - testare accessi concorrenti allo snapshot rilevato;
 - allineare facade pubblica e implementazione interna;

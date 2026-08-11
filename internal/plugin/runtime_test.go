@@ -167,7 +167,18 @@ func TestRuntimeValidatesPluginManifest(t *testing.T) {
 		t.Fatalf("expected ErrIncompatible, got %v", err)
 	}
 
-	if pluginRuntime.Has("missing-version") || pluginRuntime.Has("incompatible") {
+	whitespace := newTestPlugin("whitespace-version")
+	whitespace.manifest.RuntimeAPIVersion = " 1"
+	if err := pluginRuntime.Register(whitespace); !errors.Is(
+		err,
+		pkgPlugin.ErrIncompatible,
+	) {
+		t.Fatalf("expected exact version mismatch, got %v", err)
+	}
+
+	if pluginRuntime.Has("missing-version") ||
+		pluginRuntime.Has("incompatible") ||
+		pluginRuntime.Has("whitespace-version") {
 		t.Fatal("plugin with invalid manifest was indexed")
 	}
 }

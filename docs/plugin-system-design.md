@@ -1,8 +1,8 @@
 # Milestone 5 — Plugin System Design
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Draft iniziale
+Stato: Approvato — ADR-0023 Accepted
 
 Data: 2026-08-11
 
@@ -233,7 +233,7 @@ coinvolti e `go vet ./...`.
 
 ---
 
-# Decisioni da formalizzare in ADR-0023
+# Decisioni formalizzate in ADR-0023
 
 - il Plugin System della Milestone 5 resta trusted in-process;
 - catalogo, registry e stato operativo sono tre viste distinte;
@@ -244,4 +244,5 @@ coinvolti e `go vet ./...`.
 - l'evoluzione delle API è additiva salvo una motivazione esplicita emersa
   dall'audit.
 
-Il piano operativo è descritto in `plugin-system-development-plan.md`.
+ADR-0023 è Accepted. Il piano operativo è descritto in
+`plugin-system-development-plan.md`.

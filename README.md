@@ -75,6 +75,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 27. `laravel-plugin.md`
 28. `plugin-system-design.md`
 29. `plugin-system-development-plan.md`
+30. `plugin-api-compatibility-audit.md`
 
 ---
 
@@ -214,10 +215,11 @@ espliciti; più candidati senza preferenza producono ambiguity e nessun ordine
 lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
 sull'Event Bus condiviso.
 
-La Milestone 5 — Plugin System è avviata. La baseline trusted in-process viene
-consolidata in cinque fasi: contratti e ADR, catalogo e caricamento, integrazione
-con lifecycle e Gestor, Laravel come reference plugin, hardening e gate finale.
-Packaging esterno, sandbox e plugin di terze parti restano fuori scope.
+La Milestone 5 — Plugin System è in corso. La Fase 1 è completata: ADR-0023 e
+l'audit di compatibilità confermano le API esistenti, distinguono catalogo,
+registry, operazione di load e stato runtime e non introducono contratti
+prematuri. La Fase 2 — catalogo, registry e caricamento — è pronta. Packaging
+esterno, sandbox e plugin di terze parti restano fuori scope.
 
 Uso essenziale:
 

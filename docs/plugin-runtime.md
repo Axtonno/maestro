@@ -57,6 +57,21 @@ Le operazioni riuscite pubblicano sullo stesso Event Bus del Runtime:
 
 Il payload pubblico contiene ID e, quando disponibile, l'istanza plugin.
 
+## Terminologia operativa
+
+Il Plugin System distingue quattro concetti:
+
+* `Available` indica che nel catalogo esiste un loader per l'ID;
+* `Registered` e `Has` indicano che un'istanza è registrata anche nel Runtime
+  Core;
+* `plugin.loaded` indica che una singola operazione di factory e registrazione
+  è riuscita;
+* lo stato running appartiene esclusivamente allo `StateManager` globale.
+
+Loaded non è uno stato persistente e `Load` non esegue il lifecycle. Il plugin
+deve essere caricato o registrato prima di `Runtime.Start`; registrazione durante
+startup, esecuzione o shutdown viene rifiutata dal Runtime Core.
+
 ---
 
 # Loader e caricamento
@@ -105,6 +120,10 @@ fidato già collegato all'applicazione.
 Shared object, download, firme, sandbox, process isolation, permission model,
 unload e hot replacement sono livelli di distribuzione e sicurezza successivi;
 non modificano il contratto di registry e lifecycle completato in questa fase.
+
+Le decisioni di stabilizzazione della Milestone 5 sono formalizzate in
+`docs/adr/ADR-0023.md`; la matrice pubblica è disponibile in
+`docs/plugin-api-compatibility-audit.md`.
 
 ---
 

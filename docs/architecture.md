@@ -259,7 +259,8 @@ Distribuzione di artefatti esterni e isolamento sono livelli successivi.
 La Milestone 5 consolida questa baseline attraverso audit dei contratti,
 hardening concorrente, integrazione Gestor e Laravel come reference plugin. Il
 design e i gate operativi sono descritti in `plugin-system-design.md` e
-`plugin-system-development-plan.md`.
+`plugin-system-development-plan.md`; ADR-0023 stabilizza ownership e semantica
+pre-start.
 
 Esempi:
 
