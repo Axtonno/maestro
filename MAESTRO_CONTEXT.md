@@ -1313,7 +1313,7 @@ llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.
 
 ## Milestone 5 — Plugin System
 
-Stato: in corso — Fase 1 completata; Fase 2 pronta.
+Stato: in corso — Fasi 1–2 completate; Fase 3 pronta.
 
 Il design iniziale è definito in `docs/plugin-system-design.md` e il piano
 operativo in `docs/plugin-system-development-plan.md`.
@@ -1325,7 +1325,7 @@ sandbox, permission model o plugin di terze parti.
 Le cinque fasi previste sono:
 
 1. contratti, audit della baseline e ADR-0023 — completata;
-2. catalogo, registry e caricamento;
+2. catalogo, registry e caricamento — completata;
 3. lifecycle, dependency graph e Gestor;
 4. Laravel reference plugin;
 5. osservabilità, hardening e gate finale.
@@ -1360,3 +1360,23 @@ Sono stati aggiunti commenti pubblici ai sentinel, assertion di compilazione e
 regressioni sulla compatibilità esatta del manifest. Suite completa, race
 detector e vet sono verdi. Il report è disponibile in
 `docs/reports/milestone-5-phase-1.md`.
+
+### Fase 2 — Catalogo, registry e caricamento
+
+Completata in:
+
+```text
+pkg/plugin
+internal/plugin
+```
+
+Le firme pubbliche restano invariate. Il contratto ora esplicita che ogni
+`Load` è un tentativo indipendente: factory concorrenti sullo stesso ID possono
+essere invocate più volte, mentre il Registry globale consente una sola
+registrazione riuscita. Non viene introdotto singleflight implicito.
+
+Fixture bloccanti dimostrano che loader, registrar ed eventi vengono invocati
+senza lock interni. Sono coperti snapshot concorrenti, load sullo stesso ID e
+su ID differenti, failure atomiche, cancellazione e composizione dei sentinel.
+Suite completa, race detector e vet sono verdi. Il report è disponibile in
+`docs/reports/milestone-5-phase-2.md`.

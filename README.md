@@ -215,10 +215,10 @@ espliciti; più candidati senza preferenza producono ambiguity e nessun ordine
 lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
 sull'Event Bus condiviso.
 
-La Milestone 5 — Plugin System è in corso. La Fase 1 è completata: ADR-0023 e
-l'audit di compatibilità confermano le API esistenti, distinguono catalogo,
-registry, operazione di load e stato runtime e non introducono contratti
-prematuri. La Fase 2 — catalogo, registry e caricamento — è pronta. Packaging
+La Milestone 5 — Plugin System è in corso. Le Fasi 1–2 sono completate: ADR e
+audit confermano le API esistenti; catalogo, registry e caricamento sono ora
+coperti sotto concorrenza, cancellazione, failure e callback re-entrant fuori
+lock. La Fase 3 — lifecycle, dependency graph e Gestor — è pronta. Packaging
 esterno, sandbox e plugin di terze parti restano fuori scope.
 
 Uso essenziale:

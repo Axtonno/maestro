@@ -94,6 +94,17 @@ lifecycle e non acquisisce risorse di lunga durata. Queste ultime appartengono
 alle capability `Initialize` e `Start`, così un errore di registrazione non
 lascia risorse orfane.
 
+Ogni `Load` è un tentativo indipendente. Chiamate concorrenti sullo stesso ID
+possono invocare il loader più volte, ma il Registry globale consente una sola
+registrazione riuscita. I loader devono quindi proteggere eventuale stato
+mutabile della factory. Maestro non accorpa context o risultati distinti tramite
+singleflight implicito.
+
+Factory, registrar ed eventi vengono invocati senza lock interni del Plugin
+Runtime. `Available` e `Registered` sono snapshot difensivi ordinati per
+registrazione riuscita; l'ordine relativo di operazioni concorrenti non è
+specificato e non costituisce selezione implicita.
+
 Il catalogo descrive plugin disponibili nella build corrente. Non esegue
 scansioni, download o selezioni implicite.
 
