@@ -452,17 +452,41 @@ pubblico e la milestone è chiusa.
 
 # Milestone 6 — Context Engine
 
+Stato: In corso — Fase 1 avviata
+
 Obiettivi:
 
-- Workspace indexing.
-- Analisi AST.
-- Context Builder.
-- Ottimizzazione token.
-- Cache.
+- Modello workspace framework-neutral e snapshot immutabili.
+- Workspace indexing sicuro, limitato e deterministico.
+- Analisi strutturata e AST tramite analyzer sostituibili.
+- Retrieval lessicale, strutturale e semantico opt-in.
+- Context Builder con provenance e budget espliciti.
+- Cache in-memory content-addressed e aggiornamento incrementale.
+- Integrazione con Runtime, Gestor, Provider Runtime e plugin Laravel.
+
+Fasi di sviluppo:
+
+| Fase | Ambito | Stato |
+|---|---|---|
+| 1 | Contratti, ownership e ADR-0024 | In corso |
+| 2 | Workspace indexing e snapshot | Pianificata |
+| 3 | Analisi strutturata e AST | Pianificata |
+| 4 | Retrieval, Context Builder e budget | Pianificata |
+| 5 | Cache e aggiornamento incrementale | Pianificata |
+| 6 | Integrazione, osservabilità e gate finale | Pianificata |
+
+Il design è descritto in `context-engine-design.md`; il piano operativo, i gate
+e i deliverable sono definiti in `context-engine-development-plan.md`.
+
+La milestone non include memoria conversazionale, tool execution, permission
+model, persistenza distribuita o ranking LLM. Il retrieval semantico resta
+opt-in e riusa il Provider Runtime esistente senza selezione implicita di
+provider o modello.
 
 Output atteso:
 
-Costruzione intelligente del contesto.
+Costruzione intelligente, deterministica e ispezionabile del contesto entro un
+budget dichiarato.
 
 ---
 
@@ -514,4 +538,6 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - architecture.md
 - provider-layer-plan.md
 - benchmark-evaluation-plan.md
+- context-engine-design.md
+- context-engine-development-plan.md
 - MAESTRO_CONTEXT.md

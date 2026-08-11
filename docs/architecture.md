@@ -1,10 +1,10 @@
 # Maestro Architecture
 
-Versione: 0.2.0
+Versione: 0.3.0
 
 Stato: Draft
 
-Ultimo aggiornamento: 2026-08-09
+Ultimo aggiornamento: 2026-08-11
 
 Autori:
 - Antonio Cafeo
@@ -278,13 +278,36 @@ Esempi:
 
 Responsabilità:
 
-- analisi workspace;
-- indicizzazione;
-- AST;
-- gestione della memoria;
-- costruzione del contesto.
+- descrizione framework-neutral dei workspace;
+- indicizzazione sicura e limitata;
+- snapshot immutabili e generazionali;
+- analisi strutturata tramite analyzer sostituibili;
+- retrieval lessicale, strutturale e semantico opt-in;
+- costruzione di bundle con provenance e budget espliciti;
+- cache derivata content-addressed e limitata.
 
-Il Context Engine rappresenta il "cervello" del runtime.
+Il Context Engine è un servizio composto dal Runtime e resta distinto sia da
+`context.Context` sia dal `runtime.Context` consegnato ai componenti. Il
+package pubblico previsto è `pkg/contextengine`; l'implementazione concreta
+rimane interna.
+
+La pipeline separa source, indice, analyzer, retrieval, builder e cache. Lo
+snapshot del workspace è autorevole; la cache conserva soltanto artefatti
+derivati e una cache miss non modifica il risultato funzionale. Analyzer di
+linguaggio e framework rimangono sostituibili e non entrano nel Runtime Core.
+
+Gli embedding sono un'estensione opt-in del retrieval e passano attraverso il
+Provider Runtime esistente con provider e modello espliciti. Gestor descrive le
+capability ma non esegue indexing o analyzer. Plugin come Laravel possono
+fornire workspace tramite un contratto framework-neutral senza trasferire
+conoscenza Laravel al Context Engine.
+
+Ogni risultato conserva origine e metodo di selezione; ogni bundle dichiara
+budget ed estimator. Eventi e log espongono soltanto contatori e codici redatti,
+mai query, testo, embedding o path assoluti.
+
+Il design e le sei fasi della Milestone 6 sono descritti in
+`context-engine-design.md` e `context-engine-development-plan.md`.
 
 ---
 

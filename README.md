@@ -70,12 +70,14 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 24. `provider-smoke-benchmark-manifest.yaml`
 25. `benchmark-evaluation-plan.md`
 26. `benchmark-runtime.md`
-25. `smoke-benchmark.md`
-26. `plugin-runtime.md`
-27. `laravel-plugin.md`
-28. `plugin-system-design.md`
-29. `plugin-system-development-plan.md`
-30. `plugin-api-compatibility-audit.md`
+27. `smoke-benchmark.md`
+28. `plugin-runtime.md`
+29. `laravel-plugin.md`
+30. `plugin-system-design.md`
+31. `plugin-system-development-plan.md`
+32. `plugin-api-compatibility-audit.md`
+33. `context-engine-design.md`
+34. `context-engine-development-plan.md`
 
 ---
 
@@ -221,6 +223,12 @@ coperti sotto concorrenza; graph, stato e lifecycle restano globali; Laravel
 best-effort e isolati da errori o panic degli observer. Audit API, suite
 completa, race detector, vet e gate finale sono verdi. Packaging esterno,
 sandbox e plugin di terze parti restano fuori scope.
+
+La Milestone 6 — Context Engine è iniziata con il design architetturale e un
+piano in sei fasi: contratti; workspace indexing; analisi strutturata e AST;
+retrieval e Context Builder budgetato; cache incrementale; integrazione e gate
+finale. Il servizio resterà provider-agnostic, userà embedding soltanto in modo
+opt-in e non anticiperà memoria agente, tool execution o permission model.
 
 Uso essenziale:
 

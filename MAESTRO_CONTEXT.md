@@ -41,6 +41,11 @@ Completati:
 * plugin-system-development-plan.md
 * plugin-api-compatibility-audit.md
 
+In progettazione:
+
+* context-engine-design.md
+* context-engine-development-plan.md
+
 ---
 
 # ADR approvate
@@ -1454,3 +1459,58 @@ report di fase è in `docs/reports/milestone-5-phase-5.md`; il report conclusivo
 
 La Milestone 5 è chiusa. La Milestone 3 resta sospesa per la matrice live
 llama.cpp già documentata; non è stata modificata da questo gate.
+
+## Milestone 6 — Context Engine
+
+Stato: in corso — Fase 1 avviata.
+
+Il design iniziale è definito in `docs/context-engine-design.md` e il piano
+operativo in `docs/context-engine-development-plan.md`.
+
+La milestone introduce un servizio provider-agnostic separato da
+`context.Context` e da `runtime.Context`. Il package pubblico previsto è
+`pkg/contextengine`; l'implementazione concreta resta in
+`internal/contextengine`. Il composition root verrà esteso in modo additivo
+senza modificare il contratto `pkg/runtime.Runtime`.
+
+La pipeline prevista è:
+
+```text
+workspace -> snapshot -> analisi -> retrieval -> selezione -> context bundle
+```
+
+Le sei fasi sono:
+
+1. contratti, ownership e ADR-0024 — in corso;
+2. workspace indexing e snapshot — pianificata;
+3. analisi strutturata e AST — pianificata;
+4. retrieval, Context Builder e budget — pianificata;
+5. cache e aggiornamento incrementale — pianificata;
+6. integrazione, osservabilità e gate finale — pianificata.
+
+Decisioni iniziali del design:
+
+* workspace e path pubblici sono framework-neutral; i path sono logici e non
+  escono dalla root;
+* gli snapshot sono immutabili, generazionali e pubblicati atomicamente;
+* refresh falliti o cancellati conservano l'ultimo snapshot valido;
+* analyzer language-specific sono registrabili e restano fuori dal Runtime
+  Core;
+* retrieval lessicale e strutturale funzionano offline;
+* embedding e semantic retrieval sono opt-in e riusano il Provider Runtime con
+  provider e modello espliciti;
+* il Context Builder conserva provenance, metodo, costo stimato e budget;
+* una stima token non viene presentata come conteggio esatto;
+* la cache iniziale è in-memory, bounded, content-addressed e non autorevole;
+* Gestor descrive capability ma non esegue indexing o analyzer;
+* Laravel fornirà il primo workspace attraverso un contratto generico senza
+  introdurre conoscenza framework-specific nel Context Engine;
+* eventi e log non contengono query, testo, embedding o path assoluti.
+
+Ogni fase produrrà un report in `docs/reports/`; la Fase 6 produrrà anche
+`docs/reports/milestone-6-final.md`.
+
+Restano fuori scope memoria conversazionale, tool execution, permission model,
+watcher filesystem, persistenza distribuita, vector database, ranking LLM e
+selezione implicita di provider o modello. Questi confini impediscono alla
+Milestone 6 di anticipare Agent System ed Ecosistema.
