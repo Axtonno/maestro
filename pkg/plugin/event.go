@@ -8,7 +8,10 @@ const (
 
 // EventPayload describes a Plugin Runtime state change.
 type EventPayload struct {
-	ID     ID
+	ID ID
+
+	// Plugin is present only after an instance has been registered. It is a
+	// trusted in-process reference, not a serializable telemetry payload.
 	Plugin Plugin
 }
 

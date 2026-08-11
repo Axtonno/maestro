@@ -1192,6 +1192,75 @@ func TestPluginRuntimePublishesSuccessfulOperations(t *testing.T) {
 	}
 }
 
+func TestPluginEventDeliveryObservesCommittedStateAndBackpressure(t *testing.T) {
+	runtime := New()
+	calls := make([]string, 0)
+	plugin := newLifecyclePlugin("laravel", &calls)
+	entered := make(chan struct{})
+	release := make(chan struct{})
+	if err := runtime.EventBus().Subscribe(
+		pkgPlugin.EventRegistered,
+		func(pkgRuntime.Event) {
+			close(entered)
+			<-release
+		},
+	); err != nil {
+		t.Fatalf("subscribe blocking plugin observer: %v", err)
+	}
+
+	registered := make(chan error, 1)
+	go func() { registered <- runtime.Plugins().Register(plugin) }()
+	select {
+	case <-entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("plugin observer was not called")
+	}
+	if !runtime.Plugins().Has("laravel") || !runtime.Registry().Has("laravel") {
+		t.Fatal("observer ran before plugin state was committed")
+	}
+	select {
+	case err := <-registered:
+		t.Fatalf("synchronous observer did not apply backpressure: %v", err)
+	default:
+	}
+	close(release)
+	if err := <-registered; err != nil {
+		t.Fatalf("blocking observer changed registration: %v", err)
+	}
+}
+
+func TestPluginEventPanicsDoNotChangeCompletedOperations(t *testing.T) {
+	runtime := New()
+	for _, topic := range []string{
+		pkgPlugin.EventLoaderRegistered,
+		pkgPlugin.EventRegistered,
+		pkgPlugin.EventLoaded,
+	} {
+		if err := runtime.EventBus().Subscribe(
+			topic,
+			func(pkgRuntime.Event) { panic("plugin observer panic") },
+		); err != nil {
+			t.Fatalf("subscribe panic observer to %q: %v", topic, err)
+		}
+	}
+
+	if err := runtime.Plugins().RegisterLoader(
+		"laravel",
+		pkgPlugin.LoaderFunc(func(context.Context) (pkgPlugin.Plugin, error) {
+			return newLifecyclePlugin("laravel", new([]string)), nil
+		}),
+	); err != nil {
+		t.Fatalf("panic observer changed loader registration: %v", err)
+	}
+	loaded, err := runtime.Plugins().Load(t.Context(), "laravel")
+	if err != nil {
+		t.Fatalf("panic observer changed load result: %v", err)
+	}
+	if loaded == nil || !runtime.Plugins().Has("laravel") {
+		t.Fatal("panic observer corrupted loaded plugin state")
+	}
+}
+
 type typedNilConfig struct{}
 
 func (c *typedNilConfig) Get(string) any {

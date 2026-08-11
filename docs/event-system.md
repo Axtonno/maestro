@@ -74,6 +74,11 @@ esplicita del componente che ne ha bisogno.
 Il bus non intercetta i panic degli handler. Il boundary che esegue codice non
 fidato dovrà introdurre la propria strategia di isolamento.
 
+Plugin Runtime e Gestor applicano questa strategia ai rispettivi eventi
+osservazionali: recuperano errori e panic al proprio boundary perché lo stato è
+già stato committato. Questa scelta non modifica la semantica del bus né elimina
+la backpressure sincrona degli handler lenti.
+
 ---
 
 # Errori

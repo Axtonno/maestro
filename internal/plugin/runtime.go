@@ -333,13 +333,19 @@ func (r *runtime) publish(
 		return
 	}
 
-	// Topics are constants and Event always implements runtime.Event, so the
-	// in-process Event Bus cannot reject these notifications.
-	_ = r.eventBus.Publish(pkgPlugin.Event{
-		Topic: topic,
-		Data: pkgPlugin.EventPayload{
-			ID:     pluginID,
-			Plugin: registered,
-		},
-	})
+	// Event delivery is best-effort. The state change is already committed and
+	// observer errors or panics must not turn it into an apparent failure.
+	func() {
+		defer func() {
+			_ = recover()
+		}()
+
+		_ = r.eventBus.Publish(pkgPlugin.Event{
+			Topic: topic,
+			Data: pkgPlugin.EventPayload{
+				ID:     pluginID,
+				Plugin: registered,
+			},
+		})
+	}()
 }

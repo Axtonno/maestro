@@ -215,11 +215,11 @@ espliciti; più candidati senza preferenza producono ambiguity e nessun ordine
 lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
 sull'Event Bus condiviso.
 
-La Milestone 5 — Plugin System è in corso. Le Fasi 1–4 sono completate:
-catalogo e caricamento sono coperti sotto concorrenza; graph, stato e lifecycle
-restano globali; Laravel `0.2.0` dichiara la capability namespaced
-`plugin.workspace-detection`, individuabile da Gestor prima del lifecycle. La
-Fase 5 — osservabilità, hardening e gate finale — è pronta. Packaging esterno,
+La Milestone 5 — Plugin System è completata. Catalogo e caricamento sono
+coperti sotto concorrenza; graph, stato e lifecycle restano globali; Laravel
+`0.2.0` dichiara `plugin.workspace-detection`; gli eventi sono sincroni,
+best-effort e isolati da errori o panic degli observer. Audit API, suite
+completa, race detector, vet e gate finale sono verdi. Packaging esterno,
 sandbox e plugin di terze parti restano fuori scope.
 
 Uso essenziale:

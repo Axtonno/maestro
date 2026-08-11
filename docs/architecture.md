@@ -262,6 +262,9 @@ design e i gate operativi sono descritti in `plugin-system-design.md` e
 `plugin-system-development-plan.md`; ADR-0023 stabilizza ownership e semantica
 pre-start.
 
+Le cinque fasi e il gate finale sono completati; l'esito è disponibile in
+`reports/milestone-5-final.md`.
+
 Esempi:
 
 - Laravel (implementato)

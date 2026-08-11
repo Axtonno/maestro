@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–4 completate; Fase 5 pronta
+Stato: Completata — Fasi 1–5 e gate finale superati
 
 Data: 2026-08-11
 
@@ -30,7 +30,7 @@ lifecycle.
 | 2 | Catalogo, registry e caricamento | Completata | Fase 1 |
 | 3 | Lifecycle, dependency graph e Gestor | Completata | Fasi 1–2 |
 | 4 | Laravel reference plugin | Completata | Fasi 1–3 |
-| 5 | Osservabilità, hardening e gate finale | Pianificata | Fasi 1–4 |
+| 5 | Osservabilità, hardening e gate finale | Completata | Fasi 1–4 |
 
 Le fasi sono sequenziali rispetto ai contratti. Ogni fase termina con un report
 in `docs/reports/`; la successiva può essere dichiarata completata soltanto dopo

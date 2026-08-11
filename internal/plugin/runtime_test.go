@@ -59,14 +59,19 @@ func (r *blockingRegistrar) Register(pkgRuntime.Component) error {
 
 type callbackEventBus struct {
 	publish func(pkgRuntime.Event)
+	err     error
+	panics  bool
 }
 
 func (b *callbackEventBus) Publish(event pkgRuntime.Event) error {
 	if b.publish != nil {
 		b.publish(event)
 	}
+	if b.panics {
+		panic("event publisher panic")
+	}
 
-	return nil
+	return b.err
 }
 
 func (b *callbackEventBus) Subscribe(string, pkgRuntime.Handler) error {
@@ -706,6 +711,134 @@ func TestRuntimeEventsCanReenterPluginRuntime(t *testing.T) {
 		t.Fatal("event callback deadlocked on Plugin Runtime lock")
 	}
 }
+
+func TestRuntimeIsolatesEventPublisherFailures(t *testing.T) {
+	tests := []struct {
+		name     string
+		busError error
+		panics   bool
+	}{
+		{name: "error", busError: errors.New("event publisher failed")},
+		{name: "panic", panics: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			eventBus := &callbackEventBus{
+				err:    test.busError,
+				panics: test.panics,
+			}
+			pluginRuntime := NewRuntimeWithEventBus(
+				newRecordingRegistrar(),
+				eventBus,
+			)
+			if err := pluginRuntime.RegisterLoader(
+				"laravel",
+				&testLoader{plugin: newTestPlugin("laravel")},
+			); err != nil {
+				t.Fatalf("observer changed loader registration: %v", err)
+			}
+			loaded, err := pluginRuntime.Load(t.Context(), "laravel")
+			if err != nil {
+				t.Fatalf("observer changed plugin load: %v", err)
+			}
+			if loaded == nil || !pluginRuntime.Has("laravel") {
+				t.Fatal("observer corrupted successful plugin state")
+			}
+		})
+	}
+}
+
+func TestRuntimeDoesNotPublishSuccessEventsForFailures(t *testing.T) {
+	factoryFailure := errors.New("factory failed")
+	tests := []struct {
+		name         string
+		plugin       pkgPlugin.Plugin
+		loader       pkgPlugin.Loader
+		ctx          func() context.Context
+		registrarErr error
+		direct       bool
+	}{
+		{
+			name:   "factory error",
+			loader: &testLoader{err: factoryFailure},
+		},
+		{
+			name: "canceled after factory",
+			loader: pkgPlugin.LoaderFunc(func(ctx context.Context) (pkgPlugin.Plugin, error) {
+				if cancel, ok := ctx.Value(cancelContextKey{}).(context.CancelFunc); ok {
+					cancel()
+				}
+
+				return newTestPlugin("laravel"), nil
+			}),
+			ctx: func() context.Context {
+				ctx, cancel := context.WithCancel(context.Background())
+
+				return context.WithValue(ctx, cancelContextKey{}, context.CancelFunc(cancel))
+			},
+		},
+		{
+			name: "incompatible manifest",
+			loader: &testLoader{plugin: func() pkgPlugin.Plugin {
+				plugin := newTestPlugin("laravel")
+				plugin.manifest.RuntimeAPIVersion = "999"
+
+				return plugin
+			}()},
+		},
+		{
+			name:         "registrar rejection",
+			loader:       &testLoader{plugin: newTestPlugin("laravel")},
+			registrarErr: pkgRuntime.ErrAlreadyStarted,
+		},
+		{
+			name:   "duplicate direct registration",
+			plugin: newTestPlugin("laravel"),
+			direct: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			published := make([]string, 0)
+			eventBus := &callbackEventBus{publish: func(event pkgRuntime.Event) {
+				published = append(published, event.Name())
+			}}
+			registrar := newRecordingRegistrar()
+			pluginRuntime := NewRuntimeWithEventBus(registrar, eventBus)
+
+			if test.direct {
+				if err := pluginRuntime.Register(test.plugin); err != nil {
+					t.Fatalf("prepare registered plugin: %v", err)
+				}
+				published = published[:0]
+				if err := pluginRuntime.Register(test.plugin); err == nil {
+					t.Fatal("expected duplicate registration failure")
+				}
+			} else {
+				if err := pluginRuntime.RegisterLoader("laravel", test.loader); err != nil {
+					t.Fatalf("register loader: %v", err)
+				}
+				published = published[:0]
+				registrar.err = test.registrarErr
+				var ctx context.Context = context.Background()
+				if test.ctx != nil {
+					ctx = test.ctx()
+				}
+				if _, err := pluginRuntime.Load(ctx, "laravel"); err == nil {
+					t.Fatal("expected load failure")
+				}
+			}
+
+			if len(published) != 0 {
+				t.Fatalf("failure published success events: %v", published)
+			}
+		})
+	}
+}
+
+type cancelContextKey struct{}
 
 func TestRuntimeConcurrentLoadsOfSameIDHaveOneWinner(t *testing.T) {
 	ctx := timeoutContext(t)

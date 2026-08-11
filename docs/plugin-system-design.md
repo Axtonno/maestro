@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: Approvato — ADR-0023 Accepted
+Stato: Implementato — Milestone 5 completata
 
 Data: 2026-08-11
 

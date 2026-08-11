@@ -1313,7 +1313,7 @@ llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.
 
 ## Milestone 5 — Plugin System
 
-Stato: in corso — Fasi 1–4 completate; Fase 5 pronta.
+Stato: completata — Fasi 1–5 e gate finale superati.
 
 Il design iniziale è definito in `docs/plugin-system-design.md` e il piano
 operativo in `docs/plugin-system-development-plan.md`.
@@ -1328,7 +1328,7 @@ Le cinque fasi previste sono:
 2. catalogo, registry e caricamento — completata;
 3. lifecycle, dependency graph e Gestor — completata;
 4. Laravel reference plugin — completata;
-5. osservabilità, hardening e gate finale.
+5. osservabilità, hardening e gate finale — completata.
 
 Ogni fase produce un report in `docs/reports/`; la Fase 5 produce anche
 `docs/reports/milestone-5-final.md`. Il codice plugin esistente è considerato
@@ -1427,3 +1427,30 @@ mutation e concorrenza sono coperti deterministicamente.
 Non viene introdotto un contratto workspace framework-neutral senza il consumer
 del Context Engine. Suite completa, race detector e vet sono verdi. Il report è
 disponibile in `docs/reports/milestone-5-phase-4.md`.
+
+### Fase 5 — Osservabilità, hardening e gate finale
+
+Completata in:
+
+```text
+pkg/plugin
+internal/plugin
+maestro_test.go
+```
+
+Ordine e cardinalità degli eventi sono coperti per successi, failure e
+cancellazione. La pubblicazione resta sincrona e fuori lock, ma errori e panic
+dell'Event Bus sono isolati affinché non alterino operazioni già committate. Un
+subscriber lento mantiene la backpressure definita da ADR-0005.
+
+Il payload conserva ID e riferimento plugin trusted in-process senza copiare
+configurazione, error string o contenuti del workspace; non è un envelope
+telemetrico serializzabile. L'audit API finale non rileva modifiche breaking o
+nuove dipendenze.
+
+Suite ripetuta, suite completa, race detector, vet e diff check sono verdi. Il
+report di fase è in `docs/reports/milestone-5-phase-5.md`; il report conclusivo
+è in `docs/reports/milestone-5-final.md`.
+
+La Milestone 5 è chiusa. La Milestone 3 resta sospesa per la matrice live
+llama.cpp già documentata; non è stata modificata da questo gate.

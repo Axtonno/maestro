@@ -411,7 +411,7 @@ I cinque report di fase e il report conclusivo sono disponibili in
 
 # Milestone 5 — Plugin System
 
-Stato: In corso — Fasi 1–4 completate; Fase 5 pronta
+Stato: Completata — Fasi 1–5 e gate finale superati
 
 Obiettivi:
 
@@ -434,7 +434,7 @@ Fasi di sviluppo:
 | 2 | Catalogo, registry e caricamento | Completata |
 | 3 | Lifecycle, dependency graph e Gestor | Completata |
 | 4 | Laravel reference plugin | Completata |
-| 5 | Osservabilità, hardening e gate finale | Pianificata |
+| 5 | Osservabilità, hardening e gate finale | Completata |
 
 Il design è descritto in `plugin-system-design.md`; il piano operativo, i gate
 e i deliverable di ogni fase sono definiti in
@@ -443,6 +443,10 @@ e i deliverable di ogni fase sono definiti in
 La milestone consolida il modello trusted in-process. Packaging esterno,
 marketplace, firme, sandbox, hot loading e plugin di terze parti restano fuori
 scope e confluiscono nell'evoluzione dell'ecosistema.
+
+I cinque report di fase e il report conclusivo sono disponibili in
+`docs/reports/`. Il Plugin System trusted in-process è composto nel Runtime
+pubblico e la milestone è chiusa.
 
 ---
 

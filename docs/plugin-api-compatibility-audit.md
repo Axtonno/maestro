@@ -1,8 +1,8 @@
 # Plugin API Compatibility Audit — Milestone 5, Fase 1
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Superato
+Stato: Superato — audit finale Milestone 5
 
 Data: 2026-08-11
 
@@ -151,3 +151,33 @@ futura esigenza concreta potrà essere soddisfatta con un'estensione additiva.
 - permission model operativo: Milestone 7.
 
 Non restano gap di Fase 1 senza una destinazione documentata.
+
+---
+
+# Audit finale della Milestone 5
+
+Le Fasi 2–5 preservano tutte le firme elencate nella matrice iniziale.
+
+Modifiche additive o interne:
+
+- `plugin.CapabilityWorkspaceDetection` aggiunge un identificatore pubblico
+  namespaced senza ampliare interfacce;
+- Laravel passa a `0.2.0` e dichiara la nuova capability nei metadata;
+- commenti pubblici precisano snapshot e concorrenza di `Load`;
+- il Runtime Core distingue correttamente shutdown da running durante Register;
+- il Plugin Runtime isola internamente errori e panic dell'Event Bus;
+- test e documentazione crescono senza nuove dipendenze Go.
+
+Invariati:
+
+- `RuntimeAPIVersion == "1"`;
+- firme di `Plugin`, `Loader`, `LoaderFunc` e `Runtime`;
+- forma di `Manifest`;
+- errori sentinel;
+- topic e forma di `EventPayload`;
+- ID, costruttori, configurazione, errori e metodi Laravel.
+
+L'aggiornamento del valore `laravel.Version` riflette una feature additiva del
+reference plugin e non cambia il contratto dell'API Plugin Runtime.
+
+Esito finale: compatibilità superata.

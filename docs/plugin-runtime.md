@@ -56,6 +56,13 @@ Le operazioni riuscite pubblicano sullo stesso Event Bus del Runtime:
 * `plugin.loaded`.
 
 Il payload pubblico contiene ID e, quando disponibile, l'istanza plugin.
+L'istanza è un riferimento trusted in-process, non un payload serializzabile:
+adapter di logging o telemetria non devono convertirla implicitamente in dati.
+
+La pubblicazione avviene dopo lo stato corrispondente e fuori lock. Errori e
+panic dell'Event Bus sono isolati dal Plugin Runtime e non trasformano
+un'operazione già riuscita in un errore apparente. La consegna resta sincrona:
+un subscriber lento applica backpressure al publisher secondo ADR-0005.
 
 ## Terminologia operativa
 
