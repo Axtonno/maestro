@@ -44,6 +44,7 @@ Completati:
 * context-engine-indexing.md
 * context-engine-analysis.md
 * context-engine-retrieval.md
+* context-engine-cache.md
 
 In progettazione:
 
@@ -1466,7 +1467,7 @@ llama.cpp già documentata; non è stata modificata da questo gate.
 
 ## Milestone 6 — Context Engine
 
-Stato: in corso — Fasi 1–4 completate; Fase 5 pronta.
+Stato: in corso — Fasi 1–5 completate; Fase 6 pronta.
 
 Il design iniziale è definito in `docs/context-engine-design.md` e il piano
 operativo in `docs/context-engine-development-plan.md`.
@@ -1489,7 +1490,7 @@ Le sei fasi sono:
 2. workspace indexing e snapshot — completata;
 3. analisi strutturata e AST — completata;
 4. retrieval, Context Builder e budget — completata;
-5. cache e aggiornamento incrementale — pianificata;
+5. cache e aggiornamento incrementale — completata;
 6. integrazione, osservabilità e gate finale — pianificata.
 
 Decisioni iniziali del design:
@@ -1615,3 +1616,26 @@ costo senza superare evidence budget, riserva e safety margin.
 Lo scenario retrieval del Developer Benchmark passa ora dal Context Engine
 senza cambiare dataset o rubrica. Il report è disponibile in
 `docs/reports/milestone-6-phase-4.md`.
+
+### Fase 5 — Cache e aggiornamento incrementale
+
+Completata in:
+
+```text
+internal/contextengine
+pkg/contextengine
+docs/context-engine-cache.md
+```
+
+La cache LRU in-memory applica limiti per entry e byte e pubblica statistiche
+aggregate. Analysis, embedding e stime usano chiavi che includono digest e
+versioni semantiche; rename, analyzer, provider, modello, dimensione ed
+estimator invalidano soltanto gli artefatti coinvolti.
+
+Vettori sono clonati e validati prima del commit. Un cambio dimensione elimina
+le entry del target e fallisce la richiesta corrente; il retry riparte pulito.
+Failure, panic e cancellazioni non diventano hit.
+
+Cold e warm producono ranking e bundle equivalenti. Due richieste cold
+concorrenti restano indipendenti e non introducono singleflight implicito. Il
+report è disponibile in `docs/reports/milestone-6-phase-5.md`.

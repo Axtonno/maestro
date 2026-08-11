@@ -82,6 +82,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 36. `context-engine-indexing.md`
 37. `context-engine-analysis.md`
 38. `context-engine-retrieval.md`
+39. `context-engine-cache.md`
 
 ---
 
@@ -253,6 +254,11 @@ La Fase 4 è completata: retrieval lessicale, strutturale e semantico produce
 ranking con provenance e fusione esplicita; il Context Builder deduplica e
 tronca su confini UTF-8 entro il budget dichiarato. Il Developer Benchmark usa
 ora semantic retrieval del Context Engine.
+
+La Fase 5 è completata: una cache LRU bounded riusa analysis, embedding e stime
+con chiavi versionate. Rename, versioni e dimensioni invalidano gli artefatti;
+percorsi cold e warm restano equivalenti e richieste concorrenti non vengono
+accorpate implicitamente.
 
 Uso essenziale:
 

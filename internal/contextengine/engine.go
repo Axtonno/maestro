@@ -19,7 +19,13 @@ type Engine struct {
 	analyzers  map[pkgContext.AnalyzerID]pkgContext.Analyzer
 	estimators map[pkgContext.EstimatorID]pkgContext.TokenEstimator
 	embedding  embeddingRuntime
+	cache      *artifactCache
 	snapshots  map[pkgContext.WorkspaceID]pkgContext.Snapshot
+}
+
+type Options struct {
+	Embedding embeddingRuntime
+	Cache     pkgContext.CachePolicy
 }
 
 func New() *Engine {
@@ -27,6 +33,17 @@ func New() *Engine {
 }
 
 func NewWithEmbeddingRuntime(embedding embeddingRuntime) *Engine {
+	engine, err := NewWithOptions(Options{Embedding: embedding, Cache: pkgContext.DefaultCachePolicy()})
+	if err != nil {
+		panic(err)
+	}
+	return engine
+}
+
+func NewWithOptions(options Options) (*Engine, error) {
+	if err := options.Cache.Validate(); err != nil {
+		return nil, err
+	}
 	filesystem := NewFilesystemSource()
 	goAnalyzer := NewGoAnalyzer()
 	estimator := NewUTF8Estimator()
@@ -34,10 +51,13 @@ func NewWithEmbeddingRuntime(embedding embeddingRuntime) *Engine {
 		sources:    map[pkgContext.SourceID]pkgContext.Source{filesystem.ID(): filesystem},
 		analyzers:  map[pkgContext.AnalyzerID]pkgContext.Analyzer{goAnalyzer.ID(): goAnalyzer},
 		estimators: map[pkgContext.EstimatorID]pkgContext.TokenEstimator{estimator.ID(): estimator},
-		embedding:  embedding,
+		embedding:  options.Embedding,
+		cache:      newArtifactCache(options.Cache),
 		snapshots:  make(map[pkgContext.WorkspaceID]pkgContext.Snapshot),
-	}
+	}, nil
 }
+
+func (engine *Engine) CacheStats() pkgContext.CacheStats { return engine.cache.stats() }
 
 func (engine *Engine) RegisterSource(source pkgContext.Source) error {
 	if nilInterface(source) {
@@ -127,7 +147,7 @@ func (engine *Engine) Index(ctx context.Context, workspace pkgContext.Workspace)
 	if err := ctx.Err(); err != nil {
 		return pkgContext.Snapshot{}, err
 	}
-	analyses, err := analyzeDocuments(ctx, result.Documents, analyzers, len(workspace.Analyzers()) > 0)
+	analyses, err := analyzeDocuments(ctx, result.Documents, analyzers, len(workspace.Analyzers()) > 0, engine.cache)
 	if err != nil {
 		return pkgContext.Snapshot{}, err
 	}
@@ -143,6 +163,7 @@ func (engine *Engine) Index(ctx context.Context, workspace pkgContext.Workspace)
 		return pkgContext.Snapshot{}, fmt.Errorf("publish workspace %q snapshot: %w", workspace.ID(), err)
 	}
 	engine.snapshots[workspace.ID()] = snapshot
+	cacheAnalyses(engine.cache, snapshot, analyzers)
 	return snapshot, nil
 }
 
@@ -170,7 +191,7 @@ func (engine *Engine) resolveAnalyzersLocked(configured []pkgContext.AnalyzerID)
 	return resolved, nil
 }
 
-func analyzeDocuments(ctx context.Context, documents []pkgContext.Document, analyzers []pkgContext.Analyzer, explicit bool) ([]pkgContext.Analysis, error) {
+func analyzeDocuments(ctx context.Context, documents []pkgContext.Document, analyzers []pkgContext.Analyzer, explicit bool, cache *artifactCache) ([]pkgContext.Analysis, error) {
 	analyses := make([]pkgContext.Analysis, 0)
 	for _, document := range documents {
 		if document.MediaType() == "application/octet-stream" {
@@ -190,6 +211,14 @@ func analyzeDocuments(ctx context.Context, documents []pkgContext.Document, anal
 			return nil, fmt.Errorf("document %q matches multiple analyzers: %w", document.Path(), pkgContext.ErrAmbiguous)
 		}
 		for _, analyzer := range matching {
+			if cached, found := cache.get(analysisCacheKey(document, analyzer)); found {
+				analysis, err := rebindAnalysis(cached.(pkgContext.Analysis), document)
+				if err != nil {
+					return nil, err
+				}
+				analyses = append(analyses, analysis)
+				continue
+			}
 			if err := ctx.Err(); err != nil {
 				return nil, err
 			}
@@ -207,6 +236,31 @@ func analyzeDocuments(ctx context.Context, documents []pkgContext.Document, anal
 		}
 	}
 	return analyses, nil
+}
+
+func rebindAnalysis(cached pkgContext.Analysis, document pkgContext.Document) (pkgContext.Analysis, error) {
+	diagnostics := cached.Diagnostics()
+	for index := range diagnostics {
+		diagnostics[index].Path = document.Path()
+	}
+	return pkgContext.NewAnalysis(
+		document, cached.Analyzer(), cached.Version(), cached.Symbols(),
+		cached.Relations(), cached.Chunks(), diagnostics,
+	)
+}
+
+func cacheAnalyses(cache *artifactCache, snapshot pkgContext.Snapshot, analyzers []pkgContext.Analyzer) {
+	byID := make(map[pkgContext.AnalyzerID]pkgContext.Analyzer, len(analyzers))
+	for _, analyzer := range analyzers {
+		byID[analyzer.ID()] = analyzer
+	}
+	for _, analysis := range snapshot.Analyses() {
+		document, found := snapshot.Document(analysis.Path())
+		analyzer, analyzerFound := byID[analysis.Analyzer()]
+		if found && analyzerFound {
+			cache.put(analysisCacheKey(document, analyzer), analysis, analysisSize(analysis))
+		}
+	}
 }
 
 func supportsSafely(analyzer pkgContext.Analyzer, document pkgContext.Document) (supported bool, err error) {
@@ -255,7 +309,7 @@ func (engine *Engine) Retrieve(ctx context.Context, query pkgContext.RetrievalQu
 	if !found {
 		return nil, fmt.Errorf("workspace %q snapshot: %w", query.Workspace(), pkgContext.ErrNotFound)
 	}
-	return retrieveSnapshot(ctx, snapshot, query, embedding)
+	return retrieveSnapshot(ctx, snapshot, query, embedding, engine.cache)
 }
 
 func (engine *Engine) Build(ctx context.Context, request pkgContext.BuildRequest) (pkgContext.ContextBundle, error) {
@@ -279,11 +333,11 @@ func (engine *Engine) Build(ctx context.Context, request pkgContext.BuildRequest
 	if !estimatorFound {
 		return pkgContext.ContextBundle{}, fmt.Errorf("token estimator %q: %w", request.Estimator, pkgContext.ErrNotFound)
 	}
-	results, err := retrieveSnapshot(ctx, snapshot, request.Query, embedding)
+	results, err := retrieveSnapshot(ctx, snapshot, request.Query, embedding, engine.cache)
 	if err != nil {
 		return pkgContext.ContextBundle{}, err
 	}
-	return buildBundle(ctx, snapshot, estimator, request.Budget, results)
+	return buildBundle(ctx, snapshot, estimator, request.Budget, results, engine.cache)
 }
 
 func nilInterface(value any) bool {

@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–4 completate; Fase 5 pronta
+Stato: In corso — Fasi 1–5 completate; Fase 6 pronta
 
 Data: 2026-08-11
 
@@ -30,7 +30,7 @@ permission model, persistenza distribuita o ranking LLM.
 | 2 | Workspace indexing e snapshot | Completata | Fase 1 |
 | 3 | Analisi strutturata e AST | Completata | Fasi 1–2 |
 | 4 | Retrieval, Context Builder e budget | Completata | Fasi 1–3 |
-| 5 | Cache e aggiornamento incrementale | Pianificata | Fasi 1–4 |
+| 5 | Cache e aggiornamento incrementale | Completata | Fasi 1–4 |
 | 6 | Integrazione, osservabilità e gate finale | Pianificata | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto ai contratti e agli invarianti. Ogni fase

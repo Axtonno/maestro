@@ -13,6 +13,7 @@ type Source interface {
 }
 
 type Engine interface {
+	CacheInspector
 	RegisterSource(Source) error
 	RegisterAnalyzer(Analyzer) error
 	RegisterEstimator(TokenEstimator) error

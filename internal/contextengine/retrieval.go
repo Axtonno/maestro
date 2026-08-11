@@ -19,7 +19,7 @@ type retrievalCandidate struct {
 	language pkgContext.Language
 }
 
-func retrieveSnapshot(ctx context.Context, snapshot pkgContext.Snapshot, query pkgContext.RetrievalQuery, embedding embeddingRuntime) ([]pkgContext.RetrievalResult, error) {
+func retrieveSnapshot(ctx context.Context, snapshot pkgContext.Snapshot, query pkgContext.RetrievalQuery, embedding embeddingRuntime, cache *artifactCache) ([]pkgContext.RetrievalResult, error) {
 	candidates := retrievalCandidates(snapshot, query)
 	byMethod := make([][]pkgContext.RetrievalResult, 0, len(query.Methods()))
 	for _, method := range query.Methods() {
@@ -34,7 +34,7 @@ func retrieveSnapshot(ctx context.Context, snapshot pkgContext.Snapshot, query p
 		case pkgContext.RetrievalStructured:
 			results = structuredResults(snapshot, query)
 		case pkgContext.RetrievalSemantic:
-			results, err = semanticResults(ctx, query, candidates, embedding)
+			results, err = semanticResults(ctx, query, candidates, embedding, cache)
 		}
 		if err != nil {
 			return nil, err
@@ -188,30 +188,71 @@ func structuredResults(snapshot pkgContext.Snapshot, query pkgContext.RetrievalQ
 	return results
 }
 
-func semanticResults(ctx context.Context, query pkgContext.RetrievalQuery, candidates []retrievalCandidate, runtime embeddingRuntime) ([]pkgContext.RetrievalResult, error) {
-	if runtime == nil {
-		return nil, fmt.Errorf("semantic retrieval has no embedding runtime: %w", pkgContext.ErrUnsupported)
-	}
+func semanticResults(ctx context.Context, query pkgContext.RetrievalQuery, candidates []retrievalCandidate, runtime embeddingRuntime, cache *artifactCache) ([]pkgContext.RetrievalResult, error) {
 	target, _ := query.Embedding()
 	inputs := make([]string, 1, len(candidates)+1)
 	inputs[0] = query.Text()
 	for _, candidate := range candidates {
 		inputs = append(inputs, candidate.text)
 	}
-	response, err := runtime.Embed(ctx, pkgProvider.ID(target.Provider), pkgProvider.EmbeddingRequest{Model: target.Model, Inputs: inputs})
-	if err != nil {
-		if ctxErr := ctx.Err(); ctxErr != nil {
-			return nil, ctxErr
+	targetKey := embeddingTarget(target.Provider, target.Model)
+	dimension, dimensionKnown := cache.embeddingDimension(targetKey)
+	vectors := make([][]float32, len(inputs))
+	missingIndexes := make([]int, 0, len(inputs))
+	missingInputs := make([]string, 0, len(inputs))
+	if dimensionKnown {
+		for index, input := range inputs {
+			if cached, found := cache.get(embeddingCacheKey(targetKey, dimension, input)); found {
+				vectors[index] = cached.([]float32)
+				continue
+			}
+			missingIndexes = append(missingIndexes, index)
+			missingInputs = append(missingInputs, input)
 		}
-		return nil, fmt.Errorf("embed retrieval inputs: %w: %w", err, pkgContext.ErrEmbeddingFailure)
+	} else {
+		cache.recordMisses(len(inputs))
+		for index, input := range inputs {
+			missingIndexes = append(missingIndexes, index)
+			missingInputs = append(missingInputs, input)
+		}
 	}
-	if len(response.Embeddings) != len(inputs) || len(response.Embeddings) == 0 {
-		return nil, fmt.Errorf("embedding cardinality %d differs from %d: %w", len(response.Embeddings), len(inputs), pkgContext.ErrEmbeddingFailure)
+	if len(missingInputs) > 0 {
+		if runtime == nil {
+			return nil, fmt.Errorf("semantic retrieval has no embedding runtime: %w", pkgContext.ErrUnsupported)
+		}
+		response, err := runtime.Embed(ctx, pkgProvider.ID(target.Provider), pkgProvider.EmbeddingRequest{Model: target.Model, Inputs: missingInputs})
+		if err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
+			return nil, fmt.Errorf("embed retrieval inputs: %w: %w", err, pkgContext.ErrEmbeddingFailure)
+		}
+		if len(response.Embeddings) != len(missingInputs) || len(response.Embeddings) == 0 {
+			return nil, fmt.Errorf("embedding cardinality %d differs from %d: %w", len(response.Embeddings), len(missingInputs), pkgContext.ErrEmbeddingFailure)
+		}
+		observedDimension := len(response.Embeddings[0])
+		for index, vector := range response.Embeddings {
+			if len(vector) != observedDimension || observedDimension == 0 {
+				return nil, fmt.Errorf("embedding %d dimension differs: %w", index, pkgContext.ErrEmbeddingFailure)
+			}
+			if _, err := cosineSimilarity(vector, vector); err != nil {
+				return nil, fmt.Errorf("embedding %d: %w: %w", index, err, pkgContext.ErrEmbeddingFailure)
+			}
+		}
+		if cache.setEmbeddingDimension(targetKey, observedDimension) && dimensionKnown {
+			return nil, fmt.Errorf("embedding dimension changed from %d to %d: %w", dimension, observedDimension, pkgContext.ErrEmbeddingFailure)
+		}
+		dimension = observedDimension
+		for index, inputIndex := range missingIndexes {
+			vector := slices.Clone(response.Embeddings[index])
+			vectors[inputIndex] = vector
+			cache.put(embeddingCacheKey(targetKey, dimension, inputs[inputIndex]), vector, int64(len(vector)*4+64))
+		}
 	}
-	queryVector := response.Embeddings[0]
+	queryVector := vectors[0]
 	results := make([]pkgContext.RetrievalResult, 0, len(candidates))
 	for index, candidate := range candidates {
-		score, err := cosineSimilarity(queryVector, response.Embeddings[index+1])
+		score, err := cosineSimilarity(queryVector, vectors[index+1])
 		if err != nil {
 			return nil, fmt.Errorf("embedding %d: %w: %w", index+1, err, pkgContext.ErrEmbeddingFailure)
 		}

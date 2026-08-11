@@ -267,6 +267,8 @@ func (estimatorStub) Estimate(context.Context, string) (int, error) { return 1, 
 
 type engineStub struct{}
 
+func (engineStub) CacheStats() contextengine.CacheStats { return contextengine.CacheStats{} }
+
 func (engineStub) RegisterSource(contextengine.Source) error            { return nil }
 func (engineStub) RegisterAnalyzer(contextengine.Analyzer) error        { return nil }
 func (engineStub) RegisterEstimator(contextengine.TokenEstimator) error { return nil }

@@ -24,6 +24,7 @@ var (
 	ErrInvalidSource      = errors.New("invalid context source")
 	ErrInvalidAnalyzer    = errors.New("invalid context analyzer")
 	ErrInvalidEstimator   = errors.New("invalid token estimator")
+	ErrInvalidCachePolicy = errors.New("invalid context cache policy")
 	ErrAlreadyRegistered  = errors.New("context extension already registered")
 	ErrNotFound           = errors.New("context resource not found")
 	ErrAmbiguous          = errors.New("ambiguous context extension")

@@ -9,7 +9,7 @@ import (
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 )
 
-func buildBundle(ctx context.Context, snapshot pkgContext.Snapshot, estimator pkgContext.TokenEstimator, budget pkgContext.Budget, results []pkgContext.RetrievalResult) (pkgContext.ContextBundle, error) {
+func buildBundle(ctx context.Context, snapshot pkgContext.Snapshot, estimator pkgContext.TokenEstimator, budget pkgContext.Budget, results []pkgContext.RetrievalResult, cache *artifactCache) (pkgContext.ContextBundle, error) {
 	remaining := budget.EvidenceTokens()
 	sections := make([]pkgContext.ContextSection, 0, len(results))
 	selected := make(map[pkgContext.DocumentPath][]pkgContext.SourceRange)
@@ -25,14 +25,14 @@ func buildBundle(ctx context.Context, snapshot pkgContext.Snapshot, estimator pk
 			return pkgContext.ContextBundle{}, fmt.Errorf("build result document %q: %w", result.Path, pkgContext.ErrNotFound)
 		}
 		text := document.Content()[result.Range.Start:result.Range.End]
-		cost, err := estimateSafely(ctx, estimator, text)
+		cost, err := estimateSafely(ctx, estimator, text, cache)
 		if err != nil {
 			return pkgContext.ContextBundle{}, err
 		}
 		selectedRange := result.Range
 		truncated := false
 		if cost > remaining {
-			text, cost, err = truncateToBudget(ctx, estimator, text, remaining)
+			text, cost, err = truncateToBudget(ctx, estimator, text, remaining, cache)
 			if err != nil {
 				return pkgContext.ContextBundle{}, err
 			}
@@ -56,7 +56,11 @@ func buildBundle(ctx context.Context, snapshot pkgContext.Snapshot, estimator pk
 	return pkgContext.NewContextBundle(snapshot, estimator.ID(), estimator.Version(), budget, sections)
 }
 
-func estimateSafely(ctx context.Context, estimator pkgContext.TokenEstimator, text string) (cost int, err error) {
+func estimateSafely(ctx context.Context, estimator pkgContext.TokenEstimator, text string, cache *artifactCache) (cost int, err error) {
+	key := estimatorCacheKey(estimator, text)
+	if cached, found := cache.get(key); found {
+		return cached.(int), nil
+	}
 	defer func() {
 		if recover() != nil {
 			err = fmt.Errorf("token estimator %q panicked: %w", estimator.ID(), pkgContext.ErrEstimatorFailure)
@@ -72,10 +76,11 @@ func estimateSafely(ctx context.Context, estimator pkgContext.TokenEstimator, te
 	if cost < 0 || (text != "" && cost == 0) {
 		return 0, fmt.Errorf("token estimator %q returned invalid cost %d: %w", estimator.ID(), cost, pkgContext.ErrEstimatorFailure)
 	}
+	cache.put(key, cost, int64(len(key)+8))
 	return cost, nil
 }
 
-func truncateToBudget(ctx context.Context, estimator pkgContext.TokenEstimator, text string, allowance int) (string, int, error) {
+func truncateToBudget(ctx context.Context, estimator pkgContext.TokenEstimator, text string, allowance int, cache *artifactCache) (string, int, error) {
 	if allowance <= 0 {
 		return "", 0, nil
 	}
@@ -95,7 +100,7 @@ func truncateToBudget(ctx context.Context, estimator pkgContext.TokenEstimator, 
 		if !utf8.ValidString(text[:end]) {
 			return "", 0, fmt.Errorf("truncation produced invalid UTF-8: %w", pkgContext.ErrEstimatorFailure)
 		}
-		cost, err := estimateSafely(ctx, estimator, text[:end])
+		cost, err := estimateSafely(ctx, estimator, text[:end], cache)
 		if err != nil {
 			return "", 0, err
 		}

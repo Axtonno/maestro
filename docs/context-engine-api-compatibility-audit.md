@@ -91,6 +91,10 @@ La Fase 4 aggiunge `FusionStrategy`, `FusionReciprocalRank` e
 `RetrievalFused`. `RetrievalQueryOptions.Fusion` è additivo; query con più
 metodi devono dichiararlo per evitare euristiche implicite.
 
+La Fase 5 aggiunge `CachePolicy`, `CacheStats` e `CacheInspector`. `Engine`
+include l'ispezione delle statistiche; non espone contenuti, chiavi o mutation
+diretta della cache.
+
 ## Engine
 
 `Engine` espone registrazione pre-uso di source, analyzer ed estimator, indexing,
