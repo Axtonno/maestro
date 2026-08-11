@@ -79,6 +79,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 33. `context-engine-design.md`
 34. `context-engine-development-plan.md`
 35. `context-engine-api-compatibility-audit.md`
+36. `context-engine-indexing.md`
 
 ---
 
@@ -235,6 +236,11 @@ La Fase 1 è completata: `pkg/contextengine` definisce workspace, documenti,
 analisi, snapshot, retrieval e bundle immutabili. ADR-0024 assegna ownership e
 stabilisce provenance, budget e riservatezza senza modificare Runtime, Gestor,
 Provider o Plugin. La Fase 2 può ora implementare l'indice filesystem.
+
+La Fase 2 è completata: la source `context.filesystem` applica containment,
+policy, limiti, normalizzazione testuale e symlink-safe scanning; l'indice
+pubblica snapshot ordinati e generazionali mantenendo l'ultimo valore valido su
+failure o cancellazione. Source esterne vengono invocate senza lock globali.
 
 Uso essenziale:
 

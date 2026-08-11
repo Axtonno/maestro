@@ -41,6 +41,7 @@ Completati:
 * plugin-system-development-plan.md
 * plugin-api-compatibility-audit.md
 * context-engine-api-compatibility-audit.md
+* context-engine-indexing.md
 
 In progettazione:
 
@@ -1463,7 +1464,7 @@ llama.cpp già documentata; non è stata modificata da questo gate.
 
 ## Milestone 6 — Context Engine
 
-Stato: in corso — Fase 1 completata; Fase 2 pronta.
+Stato: in corso — Fasi 1–2 completate; Fase 3 pronta.
 
 Il design iniziale è definito in `docs/context-engine-design.md` e il piano
 operativo in `docs/context-engine-development-plan.md`.
@@ -1483,7 +1484,7 @@ workspace -> snapshot -> analisi -> retrieval -> selezione -> context bundle
 Le sei fasi sono:
 
 1. contratti, ownership e ADR-0024 — completata;
-2. workspace indexing e snapshot — pianificata;
+2. workspace indexing e snapshot — completata;
 3. analisi strutturata e AST — pianificata;
 4. retrieval, Context Builder e budget — pianificata;
 5. cache e aggiornamento incrementale — pianificata;
@@ -1540,3 +1541,28 @@ ADR-0024 formalizza ownership, refresh atomico, analyzer sostituibili,
 retrieval semantico opt-in, budget dichiarati e confine di riservatezza. La
 suite `pkg/contextengine` è verde. Il report è disponibile in
 `docs/reports/milestone-6-phase-1.md`.
+
+### Fase 2 — Workspace indexing e snapshot
+
+Completata in:
+
+```text
+internal/contextengine
+pkg/contextengine
+docs/context-engine-indexing.md
+```
+
+L'engine registra la source filesystem built-in e pubblica snapshot in-memory
+ordinati con generazioni monotone. La scansione applica path containment,
+include/exclude, limiti per file e workspace, esclusione di hidden e dipendenze,
+normalizzazione UTF-8 e classificazione media/language deterministica.
+
+Symlink non vengono seguiti; identità, dimensione e modification time vengono
+verificati attorno alla lettura. Binari sono esclusi per default o conservati
+come `application/octet-stream` su richiesta. Failure, cancellazione e output
+source invalidi non sostituiscono l'ultimo snapshot.
+
+Source esterne vengono invocate senza lock globali. Test bloccanti e concorrenti
+verificano registrazione indipendente, venti refresh simultanei e snapshot
+completi. Il report è disponibile in
+`docs/reports/milestone-6-phase-2.md`.

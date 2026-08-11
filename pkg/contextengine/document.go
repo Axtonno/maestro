@@ -19,8 +19,9 @@ func (sourceRange SourceRange) Validate(size int) error {
 	return nil
 }
 
-// Document is immutable text identified by a normalized logical path and a
-// SHA-256 digest of its normalized UTF-8 content.
+// Document is immutable content identified by a normalized logical path and a
+// SHA-256 digest. Text documents must contain normalized UTF-8; opaque content
+// uses application/octet-stream and is indexable but not analyzable as text.
 type Document struct {
 	path      DocumentPath
 	digest    Digest
@@ -39,8 +40,12 @@ func NewDocument(documentPath DocumentPath, mediaType string, language Language,
 	if err := language.Validate(); err != nil {
 		return Document{}, err
 	}
-	if !utf8.ValidString(content) || strings.ContainsRune(content, 0) {
+	textual := strings.HasPrefix(mediaType, "text/") || language != ""
+	if textual && (!utf8.ValidString(content) || strings.ContainsRune(content, 0)) {
 		return Document{}, fmt.Errorf("document content is not supported UTF-8 text: %w", ErrInvalidDocument)
+	}
+	if !textual && mediaType != "application/octet-stream" {
+		return Document{}, fmt.Errorf("opaque document media type %q is unsupported: %w", mediaType, ErrInvalidDocument)
 	}
 	sum := sha256.Sum256([]byte(content))
 	return Document{
