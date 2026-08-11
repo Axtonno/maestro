@@ -1,8 +1,8 @@
 # Context Engine Public API Compatibility Audit
 
-Versione: 0.1.0
+Versione: 1.0.0
 
-Stato: Fase 1 completata
+Stato: Audit finale completato
 
 Data: 2026-08-11
 
@@ -10,18 +10,25 @@ Data: 2026-08-11
 
 # Scopo
 
-Registrare la baseline pubblica introdotta dalla Milestone 6 e verificare che
-non modifichi i contratti già stabili di Runtime, Gestor, Provider e Plugin.
+Registrare la superficie pubblica consegnata dalla Milestone 6 e classificare
+l'impatto sui contratti Runtime, Gestor, Provider e Plugin.
 
 ---
 
 # Esito
 
-Il nuovo package `pkg/contextengine` è additivo. Nessuna firma esistente è
-stata modificata e il package non è ancora collegato al composition root.
+Il package `pkg/contextengine` è additivo ed è collegato al composition root.
+`pkg/runtime.Runtime`, `pkg/gestor`, `pkg/provider` e `pkg/plugin` restano
+invariati.
 
-Le dipendenze pubbliche sono limitate alla libreria standard. I contratti non
-importano adapter provider, plugin Laravel o implementazioni interne.
+`maestro.Runtime` aggiunge `ContextEngine`; è compatibile per i consumer ma
+richiede l'implementazione del nuovo metodo agli eventuali implementatori
+esterni dell'interfaccia. La facade Laravel aggiunge `WorkspaceProvider` e ha
+versione `0.3.0`, con lo stesso impatto sugli implementatori esterni.
+
+Le dipendenze pubbliche di `pkg/contextengine` sono limitate alla libreria
+standard e a `pkg/runtime` per evento e capability. I contratti non importano
+adapter provider, plugin Laravel o implementazioni interne.
 
 ---
 
@@ -111,11 +118,21 @@ duplicato, provider registry, persistence API o tool execution.
 | `pkg/gestor` | nessuna | Compatibile |
 | `pkg/provider` | nessuna | Compatibile |
 | `pkg/plugin` | nessuna | Compatibile |
-| `pkg/plugin/laravel` | nessuna nella Fase 1 | Compatibile |
-| composition root `maestro` | nessuna nella Fase 1 | Compatibile |
+| `pkg/plugin/laravel` | `Plugin` include `WorkspaceProvider`; versione `0.3.0` | Consumer compatibile; implementer-breaking |
+| composition root `maestro` | `Runtime.ContextEngine()` | Consumer compatibile; implementer-breaking |
 
-L'accessor del composition root e il contratto Laravel verranno aggiunti nella
-Fase 6 soltanto dopo che l'implementazione concreta dimostrerà il consumer.
+Gli impatti sono confinati alle due interfacce di facade. Costruttori e tipi
+concreti forniti da Maestro soddisfano i nuovi contratti; non cambiano le firme
+dei metodi preesistenti.
+
+## Aggiunte della Fase 6
+
+- `Runtime.ContextEngine()` espone l'unica istanza composta;
+- `CapabilityWorkspaceProvider` rende il workspace generico scopribile;
+- il plugin Laravel implementa `WorkspaceProvider`;
+- eventi `context.index.*`, `context.build.*` e `context.cache.observed` usano
+  un payload redatto;
+- `EventFailure` espone classificazioni stabili senza error string esterne.
 
 ---
 
@@ -139,8 +156,8 @@ descrivere l'input locale necessario alla diagnosi.
 - nuovi campi opzionali possono essere aggiunti tramite options struct;
 - enum possono essere estesi in modo additivo, ma metodi sconosciuti restano
   invalidi finché non implementati;
-- `Engine` è un contratto nuovo: prima dell'integrazione finale sarà auditato
-  di nuovo per evitare metodi non necessari;
+- `Engine` è implementato dal servizio interno e include soltanto registrazione,
+  indexing, snapshot, retrieval, build e statistiche aggregate della cache;
 - `ScanPolicy` è una struct pubblica e richiede compatibilità additiva;
 - `ContextSection` e `RetrievalResult` sono value DTO e richiedono audit prima
   di modifiche semantiche.
@@ -158,4 +175,4 @@ descrivere l'input locale necessario alla diagnosi.
 - target semantic obbligatorio;
 - composizione dei sentinel sul budget.
 
-La suite `go test ./pkg/contextengine` è verde.
+La suite repository-wide, race detector e vet sono inclusi nel gate finale.

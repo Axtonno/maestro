@@ -1,6 +1,6 @@
 # Maestro Laravel Plugin
 
-Versione: 0.2.0
+Versione: 0.3.0
 
 Stato: Implementato
 
@@ -37,6 +37,11 @@ err = rt.Start(ctx)
 Il plugin dichiara `plugin.CapabilityWorkspaceDetection`, con ID stabile
 `plugin.workspace-detection`. Gestor la indicizza attraverso il Registry
 globale dei componenti senza eseguire la detection.
+
+Dichiara inoltre `contextengine.CapabilityWorkspaceProvider`, con ID
+`context.workspace-provider`. Il metodo `Workspace` restituisce il contratto
+framework-neutral consumabile da `Runtime.ContextEngine`; Gestor continua a
+descrivere la capability senza avviare indexing o analyzer.
 
 ---
 
@@ -81,10 +86,10 @@ Gli errori restano ispezionabili con `errors.Is`.
 
 # Limiti
 
-Questa prima versione esegue discovery e health del framework. Comandi Artisan,
-analisi delle route, service container, Eloquent, Blade e integrazioni con il
-Context Engine verranno aggiunti come capability del plugin, non del core.
+Questa versione esegue discovery e health del framework ed espone il workspace
+generico al Context Engine. Comandi Artisan, analisi delle route, service
+container, Eloquent e Blade restano future capability del plugin, non del core.
 
-Non viene ancora esposto un contratto workspace framework-neutral: i metodi
-concreti `Root` e `FrameworkVersion` restano il confine Laravel finché il Context
-Engine non definirà requisiti comuni verificabili.
+Il contratto generico contiene root, source filesystem, policy e metadata
+limitati. `Root` e `FrameworkVersion` restano disponibili sulla facade Laravel;
+la versione inizializzata viene duplicata soltanto come metadata descrittivo.

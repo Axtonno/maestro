@@ -1,8 +1,8 @@
 # Milestone 6 — Context Engine Design
 
-Versione: 0.2.0
+Versione: 1.0.0
 
-Stato: Approvato — ADR-0024 Accepted
+Stato: Implementato — ADR-0024 Accepted
 
 Data: 2026-08-11
 
@@ -93,11 +93,11 @@ Milestone 8.
 Il Context Engine è un servizio composto dal Runtime, non un'estensione del
 `runtime.Context` usato per cancellazione e lifecycle. Per evitare ambiguità
 con `context.Context` della libreria standard e con `pkg/runtime.Context`, il
-package pubblico previsto è `pkg/contextengine`; l'implementazione concreta
-rimane in `internal/contextengine`.
+package pubblico è `pkg/contextengine`; l'implementazione concreta rimane in
+`internal/contextengine`.
 
-Il composition root potrà esporre il servizio con un accessor additivo. Non è
-richiesta una modifica breaking di `pkg/runtime.Runtime`.
+Il composition root espone il servizio tramite `Runtime.ContextEngine`. Il
+contratto di basso livello `pkg/runtime.Runtime` resta invariato.
 
 ## Pipeline con ownership separate
 
@@ -318,8 +318,8 @@ framework-neutral, ma route, Eloquent, Blade e Composer restano conoscenza del
 plugin o di analyzer dedicati. Il Context Engine non importa il package
 Laravel.
 
-Il Developer Benchmark potrà sostituire il retrieval ad hoc con il percorso
-pubblico del Context Engine mantenendo dataset, rubrica e reporting canonici.
+Il Developer Benchmark usa il percorso pubblico del Context Engine mantenendo
+dataset, rubrica e reporting canonici.
 
 ---
 

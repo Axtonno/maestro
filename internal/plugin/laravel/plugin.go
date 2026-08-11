@@ -1,6 +1,7 @@
 package laravel
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,13 +11,14 @@ import (
 	"strings"
 	"sync"
 
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
 const (
 	ID      pkgPlugin.ID = "laravel"
-	Version              = "0.2.0"
+	Version              = "0.3.0"
 
 	maxComposerManifestBytes = 1 << 20
 )
@@ -26,11 +28,13 @@ type Plugin interface {
 
 	Root() string
 	FrameworkVersion() string
+	pkgContext.WorkspaceProvider
 }
 
 var _ Plugin = (*plugin)(nil)
 var _ pkgRuntime.Initializer = (*plugin)(nil)
 var _ pkgRuntime.HealthChecker = (*plugin)(nil)
+var _ pkgContext.WorkspaceProvider = (*plugin)(nil)
 
 type plugin struct {
 	mu sync.RWMutex
@@ -69,6 +73,7 @@ func (p *plugin) Metadata() pkgRuntime.Metadata {
 			pkgRuntime.CapabilityInitialize,
 			pkgRuntime.CapabilityHealth,
 			pkgPlugin.CapabilityWorkspaceDetection,
+			pkgContext.CapabilityWorkspaceProvider,
 		},
 	}
 }
@@ -107,6 +112,28 @@ func (p *plugin) FrameworkVersion() string {
 	defer p.mu.RUnlock()
 
 	return p.frameworkVersion
+}
+
+func (p *plugin) Workspace(ctx context.Context) (pkgContext.Workspace, error) {
+	if ctx == nil {
+		return pkgContext.Workspace{}, fmt.Errorf("describe Laravel workspace with nil context: %w", pkgContext.ErrInvalidWorkspace)
+	}
+	if err := ctx.Err(); err != nil {
+		return pkgContext.Workspace{}, err
+	}
+	metadata := map[string]string{"framework": "laravel"}
+	if version := p.FrameworkVersion(); version != "" {
+		metadata["framework_version"] = version
+	}
+	return pkgContext.NewWorkspace(
+		pkgContext.WorkspaceID(ID),
+		p.root,
+		pkgContext.WorkspaceOptions{
+			Source:   pkgContext.SourceFilesystem,
+			Policy:   pkgContext.DefaultScanPolicy(),
+			Metadata: metadata,
+		},
+	)
 }
 
 func detect(root string) (string, error) {

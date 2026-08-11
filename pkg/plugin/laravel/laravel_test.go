@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/antonio-cafeo/maestro"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	"github.com/antonio-cafeo/maestro/pkg/plugin/laravel"
@@ -51,15 +52,22 @@ func TestLaravelPluginLoadsAndStartsThroughMaestro(t *testing.T) {
 		t.Fatalf("refresh Gestor after Laravel load: %v", err)
 	}
 	descriptorCount := 0
+	contextDescriptorCount := 0
 	for _, descriptor := range runtime.Gestor().Snapshot().Descriptors() {
 		if descriptor.Capability == pkgGestor.CapabilityID(
 			pkgPlugin.CapabilityWorkspaceDetection,
 		) && descriptor.Target.ID == string(laravel.ID) {
 			descriptorCount++
 		}
+		if descriptor.Capability == pkgGestor.CapabilityID(pkgContext.CapabilityWorkspaceProvider) && descriptor.Target.ID == string(laravel.ID) {
+			contextDescriptorCount++
+		}
 	}
 	if descriptorCount != 1 {
 		t.Fatalf("expected one Laravel workspace descriptor, got %d", descriptorCount)
+	}
+	if contextDescriptorCount != 1 {
+		t.Fatalf("expected one generic workspace descriptor, got %d", contextDescriptorCount)
 	}
 
 	if err := runtime.Start(context.Background()); err != nil {
@@ -70,6 +78,17 @@ func TestLaravelPluginLoadsAndStartsThroughMaestro(t *testing.T) {
 	}
 	if state := runtime.StateManager().Get(loaded).State; state != pkgRuntime.StateRunning {
 		t.Fatalf("expected Laravel plugin running, got %d", state)
+	}
+	contextWorkspace, err := laravelPlugin.Workspace(t.Context())
+	if err != nil {
+		t.Fatalf("describe Laravel workspace: %v", err)
+	}
+	snapshot, err := runtime.ContextEngine().Index(t.Context(), contextWorkspace)
+	if err != nil {
+		t.Fatalf("index Laravel workspace: %v", err)
+	}
+	if snapshot.Metadata().DocumentCount != 2 || snapshot.Metadata().Workspace != pkgContext.WorkspaceID(laravel.ID) {
+		t.Fatalf("unexpected Laravel context snapshot: %#v", snapshot.Metadata())
 	}
 	query, err := pkgGestor.NewQuery(
 		pkgGestor.CapabilityID(pkgPlugin.CapabilityWorkspaceDetection),
@@ -84,6 +103,20 @@ func TestLaravelPluginLoadsAndStartsThroughMaestro(t *testing.T) {
 	}
 	if resolution.Descriptor().Target.ID != string(laravel.ID) {
 		t.Fatalf("unexpected Laravel capability target: %#v", resolution.Descriptor().Target)
+	}
+	contextQuery, err := pkgGestor.NewQuery(
+		pkgGestor.CapabilityID(pkgContext.CapabilityWorkspaceProvider),
+		pkgGestor.QueryOptions{TargetKind: pkgGestor.TargetKindComponent},
+	)
+	if err != nil {
+		t.Fatalf("construct generic workspace query: %v", err)
+	}
+	contextResolution, err := runtime.Gestor().Resolve(contextQuery)
+	if err != nil {
+		t.Fatalf("resolve generic workspace capability: %v", err)
+	}
+	if contextResolution.Descriptor().Target.ID != string(laravel.ID) {
+		t.Fatalf("unexpected generic workspace target: %#v", contextResolution.Descriptor().Target)
 	}
 
 	if err := runtime.Stop(context.Background()); err != nil {

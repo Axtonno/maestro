@@ -83,6 +83,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 37. `context-engine-analysis.md`
 38. `context-engine-retrieval.md`
 39. `context-engine-cache.md`
+40. `context-engine-runtime.md`
 
 ---
 
@@ -223,22 +224,19 @@ lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
 sull'Event Bus condiviso.
 
 La Milestone 5 — Plugin System è completata. Catalogo e caricamento sono
-coperti sotto concorrenza; graph, stato e lifecycle restano globali; Laravel
-`0.2.0` dichiara `plugin.workspace-detection`; gli eventi sono sincroni,
+coperti sotto concorrenza; graph, stato e lifecycle restano globali; la
+baseline Laravel `0.2.0` dichiara `plugin.workspace-detection`; gli eventi sono sincroni,
 best-effort e isolati da errori o panic degli observer. Audit API, suite
 completa, race detector, vet e gate finale sono verdi. Packaging esterno,
 sandbox e plugin di terze parti restano fuori scope.
 
-La Milestone 6 — Context Engine è iniziata con il design architetturale e un
-piano in sei fasi: contratti; workspace indexing; analisi strutturata e AST;
-retrieval e Context Builder budgetato; cache incrementale; integrazione e gate
-finale. Il servizio resterà provider-agnostic, userà embedding soltanto in modo
-opt-in e non anticiperà memoria agente, tool execution o permission model.
+La Milestone 6 — Context Engine è completata nelle sei fasi previste. Il
+servizio è provider-agnostic, usa embedding soltanto in modo opt-in e non
+anticipa memoria agente, tool execution o permission model.
 
 La Fase 1 è completata: `pkg/contextengine` definisce workspace, documenti,
 analisi, snapshot, retrieval e bundle immutabili. ADR-0024 assegna ownership e
-stabilisce provenance, budget e riservatezza senza modificare Runtime, Gestor,
-Provider o Plugin. La Fase 2 può ora implementare l'indice filesystem.
+stabilisce provenance, budget e riservatezza.
 
 La Fase 2 è completata: la source `context.filesystem` applica containment,
 policy, limiti, normalizzazione testuale e symlink-safe scanning; l'indice
@@ -259,6 +257,12 @@ La Fase 5 è completata: una cache LRU bounded riusa analysis, embedding e stime
 con chiavi versionate. Rename, versioni e dimensioni invalidano gli artefatti;
 percorsi cold e warm restano equivalenti e richieste concorrenti non vengono
 accorpate implicitamente.
+
+La Fase 6 è completata: `Runtime.ContextEngine` espone una singola istanza che
+condivide Provider Runtime ed Event Bus. Laravel `0.3.0` implementa il contratto
+generico `WorkspaceProvider`; Gestor ne risolve la capability senza eseguire la
+pipeline. Eventi di index, build e cache usano payload redatti e observer
+best-effort. Suite completa, race detector, vet e audit API chiudono il gate.
 
 Uso essenziale:
 

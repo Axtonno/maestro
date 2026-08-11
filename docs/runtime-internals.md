@@ -203,9 +203,11 @@ impedisce al ramo stopping di essere mascherato dallo stato started.
 Il Runtime non deve duplicare la logica appartenente a Registry, Graph, Resolver, Validator o Builder.
 
 Il Runtime è anche il composition root dei servizi Config, Logger, Event Bus,
-Provider Runtime e Plugin Runtime. Config, Logger, Event Bus e Provider Runtime
-sono condivisi con il `runtimeContext` dei componenti; il Plugin Runtime è
-esposto dal composition root pubblico.
+Provider Runtime, Plugin Runtime, Gestor e Context Engine. Config, Logger,
+Event Bus e Provider Runtime sono condivisi con il `runtimeContext` dei
+componenti. Il Context Engine usa la stessa istanza Provider Runtime per gli
+embedding e lo stesso Event Bus per gli eventi redatti; non partecipa al
+lifecycle dei componenti e viene esposto dal composition root pubblico.
 
 ## Costruttori
 
@@ -249,6 +251,7 @@ Per `internal/runtime` vengono adottate le seguenti regole:
 17. Il Plugin Runtime non esegue loader mantenendo lock sul catalogo.
 18. Un plugin viene registrato soltanto se il manifest richiede la versione API supportata.
 19. Il Provider Runtime non invoca observer mentre mantiene lock interni e ne isola errori e panic.
+20. Il Context Engine è composto una sola volta e non duplica registry provider o Event Bus.
 
 ## Evoluzione futura
 

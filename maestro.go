@@ -2,6 +2,7 @@ package maestro
 
 import (
 	internalRuntime "github.com/antonio-cafeo/maestro/internal/runtime"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
@@ -11,6 +12,7 @@ import (
 // dedicated Plugin Runtime.
 type Runtime interface {
 	pkgRuntime.Runtime
+	ContextEngine() pkgContext.Engine
 	Gestor() pkgGestor.Service
 	Plugins() pkgPlugin.Runtime
 }

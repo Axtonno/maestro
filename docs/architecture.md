@@ -1,6 +1,6 @@
 # Maestro Architecture
 
-Versione: 0.3.0
+Versione: 0.4.0
 
 Stato: Draft
 
@@ -288,8 +288,9 @@ Responsabilità:
 
 Il Context Engine è un servizio composto dal Runtime e resta distinto sia da
 `context.Context` sia dal `runtime.Context` consegnato ai componenti. Il
-package pubblico previsto è `pkg/contextengine`; l'implementazione concreta
-rimane interna.
+package pubblico è `pkg/contextengine`; l'implementazione concreta rimane in
+`internal/contextengine` ed è esposta dal composition root tramite
+`Runtime.ContextEngine`.
 
 La pipeline separa source, indice, analyzer, retrieval, builder e cache. Lo
 snapshot del workspace è autorevole; la cache conserva soltanto artefatti
@@ -298,9 +299,9 @@ linguaggio e framework rimangono sostituibili e non entrano nel Runtime Core.
 
 Gli embedding sono un'estensione opt-in del retrieval e passano attraverso il
 Provider Runtime esistente con provider e modello espliciti. Gestor descrive le
-capability ma non esegue indexing o analyzer. Plugin come Laravel possono
-fornire workspace tramite un contratto framework-neutral senza trasferire
-conoscenza Laravel al Context Engine.
+capability ma non esegue indexing o analyzer. Il plugin Laravel `0.3.0`
+fornisce workspace tramite il contratto framework-neutral `WorkspaceProvider`
+senza trasferire conoscenza Laravel al Context Engine.
 
 Ogni risultato conserva origine e metodo di selezione; ogni bundle dichiara
 budget ed estimator. Eventi e log espongono soltanto contatori e codici redatti,

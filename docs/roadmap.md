@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Living Document
 
-Ultimo aggiornamento: 2026-08-08
+Ultimo aggiornamento: 2026-08-11
 
 Autori:
 - Antonio Cafeo
@@ -452,7 +452,7 @@ pubblico e la milestone è chiusa.
 
 # Milestone 6 — Context Engine
 
-Stato: In corso — Fasi 1–5 completate; Fase 6 pronta
+Stato: Conclusa
 
 Obiettivi:
 
@@ -473,7 +473,7 @@ Fasi di sviluppo:
 | 3 | Analisi strutturata e AST | Completata |
 | 4 | Retrieval, Context Builder e budget | Completata |
 | 5 | Cache e aggiornamento incrementale | Completata |
-| 6 | Integrazione, osservabilità e gate finale | Pianificata |
+| 6 | Integrazione, osservabilità e gate finale | Completata |
 
 Il design è descritto in `context-engine-design.md`; il piano operativo, i gate
 e i deliverable sono definiti in `context-engine-development-plan.md`.
@@ -483,10 +483,13 @@ model, persistenza distribuita o ranking LLM. Il retrieval semantico resta
 opt-in e riusa il Provider Runtime esistente senza selezione implicita di
 provider o modello.
 
-Output atteso:
+Output consegnato:
 
 Costruzione intelligente, deterministica e ispezionabile del contesto entro un
-budget dichiarato.
+budget dichiarato, composta nel Runtime e verificata con il workspace provider
+Laravel.
+
+I sei report di fase e `reports/milestone-6-final.md` documentano i gate.
 
 ---
 

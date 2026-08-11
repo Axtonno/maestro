@@ -2,6 +2,7 @@ package laravel
 
 import (
 	internalLaravel "github.com/antonio-cafeo/maestro/internal/plugin/laravel"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 )
 
@@ -23,6 +24,7 @@ type Plugin interface {
 
 	Root() string
 	FrameworkVersion() string
+	pkgContext.WorkspaceProvider
 }
 
 // New constructs a Laravel plugin for a workspace. Detection is performed by

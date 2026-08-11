@@ -1467,16 +1467,16 @@ llama.cpp già documentata; non è stata modificata da questo gate.
 
 ## Milestone 6 — Context Engine
 
-Stato: in corso — Fasi 1–5 completate; Fase 6 pronta.
+Stato: completata — Fasi 1–6 completate.
 
 Il design iniziale è definito in `docs/context-engine-design.md` e il piano
 operativo in `docs/context-engine-development-plan.md`.
 
 La milestone introduce un servizio provider-agnostic separato da
-`context.Context` e da `runtime.Context`. Il package pubblico previsto è
+`context.Context` e da `runtime.Context`. Il package pubblico è
 `pkg/contextengine`; l'implementazione concreta resta in
-`internal/contextengine`. Il composition root verrà esteso in modo additivo
-senza modificare il contratto `pkg/runtime.Runtime`.
+`internal/contextengine`. Il composition root espone `Runtime.ContextEngine`
+senza modificare il contratto di basso livello `pkg/runtime.Runtime`.
 
 La pipeline prevista è:
 
@@ -1491,7 +1491,7 @@ Le sei fasi sono:
 3. analisi strutturata e AST — completata;
 4. retrieval, Context Builder e budget — completata;
 5. cache e aggiornamento incrementale — completata;
-6. integrazione, osservabilità e gate finale — pianificata.
+6. integrazione, osservabilità e gate finale — completata.
 
 Decisioni iniziali del design:
 
@@ -1508,11 +1508,11 @@ Decisioni iniziali del design:
 * una stima token non viene presentata come conteggio esatto;
 * la cache iniziale è in-memory, bounded, content-addressed e non autorevole;
 * Gestor descrive capability ma non esegue indexing o analyzer;
-* Laravel fornirà il primo workspace attraverso un contratto generico senza
+* Laravel fornisce il primo workspace attraverso un contratto generico senza
   introdurre conoscenza framework-specific nel Context Engine;
 * eventi e log non contengono query, testo, embedding o path assoluti.
 
-Ogni fase produrrà un report in `docs/reports/`; la Fase 6 produrrà anche
+Ogni fase ha un report in `docs/reports/`; il report conclusivo è
 `docs/reports/milestone-6-final.md`.
 
 Restano fuori scope memoria conversazionale, tool execution, permission model,
@@ -1639,3 +1639,35 @@ Failure, panic e cancellazioni non diventano hit.
 Cold e warm producono ranking e bundle equivalenti. Due richieste cold
 concorrenti restano indipendenti e non introducono singleflight implicito. Il
 report è disponibile in `docs/reports/milestone-6-phase-5.md`.
+
+### Fase 6 — Integrazione, osservabilità e gate finale
+
+Completata in:
+
+```text
+internal/runtime
+internal/plugin/laravel
+pkg/contextengine
+docs/context-engine-runtime.md
+```
+
+Il composition root crea una sola istanza del Context Engine e condivide il
+Provider Runtime per gli embedding e l'Event Bus per osservabilità. L'accessor
+pubblico è `Runtime.ContextEngine`; il Context Engine non entra nel lifecycle
+dei componenti.
+
+Laravel `0.3.0` implementa `WorkspaceProvider` e dichiara
+`context.workspace-provider`. Gestor indicizza e risolve la capability senza
+invocare workspace, indexing o analyzer. Il percorso end-to-end usa il
+workspace generico Laravel per produrre uno snapshot.
+
+Gli eventi `context.index.*`, `context.build.*` e `context.cache.observed`
+espongono soltanto ID, generazione, conteggi, statistiche aggregate e codici di
+failure. Query, testo, embedding, root, path, provider, modello ed error string
+non entrano nei payload. Errori e panic degli observer sono best-effort e non
+alterano operazioni già committate.
+
+Suite completa, race detector, vet, test ripetuti, diff check e audit API sono
+verdi. I report sono `docs/reports/milestone-6-phase-6.md` e
+`docs/reports/milestone-6-final.md`. Memoria, tool permissions, watcher,
+persistenza e ranking LLM restano fuori scope.

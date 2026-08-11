@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
@@ -80,11 +81,43 @@ func TestPluginDeclaresIdentityAndCompatibility(t *testing.T) {
 		pkgRuntime.CapabilityInitialize,
 		pkgRuntime.CapabilityHealth,
 		pkgPlugin.CapabilityWorkspaceDetection,
+		pkgContext.CapabilityWorkspaceProvider,
 	}; !equalCapabilities(got, want) {
 		t.Fatalf("expected capabilities %v, got %v", want, got)
 	}
 	if plugin.Manifest().RuntimeAPIVersion != pkgPlugin.RuntimeAPIVersion {
 		t.Fatalf("unexpected plugin manifest: %#v", plugin.Manifest())
+	}
+}
+
+func TestPluginProvidesFrameworkNeutralWorkspace(t *testing.T) {
+	root := newLaravelWorkspace(t, "^12.0")
+	plugin, err := New(root)
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+	if _, err := plugin.Workspace(nil); !errors.Is(err, pkgContext.ErrInvalidWorkspace) {
+		t.Fatalf("expected nil context rejection, got %v", err)
+	}
+	before, err := plugin.Workspace(context.Background())
+	if err != nil {
+		t.Fatalf("describe workspace before initialization: %v", err)
+	}
+	if before.ID() != pkgContext.WorkspaceID(ID) || before.Root() != filepath.Clean(root) || before.Source() != pkgContext.SourceFilesystem || before.Metadata()["framework"] != "laravel" {
+		t.Fatalf("unexpected generic workspace: id=%q root=%q source=%q metadata=%#v", before.ID(), before.Root(), before.Source(), before.Metadata())
+	}
+	if _, exists := before.Metadata()["framework_version"]; exists {
+		t.Fatal("workspace exposed a version before initialization")
+	}
+	if err := plugin.(pkgRuntime.Initializer).Initialize(nil); err != nil {
+		t.Fatalf("initialize plugin: %v", err)
+	}
+	after, err := plugin.Workspace(context.Background())
+	if err != nil {
+		t.Fatalf("describe initialized workspace: %v", err)
+	}
+	if after.Metadata()["framework_version"] != "^12.0" {
+		t.Fatalf("unexpected framework-neutral metadata: %#v", after.Metadata())
 	}
 }
 

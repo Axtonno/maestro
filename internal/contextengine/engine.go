@@ -2,6 +2,7 @@ package contextengine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -9,6 +10,7 @@ import (
 	"sync"
 
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
+	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 )
 
 var _ pkgContext.Engine = (*Engine)(nil)
@@ -20,12 +22,14 @@ type Engine struct {
 	estimators map[pkgContext.EstimatorID]pkgContext.TokenEstimator
 	embedding  embeddingRuntime
 	cache      *artifactCache
+	eventBus   pkgRuntime.EventBus
 	snapshots  map[pkgContext.WorkspaceID]pkgContext.Snapshot
 }
 
 type Options struct {
 	Embedding embeddingRuntime
 	Cache     pkgContext.CachePolicy
+	EventBus  pkgRuntime.EventBus
 }
 
 func New() *Engine {
@@ -53,6 +57,7 @@ func NewWithOptions(options Options) (*Engine, error) {
 		estimators: map[pkgContext.EstimatorID]pkgContext.TokenEstimator{estimator.ID(): estimator},
 		embedding:  options.Embedding,
 		cache:      newArtifactCache(options.Cache),
+		eventBus:   options.EventBus,
 		snapshots:  make(map[pkgContext.WorkspaceID]pkgContext.Snapshot),
 	}, nil
 }
@@ -116,7 +121,27 @@ func (engine *Engine) RegisterEstimator(estimator pkgContext.TokenEstimator) err
 	return nil
 }
 
-func (engine *Engine) Index(ctx context.Context, workspace pkgContext.Workspace) (pkgContext.Snapshot, error) {
+func (engine *Engine) Index(ctx context.Context, workspace pkgContext.Workspace) (snapshot pkgContext.Snapshot, err error) {
+	engine.publish(pkgContext.EventIndexStarted, pkgContext.EventPayload{Workspace: workspace.ID()})
+	defer func() {
+		payload := pkgContext.EventPayload{Workspace: workspace.ID(), Failure: classifyEventFailure(err)}
+		topic := pkgContext.EventIndexFailed
+		if err == nil {
+			metadata := snapshot.Metadata()
+			payload.Generation = metadata.Generation
+			payload.DocumentCount = metadata.DocumentCount
+			payload.AnalysisCount = metadata.AnalysisCount
+			topic = pkgContext.EventIndexCompleted
+		}
+		engine.publish(topic, payload)
+		if err == nil {
+			engine.publish(pkgContext.EventCacheObserved, pkgContext.EventPayload{Workspace: workspace.ID(), Generation: snapshot.Metadata().Generation, Cache: engine.CacheStats()})
+		}
+	}()
+	return engine.index(ctx, workspace)
+}
+
+func (engine *Engine) index(ctx context.Context, workspace pkgContext.Workspace) (pkgContext.Snapshot, error) {
 	if ctx == nil {
 		return pkgContext.Snapshot{}, fmt.Errorf("index workspace with nil context: %w", pkgContext.ErrInvalidWorkspace)
 	}
@@ -312,7 +337,26 @@ func (engine *Engine) Retrieve(ctx context.Context, query pkgContext.RetrievalQu
 	return retrieveSnapshot(ctx, snapshot, query, embedding, engine.cache)
 }
 
-func (engine *Engine) Build(ctx context.Context, request pkgContext.BuildRequest) (pkgContext.ContextBundle, error) {
+func (engine *Engine) Build(ctx context.Context, request pkgContext.BuildRequest) (bundle pkgContext.ContextBundle, err error) {
+	engine.publish(pkgContext.EventBuildStarted, pkgContext.EventPayload{Workspace: request.Query.Workspace()})
+	defer func() {
+		payload := pkgContext.EventPayload{Workspace: request.Query.Workspace(), Failure: classifyEventFailure(err)}
+		topic := pkgContext.EventBuildFailed
+		if err == nil {
+			payload.Generation = bundle.Generation()
+			payload.SectionCount = len(bundle.Sections())
+			payload.UsedTokens = bundle.UsedTokens()
+			topic = pkgContext.EventBuildCompleted
+		}
+		engine.publish(topic, payload)
+		if err == nil {
+			engine.publish(pkgContext.EventCacheObserved, pkgContext.EventPayload{Workspace: bundle.Workspace(), Generation: bundle.Generation(), Cache: engine.CacheStats()})
+		}
+	}()
+	return engine.build(ctx, request)
+}
+
+func (engine *Engine) build(ctx context.Context, request pkgContext.BuildRequest) (pkgContext.ContextBundle, error) {
 	if ctx == nil {
 		return pkgContext.ContextBundle{}, fmt.Errorf("build with nil context: %w", pkgContext.ErrInvalidBundle)
 	}
@@ -338,6 +382,44 @@ func (engine *Engine) Build(ctx context.Context, request pkgContext.BuildRequest
 		return pkgContext.ContextBundle{}, err
 	}
 	return buildBundle(ctx, snapshot, estimator, request.Budget, results, engine.cache)
+}
+
+func (engine *Engine) publish(topic string, payload pkgContext.EventPayload) {
+	if engine.eventBus == nil {
+		return
+	}
+	func() {
+		defer func() { _ = recover() }()
+		_ = engine.eventBus.Publish(pkgContext.Event{Topic: topic, Data: payload})
+	}()
+}
+
+func classifyEventFailure(err error) pkgContext.EventFailure {
+	switch {
+	case err == nil:
+		return pkgContext.EventFailureNone
+	case errors.Is(err, context.Canceled):
+		return pkgContext.EventFailureCanceled
+	case errors.Is(err, context.DeadlineExceeded):
+		return pkgContext.EventFailureDeadline
+	case errors.Is(err, pkgContext.ErrSourceFailure):
+		return pkgContext.EventFailureSource
+	case errors.Is(err, pkgContext.ErrAnalyzerFailure):
+		return pkgContext.EventFailureAnalyzer
+	case errors.Is(err, pkgContext.ErrEmbeddingFailure):
+		return pkgContext.EventFailureEmbedding
+	case errors.Is(err, pkgContext.ErrEstimatorFailure):
+		return pkgContext.EventFailureEstimator
+	case errors.Is(err, pkgContext.ErrBudgetExceeded):
+		return pkgContext.EventFailureBudget
+	case errors.Is(err, pkgContext.ErrNotFound):
+		return pkgContext.EventFailureNotFound
+	case errors.Is(err, pkgContext.ErrInvalidWorkspace), errors.Is(err, pkgContext.ErrInvalidQuery),
+		errors.Is(err, pkgContext.ErrInvalidBundle), errors.Is(err, pkgContext.ErrInvalidSnapshot):
+		return pkgContext.EventFailureInvalid
+	default:
+		return pkgContext.EventFailureInternal
+	}
 }
 
 func nilInterface(value any) bool {

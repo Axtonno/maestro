@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	internalContext "github.com/antonio-cafeo/maestro/internal/contextengine"
 	internalGestor "github.com/antonio-cafeo/maestro/internal/gestor"
 	internalPlugin "github.com/antonio-cafeo/maestro/internal/plugin"
 	internalProvider "github.com/antonio-cafeo/maestro/internal/provider"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
@@ -33,6 +35,7 @@ type gestorProviderRuntime interface {
 // Maestro entry point.
 type Runtime interface {
 	pkgRuntime.Runtime
+	ContextEngine() pkgContext.Engine
 	Gestor() pkgGestor.Service
 	Plugins() pkgPlugin.Runtime
 }
@@ -52,6 +55,7 @@ type runtime struct {
 	pluginRuntime     pkgPlugin.Runtime
 	providerRuntime   pkgProvider.Runtime
 	gestorService     pkgGestor.Service
+	contextEngine     pkgContext.Engine
 	gestorInvalidator func()
 
 	dependencyGraph          *graph
@@ -100,6 +104,15 @@ func newRuntimeWithServices(
 		stateManager:    componentStates,
 		providerRuntime: providerRuntime,
 	}
+	contextEngine, err := internalContext.NewWithOptions(internalContext.Options{
+		Embedding: providerRuntime,
+		Cache:     pkgContext.DefaultCachePolicy(),
+		EventBus:  componentEventBus,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("compose Context Engine: %v", err))
+	}
+	rt.contextEngine = contextEngine
 
 	rt.registryView = newRuntimeRegistry(rt)
 	rt.pluginRuntime = internalPlugin.NewRuntimeWithEventBus(
@@ -360,6 +373,10 @@ func (r *runtime) Plugins() pkgPlugin.Runtime {
 
 func (r *runtime) Gestor() pkgGestor.Service {
 	return r.gestorService
+}
+
+func (r *runtime) ContextEngine() pkgContext.Engine {
+	return r.contextEngine
 }
 
 func (r *runtime) composeGestor() {
