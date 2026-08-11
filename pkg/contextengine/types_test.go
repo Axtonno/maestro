@@ -22,15 +22,17 @@ func TestWorkspaceValidationAndDefensiveCopies(t *testing.T) {
 	root := filepath.Clean(t.TempDir())
 	policy := contextengine.DefaultScanPolicy()
 	policy.Include = []string{"*.go"}
+	analyzers := []contextengine.AnalyzerID{"context.go-ast"}
 	metadata := map[string]string{"framework": "laravel"}
 
 	workspace, err := contextengine.NewWorkspace("workspace", root, contextengine.WorkspaceOptions{
-		Source: contextengine.SourceFilesystem, Policy: policy, Metadata: metadata,
+		Source: contextengine.SourceFilesystem, Policy: policy, Analyzers: analyzers, Metadata: metadata,
 	})
 	if err != nil {
 		t.Fatalf("construct workspace: %v", err)
 	}
 	policy.Include[0] = "*.php"
+	analyzers[0] = "context.changed"
 	metadata["framework"] = "changed"
 	if got := workspace.Policy().Include[0]; got != "*.go" {
 		t.Fatalf("workspace policy shares caller storage: %q", got)
@@ -38,12 +40,17 @@ func TestWorkspaceValidationAndDefensiveCopies(t *testing.T) {
 	if got := workspace.Metadata()["framework"]; got != "laravel" {
 		t.Fatalf("workspace metadata shares caller storage: %q", got)
 	}
+	if got := workspace.Analyzers()[0]; got != "context.go-ast" {
+		t.Fatalf("workspace analyzers share caller storage: %q", got)
+	}
 
 	returnedPolicy := workspace.Policy()
 	returnedPolicy.Include[0] = "*.md"
 	returnedMetadata := workspace.Metadata()
+	returnedAnalyzers := workspace.Analyzers()
+	returnedAnalyzers[0] = "context.changed"
 	returnedMetadata["framework"] = "symfony"
-	if workspace.Policy().Include[0] != "*.go" || workspace.Metadata()["framework"] != "laravel" {
+	if workspace.Policy().Include[0] != "*.go" || workspace.Metadata()["framework"] != "laravel" || workspace.Analyzers()[0] != "context.go-ast" {
 		t.Fatal("workspace accessors expose mutable storage")
 	}
 }

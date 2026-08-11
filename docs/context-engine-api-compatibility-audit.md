@@ -53,6 +53,9 @@ importano adapter provider, plugin Laravel o implementazioni interne.
 root assoluta è necessaria all'I/O ma non è un path documento e non è destinata
 agli eventi.
 
+La Fase 3 aggiunge `WorkspaceOptions.Analyzers` e `Workspace.Analyzers` in modo
+additivo. La slice è difensiva e rappresenta selezione/composizione esplicita.
+
 ## Documento, analisi e snapshot
 
 | Contratto | Ownership |

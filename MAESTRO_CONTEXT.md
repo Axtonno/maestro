@@ -42,6 +42,7 @@ Completati:
 * plugin-api-compatibility-audit.md
 * context-engine-api-compatibility-audit.md
 * context-engine-indexing.md
+* context-engine-analysis.md
 
 In progettazione:
 
@@ -1464,7 +1465,7 @@ llama.cpp già documentata; non è stata modificata da questo gate.
 
 ## Milestone 6 — Context Engine
 
-Stato: in corso — Fasi 1–2 completate; Fase 3 pronta.
+Stato: in corso — Fasi 1–3 completate; Fase 4 pronta.
 
 Il design iniziale è definito in `docs/context-engine-design.md` e il piano
 operativo in `docs/context-engine-development-plan.md`.
@@ -1485,7 +1486,7 @@ Le sei fasi sono:
 
 1. contratti, ownership e ADR-0024 — completata;
 2. workspace indexing e snapshot — completata;
-3. analisi strutturata e AST — pianificata;
+3. analisi strutturata e AST — completata;
 4. retrieval, Context Builder e budget — pianificata;
 5. cache e aggiornamento incrementale — pianificata;
 6. integrazione, osservabilità e gate finale — pianificata.
@@ -1566,3 +1567,26 @@ Source esterne vengono invocate senza lock globali. Test bloccanti e concorrenti
 verificano registrazione indipendente, venti refresh simultanei e snapshot
 completi. Il report è disponibile in
 `docs/reports/milestone-6-phase-2.md`.
+
+### Fase 3 — Analisi strutturata e AST
+
+Completata in:
+
+```text
+internal/contextengine
+pkg/contextengine
+docs/context-engine-analysis.md
+```
+
+Il registry analyzer valida ID e versioni, rifiuta nil/typed nil e duplicati e
+invoca `Supports` e `Analyze` fuori lock. Senza configurazione, più analyzer
+applicabili producono `ErrAmbiguous`; `WorkspaceOptions.Analyzers` dichiara una
+composizione esplicita e difensiva.
+
+`context.go-ast@1` usa `go/parser` e produce package, import, type, field,
+constant, variable, function, method, relazioni e chunk. Parse incompleti
+conservano l'AST parziale con diagnostica `go_parse_error`. Errori operativi,
+panic, cancellazione o output incoerenti non pubblicano snapshot.
+
+Test bloccanti dimostrano callback fuori lock e cancellazione atomica. Il report
+è disponibile in `docs/reports/milestone-6-phase-3.md`.

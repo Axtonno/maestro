@@ -80,6 +80,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 34. `context-engine-development-plan.md`
 35. `context-engine-api-compatibility-audit.md`
 36. `context-engine-indexing.md`
+37. `context-engine-analysis.md`
 
 ---
 
@@ -241,6 +242,11 @@ La Fase 2 è completata: la source `context.filesystem` applica containment,
 policy, limiti, normalizzazione testuale e symlink-safe scanning; l'indice
 pubblica snapshot ordinati e generazionali mantenendo l'ultimo valore valido su
 failure o cancellazione. Source esterne vengono invocate senza lock globali.
+
+La Fase 3 è completata: analyzer versionati arricchiscono gli snapshot senza
+lock durante codice esterno; ambiguità richiedono selezione esplicita.
+`context.go-ast@1` usa la libreria standard e produce simboli, relazioni, chunk
+e diagnostiche anche da AST parziali.
 
 Uso essenziale:
 

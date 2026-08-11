@@ -452,7 +452,7 @@ pubblico e la milestone è chiusa.
 
 # Milestone 6 — Context Engine
 
-Stato: In corso — Fasi 1–2 completate; Fase 3 pronta
+Stato: In corso — Fasi 1–3 completate; Fase 4 pronta
 
 Obiettivi:
 
@@ -470,7 +470,7 @@ Fasi di sviluppo:
 |---|---|---|
 | 1 | Contratti, ownership e ADR-0024 | Completata |
 | 2 | Workspace indexing e snapshot | Completata |
-| 3 | Analisi strutturata e AST | Pianificata |
+| 3 | Analisi strutturata e AST | Completata |
 | 4 | Retrieval, Context Builder e budget | Pianificata |
 | 5 | Cache e aggiornamento incrementale | Pianificata |
 | 6 | Integrazione, osservabilità e gate finale | Pianificata |

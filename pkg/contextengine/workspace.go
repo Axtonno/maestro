@@ -52,19 +52,21 @@ func (policy ScanPolicy) Validate() error {
 }
 
 type WorkspaceOptions struct {
-	Source   SourceID
-	Policy   ScanPolicy
-	Metadata map[string]string
+	Source    SourceID
+	Policy    ScanPolicy
+	Analyzers []AnalyzerID
+	Metadata  map[string]string
 }
 
 // Workspace is immutable after construction. Metadata and policy patterns are
 // returned as defensive copies.
 type Workspace struct {
-	id       WorkspaceID
-	root     string
-	source   SourceID
-	policy   ScanPolicy
-	metadata map[string]string
+	id        WorkspaceID
+	root      string
+	source    SourceID
+	policy    ScanPolicy
+	analyzers []AnalyzerID
+	metadata  map[string]string
 }
 
 func NewWorkspace(id WorkspaceID, root string, options WorkspaceOptions) (Workspace, error) {
@@ -80,6 +82,17 @@ func NewWorkspace(id WorkspaceID, root string, options WorkspaceOptions) (Worksp
 	if err := options.Policy.Validate(); err != nil {
 		return Workspace{}, fmt.Errorf("workspace policy: %w: %w", err, ErrInvalidWorkspace)
 	}
+	analyzers := slices.Clone(options.Analyzers)
+	seenAnalyzers := make(map[AnalyzerID]struct{}, len(analyzers))
+	for index, analyzer := range analyzers {
+		if err := analyzer.Validate(); err != nil {
+			return Workspace{}, fmt.Errorf("workspace analyzer %d: %w: %w", index, err, ErrInvalidWorkspace)
+		}
+		if _, exists := seenAnalyzers[analyzer]; exists {
+			return Workspace{}, fmt.Errorf("workspace analyzer %q is duplicated: %w", analyzer, ErrInvalidWorkspace)
+		}
+		seenAnalyzers[analyzer] = struct{}{}
+	}
 	metadata := make(map[string]string, len(options.Metadata))
 	for key, value := range options.Metadata {
 		if !exactID(key) || strings.ContainsAny(key, "\r\n") || strings.ContainsAny(value, "\r\n") {
@@ -87,13 +100,17 @@ func NewWorkspace(id WorkspaceID, root string, options WorkspaceOptions) (Worksp
 		}
 		metadata[key] = value
 	}
-	return Workspace{id: id, root: root, source: options.Source, policy: clonePolicy(options.Policy), metadata: metadata}, nil
+	return Workspace{
+		id: id, root: root, source: options.Source, policy: clonePolicy(options.Policy),
+		analyzers: analyzers, metadata: metadata,
+	}, nil
 }
 
-func (workspace Workspace) ID() WorkspaceID    { return workspace.id }
-func (workspace Workspace) Root() string       { return workspace.root }
-func (workspace Workspace) Source() SourceID   { return workspace.source }
-func (workspace Workspace) Policy() ScanPolicy { return clonePolicy(workspace.policy) }
+func (workspace Workspace) ID() WorkspaceID         { return workspace.id }
+func (workspace Workspace) Root() string            { return workspace.root }
+func (workspace Workspace) Source() SourceID        { return workspace.source }
+func (workspace Workspace) Policy() ScanPolicy      { return clonePolicy(workspace.policy) }
+func (workspace Workspace) Analyzers() []AnalyzerID { return slices.Clone(workspace.analyzers) }
 func (workspace Workspace) Metadata() map[string]string {
 	metadata := make(map[string]string, len(workspace.metadata))
 	for key, value := range workspace.metadata {
@@ -104,7 +121,8 @@ func (workspace Workspace) Metadata() map[string]string {
 
 func (workspace Workspace) Validate() error {
 	_, err := NewWorkspace(workspace.id, workspace.root, WorkspaceOptions{
-		Source: workspace.source, Policy: workspace.policy, Metadata: workspace.metadata,
+		Source: workspace.source, Policy: workspace.policy,
+		Analyzers: workspace.analyzers, Metadata: workspace.metadata,
 	})
 	return err
 }
