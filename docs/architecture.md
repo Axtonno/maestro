@@ -1,6 +1,6 @@
 # Maestro Architecture
 
-Versione: 0.4.0
+Versione: 0.5.0
 
 Stato: Draft
 
@@ -316,15 +316,27 @@ Il design e le sei fasi della Milestone 6 sono descritti in
 
 Responsabilità:
 
-- filesystem;
-- git;
-- terminale;
-- docker;
-- composer;
-- artisan;
-- phpunit.
+- descrizione e registrazione dei tool;
+- preparazione e validazione delle invocazioni;
+- dichiarazione delle azioni e degli effetti;
+- autorizzazione tramite policy e approval flow;
+- esecuzione cancellabile e limitata;
+- produzione di risultati correlati e bounded.
 
-Ogni tool implementa una capability.
+Ogni tool implementa una capability e resta separato dall'agente che decide di
+richiederlo. Il modello propone arguments non fidati; il Tool Runtime li
+prepara, normalizza le risorse, richiede una decisione e soltanto dopo esegue
+l'effetto.
+
+Il permission model iniziale è default-deny e distingue almeno ispezione e
+mutazione del workspace, esecuzione di processi, rete, invocazione del modello e
+disclosure di contenuto. È un confine operativo per codice trusted in-process,
+non una sandbox per estensioni malevole.
+
+Le implementazioni previste includono filesystem, Git, terminale, Docker,
+Composer, Artisan e PHPUnit. La baseline della Milestone 7 consegna soltanto il
+set workspace minimo necessario a validare il primo agente; il catalogo resta
+estensibile senza modificare il Runtime Core.
 
 ---
 
@@ -335,11 +347,25 @@ Responsabilità:
 - pianificazione;
 - esecuzione task;
 - utilizzo dei tool;
-- gestione delle autorizzazioni.
+- coordinamento delle autorizzazioni;
+- memoria bounded della sessione;
+- gestione di budget, cancellazione e terminali;
+- integrazione workspace-aware con il Context Engine.
 
 Gli agenti non comunicano direttamente con i provider.
 
-Utilizzano il Runtime.
+Utilizzano l'Agent Runtime composto da Maestro, che coordina il Provider Runtime
+condiviso, il Context Engine, il Tool Runtime e Gestor. Provider, modello,
+workspace, agente e limiti sono input espliciti del run; nessun sottosistema
+applica selezione automatica o fallback nascosto.
+
+Il Tool System e l'Agent System hanno package e ownership separati. Il primo
+possiede catalogo ed execution boundary; il secondo possiede sessione, piano e
+loop modello–tool. Una sessione è in-memory, immutabile dal punto di vista del
+chiamante e limitata da hard ceiling indipendenti dalle istruzioni del modello.
+
+Il design e le sette fasi della Milestone 7 sono descritti in
+`agent-system-design.md` e `agent-system-development-plan.md`.
 
 ---
 
@@ -350,8 +376,9 @@ Utilizzano il Runtime.
 3. Gestor individua le capability necessarie.
 4. Il Context Engine prepara il workspace.
 5. Il Provider comunica con il modello.
-6. L'Agent coordina gli strumenti.
-7. Il Runtime restituisce il risultato.
+6. L'Agent propone e coordina gli strumenti.
+7. Il Tool Runtime prepara, autorizza ed esegue gli effetti consentiti.
+8. Il Runtime restituisce il risultato e lo stato terminale.
 
 ---
 

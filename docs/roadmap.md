@@ -495,6 +495,8 @@ I sei report di fase e `reports/milestone-6-final.md` documentano i gate.
 
 # Milestone 7 — Agent System
 
+Stato: In corso — Fasi 1–7 pianificate, Fase 1 da avviare
+
 Obiettivi:
 
 - Pianificazione.
@@ -503,9 +505,31 @@ Obiettivi:
 - Permission model.
 - Workspace awareness.
 
+Fasi di sviluppo:
+
+| Fase | Ambito | Stato |
+|---|---|---|
+| 1 | Contratti, ownership e ADR-0025 | Pianificata |
+| 2 | Tool catalog e execution boundary | Pianificata |
+| 3 | Permission model e approval flow | Pianificata |
+| 4 | Sessioni, piani e budget | Pianificata |
+| 5 | Loop agentico e tool calling | Pianificata |
+| 6 | Workspace awareness e reference tool | Pianificata |
+| 7 | Integrazione, osservabilità e gate finale | Pianificata |
+
+Il design è descritto in `agent-system-design.md`; il piano operativo, i gate
+e i deliverable di ogni fase sono definiti in
+`agent-system-development-plan.md`.
+
+La milestone separa Tool System e Agent System. Ogni effetto attraversa
+preparazione, autorizzazione default-deny ed esecuzione limitata. Provider,
+modello, workspace, agente e budget rimangono scelte esplicite; Gestor descrive
+le capability senza eseguirle.
+
 Output atteso:
 
-Primo agente autonomo.
+Primo agente autonomo, provider-agnostic, workspace-aware e governato da
+permessi espliciti.
 
 ---
 
@@ -543,4 +567,6 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - benchmark-evaluation-plan.md
 - context-engine-design.md
 - context-engine-development-plan.md
+- agent-system-design.md
+- agent-system-development-plan.md
 - MAESTRO_CONTEXT.md

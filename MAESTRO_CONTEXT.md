@@ -45,11 +45,13 @@ Completati:
 * context-engine-analysis.md
 * context-engine-retrieval.md
 * context-engine-cache.md
+* context-engine-design.md
+* context-engine-development-plan.md
 
 In progettazione:
 
-* context-engine-design.md
-* context-engine-development-plan.md
+* agent-system-design.md
+* agent-system-development-plan.md
 
 ---
 
@@ -1671,3 +1673,66 @@ Suite completa, race detector, vet, test ripetuti, diff check e audit API sono
 verdi. I report sono `docs/reports/milestone-6-phase-6.md` e
 `docs/reports/milestone-6-final.md`. Memoria, tool permissions, watcher,
 persistenza e ranking LLM restano fuori scope.
+
+## Milestone 7 — Agent System
+
+Stato: in corso — Fasi 1–7 pianificate, Fase 1 da avviare.
+
+Il design iniziale è definito in `docs/agent-system-design.md` e il piano
+operativo in `docs/agent-system-development-plan.md`.
+
+La milestone introduce due servizi con ownership separate:
+
+```text
+pkg/tool     + internal/tool   -> catalogo, prepare, autorizzazione, execute
+pkg/agent    + internal/agent  -> sessione, piano, budget, loop modello-tool
+```
+
+Il composition root li esporrà in modo additivo tramite `Runtime.Tools()` e
+`Runtime.Agents()` senza modificare `pkg/runtime.Runtime`. L'Agent Runtime
+coordinerà Provider Runtime, Context Engine, Tool Runtime e Gestor; non
+duplicherà registry, snapshot o lifecycle autorevoli.
+
+Le sette fasi pianificate sono:
+
+1. contratti, ownership e ADR-0025;
+2. Tool catalog ed execution boundary;
+3. permission model e approval flow;
+4. sessioni, piani e budget;
+5. loop agentico e tool calling;
+6. workspace awareness e reference tool;
+7. integrazione, osservabilità e gate finale.
+
+Decisioni iniziali del design:
+
+* gli arguments prodotti dal modello sono input non fidati;
+* ogni effetto attraversa `Prepare`, autorizzazione ed `Execute`;
+* l'autorizzazione valuta action concrete e normalizzate, non il solo nome del
+  tool;
+* una policy senza regola applicabile nega l'azione;
+* `prompt` senza un Approver configurato non equivale ad allow;
+* agenti, modelli e tool non possono concedersi grant;
+* invocazione del modello e disclosure del workspace sono effetti
+  autorizzabili separatamente;
+* provider, modello, workspace, agente, policy e limiti sono input espliciti;
+* sessioni e memoria iniziali sono in-memory, bounded e con terminale unico;
+* piani prodotti dal modello vengono validati prima di diventare stato;
+* ogni loop applica hard ceiling su durata, turni, tool, token e byte;
+* tool mutanti non vengono ritentati implicitamente;
+* il Context Engine fornisce evidenza e provenance, non memoria agente;
+* una mutazione marca il contesto stale e richiede refresh a un checkpoint
+  esplicito;
+* Gestor descrive agenti e tool senza eseguirli;
+* eventi e log non contengono prompt, contenuti workspace, arguments o output;
+* il permission model trusted in-process non viene presentato come sandbox.
+
+La baseline workspace prevista comprende listing, read, search e write/patch
+con path logici, containment, controllo symlink, output limitati e
+precondizione content-addressed per le mutazioni. Shell completa, Git write,
+Docker, Composer, Artisan e PHPUnit non sono requisiti del primo reference
+agent.
+
+Restano fuori scope memoria persistente, recovery dopo restart, multi-agent,
+esecuzione distribuita, sandbox, plugin/tool di terze parti, secret manager,
+CLI completa e selezione automatica di provider o modello. Questi confini sono
+assegnati alla Milestone 8 o a evoluzioni successive.

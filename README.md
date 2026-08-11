@@ -84,6 +84,8 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 38. `context-engine-retrieval.md`
 39. `context-engine-cache.md`
 40. `context-engine-runtime.md`
+41. `agent-system-design.md`
+42. `agent-system-development-plan.md`
 
 ---
 
@@ -263,6 +265,14 @@ condivide Provider Runtime ed Event Bus. Laravel `0.3.0` implementa il contratto
 generico `WorkspaceProvider`; Gestor ne risolve la capability senza eseguire la
 pipeline. Eventi di index, build e cache usano payload redatti e observer
 best-effort. Suite completa, race detector, vet e audit API chiudono il gate.
+
+La Milestone 7 — Agent System è aperta e pianificata in sette fasi. Il design
+separa Tool Runtime e Agent Runtime: i tool possiedono catalogo ed execution boundary,
+mentre gli agenti possiedono sessioni, piani e loop modello–tool. Ogni effetto
+passerà da prepare, autorizzazione default-deny ed execute; provider, modello,
+workspace, agente e budget resteranno espliciti. Il piano completo è in
+`docs/agent-system-development-plan.md`; nessuna fase è ancora dichiarata
+completata.
 
 Uso essenziale:
 
