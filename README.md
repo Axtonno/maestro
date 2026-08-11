@@ -78,6 +78,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 32. `plugin-api-compatibility-audit.md`
 33. `context-engine-design.md`
 34. `context-engine-development-plan.md`
+35. `context-engine-api-compatibility-audit.md`
 
 ---
 
@@ -229,6 +230,11 @@ piano in sei fasi: contratti; workspace indexing; analisi strutturata e AST;
 retrieval e Context Builder budgetato; cache incrementale; integrazione e gate
 finale. Il servizio resterà provider-agnostic, userà embedding soltanto in modo
 opt-in e non anticiperà memoria agente, tool execution o permission model.
+
+La Fase 1 è completata: `pkg/contextengine` definisce workspace, documenti,
+analisi, snapshot, retrieval e bundle immutabili. ADR-0024 assegna ownership e
+stabilisce provenance, budget e riservatezza senza modificare Runtime, Gestor,
+Provider o Plugin. La Fase 2 può ora implementare l'indice filesystem.
 
 Uso essenziale:
 

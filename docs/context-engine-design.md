@@ -1,8 +1,8 @@
 # Milestone 6 — Context Engine Design
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Draft iniziale
+Stato: Approvato — ADR-0024 Accepted
 
 Data: 2026-08-11
 
@@ -392,7 +392,7 @@ Il gate finale richiede suite completa, race detector sui package coinvolti,
 
 ---
 
-# Decisioni da formalizzare nella Fase 1
+# Decisioni formalizzate nella Fase 1
 
 - package e contratti pubblici del Context Engine;
 - ownership di workspace, snapshot, analyzer, retrieval, builder e cache;
@@ -405,5 +405,5 @@ Il gate finale richiede suite completa, race detector sui package coinvolti,
 - integrazione additiva con Runtime, Gestor e plugin workspace;
 - confine di riservatezza tra eventi redatti e bundle affidato al chiamante.
 
-Queste decisioni saranno raccolte in ADR-0024. Il piano operativo è descritto
-in `context-engine-development-plan.md`.
+Queste decisioni sono raccolte in ADR-0024. Il piano operativo è descritto in
+`context-engine-development-plan.md`.

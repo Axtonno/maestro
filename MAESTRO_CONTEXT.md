@@ -40,6 +40,7 @@ Completati:
 * plugin-system-design.md
 * plugin-system-development-plan.md
 * plugin-api-compatibility-audit.md
+* context-engine-api-compatibility-audit.md
 
 In progettazione:
 
@@ -1462,7 +1463,7 @@ llama.cpp già documentata; non è stata modificata da questo gate.
 
 ## Milestone 6 — Context Engine
 
-Stato: in corso — Fase 1 avviata.
+Stato: in corso — Fase 1 completata; Fase 2 pronta.
 
 Il design iniziale è definito in `docs/context-engine-design.md` e il piano
 operativo in `docs/context-engine-development-plan.md`.
@@ -1481,7 +1482,7 @@ workspace -> snapshot -> analisi -> retrieval -> selezione -> context bundle
 
 Le sei fasi sono:
 
-1. contratti, ownership e ADR-0024 — in corso;
+1. contratti, ownership e ADR-0024 — completata;
 2. workspace indexing e snapshot — pianificata;
 3. analisi strutturata e AST — pianificata;
 4. retrieval, Context Builder e budget — pianificata;
@@ -1514,3 +1515,28 @@ Restano fuori scope memoria conversazionale, tool execution, permission model,
 watcher filesystem, persistenza distribuita, vector database, ranking LLM e
 selezione implicita di provider o modello. Questi confini impediscono alla
 Milestone 6 di anticipare Agent System ed Ecosistema.
+
+### Fase 1 — Contratti, ownership e ADR-0024
+
+Completata in:
+
+```text
+pkg/contextengine
+docs/adr/ADR-0024.md
+docs/context-engine-api-compatibility-audit.md
+```
+
+La baseline pubblica introduce workspace, policy, documenti content-addressed,
+analisi strutturate, snapshot generazionali, query di retrieval, budget,
+estimator e context bundle immutabili. Source, analyzer ed engine sono contratti
+provider- e framework-neutral.
+
+Path documento, digest, intervalli, riferimenti, query e budget vengono validati
+prima della costruzione. Slice e mappe sono difensive; gli errori sentinel
+restano ispezionabili con `errors.Is`. Nessuna API Runtime, Gestor, Provider o
+Plugin è stata modificata.
+
+ADR-0024 formalizza ownership, refresh atomico, analyzer sostituibili,
+retrieval semantico opt-in, budget dichiarati e confine di riservatezza. La
+suite `pkg/contextengine` è verde. Il report è disponibile in
+`docs/reports/milestone-6-phase-1.md`.
