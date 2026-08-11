@@ -13,11 +13,18 @@ const (
 	RetrievalLexical    RetrievalMethod = "lexical"
 	RetrievalStructured RetrievalMethod = "structured"
 	RetrievalSemantic   RetrievalMethod = "semantic"
+	RetrievalFused      RetrievalMethod = "fused"
 )
 
 func (method RetrievalMethod) Valid() bool {
-	return method == RetrievalLexical || method == RetrievalStructured || method == RetrievalSemantic
+	return method == RetrievalLexical || method == RetrievalStructured || method == RetrievalSemantic || method == RetrievalFused
 }
+
+type FusionStrategy string
+
+const FusionReciprocalRank FusionStrategy = "reciprocal_rank"
+
+func (strategy FusionStrategy) Valid() bool { return strategy == FusionReciprocalRank }
 
 type EmbeddingTarget struct {
 	Provider string
@@ -38,6 +45,7 @@ type RetrievalQueryOptions struct {
 	Symbol    string
 	TopK      int
 	Embedding *EmbeddingTarget
+	Fusion    FusionStrategy
 }
 
 type RetrievalQuery struct {
@@ -49,13 +57,14 @@ type RetrievalQuery struct {
 	symbol    string
 	topK      int
 	embedding *EmbeddingTarget
+	fusion    FusionStrategy
 }
 
 func NewRetrievalQuery(workspace WorkspaceID, text string, options RetrievalQueryOptions) (RetrievalQuery, error) {
 	query := RetrievalQuery{
 		workspace: workspace, text: text, methods: slices.Clone(options.Methods),
 		paths: slices.Clone(options.Paths), languages: slices.Clone(options.Languages),
-		symbol: options.Symbol, topK: options.TopK,
+		symbol: options.Symbol, topK: options.TopK, fusion: options.Fusion,
 	}
 	if options.Embedding != nil {
 		target := *options.Embedding
@@ -74,6 +83,7 @@ func (query RetrievalQuery) Paths() []DocumentPath      { return slices.Clone(qu
 func (query RetrievalQuery) Languages() []Language      { return slices.Clone(query.languages) }
 func (query RetrievalQuery) Symbol() string             { return query.symbol }
 func (query RetrievalQuery) TopK() int                  { return query.topK }
+func (query RetrievalQuery) Fusion() FusionStrategy     { return query.fusion }
 func (query RetrievalQuery) Embedding() (EmbeddingTarget, bool) {
 	if query.embedding == nil {
 		return EmbeddingTarget{}, false
@@ -85,8 +95,8 @@ func (query RetrievalQuery) Validate() error {
 	if err := query.workspace.Validate(); err != nil {
 		return fmt.Errorf("retrieval workspace: %w: %w", err, ErrInvalidQuery)
 	}
-	if strings.TrimSpace(query.text) == "" || query.topK <= 0 {
-		return fmt.Errorf("retrieval text must not be blank and top-k must be positive: %w", ErrInvalidQuery)
+	if strings.TrimSpace(query.text) == "" || query.topK <= 0 || query.topK > 100 {
+		return fmt.Errorf("retrieval text must not be blank and top-k must be between 1 and 100: %w", ErrInvalidQuery)
 	}
 	if len(query.methods) == 0 {
 		return fmt.Errorf("retrieval requires at least one method: %w", ErrInvalidQuery)
@@ -94,7 +104,7 @@ func (query RetrievalQuery) Validate() error {
 	seenMethods := make(map[RetrievalMethod]struct{}, len(query.methods))
 	semantic := false
 	for _, method := range query.methods {
-		if !method.Valid() {
+		if !method.Valid() || method == RetrievalFused {
 			return fmt.Errorf("retrieval method %q is invalid: %w", method, ErrInvalidQuery)
 		}
 		if _, exists := seenMethods[method]; exists {
@@ -102,6 +112,13 @@ func (query RetrievalQuery) Validate() error {
 		}
 		seenMethods[method] = struct{}{}
 		semantic = semantic || method == RetrievalSemantic
+	}
+	if len(query.methods) > 1 {
+		if !query.fusion.Valid() {
+			return fmt.Errorf("multiple retrieval methods require an explicit fusion strategy: %w", ErrInvalidQuery)
+		}
+	} else if query.fusion != "" {
+		return fmt.Errorf("fusion strategy requires multiple retrieval methods: %w", ErrInvalidQuery)
 	}
 	for _, documentPath := range query.paths {
 		if err := documentPath.Validate(); err != nil {

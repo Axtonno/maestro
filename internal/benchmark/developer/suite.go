@@ -6,12 +6,16 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/antonio-cafeo/maestro/internal/benchmark/smoke"
+	internalContext "github.com/antonio-cafeo/maestro/internal/contextengine"
 	pkgBenchmark "github.com/antonio-cafeo/maestro/pkg/benchmark"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 )
 
@@ -116,27 +120,64 @@ func (s *Suite) retrievalScenario(definition pkgBenchmark.ScenarioDefinition, ta
 			if err != nil || preflight != nil {
 				return resultOrZero(preflight), err
 			}
-			inputs := make([]string, 1, len(task.Files)+1)
-			inputs[0] = task.Instruction
+			documents := make([]pkgContext.Document, 0, len(task.Files))
 			for _, name := range task.Files {
 				content, err := s.dataset.File(name)
 				if err != nil {
 					return pkgBenchmark.IterationResult{}, err
 				}
-				inputs = append(inputs, "Fixture file "+name+"\n"+string(content))
+				document, err := pkgContext.NewDocument(
+					pkgContext.DocumentPath(name),
+					"text/x-php",
+					"php",
+					"Fixture file "+name+"\n"+string(content),
+				)
+				if err != nil {
+					return pkgBenchmark.IterationResult{}, err
+				}
+				documents = append(documents, document)
+			}
+			embedding := &observedEmbeddingRuntime{runtime: s.runtime}
+			contextEngine := internalContext.NewWithEmbeddingRuntime(embedding)
+			source := developerContextSource{documents: documents}
+			if err := contextEngine.RegisterSource(source); err != nil {
+				return pkgBenchmark.IterationResult{}, err
+			}
+			workspace, err := pkgContext.NewWorkspace(
+				"developer-benchmark",
+				"/developer-benchmark",
+				pkgContext.WorkspaceOptions{Source: source.ID(), Policy: pkgContext.DefaultScanPolicy()},
+			)
+			if err != nil {
+				return pkgBenchmark.IterationResult{}, err
+			}
+			if _, err := contextEngine.Index(ctx, workspace); err != nil {
+				return pkgBenchmark.IterationResult{}, err
+			}
+			target := pkgContext.EmbeddingTarget{Provider: string(s.config.ProviderID), Model: model}
+			query, err := pkgContext.NewRetrievalQuery(
+				workspace.ID(),
+				task.Instruction,
+				pkgContext.RetrievalQueryOptions{
+					Methods: []pkgContext.RetrievalMethod{pkgContext.RetrievalSemantic},
+					TopK:    len(task.Files), Embedding: &target,
+				},
+			)
+			if err != nil {
+				return pkgBenchmark.IterationResult{}, err
 			}
 			started := time.Now()
-			response, err := s.runtime.Embed(ctx, s.config.ProviderID, pkgProvider.EmbeddingRequest{Model: model, Inputs: inputs})
+			results, err := contextEngine.Retrieve(ctx, query)
 			elapsed := time.Since(started)
 			if err != nil {
 				return pkgBenchmark.IterationResult{}, err
 			}
-			if len(response.Embeddings) != len(inputs) || len(response.Embeddings[0]) == 0 {
+			if len(results) != len(task.Files) || embedding.Dimension() == 0 {
 				return failed("developer_embedding_shape_invalid"), nil
 			}
-			ranking, err := rankDocuments(response.Embeddings[0], response.Embeddings[1:], task.Files)
-			if err != nil {
-				return failed("developer_embedding_values_invalid"), nil
+			ranking := make([]rankedDocument, 0, len(results))
+			for _, result := range results {
+				ranking = append(ranking, rankedDocument{name: string(result.Path), similarity: result.Score})
 			}
 			bestRank := bestRelevantRank(ranking, task.RelevantFiles)
 			evaluation := evaluateRetrieval(s.dataset, task, bestRank)
@@ -145,7 +186,7 @@ func (s *Suite) retrievalScenario(definition pkgBenchmark.ScenarioDefinition, ta
 				Measurements: []pkgBenchmark.Measurement{
 					milliseconds("embedding_latency_ms", elapsed),
 					count("document_count", len(task.Files)),
-					count("embedding_dimension", len(response.Embeddings[0])),
+					count("embedding_dimension", embedding.Dimension()),
 					count("best_relevant_rank", bestRank),
 					scoreMeasurement(evaluation.Score),
 				},
@@ -153,6 +194,32 @@ func (s *Suite) retrievalScenario(definition pkgBenchmark.ScenarioDefinition, ta
 			}, nil
 		},
 	}
+}
+
+type developerContextSource struct {
+	documents []pkgContext.Document
+}
+
+func (developerContextSource) ID() pkgContext.SourceID { return "benchmark.developer" }
+func (source developerContextSource) Scan(context.Context, pkgContext.Workspace) (pkgContext.ScanResult, error) {
+	return pkgContext.ScanResult{Documents: slices.Clone(source.documents)}, nil
+}
+
+type observedEmbeddingRuntime struct {
+	runtime   pkgProvider.Runtime
+	dimension atomic.Int64
+}
+
+func (runtime *observedEmbeddingRuntime) Embed(ctx context.Context, id pkgProvider.ID, request pkgProvider.EmbeddingRequest) (pkgProvider.EmbeddingResponse, error) {
+	response, err := runtime.runtime.Embed(ctx, id, request)
+	if err == nil && len(response.Embeddings) > 0 {
+		runtime.dimension.Store(int64(len(response.Embeddings[0])))
+	}
+	return response, err
+}
+
+func (runtime *observedEmbeddingRuntime) Dimension() int {
+	return int(runtime.dimension.Load())
 }
 
 func (s *Suite) requireModel(ctx context.Context, role string, capability pkgProvider.Capability) (string, *pkgBenchmark.IterationResult, error) {

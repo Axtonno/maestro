@@ -136,7 +136,7 @@ e plugin Laravel vengono comunque validati.
 - La checklist non compila né esegue il codice generato.
 - Il report non conserva la risposta, quindi la revisione manuale deve essere
   svolta durante una run diagnostica separata.
-- Il retrieval usa direttamente gli embedding provider e non anticipa il
-  futuro Context Engine.
+- Il retrieval usa il Context Engine con semantic retrieval opt-in; il Provider
+  Runtime resta l'unico confine verso gli embedding.
 - Il dataset iniziale è piccolo e in lingua inglese per rendere stabili le
   evidenze lessicali.

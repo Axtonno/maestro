@@ -81,6 +81,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 35. `context-engine-api-compatibility-audit.md`
 36. `context-engine-indexing.md`
 37. `context-engine-analysis.md`
+38. `context-engine-retrieval.md`
 
 ---
 
@@ -247,6 +248,11 @@ La Fase 3 è completata: analyzer versionati arricchiscono gli snapshot senza
 lock durante codice esterno; ambiguità richiedono selezione esplicita.
 `context.go-ast@1` usa la libreria standard e produce simboli, relazioni, chunk
 e diagnostiche anche da AST parziali.
+
+La Fase 4 è completata: retrieval lessicale, strutturale e semantico produce
+ranking con provenance e fusione esplicita; il Context Builder deduplica e
+tronca su confini UTF-8 entro il budget dichiarato. Il Developer Benchmark usa
+ora semantic retrieval del Context Engine.
 
 Uso essenziale:
 

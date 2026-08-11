@@ -87,6 +87,10 @@ Semantic retrieval richiede `EmbeddingTarget`; un target non è accettato senza
 il metodo semantic. Il costruttore del bundle compone `ErrBudgetExceeded` e
 `ErrInvalidBundle`, preservando entrambe le classificazioni con `errors.Is`.
 
+La Fase 4 aggiunge `FusionStrategy`, `FusionReciprocalRank` e
+`RetrievalFused`. `RetrievalQueryOptions.Fusion` è additivo; query con più
+metodi devono dichiararlo per evitare euristiche implicite.
+
 ## Engine
 
 `Engine` espone registrazione pre-uso di source, analyzer ed estimator, indexing,

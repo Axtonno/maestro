@@ -27,6 +27,7 @@ func (budget Budget) EvidenceTokens() int {
 type TokenEstimator interface {
 	ID() EstimatorID
 	Version() string
+	// Estimate returns a non-negative, monotonic cost for UTF-8 prefixes.
 	Estimate(context.Context, string) (int, error)
 }
 

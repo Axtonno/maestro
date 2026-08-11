@@ -170,9 +170,9 @@ software. Questo è il livello più caratterizzante del progetto.
 Le fixture sono versionate, locali, prive di dati sensibili e sufficientemente
 piccole da poter essere eseguite anche su hardware non workstation.
 
-Il primo scenario di retrieval usa direttamente gli embedding provider sulle
-fixture versionate. L'integrazione con il futuro Context Engine potrà estendere
-lo stesso scenario senza bloccare la Milestone 3.
+Il primo scenario di retrieval usa il Context Engine sulle fixture versionate,
+con semantic retrieval esplicito tramite il Provider Runtime. Dataset e rubrica
+restano quelli approvati dalla Milestone 3.
 
 ## Comando previsto
 

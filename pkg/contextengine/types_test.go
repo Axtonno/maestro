@@ -163,7 +163,8 @@ func TestRetrievalQueryValidationAndCopies(t *testing.T) {
 	methods := []contextengine.RetrievalMethod{contextengine.RetrievalLexical, contextengine.RetrievalSemantic}
 	paths := []contextengine.DocumentPath{"main.go"}
 	query, err := contextengine.NewRetrievalQuery("workspace", "main package", contextengine.RetrievalQueryOptions{
-		Methods: methods, Paths: paths, Languages: []contextengine.Language{"go"}, TopK: 5, Embedding: &target,
+		Methods: methods, Paths: paths, Languages: []contextengine.Language{"go"}, TopK: 5,
+		Embedding: &target, Fusion: contextengine.FusionReciprocalRank,
 	})
 	if err != nil {
 		t.Fatalf("construct query: %v", err)

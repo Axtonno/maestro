@@ -14,19 +14,28 @@ import (
 var _ pkgContext.Engine = (*Engine)(nil)
 
 type Engine struct {
-	mu        sync.RWMutex
-	sources   map[pkgContext.SourceID]pkgContext.Source
-	analyzers map[pkgContext.AnalyzerID]pkgContext.Analyzer
-	snapshots map[pkgContext.WorkspaceID]pkgContext.Snapshot
+	mu         sync.RWMutex
+	sources    map[pkgContext.SourceID]pkgContext.Source
+	analyzers  map[pkgContext.AnalyzerID]pkgContext.Analyzer
+	estimators map[pkgContext.EstimatorID]pkgContext.TokenEstimator
+	embedding  embeddingRuntime
+	snapshots  map[pkgContext.WorkspaceID]pkgContext.Snapshot
 }
 
 func New() *Engine {
+	return NewWithEmbeddingRuntime(nil)
+}
+
+func NewWithEmbeddingRuntime(embedding embeddingRuntime) *Engine {
 	filesystem := NewFilesystemSource()
 	goAnalyzer := NewGoAnalyzer()
+	estimator := NewUTF8Estimator()
 	return &Engine{
-		sources:   map[pkgContext.SourceID]pkgContext.Source{filesystem.ID(): filesystem},
-		analyzers: map[pkgContext.AnalyzerID]pkgContext.Analyzer{goAnalyzer.ID(): goAnalyzer},
-		snapshots: make(map[pkgContext.WorkspaceID]pkgContext.Snapshot),
+		sources:    map[pkgContext.SourceID]pkgContext.Source{filesystem.ID(): filesystem},
+		analyzers:  map[pkgContext.AnalyzerID]pkgContext.Analyzer{goAnalyzer.ID(): goAnalyzer},
+		estimators: map[pkgContext.EstimatorID]pkgContext.TokenEstimator{estimator.ID(): estimator},
+		embedding:  embedding,
+		snapshots:  make(map[pkgContext.WorkspaceID]pkgContext.Snapshot),
 	}
 }
 
@@ -67,8 +76,24 @@ func (engine *Engine) RegisterAnalyzer(analyzer pkgContext.Analyzer) error {
 	return nil
 }
 
-func (engine *Engine) RegisterEstimator(pkgContext.TokenEstimator) error {
-	return pkgContext.ErrUnsupported
+func (engine *Engine) RegisterEstimator(estimator pkgContext.TokenEstimator) error {
+	if nilInterface(estimator) {
+		return fmt.Errorf("register token estimator: %w", pkgContext.ErrInvalidEstimator)
+	}
+	id := estimator.ID()
+	if err := id.Validate(); err != nil {
+		return fmt.Errorf("register token estimator: %w: %w", err, pkgContext.ErrInvalidEstimator)
+	}
+	if !exactVersion(estimator.Version()) {
+		return fmt.Errorf("register token estimator %q with invalid version: %w", id, pkgContext.ErrInvalidEstimator)
+	}
+	engine.mu.Lock()
+	defer engine.mu.Unlock()
+	if _, exists := engine.estimators[id]; exists {
+		return fmt.Errorf("register token estimator %q: %w", id, pkgContext.ErrAlreadyRegistered)
+	}
+	engine.estimators[id] = estimator
+	return nil
 }
 
 func (engine *Engine) Index(ctx context.Context, workspace pkgContext.Workspace) (pkgContext.Snapshot, error) {
@@ -213,12 +238,52 @@ func (engine *Engine) Snapshot(id pkgContext.WorkspaceID) (pkgContext.Snapshot, 
 	return snapshot, found
 }
 
-func (engine *Engine) Retrieve(context.Context, pkgContext.RetrievalQuery) ([]pkgContext.RetrievalResult, error) {
-	return nil, pkgContext.ErrUnsupported
+func (engine *Engine) Retrieve(ctx context.Context, query pkgContext.RetrievalQuery) ([]pkgContext.RetrievalResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("retrieve with nil context: %w", pkgContext.ErrInvalidQuery)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if err := query.Validate(); err != nil {
+		return nil, err
+	}
+	engine.mu.RLock()
+	snapshot, found := engine.snapshots[query.Workspace()]
+	embedding := engine.embedding
+	engine.mu.RUnlock()
+	if !found {
+		return nil, fmt.Errorf("workspace %q snapshot: %w", query.Workspace(), pkgContext.ErrNotFound)
+	}
+	return retrieveSnapshot(ctx, snapshot, query, embedding)
 }
 
-func (engine *Engine) Build(context.Context, pkgContext.BuildRequest) (pkgContext.ContextBundle, error) {
-	return pkgContext.ContextBundle{}, pkgContext.ErrUnsupported
+func (engine *Engine) Build(ctx context.Context, request pkgContext.BuildRequest) (pkgContext.ContextBundle, error) {
+	if ctx == nil {
+		return pkgContext.ContextBundle{}, fmt.Errorf("build with nil context: %w", pkgContext.ErrInvalidBundle)
+	}
+	if err := ctx.Err(); err != nil {
+		return pkgContext.ContextBundle{}, err
+	}
+	if err := request.Validate(); err != nil {
+		return pkgContext.ContextBundle{}, err
+	}
+	engine.mu.RLock()
+	snapshot, found := engine.snapshots[request.Query.Workspace()]
+	estimator, estimatorFound := engine.estimators[request.Estimator]
+	embedding := engine.embedding
+	engine.mu.RUnlock()
+	if !found {
+		return pkgContext.ContextBundle{}, fmt.Errorf("workspace %q snapshot: %w", request.Query.Workspace(), pkgContext.ErrNotFound)
+	}
+	if !estimatorFound {
+		return pkgContext.ContextBundle{}, fmt.Errorf("token estimator %q: %w", request.Estimator, pkgContext.ErrNotFound)
+	}
+	results, err := retrieveSnapshot(ctx, snapshot, request.Query, embedding)
+	if err != nil {
+		return pkgContext.ContextBundle{}, err
+	}
+	return buildBundle(ctx, snapshot, estimator, request.Budget, results)
 }
 
 func nilInterface(value any) bool {

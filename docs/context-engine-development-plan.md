@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–3 completate; Fase 4 pronta
+Stato: In corso — Fasi 1–4 completate; Fase 5 pronta
 
 Data: 2026-08-11
 
@@ -29,7 +29,7 @@ permission model, persistenza distribuita o ranking LLM.
 | 1 | Contratti, ownership e ADR-0024 | Completata | Design iniziale |
 | 2 | Workspace indexing e snapshot | Completata | Fase 1 |
 | 3 | Analisi strutturata e AST | Completata | Fasi 1–2 |
-| 4 | Retrieval, Context Builder e budget | Pianificata | Fasi 1–3 |
+| 4 | Retrieval, Context Builder e budget | Completata | Fasi 1–3 |
 | 5 | Cache e aggiornamento incrementale | Pianificata | Fasi 1–4 |
 | 6 | Integrazione, osservabilità e gate finale | Pianificata | Fasi 1–5 |
 
