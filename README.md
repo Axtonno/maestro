@@ -215,11 +215,12 @@ espliciti; più candidati senza preferenza producono ambiguity e nessun ordine
 lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
 sull'Event Bus condiviso.
 
-La Milestone 5 — Plugin System è in corso. Le Fasi 1–2 sono completate: ADR e
-audit confermano le API esistenti; catalogo, registry e caricamento sono ora
-coperti sotto concorrenza, cancellazione, failure e callback re-entrant fuori
-lock. La Fase 3 — lifecycle, dependency graph e Gestor — è pronta. Packaging
-esterno, sandbox e plugin di terze parti restano fuori scope.
+La Milestone 5 — Plugin System è in corso. Le Fasi 1–3 sono completate:
+catalogo e caricamento sono coperti sotto concorrenza; plugin e componenti
+condividono dependency graph, state machine e lifecycle; Gestor scopre le
+capability plugin una sola volta e non le esegue. La Fase 4 — Laravel reference
+plugin — è pronta. Packaging esterno, sandbox e plugin di terze parti restano
+fuori scope.
 
 Uso essenziale:
 

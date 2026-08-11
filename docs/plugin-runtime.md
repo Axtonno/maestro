@@ -120,6 +120,15 @@ stato e failure sono osservabili tramite lo `StateManager` globale. Il plugin
 riceve lo stesso `runtime.Context` con configurazione, logger, Event Bus,
 Registry e Provider Runtime.
 
+Dipendenze plugin -> componente, plugin -> plugin e componente -> plugin sono
+archi dello stesso graph. Dipendenze richieste mancanti e cicli impediscono lo
+startup prima del lifecycle; dipendenze opzionali assenti vengono ignorate.
+
+La registrazione durante startup o running produce `runtime.ErrAlreadyStarted`;
+durante shutdown produce `runtime.ErrInvalidState`. Gestor vede una
+registrazione riuscita attraverso la source globale dei componenti: lo snapshot
+diventa stale, il refresh resta esplicito e la risoluzione non esegue il plugin.
+
 ---
 
 # Modello di fiducia

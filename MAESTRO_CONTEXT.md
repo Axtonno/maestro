@@ -1313,7 +1313,7 @@ llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.
 
 ## Milestone 5 — Plugin System
 
-Stato: in corso — Fasi 1–2 completate; Fase 3 pronta.
+Stato: in corso — Fasi 1–3 completate; Fase 4 pronta.
 
 Il design iniziale è definito in `docs/plugin-system-design.md` e il piano
 operativo in `docs/plugin-system-development-plan.md`.
@@ -1326,7 +1326,7 @@ Le cinque fasi previste sono:
 
 1. contratti, audit della baseline e ADR-0023 — completata;
 2. catalogo, registry e caricamento — completata;
-3. lifecycle, dependency graph e Gestor;
+3. lifecycle, dependency graph e Gestor — completata;
 4. Laravel reference plugin;
 5. osservabilità, hardening e gate finale.
 
@@ -1380,3 +1380,26 @@ senza lock interni. Sono coperti snapshot concorrenti, load sullo stesso ID e
 su ID differenti, failure atomiche, cancellazione e composizione dei sentinel.
 Suite completa, race detector e vet sono verdi. Il report è disponibile in
 `docs/reports/milestone-5-phase-2.md`.
+
+### Fase 3 — Lifecycle, dependency graph e Gestor
+
+Completata in:
+
+```text
+maestro_test.go
+internal/runtime/runtime.go
+```
+
+La matrice end-to-end copre plugin passivi e lifecycle completo, failure di
+configure/initialize/start/stop, dipendenze plugin-componente in entrambe le
+direzioni, plugin-plugin, required/optional e cicli. Startup e shutdown seguono
+lo stesso graph globale e gli stati restano nello `StateManager` unico.
+
+Fixture bloccanti verificano il rifiuto di Register e Load durante startup e
+shutdown. È stato corretto l'ordine dei controlli del Runtime Core affinché lo
+shutdown restituisca `ErrInvalidState` senza essere mascherato dal flag started.
+
+Una capability custom caricata dal catalogo invalida Gestor, viene scoperta una
+sola volta dopo refresh e produce un dependency plan senza eseguire codice del
+plugin. Suite completa, race detector e vet sono verdi. Il report è disponibile
+in `docs/reports/milestone-5-phase-3.md`.

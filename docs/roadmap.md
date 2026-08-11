@@ -411,7 +411,7 @@ I cinque report di fase e il report conclusivo sono disponibili in
 
 # Milestone 5 — Plugin System
 
-Stato: In corso — Fasi 1–2 completate; Fase 3 pronta
+Stato: In corso — Fasi 1–3 completate; Fase 4 pronta
 
 Obiettivi:
 
@@ -432,7 +432,7 @@ Fasi di sviluppo:
 |---|---|---|
 | 1 | Contratti, audit della baseline e ADR-0023 | Completata |
 | 2 | Catalogo, registry e caricamento | Completata |
-| 3 | Lifecycle, dependency graph e Gestor | Pianificata |
+| 3 | Lifecycle, dependency graph e Gestor | Completata |
 | 4 | Laravel reference plugin | Pianificata |
 | 5 | Osservabilità, hardening e gate finale | Pianificata |
 

@@ -143,19 +143,19 @@ func (r *runtime) Register(
 
 	r.mu.Lock()
 
-	if r.started || r.starting {
-		r.mu.Unlock()
-		return fmt.Errorf(
-			"register component: %w",
-			pkgRuntime.ErrAlreadyStarted,
-		)
-	}
-
 	if r.stopping {
 		r.mu.Unlock()
 		return fmt.Errorf(
 			"register component while runtime is stopping: %w",
 			pkgRuntime.ErrInvalidState,
+		)
+	}
+
+	if r.started || r.starting {
+		r.mu.Unlock()
+		return fmt.Errorf(
+			"register component: %w",
+			pkgRuntime.ErrAlreadyStarted,
 		)
 	}
 

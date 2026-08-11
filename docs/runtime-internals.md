@@ -195,6 +195,11 @@ Un errore non deve lasciare nel builder o nel Runtime un oggetto parzialmente co
 
 Quando una nuova registrazione rende obsoleto il grafo esistente, il Runtime deve invalidarlo.
 
+La registrazione è ammessa soltanto prima dello startup. Durante startup o
+running restituisce `ErrAlreadyStarted`; durante shutdown, controllato prima del
+flag started ancora attivo, restituisce `ErrInvalidState`. Questa distinzione
+impedisce al ramo stopping di essere mascherato dallo stato started.
+
 Il Runtime non deve duplicare la logica appartenente a Registry, Graph, Resolver, Validator o Builder.
 
 Il Runtime è anche il composition root dei servizi Config, Logger, Event Bus,
