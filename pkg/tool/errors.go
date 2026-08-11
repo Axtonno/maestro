@@ -1,0 +1,32 @@
+package tool
+
+import "errors"
+
+var (
+	ErrInvalidToolID             = errors.New("invalid tool ID")
+	ErrInvalidToolName           = errors.New("invalid tool name")
+	ErrInvalidPolicyID           = errors.New("invalid tool policy ID")
+	ErrInvalidRunID              = errors.New("invalid tool run ID")
+	ErrInvalidCallID             = errors.New("invalid tool call ID")
+	ErrInvalidVersion            = errors.New("invalid tool version")
+	ErrInvalidDescriptor         = errors.New("invalid tool descriptor")
+	ErrInvalidInvocation         = errors.New("invalid tool invocation")
+	ErrInvalidPreparedInvocation = errors.New("invalid prepared tool invocation")
+	ErrInvalidAction             = errors.New("invalid tool action")
+	ErrInvalidPermissionRequest  = errors.New("invalid permission request")
+	ErrInvalidDecision           = errors.New("invalid permission decision")
+	ErrInvalidApproval           = errors.New("invalid permission approval")
+	ErrInvalidExecutionRequest   = errors.New("invalid tool execution request")
+	ErrInvalidLimits             = errors.New("invalid tool execution limits")
+	ErrInvalidResult             = errors.New("invalid tool result")
+	ErrInvalidTool               = errors.New("invalid tool")
+	ErrInvalidPolicy             = errors.New("invalid tool policy")
+	ErrInvalidApprover           = errors.New("invalid permission approver")
+	ErrAlreadyRegistered         = errors.New("tool already registered")
+	ErrPolicyAlreadyRegistered   = errors.New("tool policy already registered")
+	ErrNotFound                  = errors.New("tool not found")
+	ErrPolicyNotFound            = errors.New("tool policy not found")
+	ErrPermissionDenied          = errors.New("tool permission denied")
+	ErrExecutionFailed           = errors.New("tool execution failed")
+	ErrLimitExceeded             = errors.New("tool execution limit exceeded")
+)

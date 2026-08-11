@@ -1,8 +1,8 @@
 # Milestone 7 — Agent System Design
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Progettato — milestone aperta
+Stato: Implementazione avviata — ADR-0025 Accepted, Fase 1 completata
 
 Data: 2026-08-11
 
@@ -21,11 +21,11 @@ collocare logica agentica nel Runtime Core:
 - Context Engine per snapshot, retrieval e bundle con provenance e budget;
 - Benchmark Layer con fixture provider e task di sviluppo riproducibili.
 
-Mancano ancora un contratto eseguibile per i tool, un permission model, lo
-stato di una sessione, un piano verificabile e il coordinamento bounded del
-ciclo modello–tool. La Milestone 7 introduce questi confini senza trasformare
-il Runtime Core in un agente e senza affidare al modello autorizzazioni o
-selezione implicita delle risorse.
+La Fase 1 ha definito i contratti pubblici per tool, permission, sessione e
+piano. Mancano le implementazioni concrete di catalogo, executor, policy
+engine, session coordinator e ciclo modello–tool. La Milestone 7 introduce
+questi confini senza trasformare il Runtime Core in un agente e senza affidare
+al modello autorizzazioni o selezione implicita delle risorse.
 
 ---
 
@@ -206,6 +206,12 @@ Prepared invocation e action sono value object immutabili dal punto di vista
 del chiamante. I tool restano codice trusted; l'executor protegge il percorso
 normale, mentre la sandbox contro implementazioni malevole resta fuori scope.
 
+`Decision` e `Approval` descrivono l'esito della policy ma non sono autorità di
+esecuzione. L'API pubblica `Runtime.Invoke` incorpora autorizzazione ed
+esecuzione e non accetta un bool `Allow`, una `Decision` o un grant. Il permit
+operativo resta interno, lega runtime issuer, run ID e permission fingerprint e
+viene verificato e consumato dall'executor.
+
 ## Risultati e limiti
 
 Un risultato distingue:
@@ -295,6 +301,12 @@ Le policy non sostituiscono i controlli locali dei tool: containment dei path,
 symlink, limiti, argv, environment e output devono essere validati anche
 dall'implementazione proprietaria dell'effetto.
 
+Per le chiamate modello, il Context Engine costruisce prima il bundle
+localmente. L'Agent Runtime ne deriva quindi un `DisclosureManifest` redatto e
+un fingerprint, autorizza atomicamente `model.invoke` e l'eventuale
+`model.disclose`, e soltanto dopo invoca il Provider Runtime. Una permission
+request modello non viene rappresentata come tool invocation.
+
 ---
 
 # Sessione, memoria e piano
@@ -348,6 +360,11 @@ run termina con un reason tipizzato: completato, limite raggiunto, cancellato,
 permission denied non recuperabile, provider failure, tool failure o piano
 bloccato. Non esiste un loop illimitato come default.
 
+Prima del commit terminale, cause concorrenti applicano la precedenza
+`deadline > canceled > limit > permission_denied > blocked > provider_failure
+> tool_failure > planning_failure > internal_failure > completed`. Il primo
+terminale committato è definitivo e non viene sostituito da segnali tardivi.
+
 ---
 
 # Orchestrazione provider e tool calling
@@ -359,9 +376,9 @@ candidato tramite ordine lessicografico o fallback nascosto.
 L'Agent Runtime:
 
 1. valida request, limiti e riferimenti;
-2. autorizza model invocation e disclosure applicabili;
-3. costruisce o riceve il context bundle;
-4. crea un piano validato;
+2. costruisce localmente il context bundle e il disclosure manifest;
+3. autorizza model invocation e disclosure applicabili;
+4. crea un piano validato soltanto dopo l'autorizzazione richiesta;
 5. traduce i descriptor tool nel contratto `provider.Tool`;
 6. invoca il Provider Runtime condiviso;
 7. valida ogni tool call completa e la associa a un call ID stabile;
@@ -396,10 +413,12 @@ workspace associato alla sessione. La baseline include almeno:
 - ricerca testuale limitata;
 - scrittura o patch controllata con precondizione sul contenuto osservato.
 
-Una mutazione non modifica retroattivamente il bundle già inviato. Dopo un
-effetto workspace, l'Agent Runtime marca il contesto stale e richiede un refresh
-esplicito al checkpoint successivo prima di costruire nuova evidenza. Failure
-di refresh non pubblicano snapshot parziali e non vengono nascoste al run.
+Una mutazione non modifica retroattivamente il bundle già inviato. Quando
+l'esecuzione di una action `workspace.mutate` inizia, l'Agent Runtime marca il
+contesto stale anche se il tool termina con errore, cancellazione o risultato
+ambiguo. Un refresh esplicito e riuscito è necessario al checkpoint successivo
+prima di costruire nuova evidenza. Failure di refresh non pubblicano snapshot
+parziali e non vengono nascoste al run.
 
 La precondizione content-addressed riduce overwrite su contenuto cambiato tra
 preparazione ed esecuzione. Containment e symlink vengono verificati al confine
@@ -441,10 +460,13 @@ Gli eventi condividono l'Event Bus sincrono e descrivono almeno:
 - transition di task step;
 - limite raggiunto.
 
-I payload possono includere run ID, agent ID, tool ID, provider ID redatto o
-codificato secondo policy, contatori, durata, effect code, decisione e reason
-code. Non includono richiesta utente, prompt, messaggi, context section, path
-assoluti, arguments JSON, output tool, stdout/stderr, secret o error string.
+L'allowlist tool contiene soltanto run ID, tool ID, call ID, action count,
+decision kind, deny disposition, outcome, truncated, durata e failure code.
+L'allowlist agent contiene soltanto run ID, agent ID, step ID, state, step
+state, terminal reason, plan version, contatori di turni/tool/token, durata e
+failure code. Provider, modello, policy, workspace, resource, richiesta utente,
+prompt, piano testuale, context section, path, arguments JSON, output tool,
+stdout/stderr, permit, secret ed error string sono esclusi.
 
 Gli eventi osservazionali sono best-effort al boundary del servizio: errori e
 panic degli handler non annullano uno stato già committato. Nessun callback
@@ -461,7 +483,7 @@ dell'Event Bus.
 - il Runtime Core non contiene logica di planning o tool execution;
 - Tool Runtime e Agent Runtime hanno registry e ownership separati;
 - il modello propone azioni ma non autorizza effetti;
-- ogni effetto usa una prepared invocation validata e una decisione esplicita;
+- ogni effetto usa una prepared invocation validata e un permit interno verificabile;
 - una decisione assente non equivale mai ad allow;
 - provider, modello, workspace, agente e limiti non vengono scelti implicitamente;
 - nessun tool o callback esterno viene invocato sotto lock del registry;
@@ -499,7 +521,7 @@ di compatibilità pubblica, `git diff --check` e documentazione allineata.
 
 ---
 
-# Decisioni da formalizzare nella Fase 1
+# Decisioni formalizzate nella Fase 1
 
 - separazione tra `pkg/tool` e `pkg/agent`;
 - composition root additivo senza modifica di `pkg/runtime.Runtime`;
@@ -512,5 +534,8 @@ di compatibilità pubblica, `git diff --check` e documentazione allineata.
 - eventi redatti separati dalla memoria sensibile della sessione;
 - baseline trusted in-process distinta da sandbox e plugin trust.
 
-Queste decisioni confluiranno in ADR-0025. Il piano operativo è descritto in
+Queste decisioni sono raccolte in ADR-0025. I contratti iniziali sono in
+`pkg/tool` e `pkg/agent`; audit e gate sono documentati in
+`agent-system-api-compatibility-audit.md` e
+`reports/milestone-7-phase-1.md`. Il piano operativo è descritto in
 `agent-system-development-plan.md`.

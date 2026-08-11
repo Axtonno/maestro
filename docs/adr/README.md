@@ -21,3 +21,4 @@
 - [ADR-0022 – Immutable Public Gestor Contracts and Internal Domain Adapters](ADR-0022.md)
 - [ADR-0023 – Pre-Start Trusted In-Process Plugin System with Core-Owned Lifecycle](ADR-0023.md)
 - [ADR-0024 – Immutable Context Pipeline with Explicit Provenance and Budgets](ADR-0024.md)
+- [ADR-0025 – Bounded Agent Sessions with Atomic Permission-Gated Effects](ADR-0025.md)

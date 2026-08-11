@@ -47,6 +47,7 @@ Completati:
 * context-engine-cache.md
 * context-engine-design.md
 * context-engine-development-plan.md
+* agent-system-api-compatibility-audit.md
 
 In progettazione:
 
@@ -1676,7 +1677,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fasi 1–7 pianificate, Fase 1 da avviare.
+Stato: in corso — Fase 1 completata, Fase 2 pianificata.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1695,7 +1696,7 @@ duplicherà registry, snapshot o lifecycle autorevoli.
 
 Le sette fasi pianificate sono:
 
-1. contratti, ownership e ADR-0025;
+1. contratti, ownership e ADR-0025 — completata;
 2. Tool catalog ed execution boundary;
 3. permission model e approval flow;
 4. sessioni, piani e budget;
@@ -1725,6 +1726,52 @@ Decisioni iniziali del design:
 * Gestor descrive agenti e tool senza eseguirli;
 * eventi e log non contengono prompt, contenuti workspace, arguments o output;
 * il permission model trusted in-process non viene presentato come sandbox.
+
+### Fase 1 — Contratti, ownership e ADR-0025
+
+Completata in:
+
+```text
+pkg/tool
+pkg/agent
+docs/adr/ADR-0025.md
+docs/agent-system-api-compatibility-audit.md
+docs/reports/milestone-7-phase-1.md
+```
+
+`pkg/tool` introduce descriptor versionati, invocation e prepared invocation
+immutabili, action tipizzate, permission request atomiche, richiesta modello
+distinta, disclosure manifest redatto, decision/approval, limiti, risultati,
+sentinel, envelope ed event allowlist. Arguments e schema JSON sono
+canonicalizzati e difensivi; il fingerprint lega tool, versione, call, run,
+arguments e action.
+
+`pkg/agent` introduce descriptor e capability, run request con target e limiti
+espliciti, piani aciclici, step transition, planning request, session snapshot,
+contatori, stale bit, terminal precedence, run result, Runtime, sentinel,
+envelope ed event allowlist.
+
+ADR-0025 stabilisce che `Decision` e `Approval` non sono permit. Il percorso
+pubblico `tool.Runtime.Invoke` incorpora autorizzazione ed esecuzione e non
+accetta un valore allow dal chiamante. Il permit operativo futuro è interno,
+issuer-bound e vincolato a run ID e permission fingerprint. La Fase 2 ne
+implementa controllo e issuer deterministico di test; la Fase 3 implementa
+policy, Approver e grant reali.
+
+Le permission modello usano lo stesso modello di action ma subject distinto:
+il bundle viene costruito localmente, ne viene derivato un manifest redatto,
+quindi `model.invoke` e `model.disclose` vengono autorizzati prima della chiamata
+provider. Tool con più action sono autorizzati atomicamente.
+
+La precedenza pre-commit dei terminali è `deadline > canceled > limit >
+permission_denied > blocked > provider_failure > tool_failure >
+planning_failure > internal_failure > completed`; il primo terminale committato
+resta definitivo. L'avvio di `workspace.mutate` marca il contesto stale anche
+su errore o esito ambiguo.
+
+Nessuna API Runtime, Provider, Context Engine, Gestor, Plugin o composition root
+è stata modificata. I contratti nuovi dipendono soltanto da package pubblici e
+non importano implementazioni interne.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e

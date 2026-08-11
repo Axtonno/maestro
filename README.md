@@ -86,6 +86,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 40. `context-engine-runtime.md`
 41. `agent-system-design.md`
 42. `agent-system-development-plan.md`
+43. `agent-system-api-compatibility-audit.md`
 
 ---
 
@@ -266,13 +267,12 @@ generico `WorkspaceProvider`; Gestor ne risolve la capability senza eseguire la
 pipeline. Eventi di index, build e cache usano payload redatti e observer
 best-effort. Suite completa, race detector, vet e audit API chiudono il gate.
 
-La Milestone 7 — Agent System è aperta e pianificata in sette fasi. Il design
-separa Tool Runtime e Agent Runtime: i tool possiedono catalogo ed execution boundary,
-mentre gli agenti possiedono sessioni, piani e loop modello–tool. Ogni effetto
-passerà da prepare, autorizzazione default-deny ed execute; provider, modello,
-workspace, agente e budget resteranno espliciti. Il piano completo è in
-`docs/agent-system-development-plan.md`; nessuna fase è ancora dichiarata
-completata.
+La Milestone 7 — Agent System è aperta e pianificata in sette fasi. La Fase 1
+è completata: `pkg/tool` e `pkg/agent` definiscono descriptor, invocation,
+permission request, sessioni, piani, limiti e terminali. ADR-0025 stabilisce che
+una `Decision` pubblica non è un permit, le action sono autorizzate atomicamente
+e gli eventi usano allowlist esatte. Catalogo ed executor appartengono alla
+Fase 2 e non sono ancora presentati come implementati.
 
 Uso essenziale:
 

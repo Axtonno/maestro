@@ -333,6 +333,11 @@ mutazione del workspace, esecuzione di processi, rete, invocazione del modello e
 disclosure di contenuto. È un confine operativo per codice trusted in-process,
 non una sandbox per estensioni malevole.
 
+La Fase 1 della Milestone 7 definisce `pkg/tool`: `PreparedInvocation` lega
+identità, run, arguments e action tramite fingerprint; `Runtime.Invoke`
+incorpora autorizzazione ed esecuzione e non accetta una `Decision` pubblica
+come autorità. Policy registry e permit operativo appartengono al Tool Runtime.
+
 Le implementazioni previste includono filesystem, Git, terminale, Docker,
 Composer, Artisan e PHPUnit. La baseline della Milestone 7 consegna soltanto il
 set workspace minimo necessario a validare il primo agente; il catalogo resta
@@ -363,6 +368,10 @@ Il Tool System e l'Agent System hanno package e ownership separati. Il primo
 possiede catalogo ed execution boundary; il secondo possiede sessione, piano e
 loop modello–tool. Una sessione è in-memory, immutabile dal punto di vista del
 chiamante e limitata da hard ceiling indipendenti dalle istruzioni del modello.
+
+La Fase 1 definisce `pkg/agent` con request a target espliciti, piani aciclici,
+snapshot generazionali e precedenza deterministica delle cause terminali. Le
+implementazioni concrete restano nelle fasi successive.
 
 Il design e le sette fasi della Milestone 7 sono descritti in
 `agent-system-design.md` e `agent-system-development-plan.md`.

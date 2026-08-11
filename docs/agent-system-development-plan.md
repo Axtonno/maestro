@@ -1,8 +1,8 @@
 # Milestone 7 — Agent System Development Plan
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Attivo — nessuna fase completata
+Stato: Attivo — Fase 1 completata, Fase 2 pianificata
 
 Data: 2026-08-11
 
@@ -26,7 +26,7 @@ lungo periodo, sandbox di codice non fidato, multi-agent o una CLI completa.
 
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | Contratti, ownership e ADR-0025 | Pianificata | Design iniziale |
+| 1 | Contratti, ownership e ADR-0025 | Completata | Design iniziale |
 | 2 | Tool catalog e execution boundary | Pianificata | Fase 1 |
 | 3 | Permission model e approval flow | Pianificata | Fasi 1–2 |
 | 4 | Sessioni, piani e budget | Pianificata | Fasi 1–3 |
@@ -109,13 +109,18 @@ di introdurre esecuzione o chiamate ai modelli.
 Costruire un Tool Runtime deterministico e thread-safe che separi preparazione
 senza effetti ed esecuzione, senza ancora concedere permessi impliciti.
 
+ADR-0025 definisce già il permit interno: non è una `Decision` pubblica, lega
+issuer, run ID e permission fingerprint ed è consumato dall'executor. Questa
+fase implementa il controllo obbligatorio con un issuer deterministico di test;
+policy, Approver e grant reali arrivano nella Fase 3.
+
 ## Sviluppo previsto
 
 - implementare catalogo e registry di tool trusted in-process;
 - validare descriptor, nome provider, versione e JSON Schema;
 - introdurre listing ordinati, resolution esatta e snapshot difensivi;
 - implementare `Prepare` con validazione e normalizzazione delle action;
-- implementare un executor che richieda una decisione verificabile;
+- implementare un executor che richieda un permit interno verificabile;
 - validare prepared invocation, action fingerprint e correlazione call ID;
 - applicare limiti a durata, byte, elementi e diagnostiche del risultato;
 - classificare invalid input, denied, failed, cancelled e truncated;
