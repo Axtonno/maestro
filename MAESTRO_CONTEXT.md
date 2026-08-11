@@ -1307,3 +1307,26 @@ esegue la capability risolta.
 
 La Milestone 4 è chiusa. La Milestone 3 resta sospesa con la matrice live
 llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.
+
+## Milestone 5 — Plugin System
+
+Stato: in corso — Fase 1 avviata; baseline Plugin Runtime disponibile.
+
+Il design iniziale è definito in `docs/plugin-system-design.md` e il piano
+operativo in `docs/plugin-system-development-plan.md`.
+
+La milestone consolida il modello trusted in-process già introdotto dalla Fase
+6 del Runtime Core. Non crea un secondo lifecycle e non anticipa packaging,
+sandbox, permission model o plugin di terze parti.
+
+Le cinque fasi previste sono:
+
+1. contratti, audit della baseline e ADR-0023;
+2. catalogo, registry e caricamento;
+3. lifecycle, dependency graph e Gestor;
+4. Laravel reference plugin;
+5. osservabilità, hardening e gate finale.
+
+Ogni fase produce un report in `docs/reports/`; la Fase 5 produce anche
+`docs/reports/milestone-5-final.md`. Il codice plugin esistente è considerato
+una baseline da verificare e non rende automaticamente completate le fasi.

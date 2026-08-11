@@ -411,18 +411,38 @@ I cinque report di fase e il report conclusivo sono disponibili in
 
 # Milestone 5 — Plugin System
 
-Stato: Baseline completata nella Fase 6; ecosistema in evoluzione
+Stato: In corso — Fase 1 avviata; baseline Plugin Runtime disponibile
 
 Obiettivi:
 
-- Caricamento plugin.
-- Registrazione plugin.
-- Lifecycle plugin.
-- API pubbliche.
+- Stabilizzazione delle API pubbliche plugin.
+- Catalogo, registrazione e caricamento deterministici.
+- Lifecycle e dependency graph condivisi con il Runtime Core.
+- Discovery delle capability plugin tramite Gestor.
+- Primo reference plugin framework-aware.
+- Hardening concorrente, osservabilità e audit di compatibilità.
 
 Primo plugin:
 
 Laravel (detection e health implementati).
+
+Fasi di sviluppo:
+
+| Fase | Ambito | Stato |
+|---|---|---|
+| 1 | Contratti, audit della baseline e ADR-0023 | In corso |
+| 2 | Catalogo, registry e caricamento | Pianificata |
+| 3 | Lifecycle, dependency graph e Gestor | Pianificata |
+| 4 | Laravel reference plugin | Pianificata |
+| 5 | Osservabilità, hardening e gate finale | Pianificata |
+
+Il design è descritto in `plugin-system-design.md`; il piano operativo, i gate
+e i deliverable di ogni fase sono definiti in
+`plugin-system-development-plan.md`.
+
+La milestone consolida il modello trusted in-process. Packaging esterno,
+marketplace, firme, sandbox, hot loading e plugin di terze parti restano fuori
+scope e confluiscono nell'evoluzione dell'ecosistema.
 
 ---
 

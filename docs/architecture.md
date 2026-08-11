@@ -256,6 +256,11 @@ fornisce discovery deterministica; il Plugin Runtime valida ID e manifest, li
 indicizza e pubblica gli eventi, mentre il Runtime Core orchestra il lifecycle.
 Distribuzione di artefatti esterni e isolamento sono livelli successivi.
 
+La Milestone 5 consolida questa baseline attraverso audit dei contratti,
+hardening concorrente, integrazione Gestor e Laravel come reference plugin. Il
+design e i gate operativi sono descritti in `plugin-system-design.md` e
+`plugin-system-development-plan.md`.
+
 Esempi:
 
 - Laravel (implementato)
