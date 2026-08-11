@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–3 completate; Fase 4 pronta
+Stato: In corso — Fasi 1–4 completate; Fase 5 pronta
 
 Data: 2026-08-11
 
@@ -29,7 +29,7 @@ lifecycle.
 | 1 | Contratti, audit della baseline e ADR-0023 | Completata | Design iniziale |
 | 2 | Catalogo, registry e caricamento | Completata | Fase 1 |
 | 3 | Lifecycle, dependency graph e Gestor | Completata | Fasi 1–2 |
-| 4 | Laravel reference plugin | Pianificata | Fasi 1–3 |
+| 4 | Laravel reference plugin | Completata | Fasi 1–3 |
 | 5 | Osservabilità, hardening e gate finale | Pianificata | Fasi 1–4 |
 
 Le fasi sono sequenziali rispetto ai contratti. Ogni fase termina con un report

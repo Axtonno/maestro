@@ -42,6 +42,15 @@ func TestRuntimeAPIVersionIsStableAndNonEmpty(t *testing.T) {
 	}
 }
 
+func TestWorkspaceDetectionCapabilityIsNamespaced(t *testing.T) {
+	if CapabilityWorkspaceDetection != "plugin.workspace-detection" {
+		t.Fatalf(
+			"unexpected workspace detection capability %q",
+			CapabilityWorkspaceDetection,
+		)
+	}
+}
+
 func TestEvent(t *testing.T) {
 	registered := &typeTestPlugin{}
 	payload := EventPayload{ID: "test", Plugin: registered}

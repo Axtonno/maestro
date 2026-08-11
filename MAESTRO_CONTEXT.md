@@ -1313,7 +1313,7 @@ llama.cpp ancora pendente; la chiusura di Gestor non ne modifica lo stato.
 
 ## Milestone 5 — Plugin System
 
-Stato: in corso — Fasi 1–3 completate; Fase 4 pronta.
+Stato: in corso — Fasi 1–4 completate; Fase 5 pronta.
 
 Il design iniziale è definito in `docs/plugin-system-design.md` e il piano
 operativo in `docs/plugin-system-development-plan.md`.
@@ -1327,7 +1327,7 @@ Le cinque fasi previste sono:
 1. contratti, audit della baseline e ADR-0023 — completata;
 2. catalogo, registry e caricamento — completata;
 3. lifecycle, dependency graph e Gestor — completata;
-4. Laravel reference plugin;
+4. Laravel reference plugin — completata;
 5. osservabilità, hardening e gate finale.
 
 Ogni fase produce un report in `docs/reports/`; la Fase 5 produce anche
@@ -1403,3 +1403,27 @@ Una capability custom caricata dal catalogo invalida Gestor, viene scoperta una
 sola volta dopo refresh e produce un dependency plan senza eseguire codice del
 plugin. Suite completa, race detector e vet sono verdi. Il report è disponibile
 in `docs/reports/milestone-5-phase-3.md`.
+
+### Fase 4 — Laravel reference plugin
+
+Completata in:
+
+```text
+pkg/plugin
+pkg/plugin/laravel
+internal/plugin/laravel
+```
+
+Il contratto additivo `plugin.CapabilityWorkspaceDetection` usa l'ID
+`plugin.workspace-detection`. Laravel `0.2.0` lo dichiara nei metadata e Gestor
+lo indicizza una sola volta prima del lifecycle.
+
+La facade concreta resta invariata: Root è assoluta e immutabile;
+FrameworkVersion viene pubblicata atomicamente dopo Initialize. Health e
+inizializzazioni fallite conservano l'ultimo snapshot valido. Root relative o
+inesistenti, manifest mancanti/malformati/oltre limite, constraint vuoti,
+mutation e concorrenza sono coperti deterministicamente.
+
+Non viene introdotto un contratto workspace framework-neutral senza il consumer
+del Context Engine. Suite completa, race detector e vet sono verdi. Il report è
+disponibile in `docs/reports/milestone-5-phase-4.md`.

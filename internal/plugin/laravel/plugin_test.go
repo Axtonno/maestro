@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
@@ -32,6 +33,37 @@ func TestNewValidatesAndNormalizesWorkspaceRoot(t *testing.T) {
 	if plugin.FrameworkVersion() != "" {
 		t.Fatalf("expected no version before initialization, got %q", plugin.FrameworkVersion())
 	}
+
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("read working directory: %v", err)
+	}
+	relativeRoot, err := filepath.Rel(workingDirectory, workspace)
+	if err != nil {
+		t.Fatalf("construct relative workspace root: %v", err)
+	}
+	relativePlugin, err := New(relativeRoot)
+	if err != nil {
+		t.Fatalf("create plugin from relative root: %v", err)
+	}
+	if relativePlugin.Root() != plugin.Root() {
+		t.Fatalf(
+			"expected normalized root %q, got %q",
+			plugin.Root(),
+			relativePlugin.Root(),
+		)
+	}
+
+	missingPlugin, err := New(filepath.Join(t.TempDir(), "missing"))
+	if err != nil {
+		t.Fatalf("create plugin for missing root: %v", err)
+	}
+	if err := missingPlugin.(pkgRuntime.Initializer).Initialize(nil); !errors.Is(
+		err,
+		ErrNotDetected,
+	) {
+		t.Fatalf("expected deferred missing-root detection, got %v", err)
+	}
 }
 
 func TestPluginDeclaresIdentityAndCompatibility(t *testing.T) {
@@ -47,6 +79,7 @@ func TestPluginDeclaresIdentityAndCompatibility(t *testing.T) {
 	if got, want := metadata.Capabilities, []pkgRuntime.Capability{
 		pkgRuntime.CapabilityInitialize,
 		pkgRuntime.CapabilityHealth,
+		pkgPlugin.CapabilityWorkspaceDetection,
 	}; !equalCapabilities(got, want) {
 		t.Fatalf("expected capabilities %v, got %v", want, got)
 	}
@@ -80,6 +113,39 @@ func TestPluginDetectsLaravelWorkspace(t *testing.T) {
 		ErrNotDetected,
 	) {
 		t.Fatalf("expected ErrNotDetected after artisan removal, got %v", err)
+	}
+	if got := plugin.FrameworkVersion(); got != "^12.0" {
+		t.Fatalf("failed health check changed version snapshot to %q", got)
+	}
+
+	writeTestFile(t, filepath.Join(workspace, "artisan"), "#!/usr/bin/env php")
+	writeTestFile(
+		t,
+		filepath.Join(workspace, "composer.json"),
+		`{"require":{"laravel/framework":"^13.0"}}`,
+	)
+	if err := plugin.(pkgRuntime.HealthChecker).Health(nil); err != nil {
+		t.Fatalf("check updated workspace health: %v", err)
+	}
+	if got := plugin.FrameworkVersion(); got != "^12.0" {
+		t.Fatalf("health check mutated initialized snapshot to %q", got)
+	}
+	if err := plugin.(pkgRuntime.Initializer).Initialize(nil); err != nil {
+		t.Fatalf("reinitialize updated workspace: %v", err)
+	}
+	if got := plugin.FrameworkVersion(); got != "^13.0" {
+		t.Fatalf("expected refreshed version ^13.0, got %q", got)
+	}
+
+	writeTestFile(t, filepath.Join(workspace, "composer.json"), `{`)
+	if err := plugin.(pkgRuntime.Initializer).Initialize(nil); !errors.Is(
+		err,
+		ErrInvalidComposerManifest,
+	) {
+		t.Fatalf("expected failed reinitialization, got %v", err)
+	}
+	if got := plugin.FrameworkVersion(); got != "^13.0" {
+		t.Fatalf("failed initialization corrupted version snapshot to %q", got)
 	}
 }
 
@@ -129,6 +195,22 @@ func TestPluginRejectsNonLaravelWorkspace(t *testing.T) {
 			want: ErrNotDetected,
 		},
 		{
+			name: "empty framework requirement",
+			prepare: func(t *testing.T, root string) {
+				writeTestFile(t, filepath.Join(root, "artisan"), "#!/usr/bin/env php")
+				writeTestFile(t, filepath.Join(root, "composer.json"), `{"require":{"laravel/framework":"   "}}`)
+			},
+			want: ErrNotDetected,
+		},
+		{
+			name: "invalid require section",
+			prepare: func(t *testing.T, root string) {
+				writeTestFile(t, filepath.Join(root, "artisan"), "#!/usr/bin/env php")
+				writeTestFile(t, filepath.Join(root, "composer.json"), `{"require":[]}`)
+			},
+			want: ErrInvalidComposerManifest,
+		},
+		{
 			name: "oversized composer manifest",
 			prepare: func(t *testing.T, root string) {
 				writeTestFile(t, filepath.Join(root, "artisan"), "#!/usr/bin/env php")
@@ -156,6 +238,50 @@ func TestPluginRejectsNonLaravelWorkspace(t *testing.T) {
 				t.Fatalf("expected %v, got %v", test.want, err)
 			}
 		})
+	}
+}
+
+func TestPluginWorkspaceViewIsConcurrent(t *testing.T) {
+	workspace := newLaravelWorkspace(t, "^12.0")
+	plugin, err := New(workspace)
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+	initializer := plugin.(pkgRuntime.Initializer)
+	health := plugin.(pkgRuntime.HealthChecker)
+	if err := initializer.Initialize(nil); err != nil {
+		t.Fatalf("initialize plugin: %v", err)
+	}
+
+	const operationCount = 100
+	var waitGroup sync.WaitGroup
+	errorsChannel := make(chan error, operationCount*3)
+	for range operationCount {
+		waitGroup.Add(2)
+		go func() {
+			defer waitGroup.Done()
+			if err := initializer.Initialize(nil); err != nil {
+				errorsChannel <- err
+			}
+		}()
+		go func() {
+			defer waitGroup.Done()
+			if err := health.Health(nil); err != nil {
+				errorsChannel <- err
+				return
+			}
+			if plugin.Root() != filepath.Clean(workspace) {
+				errorsChannel <- errors.New("workspace root changed")
+			}
+			if plugin.FrameworkVersion() != "^12.0" {
+				errorsChannel <- errors.New("framework version changed")
+			}
+		}()
+	}
+	waitGroup.Wait()
+	close(errorsChannel)
+	for err := range errorsChannel {
+		t.Errorf("concurrent workspace operation: %v", err)
 	}
 }
 

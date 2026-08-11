@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/antonio-cafeo/maestro"
+	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	"github.com/antonio-cafeo/maestro/pkg/plugin/laravel"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
@@ -43,6 +44,23 @@ func TestLaravelPluginLoadsAndStartsThroughMaestro(t *testing.T) {
 	if !ok {
 		t.Fatalf("loaded unexpected plugin type %T", loaded)
 	}
+	if laravelPlugin.FrameworkVersion() != "" {
+		t.Fatal("Laravel detection ran during Load")
+	}
+	if err := runtime.Gestor().Refresh(t.Context()); err != nil {
+		t.Fatalf("refresh Gestor after Laravel load: %v", err)
+	}
+	descriptorCount := 0
+	for _, descriptor := range runtime.Gestor().Snapshot().Descriptors() {
+		if descriptor.Capability == pkgGestor.CapabilityID(
+			pkgPlugin.CapabilityWorkspaceDetection,
+		) && descriptor.Target.ID == string(laravel.ID) {
+			descriptorCount++
+		}
+	}
+	if descriptorCount != 1 {
+		t.Fatalf("expected one Laravel workspace descriptor, got %d", descriptorCount)
+	}
 
 	if err := runtime.Start(context.Background()); err != nil {
 		t.Fatalf("start runtime: %v", err)
@@ -52,6 +70,20 @@ func TestLaravelPluginLoadsAndStartsThroughMaestro(t *testing.T) {
 	}
 	if state := runtime.StateManager().Get(loaded).State; state != pkgRuntime.StateRunning {
 		t.Fatalf("expected Laravel plugin running, got %d", state)
+	}
+	query, err := pkgGestor.NewQuery(
+		pkgGestor.CapabilityID(pkgPlugin.CapabilityWorkspaceDetection),
+		pkgGestor.QueryOptions{TargetKind: pkgGestor.TargetKindComponent},
+	)
+	if err != nil {
+		t.Fatalf("construct Laravel capability query: %v", err)
+	}
+	resolution, err := runtime.Gestor().Resolve(query)
+	if err != nil {
+		t.Fatalf("resolve Laravel workspace capability: %v", err)
+	}
+	if resolution.Descriptor().Target.ID != string(laravel.ID) {
+		t.Fatalf("unexpected Laravel capability target: %#v", resolution.Descriptor().Target)
 	}
 
 	if err := runtime.Stop(context.Background()); err != nil {

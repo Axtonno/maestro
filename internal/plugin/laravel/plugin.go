@@ -16,7 +16,7 @@ import (
 
 const (
 	ID      pkgPlugin.ID = "laravel"
-	Version              = "0.1.0"
+	Version              = "0.2.0"
 
 	maxComposerManifestBytes = 1 << 20
 )
@@ -68,6 +68,7 @@ func (p *plugin) Metadata() pkgRuntime.Metadata {
 		Capabilities: []pkgRuntime.Capability{
 			pkgRuntime.CapabilityInitialize,
 			pkgRuntime.CapabilityHealth,
+			pkgPlugin.CapabilityWorkspaceDetection,
 		},
 	}
 }

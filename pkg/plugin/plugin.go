@@ -6,6 +6,10 @@ import pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 // release of Maestro.
 const RuntimeAPIVersion = "1"
 
+// CapabilityWorkspaceDetection identifies plugins that can recognize and
+// describe a supported framework workspace during initialization.
+const CapabilityWorkspaceDetection pkgRuntime.Capability = "plugin.workspace-detection"
+
 // ID is the component identifier used to register and resolve a plugin.
 type ID = pkgRuntime.ComponentID
 
