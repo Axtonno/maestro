@@ -11,11 +11,13 @@ type TargetKind string
 const (
 	TargetKindComponent TargetKind = "component"
 	TargetKindProvider  TargetKind = "provider"
+	TargetKindAgent     TargetKind = "agent"
+	TargetKindTool      TargetKind = "tool"
 )
 
 func (kind TargetKind) Valid() bool {
 	switch kind {
-	case TargetKindComponent, TargetKindProvider:
+	case TargetKindComponent, TargetKindProvider, TargetKindAgent, TargetKindTool:
 		return true
 	default:
 		return false
@@ -29,11 +31,13 @@ const (
 	ScopeAdapter   Scope = "adapter"
 	ScopeInstance  Scope = "instance"
 	ScopeModel     Scope = "model"
+	ScopeAgent     Scope = "agent"
+	ScopeTool      Scope = "tool"
 )
 
 func (scope Scope) Valid() bool {
 	switch scope {
-	case ScopeComponent, ScopeAdapter, ScopeInstance, ScopeModel:
+	case ScopeComponent, ScopeAdapter, ScopeInstance, ScopeModel, ScopeAgent, ScopeTool:
 		return true
 	default:
 		return false
@@ -73,6 +77,14 @@ func (target Target) Validate() error {
 			}
 		} else if target.Model != "" {
 			return fmt.Errorf("non-model target cannot include a model ID: %w", ErrInvalidTarget)
+		}
+	case TargetKindAgent:
+		if target.Scope != ScopeAgent || target.Model != "" {
+			return fmt.Errorf("agent target requires agent scope and no model: %w", ErrInvalidTarget)
+		}
+	case TargetKindTool:
+		if target.Scope != ScopeTool || target.Model != "" {
+			return fmt.Errorf("tool target requires tool scope and no model: %w", ErrInvalidTarget)
 		}
 	}
 

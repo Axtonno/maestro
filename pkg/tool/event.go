@@ -5,6 +5,7 @@ const (
 	EventInvocationAuthorized = "tool.invocation.authorized"
 	EventInvocationCompleted  = "tool.invocation.completed"
 	EventInvocationFailed     = "tool.invocation.failed"
+	EventPermissionDecided    = "tool.permission.decided"
 )
 
 type EventFailure string

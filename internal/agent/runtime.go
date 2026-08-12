@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"slices"
 	"sync"
+	"time"
 
 	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	"github.com/antonio-cafeo/maestro/pkg/provider"
+	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
@@ -39,6 +41,7 @@ type Options struct {
 	Providers   generationRuntime
 	Tools       pkgTool.Runtime
 	Workspaces  workspaceBinder
+	EventBus    pkgRuntime.EventBus
 }
 
 func DefaultOptions() Options { return Options{MaxSessions: 1024} }
@@ -46,12 +49,14 @@ func DefaultOptions() Options { return Options{MaxSessions: 1024} }
 type Runtime struct {
 	mu sync.RWMutex
 
-	context     pkgContext.Engine
-	permissions pkgTool.Runtime
-	options     Options
-	agents      map[pkgAgent.ID]pkgAgent.Agent
-	sessions    map[pkgAgent.RunID]*session
-	loop        loop
+	context                 pkgContext.Engine
+	permissions             pkgTool.Runtime
+	options                 Options
+	agents                  map[pkgAgent.ID]pkgAgent.Agent
+	sessions                map[pkgAgent.RunID]*session
+	loop                    loop
+	registrationInvalidator func()
+	events                  pkgRuntime.EventBus
 }
 
 func NewRuntime(contextEngine pkgContext.Engine) *Runtime {
@@ -71,11 +76,11 @@ func NewRuntimeWithOptions(contextEngine pkgContext.Engine, options Options) (*R
 		permissions = options.Tools
 	}
 	runtime := &Runtime{
-		context: contextEngine, permissions: permissions, options: options,
+		context: contextEngine, permissions: permissions, options: options, events: options.EventBus,
 		agents: make(map[pkgAgent.ID]pkgAgent.Agent), sessions: make(map[pkgAgent.RunID]*session),
 	}
 	if options.Providers != nil && !typedNil(options.Providers) && options.Tools != nil && !typedNil(options.Tools) {
-		runtime.loop = &agentLoop{providers: options.Providers, tools: options.Tools, permissions: permissions, context: contextEngine}
+		runtime.loop = &agentLoop{providers: options.Providers, tools: options.Tools, permissions: permissions, context: contextEngine, events: options.EventBus}
 	}
 	if observable, ok := options.Tools.(executionStartObserver); ok {
 		if err := observable.ObserveExecutionStart(runtime.executionStarted); err != nil {
@@ -110,12 +115,23 @@ func (runtime *Runtime) Register(candidate pkgAgent.Agent) error {
 	}
 	descriptor := candidate.Descriptor()
 	runtime.mu.Lock()
-	defer runtime.mu.Unlock()
 	if _, exists := runtime.agents[descriptor.ID()]; exists {
+		runtime.mu.Unlock()
 		return fmt.Errorf("register agent %q: %w", descriptor.ID(), pkgAgent.ErrAlreadyRegistered)
 	}
 	runtime.agents[descriptor.ID()] = candidate
+	invalidator := runtime.registrationInvalidator
+	runtime.mu.Unlock()
+	if invalidator != nil {
+		invalidator()
+	}
 	return nil
+}
+
+func (runtime *Runtime) SetRegistrationInvalidator(invalidator func()) {
+	runtime.mu.Lock()
+	runtime.registrationInvalidator = invalidator
+	runtime.mu.Unlock()
 }
 
 func (runtime *Runtime) Descriptors() []pkgAgent.Descriptor {
@@ -131,7 +147,7 @@ func (runtime *Runtime) Descriptors() []pkgAgent.Descriptor {
 	return descriptors
 }
 
-func (runtime *Runtime) Run(ctx context.Context, request pkgAgent.RunRequest) (pkgAgent.RunResult, error) {
+func (runtime *Runtime) Run(ctx context.Context, request pkgAgent.RunRequest) (result pkgAgent.RunResult, err error) {
 	if ctx == nil {
 		return pkgAgent.RunResult{}, pkgAgent.NewRunError(pkgAgent.ErrorInvalid, request.Run(), request.Agent(), "nil_context", pkgAgent.ErrInvalidRequest)
 	}
@@ -165,6 +181,20 @@ func (runtime *Runtime) Run(ctx context.Context, request pkgAgent.RunRequest) (p
 	}
 	runtime.sessions[request.Run()] = current
 	runtime.mu.Unlock()
+	started := time.Now()
+	publishAgentEvent(runtime.events, pkgAgent.EventSessionStarted, sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone))
+	defer func() {
+		snapshot := current.snapshotValue()
+		failure := classifyAgentEventFailure(err, snapshot.Terminal())
+		topic := pkgAgent.EventSessionCompleted
+		if err != nil {
+			topic = pkgAgent.EventSessionFailed
+		}
+		if snapshot.Terminal() == pkgAgent.TerminalLimit {
+			publishAgentEvent(runtime.events, pkgAgent.EventLimitReached, sessionEventPayload(snapshot, time.Since(started), failure))
+		}
+		publishAgentEvent(runtime.events, topic, sessionEventPayload(snapshot, time.Since(started), failure))
+	}()
 	if workspace, ok := request.WorkspaceTarget(); ok && runtime.options.Workspaces != nil {
 		toolRun := pkgTool.RunID(request.Run())
 		if err := runtime.options.Workspaces.Bind(toolRun, workspace); err != nil {
@@ -233,6 +263,7 @@ func (runtime *Runtime) coordinate(
 	if err := current.transition(pkgAgent.SessionRunning, &plan, bundle.Generation()); err != nil {
 		return current.fail(pkgAgent.TerminalInternalFailure, pkgAgent.ErrorInternal, "running_transition", err)
 	}
+	publishAgentEvent(runtime.events, pkgAgent.EventPlanCreated, sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone))
 	if runtime.loop == nil {
 		return current.finish("", pkgAgent.TerminalBlocked)
 	}

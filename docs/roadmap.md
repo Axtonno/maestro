@@ -495,7 +495,7 @@ I sei report di fase e `reports/milestone-6-final.md` documentano i gate.
 
 # Milestone 7 — Agent System
 
-Stato: In corso — Fasi 1–6 completate, Fase 7 pianificata
+Stato: Completata — Fasi 1–7 e gate finale superati
 
 Obiettivi:
 
@@ -515,7 +515,7 @@ Fasi di sviluppo:
 | 4 | Sessioni, piani e budget | Completata |
 | 5 | Loop agentico e tool calling | Completata |
 | 6 | Workspace awareness e reference tool | Completata |
-| 7 | Integrazione, osservabilità e gate finale | Pianificata |
+| 7 | Integrazione, osservabilità e gate finale | Completata |
 
 Il design è descritto in `agent-system-design.md`; il piano operativo, i gate
 e i deliverable di ogni fase sono definiti in
@@ -530,6 +530,12 @@ Output atteso:
 
 Primo agente autonomo, provider-agnostic, workspace-aware e governato da
 permessi espliciti.
+
+Il composition root espone `Tools()` e `Agents()`, registra reference agent e
+workspace tool e li descrive tramite Gestor. Sessioni, piani, permission,
+streaming, containment, freshness ed eventi redatti sono verificati da gate
+deterministici. Il report conclusivo è
+`reports/milestone-7-final.md`.
 
 ---
 

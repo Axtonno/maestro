@@ -10,6 +10,7 @@ import (
 	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	"github.com/antonio-cafeo/maestro/pkg/provider"
+	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
@@ -18,6 +19,7 @@ type agentLoop struct {
 	tools       pkgTool.Runtime
 	permissions pkgTool.Runtime
 	context     pkgContext.Engine
+	events      pkgRuntime.EventBus
 }
 
 func (loop *agentLoop) Run(
@@ -52,6 +54,7 @@ func (loop *agentLoop) Run(
 		if err := current.transitionStep(step.ID(), pkgAgent.StepRunning, ""); err != nil {
 			return "", pkgAgent.TerminalInternalFailure, err
 		}
+		loop.publishStep(current, step.ID(), pkgAgent.StepRunning)
 
 		messages := initialMessages(request, step, bundle)
 		for {
@@ -69,6 +72,7 @@ func (loop *agentLoop) Run(
 			if err := current.consume(counterDelta{modelTurns: 1}); err != nil {
 				return "", pkgAgent.TerminalLimit, err
 			}
+			publishAgentEvent(loop.events, pkgAgent.EventTurnStarted, sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone))
 			turn++
 			completionRequest := provider.CompletionRequest{
 				Model: request.Model(), Messages: messages, Tools: providerTools,
@@ -96,6 +100,7 @@ func (loop *agentLoop) Run(
 			}); err != nil {
 				return "", pkgAgent.TerminalLimit, err
 			}
+			publishAgentEvent(loop.events, pkgAgent.EventTurnCompleted, sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone))
 
 			assistant := response.Message
 			assistant.Role = provider.RoleAssistant
@@ -111,6 +116,7 @@ func (loop *agentLoop) Run(
 				if err := current.transitionStep(step.ID(), pkgAgent.StepCompleted, ""); err != nil {
 					return "", pkgAgent.TerminalInternalFailure, err
 				}
+				loop.publishStep(current, step.ID(), pkgAgent.StepCompleted)
 				lastContent = assistant.Content
 				break
 			}
@@ -203,6 +209,13 @@ func (loop *agentLoop) Run(
 			}
 		}
 	}
+}
+
+func (loop *agentLoop) publishStep(current *session, step pkgAgent.StepID, state pkgAgent.StepStatus) {
+	payload := sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone)
+	payload.Step = step
+	payload.StepState = state
+	publishAgentEvent(loop.events, pkgAgent.EventStepTransitioned, payload)
 }
 
 func descriptorHasEffect(descriptor pkgTool.Descriptor, effect pkgTool.Effect) bool {

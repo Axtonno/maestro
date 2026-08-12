@@ -1,8 +1,8 @@
 # Milestone 7 — Agent System Design
 
-Versione: 0.2.0
+Versione: 0.3.0
 
-Stato: Implementazione avviata — ADR-0025 Accepted, Fase 1 completata
+Stato: Implementato — Milestone 7 completata
 
 Data: 2026-08-11
 
@@ -21,11 +21,10 @@ collocare logica agentica nel Runtime Core:
 - Context Engine per snapshot, retrieval e bundle con provenance e budget;
 - Benchmark Layer con fixture provider e task di sviluppo riproducibili.
 
-La Fase 1 ha definito i contratti pubblici per tool, permission, sessione e
-piano. Mancano le implementazioni concrete di catalogo, executor, policy
-engine, session coordinator e ciclo modello–tool. La Milestone 7 introduce
-questi confini senza trasformare il Runtime Core in un agente e senza affidare
-al modello autorizzazioni o selezione implicita delle risorse.
+Le sette fasi hanno implementato contratti, catalogo, executor, permission
+model, session coordinator, loop modello-tool, workspace tool, composition
+root, Gestor ed eventi. Il Runtime Core non è diventato un agente e il modello
+non controlla autorizzazioni o selezione implicita delle risorse.
 
 ---
 

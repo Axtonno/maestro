@@ -2,19 +2,68 @@ package maestro
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
+	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
 type testProvider struct {
 	id pkgProvider.ID
+}
+
+type catalogAgent struct{ descriptor pkgAgent.Descriptor }
+
+func (agent catalogAgent) Descriptor() pkgAgent.Descriptor { return agent.descriptor }
+
+type catalogTool struct{ descriptor pkgTool.Descriptor }
+
+func (tool catalogTool) Descriptor() pkgTool.Descriptor { return tool.descriptor }
+func (tool catalogTool) Prepare(_ context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
+	action, _ := pkgTool.NewAction(pkgTool.EffectLocalCompute, "catalog", "")
+	return pkgTool.NewPreparedInvocation(invocation, tool.descriptor.Version(), invocation.Arguments(), []pkgTool.Action{action})
+}
+func (catalogTool) Execute(context.Context, pkgTool.PreparedInvocation) (pkgTool.Result, error) {
+	return pkgTool.NewResult(pkgTool.ResultSuccess, "ok", "text/plain", "completed", 1, false, "")
+}
+
+type scriptedAgentProvider struct {
+	mu        sync.Mutex
+	responses []pkgProvider.CompletionResponse
+}
+
+func (*scriptedAgentProvider) ID() pkgProvider.ID { return "scripted" }
+func (provider *scriptedAgentProvider) Complete(_ context.Context, _ pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
+	if len(provider.responses) == 0 {
+		return pkgProvider.CompletionResponse{}, errors.New("unexpected completion")
+	}
+	response := provider.responses[0]
+	provider.responses = provider.responses[1:]
+	return response, nil
+}
+
+type allowAllAgentPolicy struct{ id pkgTool.PolicyID }
+
+func (policy allowAllAgentPolicy) ID() pkgTool.PolicyID { return policy.id }
+func (allowAllAgentPolicy) Decide(context.Context, pkgTool.PermissionRequest) (pkgTool.Decision, error) {
+	return pkgTool.NewDecision(pkgTool.DecisionAllow, "explicit_test_allow", "", pkgTool.GrantRun)
 }
 
 type contextComponent struct {
@@ -877,12 +926,14 @@ func TestDirectComponentRegistrationDoesNotClassifyPlugin(t *testing.T) {
 func TestGestorCompositionRootRefreshesAndResolvesComponentsProvidersAndPlugins(t *testing.T) {
 	runtime := New()
 	initial := runtime.Gestor().Snapshot().Metadata()
-	if !initial.Current || initial.Generation != 1 || initial.DescriptorCount != 0 {
+	if !initial.Current || initial.Generation != 1 || initial.DescriptorCount != 13 {
 		t.Fatalf("unexpected initial Gestor snapshot: %#v", initial)
 	}
 	if got := initial.Sources(); !reflect.DeepEqual(got, []pkgGestor.SourceID{
+		"agent.catalog",
 		"provider.capabilities",
 		"runtime.components",
+		"tool.catalog",
 	}) {
 		t.Fatalf("unexpected built-in sources: %v", got)
 	}
@@ -1002,6 +1053,175 @@ func TestGestorCompositionRootRefreshesAndResolvesComponentsProvidersAndPlugins(
 	}
 }
 
+func TestCompositionExposesIsolatedAgentToolCatalogsAndGestorSources(t *testing.T) {
+	first := New()
+	second := New()
+	if len(first.Tools().Descriptors()) != 5 || len(first.Agents().Descriptors()) != 1 {
+		t.Fatalf("unexpected built-in catalogs: tools=%d agents=%d", len(first.Tools().Descriptors()), len(first.Agents().Descriptors()))
+	}
+	if policies := first.Tools().Policies(); len(policies) != 0 {
+		t.Fatalf("composition root installed implicit policies: %#v", policies)
+	}
+	agentQuery, err := pkgGestor.NewQuery(pkgGestor.CapabilityAgentRun, pkgGestor.QueryOptions{
+		TargetKind: pkgGestor.TargetKindAgent, Scope: pkgGestor.ScopeAgent, RequireAvailable: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolution, err := first.Gestor().Resolve(agentQuery)
+	if err != nil || resolution.Descriptor().Target.ID != "agent.reference" {
+		t.Fatalf("reference agent was not resolved: %#v %v", resolution, err)
+	}
+	toolQuery, _ := pkgGestor.NewQuery(pkgGestor.CapabilityToolInvoke, pkgGestor.QueryOptions{
+		TargetKind: pkgGestor.TargetKindTool, Scope: pkgGestor.ScopeTool, RequireAvailable: true,
+	})
+	if candidates, err := first.Gestor().Candidates(toolQuery); err != nil || len(candidates) != 5 {
+		t.Fatalf("workspace tools were not discovered: %#v %v", candidates, err)
+	}
+	if _, err := first.Gestor().Resolve(toolQuery); !errors.Is(err, pkgGestor.ErrAmbiguous) {
+		t.Fatalf("multiple tools did not remain ambiguous: %v", err)
+	}
+
+	descriptor, _ := pkgAgent.NewDescriptor("agent.custom", "1", "Custom test agent.", []pkgRuntime.Capability{pkgAgent.CapabilityRun})
+	if err := first.Agents().Register(catalogAgent{descriptor: descriptor}); err != nil {
+		t.Fatal(err)
+	}
+	if first.Gestor().Snapshot().Metadata().Current {
+		t.Fatal("agent registration did not invalidate Gestor")
+	}
+	if !second.Gestor().Snapshot().Metadata().Current || len(second.Agents().Descriptors()) != 1 {
+		t.Fatal("agent registration leaked into another composition root")
+	}
+	if err := first.Gestor().Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if candidates, err := first.Gestor().Candidates(agentQuery); err != nil || len(candidates) != 2 {
+		t.Fatalf("refreshed agent catalog mismatch: %#v %v", candidates, err)
+	}
+
+	toolDescriptor, _ := pkgTool.NewDescriptor("fixture.catalog", "fixture_catalog", "1", "Catalog fixture.", json.RawMessage(`{"type":"object"}`), []pkgTool.Effect{pkgTool.EffectLocalCompute})
+	if err := first.Tools().Register(catalogTool{descriptor: toolDescriptor}); err != nil {
+		t.Fatal(err)
+	}
+	if first.Gestor().Snapshot().Metadata().Current {
+		t.Fatal("tool registration did not invalidate Gestor")
+	}
+}
+
+func TestReferenceAgentAutonomousWorkspaceScenarioAndRedactedEvents(t *testing.T) {
+	runtime := New()
+	root := t.TempDir()
+	filename := filepath.Join(root, "main.go")
+	original := "package original\n"
+	if err := os.WriteFile(filename, []byte(original), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := pkgContext.NewWorkspace("workspace", root, pkgContext.WorkspaceOptions{
+		Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runtime.ContextEngine().Index(context.Background(), workspace); err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256([]byte(original))
+	patchArguments, _ := json.Marshal(map[string]string{
+		"path": "main.go", "old": "package original", "new": "package updated", "expected_digest": fmt.Sprintf("%x", sum),
+	})
+	provider := &scriptedAgentProvider{responses: []pkgProvider.CompletionResponse{
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "read-1", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"main.go"}`)}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "patch-1", Name: "workspace_patch", Arguments: patchArguments}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Workspace updated."}, FinishReason: pkgProvider.FinishReasonStop},
+	}}
+	if err := runtime.Providers().Register(provider); err != nil {
+		t.Fatal(err)
+	}
+	if err := runtime.Tools().RegisterPolicy(allowAllAgentPolicy{id: "policy.explicit"}); err != nil {
+		t.Fatal(err)
+	}
+
+	var eventMu sync.Mutex
+	topics := make([]string, 0)
+	payloads := make([]any, 0)
+	observedTopics := []string{
+		pkgAgent.EventSessionStarted, pkgAgent.EventSessionCompleted, pkgAgent.EventPlanCreated,
+		pkgAgent.EventStepTransitioned, pkgAgent.EventTurnStarted, pkgAgent.EventTurnCompleted,
+		pkgTool.EventInvocationPrepared, pkgTool.EventInvocationAuthorized, pkgTool.EventPermissionDecided,
+		pkgTool.EventInvocationCompleted,
+	}
+	for _, topic := range observedTopics {
+		topic := topic
+		if err := runtime.EventBus().Subscribe(topic, func(event pkgRuntime.Event) {
+			eventMu.Lock()
+			topics = append(topics, event.Name())
+			payloads = append(payloads, event.Payload())
+			eventMu.Unlock()
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := runtime.EventBus().Subscribe(pkgTool.EventInvocationCompleted, func(pkgRuntime.Event) {
+		panic("observer panic")
+	}); err != nil {
+		t.Fatal(err)
+	}
+	query, _ := pkgContext.NewRetrievalQuery("workspace", "package original", pkgContext.RetrievalQueryOptions{
+		Methods: []pkgContext.RetrievalMethod{pkgContext.RetrievalLexical}, TopK: 5,
+	})
+	request, err := pkgAgent.NewRunRequest(
+		"run-autonomous", "agent.reference", "scripted", "fixture-model", "workspace", "policy.explicit",
+		"super-secret update instruction", pkgAgent.Limits{
+			MaxDuration: 5 * time.Second, MaxModelTurns: 5, MaxToolCalls: 4, MaxToolCallsPerTurn: 2,
+			MaxPlanSteps: 3, MaxPlanRevisions: 2, MaxToolResultBytes: 1 << 16,
+			MaxSessionBytes: 1 << 20, MaxInputTokens: 10_000, MaxOutputTokens: 10_000,
+		}, pkgAgent.RunRequestOptions{
+			Context: pkgContext.BuildRequest{Query: query, Budget: pkgContext.Budget{MaxTokens: 1024, ReservedTokens: 64, SafetyTokens: 64}, Estimator: "context.utf8-estimator"},
+			Tools:   []pkgTool.ID{"workspace.read", "workspace.patch"}, Workspace: &workspace,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := runtime.Agents().Run(context.Background(), request)
+	if err != nil || result.Session().Terminal() != pkgAgent.TerminalCompleted || result.Content() != "Workspace updated." {
+		t.Fatalf("autonomous scenario failed: result=%#v err=%v", result, err)
+	}
+	updated, err := os.ReadFile(filename)
+	if err != nil || string(updated) != "package updated\n" {
+		t.Fatalf("workspace was not patched: %q %v", updated, err)
+	}
+	if result.Session().ContextStale() || result.Session().WorkspaceGeneration() != 2 {
+		t.Fatalf("context freshness was not restored: %#v", result.Session())
+	}
+
+	eventMu.Lock()
+	encoded, _ := json.Marshal(payloads)
+	observed := append([]string(nil), topics...)
+	eventMu.Unlock()
+	serialized := string(encoded)
+	for _, secret := range []string{"super-secret", "main.go", "package original", "package updated"} {
+		if strings.Contains(serialized, secret) {
+			t.Fatalf("event payload leaked %q: %s", secret, serialized)
+		}
+	}
+	if countTopic(observed, pkgAgent.EventSessionCompleted) != 1 ||
+		countTopic(observed, pkgAgent.EventTurnStarted) != 3 || countTopic(observed, pkgAgent.EventTurnCompleted) != 3 ||
+		countTopic(observed, pkgTool.EventInvocationCompleted) != 2 || countTopic(observed, pkgTool.EventPermissionDecided) != 5 {
+		t.Fatalf("unexpected event cardinality: %#v", observed)
+	}
+}
+
+func countTopic(topics []string, target string) int {
+	count := 0
+	for _, topic := range topics {
+		if topic == target {
+			count++
+		}
+	}
+	return count
+}
+
 func TestGestorObserversRunAfterStateChangesAndCannotCorruptThem(t *testing.T) {
 	runtime := New()
 	entered := make(chan struct{})
@@ -1079,7 +1299,7 @@ func TestGestorCompositionPublishesRedactedRefreshFailure(t *testing.T) {
 	select {
 	case event := <-failed:
 		if event.Failure != pkgGestor.EventFailureSource ||
-			event.Generation != 1 || event.DescriptorCount != 0 {
+			event.Generation != 1 || event.DescriptorCount != 13 {
 			t.Fatalf("unexpected failure payload: %#v", event)
 		}
 	case <-time.After(2 * time.Second):

@@ -75,6 +75,12 @@ func (query Query) Validate() error {
 	if query.targetKind == TargetKindProvider && query.scope == ScopeComponent {
 		return fmt.Errorf("provider query cannot use component scope: %w", ErrInvalidQuery)
 	}
+	if query.targetKind == TargetKindAgent && query.scope != "" && query.scope != ScopeAgent {
+		return fmt.Errorf("agent query cannot use scope %q: %w", query.scope, ErrInvalidQuery)
+	}
+	if query.targetKind == TargetKindTool && query.scope != "" && query.scope != ScopeTool {
+		return fmt.Errorf("tool query cannot use scope %q: %w", query.scope, ErrInvalidQuery)
+	}
 
 	seen := make(map[Target]struct{}, len(query.preferredTargets))
 	for index, target := range query.preferredTargets {

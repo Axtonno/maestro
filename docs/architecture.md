@@ -1,10 +1,10 @@
 # Maestro Architecture
 
-Versione: 0.5.0
+Versione: 0.6.0
 
 Stato: Draft
 
-Ultimo aggiornamento: 2026-08-11
+Ultimo aggiornamento: 2026-08-12
 
 Autori:
 - Antonio Cafeo
@@ -90,6 +90,11 @@ Lo stesso composition root espone `Gestor()`: Registry delle capability,
 sorgenti Runtime/Provider e Resolver condividono snapshot e generazioni con una
 vista read-only del dependency graph. Il contratto `pkg/runtime.Runtime` resta
 invariato; Gestor è un servizio additivo del Runtime pubblico di Maestro.
+
+Il composition root espone inoltre le istanze condivise `Tools()` e
+`Agents()`. Tool Runtime possiede catalogo, policy, authorization ed execution;
+Agent Runtime possiede sessioni, piani, budget e loop provider-tool. Entrambi
+riusano Provider Runtime, Context Engine ed Event Bus già composti.
 
 La configurazione viene iniettata nel composition root e consegnata ai
 componenti come snapshot a chiavi esatte. Il core non decide come leggere file,
@@ -228,7 +233,7 @@ descriptor e indici immutabili e consulta il grafo in lettura. Le registrazioni
 invalidano lo snapshot senza avviare discovery o I/O; il refresh resta
 esplicito e all-or-nothing.
 
-Il composition root registra le sorgenti built-in component e provider e
+Il composition root registra le sorgenti built-in component, provider, agent e tool e
 pubblica uno snapshot iniziale current. `Resolve` non esegue capability o probe
 e non sceglie un vincitore tramite ordine lessicografico. Gli eventi sul bus
 condiviso espongono soltanto metadata redatti e vengono emessi senza lock.
@@ -236,6 +241,28 @@ condiviso espongono soltanto metadata redatti e vengono emessi senza lock.
 Il design e i contratti della Milestone 4 sono descritti in
 `gestor-design.md`; i gate conclusivi sono in
 `reports/milestone-4-final.md`.
+
+Le sorgenti agent/tool leggono soltanto descriptor e non invocano plan,
+provider, Prepare o Execute. Le nuove registrazioni invalidano lo snapshot;
+discovery e refresh restano espliciti.
+
+---
+
+## Agent e Tool System
+
+Il Tool System applica il percorso obbligatorio
+`Prepare -> authorize -> Execute`, con policy default-deny, permit privato
+one-shot e result bounded. I reference tool workspace operano su path logici,
+precondizioni content-addressed e root-confined.
+
+L'Agent System coordina un run per sessione, valida piani e transizioni,
+costruisce il contesto, autorizza invocation/disclosure del modello e gestisce
+completion o streaming tool calling entro hard ceiling. Una mutazione marca il
+contesto stale e richiede reindex/rebuild prima di una nuova generazione.
+
+Gestor descrive agenti e tool senza eseguirli. Eventi agent e tool condividono
+l'Event Bus e usano payload allowlist privi di prompt, contenuti, arguments,
+output, resource, workspace, provider, model e policy.
 
 ---
 

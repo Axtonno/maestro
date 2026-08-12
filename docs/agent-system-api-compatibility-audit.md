@@ -1,8 +1,8 @@
 # Agent System Public API Compatibility Audit
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Audit iniziale completato — Fase 1
+Stato: Audit finale completato — Fase 7
 
 Data: 2026-08-11
 
@@ -10,19 +10,17 @@ Data: 2026-08-11
 
 # Scopo
 
-Registrare la superficie pubblica iniziale della Milestone 7, verificare la
-direzione delle dipendenze e assegnare ogni estensione o rischio a una fase.
-
-L'audit riguarda soltanto i contratti. Cataloghi, executor, policy engine,
-session coordinator e loop agentico non sono presentati come implementati.
+Registrare la superficie pubblica della Milestone 7, verificare la direzione
+delle dipendenze e documentare le estensioni additive consegnate.
 
 ---
 
 # Esito
 
 I package `pkg/tool` e `pkg/agent` sono additivi. Nessuna firma in
-`pkg/runtime`, `pkg/provider`, `pkg/contextengine`, `pkg/gestor`, `pkg/plugin` o
-nel composition root `maestro.Runtime` è stata modificata.
+`pkg/runtime`, `pkg/provider`, `pkg/contextengine` o `pkg/plugin` è stata
+modificata. `pkg/gestor` aggiunge target/scopi agent e tool e capability note;
+il composition root `maestro.Runtime` aggiunge `Tools()` e `Agents()`.
 
 `pkg/tool` dipende soltanto dalla libreria standard, da `pkg/contextengine` per
 `WorkspaceID` e da `pkg/provider` per l'identità del target modello.
@@ -295,13 +293,13 @@ obiettivo del piano, path, arguments, content, output, permit o error string.
 | `pkg/runtime` | nessuna | Compatibile |
 | `pkg/provider` | nessuna | Compatibile |
 | `pkg/contextengine` | nessuna | Compatibile |
-| `pkg/gestor` | nessuna | Compatibile |
+| `pkg/gestor` | target/scopi e capability agent/tool additive | Compatibile |
 | `pkg/plugin` | nessuna | Compatibile |
-| composition root `maestro` | nessuna in Fase 1 | Compatibile |
+| composition root `maestro` | `Tools()` e `Agents()` | Additiva per consumer; implementer-breaking per implementazioni esterne della facade |
 
-Le future aggiunte `Runtime.Tools()` e `Runtime.Agents()` saranno consumer
-additive ma implementer-breaking per implementazioni esterne della facade e
-verranno auditate nella Fase 7.
+La facade `maestro.Runtime` è costruita dal progetto e non era dichiarata come
+SPI. Il rischio implementer-breaking resta esplicito; `pkg/runtime.Runtime`,
+che è il contratto core implementabile, è invariato.
 
 ---
 
@@ -315,7 +313,8 @@ verranno auditate nella Fase 7.
 - composition root, Gestor, eventi runtime e hardening: Fase 7;
 - sandbox e trust di estensioni terze: Milestone 8.
 
-Nessun rischio della Fase 1 rimane senza ownership o destinazione.
+Le Fasi 2–7 hanno chiuso i rischi assegnati. Sandbox, trust di estensioni,
+persistenza e multi-agent restano esplicitamente assegnati alla Milestone 8.
 
 ---
 

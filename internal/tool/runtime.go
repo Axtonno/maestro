@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"slices"
 	"sync"
+	"time"
 	"unicode/utf8"
 
+	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
@@ -30,18 +32,26 @@ func (denyAuthorizer) Authorize(
 type Runtime struct {
 	mu sync.RWMutex
 
-	tools              map[pkgTool.ID]pkgTool.Tool
-	descriptors        map[pkgTool.ID]pkgTool.Descriptor
-	names              map[pkgTool.Name]pkgTool.ID
-	policies           map[pkgTool.PolicyID]pkgTool.Policy
-	grants             map[grantKey]struct{}
-	authorizer         authorizer
-	executionObservers []func(pkgTool.PreparedInvocation)
+	tools                   map[pkgTool.ID]pkgTool.Tool
+	descriptors             map[pkgTool.ID]pkgTool.Descriptor
+	names                   map[pkgTool.Name]pkgTool.ID
+	policies                map[pkgTool.PolicyID]pkgTool.Policy
+	grants                  map[grantKey]struct{}
+	authorizer              authorizer
+	executionObservers      []func(pkgTool.PreparedInvocation)
+	registrationInvalidator func()
+	events                  pkgRuntime.EventBus
 }
 
 func NewRuntime() *Runtime {
 	runtime := newRuntime(nil)
 	runtime.authorizer = runtime
+	return runtime
+}
+
+func NewRuntimeWithEventBus(events pkgRuntime.EventBus) *Runtime {
+	runtime := NewRuntime()
+	runtime.events = events
 	return runtime
 }
 
@@ -64,11 +74,12 @@ func (runtime *Runtime) Register(candidate pkgTool.Tool) error {
 	descriptor := candidate.Descriptor()
 
 	runtime.mu.Lock()
-	defer runtime.mu.Unlock()
 	if _, exists := runtime.tools[descriptor.ID()]; exists {
+		runtime.mu.Unlock()
 		return fmt.Errorf("register tool %q: %w", descriptor.ID(), pkgTool.ErrAlreadyRegistered)
 	}
 	if owner, exists := runtime.names[descriptor.Name()]; exists {
+		runtime.mu.Unlock()
 		return fmt.Errorf(
 			"register tool %q: provider name %q belongs to %q: %w",
 			descriptor.ID(), descriptor.Name(), owner, pkgTool.ErrAlreadyRegistered,
@@ -77,7 +88,18 @@ func (runtime *Runtime) Register(candidate pkgTool.Tool) error {
 	runtime.tools[descriptor.ID()] = candidate
 	runtime.descriptors[descriptor.ID()] = descriptor
 	runtime.names[descriptor.Name()] = descriptor.ID()
+	invalidator := runtime.registrationInvalidator
+	runtime.mu.Unlock()
+	if invalidator != nil {
+		invalidator()
+	}
 	return nil
+}
+
+func (runtime *Runtime) SetRegistrationInvalidator(invalidator func()) {
+	runtime.mu.Lock()
+	runtime.registrationInvalidator = invalidator
+	runtime.mu.Unlock()
 }
 
 func (runtime *Runtime) Descriptors() []pkgTool.Descriptor {
@@ -132,6 +154,14 @@ func (runtime *Runtime) ObserveExecutionStart(observer func(pkgTool.PreparedInvo
 }
 
 func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionRequest) (result pkgTool.Result, err error) {
+	started := time.Now()
+	observedActions := 0
+	observedDecision := pkgTool.DecisionKind("")
+	defer func() {
+		if err != nil {
+			runtime.publish(pkgTool.EventInvocationFailed, toolEventPayload(request, result, observedActions, observedDecision, time.Since(started), classifyToolEventFailure(err)))
+		}
+	}()
 	if ctx == nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInvalid, "nil_context", pkgTool.ErrInvalidExecutionRequest)
 	}
@@ -160,6 +190,8 @@ func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionReq
 	if err := validatePrepared(descriptor, invocation, prepared); err != nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInvalid, "invalid_prepared_invocation", err)
 	}
+	observedActions = len(prepared.Actions())
+	runtime.publish(pkgTool.EventInvocationPrepared, toolEventPayload(request, pkgTool.Result{}, len(prepared.Actions()), "", time.Since(started), pkgTool.EventFailureNone))
 	permission, err := pkgTool.NewToolPermissionRequest(request.Policy(), prepared)
 	if err != nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInvalid, "invalid_permission_request", err)
@@ -171,6 +203,13 @@ func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionReq
 	if err := decision.Validate(); err != nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInvalid, "invalid_decision", err)
 	}
+	observedDecision = decision.Kind()
+	runtime.publish(pkgTool.EventInvocationAuthorized, toolEventPayload(request, pkgTool.Result{}, len(prepared.Actions()), decision.Kind(), time.Since(started), pkgTool.EventFailureNone))
+	permissionFailure := pkgTool.EventFailureNone
+	if decision.Kind() == pkgTool.DecisionDeny {
+		permissionFailure = pkgTool.EventFailureDenied
+	}
+	runtime.publish(pkgTool.EventPermissionDecided, toolEventPayload(request, pkgTool.Result{}, len(prepared.Actions()), decision.Kind(), time.Since(started), permissionFailure))
 	if decision.Kind() != pkgTool.DecisionAllow {
 		disposition := decision.Disposition()
 		if decision.Kind() == pkgTool.DecisionPrompt {
@@ -182,6 +221,7 @@ func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionReq
 		if deniedErr != nil {
 			return pkgTool.Result{}, executionError(request, pkgTool.ErrorInternal, "invalid_denied_result", deniedErr)
 		}
+		runtime.publish(pkgTool.EventInvocationCompleted, toolEventPayload(request, denied, len(prepared.Actions()), decision.Kind(), time.Since(started), pkgTool.EventFailureDenied))
 		return denied, nil
 	}
 
@@ -191,7 +231,53 @@ func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionReq
 	if err != nil {
 		return pkgTool.Result{}, classifyExecutionError(request, "execute_failed", err)
 	}
-	return limitResult(request, result)
+	result, err = limitResult(request, result)
+	if err != nil {
+		return pkgTool.Result{}, err
+	}
+	runtime.publish(pkgTool.EventInvocationCompleted, toolEventPayload(request, result, len(prepared.Actions()), decision.Kind(), time.Since(started), pkgTool.EventFailureNone))
+	return result, nil
+}
+
+func (runtime *Runtime) publish(topic string, payload pkgTool.EventPayload) {
+	if runtime.events == nil {
+		return
+	}
+	func() {
+		defer func() { _ = recover() }()
+		_ = runtime.events.Publish(pkgTool.Event{Topic: topic, Data: payload})
+	}()
+}
+
+func toolEventPayload(request pkgTool.ExecutionRequest, result pkgTool.Result, actionCount int, decision pkgTool.DecisionKind, duration time.Duration, failure pkgTool.EventFailure) pkgTool.EventPayload {
+	invocation := request.Invocation()
+	return pkgTool.EventPayload{
+		Run: invocation.Run(), Tool: invocation.Tool(), Call: invocation.Call(),
+		ActionCount: actionCount, Decision: decision, Outcome: result.Outcome(),
+		Disposition: result.Disposition(), Truncated: result.Truncated(),
+		DurationMillis: duration.Milliseconds(), Failure: failure,
+	}
+}
+
+func classifyToolEventFailure(err error) pkgTool.EventFailure {
+	switch {
+	case err == nil:
+		return pkgTool.EventFailureNone
+	case errors.Is(err, context.DeadlineExceeded):
+		return pkgTool.EventFailureDeadline
+	case errors.Is(err, context.Canceled):
+		return pkgTool.EventFailureCanceled
+	case errors.Is(err, pkgTool.ErrPermissionDenied):
+		return pkgTool.EventFailureDenied
+	case errors.Is(err, pkgTool.ErrLimitExceeded):
+		return pkgTool.EventFailureLimit
+	case errors.Is(err, pkgTool.ErrInvalidInvocation), errors.Is(err, pkgTool.ErrInvalidExecutionRequest):
+		return pkgTool.EventFailureInvalid
+	case errors.Is(err, pkgTool.ErrExecutionFailed):
+		return pkgTool.EventFailureTool
+	default:
+		return pkgTool.EventFailureInternal
+	}
 }
 
 func (runtime *Runtime) notifyExecutionStart(prepared pkgTool.PreparedInvocation) {
@@ -210,11 +296,29 @@ func (runtime *Runtime) AuthorizeModel(
 	ctx context.Context,
 	request pkgTool.PermissionRequest,
 	approver pkgTool.Approver,
-) (pkgTool.Decision, error) {
+) (decision pkgTool.Decision, err error) {
+	started := time.Now()
+	defer func() {
+		failure := classifyToolEventFailure(err)
+		if err == nil && decision.Kind() == pkgTool.DecisionDeny {
+			failure = pkgTool.EventFailureDenied
+		}
+		runtime.publish(pkgTool.EventPermissionDecided, pkgTool.EventPayload{
+			Run: request.Run(), ActionCount: len(request.Actions()), Decision: decision.Kind(),
+			Disposition: decision.Disposition(), DurationMillis: time.Since(started).Milliseconds(), Failure: failure,
+		})
+	}()
 	if ctx == nil || request.Validate() != nil || request.Subject() != pkgTool.PermissionSubjectModel {
 		return pkgTool.Decision{}, pkgTool.ErrInvalidPermissionRequest
 	}
-	return runtime.authorizer.Authorize(ctx, request, approver)
+	decision, err = runtime.authorizer.Authorize(ctx, request, approver)
+	if err != nil {
+		return pkgTool.Decision{}, err
+	}
+	if err := decision.Validate(); err != nil {
+		return pkgTool.Decision{}, err
+	}
+	return decision, nil
 }
 
 func prepare(ctx context.Context, candidate pkgTool.Tool, invocation pkgTool.Invocation) (prepared pkgTool.PreparedInvocation, err error) {

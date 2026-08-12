@@ -84,8 +84,8 @@ func TestIdentifiersValidateAndCompare(t *testing.T) {
 
 func TestKnownCapabilitiesAreValidOrderedAndDefensive(t *testing.T) {
 	capabilities := gestor.KnownCapabilities()
-	if len(capabilities) != 17 {
-		t.Fatalf("expected 17 known capabilities, got %d", len(capabilities))
+	if len(capabilities) != 21 {
+		t.Fatalf("expected 21 known capabilities, got %d", len(capabilities))
 	}
 	for index, capability := range capabilities {
 		if err := capability.Validate(); err != nil {
@@ -103,6 +103,17 @@ func TestKnownCapabilitiesAreValidOrderedAndDefensive(t *testing.T) {
 }
 
 func TestTargetValidation(t *testing.T) {
+	for _, target := range []gestor.Target{
+		{Kind: gestor.TargetKindAgent, ID: "agent.reference", Scope: gestor.ScopeAgent},
+		{Kind: gestor.TargetKindTool, ID: "workspace.read", Scope: gestor.ScopeTool},
+	} {
+		if err := target.Validate(); err != nil {
+			t.Fatalf("valid agent/tool target %#v: %v", target, err)
+		}
+	}
+	if err := (gestor.Target{Kind: gestor.TargetKindTool, ID: "workspace.read", Scope: gestor.ScopeAgent}).Validate(); !errors.Is(err, gestor.ErrInvalidTarget) {
+		t.Fatalf("expected mismatched tool scope rejection, got %v", err)
+	}
 	valid := []gestor.Target{
 		componentTarget("workspace"),
 		providerTarget("ollama", gestor.ScopeAdapter, ""),

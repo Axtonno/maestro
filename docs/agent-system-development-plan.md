@@ -1,8 +1,8 @@
 # Milestone 7 — Agent System Development Plan
 
-Versione: 0.2.0
+Versione: 0.3.0
 
-Stato: Attivo — Fasi 1–6 completate, Fase 7 pianificata
+Stato: Completato — Fasi 1–7 e gate finale completati
 
 Data: 2026-08-11
 
@@ -32,7 +32,7 @@ lungo periodo, sandbox di codice non fidato, multi-agent o una CLI completa.
 | 4 | Sessioni, piani e budget | Completata | Fasi 1–3 |
 | 5 | Loop agentico e tool calling | Completata | Fasi 1–4 |
 | 6 | Workspace awareness e reference tool | Completata | Fasi 1–5 |
-| 7 | Integrazione, osservabilità e gate finale | Pianificata | Fasi 1–6 |
+| 7 | Integrazione, osservabilità e gate finale | Completata | Fasi 1–6 |
 
 Le fasi sono sequenziali rispetto ai contratti e agli invarianti. Ogni fase
 termina con un report in `docs/reports/`; la Fase 7 produce anche

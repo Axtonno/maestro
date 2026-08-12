@@ -5,20 +5,28 @@ import (
 	"fmt"
 	"sync"
 
+	internalAgent "github.com/antonio-cafeo/maestro/internal/agent"
 	internalContext "github.com/antonio-cafeo/maestro/internal/contextengine"
 	internalGestor "github.com/antonio-cafeo/maestro/internal/gestor"
 	internalPlugin "github.com/antonio-cafeo/maestro/internal/plugin"
 	internalProvider "github.com/antonio-cafeo/maestro/internal/provider"
+	internalTool "github.com/antonio-cafeo/maestro/internal/tool"
+	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
+	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
 var _ pkgRuntime.Runtime = (*runtime)(nil)
 
 type providerRegistrationInvalidator interface {
+	SetRegistrationInvalidator(func())
+}
+
+type catalogRegistrationInvalidator interface {
 	SetRegistrationInvalidator(func())
 }
 
@@ -38,6 +46,8 @@ type Runtime interface {
 	ContextEngine() pkgContext.Engine
 	Gestor() pkgGestor.Service
 	Plugins() pkgPlugin.Runtime
+	Tools() pkgTool.Runtime
+	Agents() pkgAgent.Runtime
 }
 
 var _ Runtime = (*runtime)(nil)
@@ -56,6 +66,8 @@ type runtime struct {
 	providerRuntime   pkgProvider.Runtime
 	gestorService     pkgGestor.Service
 	contextEngine     pkgContext.Engine
+	toolRuntime       pkgTool.Runtime
+	agentRuntime      pkgAgent.Runtime
 	gestorInvalidator func()
 
 	dependencyGraph          *graph
@@ -113,6 +125,32 @@ func newRuntimeWithServices(
 		panic(fmt.Sprintf("compose Context Engine: %v", err))
 	}
 	rt.contextEngine = contextEngine
+	workspaceRegistry := internalTool.NewWorkspaceRegistry()
+	toolRuntime := internalTool.NewRuntimeWithEventBus(componentEventBus)
+	workspaceTools, err := internalTool.NewWorkspaceTools(workspaceRegistry)
+	if err != nil {
+		panic(fmt.Sprintf("compose workspace tools: %v", err))
+	}
+	for _, candidate := range workspaceTools {
+		if err := toolRuntime.Register(candidate); err != nil {
+			panic(fmt.Sprintf("register workspace tool: %v", err))
+		}
+	}
+	rt.toolRuntime = toolRuntime
+	agentOptions := internalAgent.DefaultOptions()
+	agentOptions.Providers = providerRuntime
+	agentOptions.Tools = toolRuntime
+	agentOptions.Permissions = toolRuntime
+	agentOptions.Workspaces = workspaceRegistry
+	agentOptions.EventBus = componentEventBus
+	agentRuntime, err := internalAgent.NewRuntimeWithOptions(contextEngine, agentOptions)
+	if err != nil {
+		panic(fmt.Sprintf("compose Agent Runtime: %v", err))
+	}
+	if err := agentRuntime.Register(internalAgent.NewReferenceAgent()); err != nil {
+		panic(fmt.Sprintf("register reference agent: %v", err))
+	}
+	rt.agentRuntime = agentRuntime
 
 	rt.registryView = newRuntimeRegistry(rt)
 	rt.pluginRuntime = internalPlugin.NewRuntimeWithEventBus(
@@ -210,6 +248,12 @@ func (r *runtime) setGestorInvalidator(invalidator func()) {
 
 	if provider, ok := providerRuntime.(providerRegistrationInvalidator); ok {
 		provider.SetRegistrationInvalidator(invalidator)
+	}
+	if tools, ok := r.toolRuntime.(catalogRegistrationInvalidator); ok {
+		tools.SetRegistrationInvalidator(invalidator)
+	}
+	if agents, ok := r.agentRuntime.(catalogRegistrationInvalidator); ok {
+		agents.SetRegistrationInvalidator(invalidator)
 	}
 }
 
@@ -379,6 +423,10 @@ func (r *runtime) ContextEngine() pkgContext.Engine {
 	return r.contextEngine
 }
 
+func (r *runtime) Tools() pkgTool.Runtime { return r.toolRuntime }
+
+func (r *runtime) Agents() pkgAgent.Runtime { return r.agentRuntime }
+
 func (r *runtime) composeGestor() {
 	providerRuntime, ok := r.providerRuntime.(gestorProviderRuntime)
 	if !ok {
@@ -399,6 +447,14 @@ func (r *runtime) composeGestor() {
 	if err != nil {
 		panic(fmt.Sprintf("compose Gestor provider source: %v", err))
 	}
+	agentSource, err := internalGestor.NewAgentCatalogSource(r.agentRuntime)
+	if err != nil {
+		panic(fmt.Sprintf("compose Gestor agent source: %v", err))
+	}
+	toolSource, err := internalGestor.NewToolCatalogSource(r.toolRuntime)
+	if err != nil {
+		panic(fmt.Sprintf("compose Gestor tool source: %v", err))
+	}
 
 	registry := internalGestor.NewRegistry()
 	if err := registry.RegisterSource(componentSource); err != nil {
@@ -406,6 +462,12 @@ func (r *runtime) composeGestor() {
 	}
 	if err := registry.RegisterSource(providerSource); err != nil {
 		panic(fmt.Sprintf("compose Gestor provider source registration: %v", err))
+	}
+	if err := registry.RegisterSource(agentSource); err != nil {
+		panic(fmt.Sprintf("compose Gestor agent source registration: %v", err))
+	}
+	if err := registry.RegisterSource(toolSource); err != nil {
+		panic(fmt.Sprintf("compose Gestor tool source registration: %v", err))
 	}
 
 	resolver, err := internalGestor.NewResolver(registry, newGestorGraphView(r))

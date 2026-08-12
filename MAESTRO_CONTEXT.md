@@ -1682,7 +1682,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fasi 1–6 completate, Fase 7 pianificata.
+Stato: completata — Fasi 1–7 e gate finale superati.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1707,7 +1707,7 @@ Le sette fasi pianificate sono:
 4. sessioni, piani e budget — completata;
 5. loop agentico e tool calling — completata;
 6. workspace awareness e reference tool — completata;
-7. integrazione, osservabilità e gate finale.
+7. integrazione, osservabilità e gate finale — completata.
 
 Decisioni iniziali del design:
 
@@ -1889,6 +1889,31 @@ precondizioni SHA-256. Una mutazione marca la sessione stale quando Execute
 inizia; Index e Build devono pubblicare una generazione successiva prima di
 renderla fresh. Il percorso usa il contratto WorkspaceProvider ed è verificato
 con Laravel senza dipendenze framework nel runtime.
+
+### Fase 7 — Integrazione, osservabilità e gate finale
+
+Completata in:
+
+```text
+maestro.Runtime.Tools / maestro.Runtime.Agents
+internal/gestor/agent_source.go
+internal/gestor/tool_source.go
+internal/agent/reference.go
+docs/reports/milestone-7-phase-7.md
+docs/reports/milestone-7-final.md
+```
+
+Il composition root condivide una singola istanza di Provider Runtime, Context
+Engine, Tool Runtime, Agent Runtime ed Event Bus. Reference tool e agent sono
+registrati senza policy permissive; il chiamante deve fornire policy e target
+espliciti. Gestor descrive agenti e tool tramite sorgenti read-only e viene
+invalidato dalle nuove registrazioni. Eventi session/plan/step/turn e
+permission/invocation usano payload allowlist senza prompt, path, arguments o
+output.
+
+Uno scenario deterministico completa read, patch, reindex e risposta finale su
+workspace temporaneo. Suite completa, race detector, test ripetuti, benchmark,
+vet, diff check e audit API chiudono la Milestone 7.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e

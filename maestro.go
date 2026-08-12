@@ -2,10 +2,12 @@ package maestro
 
 import (
 	internalRuntime "github.com/antonio-cafeo/maestro/internal/runtime"
+	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgGestor "github.com/antonio-cafeo/maestro/pkg/gestor"
 	pkgPlugin "github.com/antonio-cafeo/maestro/pkg/plugin"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
+	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
 // Runtime is Maestro's composition root. It extends the Runtime Core with the
@@ -15,6 +17,8 @@ type Runtime interface {
 	ContextEngine() pkgContext.Engine
 	Gestor() pkgGestor.Service
 	Plugins() pkgPlugin.Runtime
+	Tools() pkgTool.Runtime
+	Agents() pkgAgent.Runtime
 }
 
 type options struct {

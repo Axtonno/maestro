@@ -301,6 +301,12 @@ stale all'inizio di Execute e il loop reindicizza prima di usare una nuova
 generazione. Il percorso resta framework-neutral ed è verificato anche con il
 WorkspaceProvider Laravel.
 
+La Fase 7 chiude la Milestone 7: `maestro.Runtime` espone le istanze condivise
+`Tools()` e `Agents()`, registra reference agent/tool e aggiunge le sorgenti
+Gestor agent/tool. Eventi redatti coprono sessioni, piani, turni, permission e
+invocation; uno scenario deterministico completa read, patch, refresh e
+risposta finale senza rete.
+
 Uso essenziale:
 
 ```go

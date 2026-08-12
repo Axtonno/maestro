@@ -3,6 +3,9 @@ package gestor
 import "slices"
 
 const (
+	CapabilityAgentPlanning            CapabilityID = "agent.planning"
+	CapabilityAgentRun                 CapabilityID = "agent.run"
+	CapabilityAgentWorkspaceAware      CapabilityID = "agent.workspace-aware"
 	CapabilityProviderCompletion       CapabilityID = "provider.completion"
 	CapabilityProviderEmbedding        CapabilityID = "provider.embedding"
 	CapabilityProviderModelDiscovery   CapabilityID = "provider.model_discovery"
@@ -20,9 +23,13 @@ const (
 	CapabilityRuntimeReload            CapabilityID = "runtime.reload"
 	CapabilityRuntimeStart             CapabilityID = "runtime.start"
 	CapabilityRuntimeStop              CapabilityID = "runtime.stop"
+	CapabilityToolInvoke               CapabilityID = "tool.invoke"
 )
 
 var knownCapabilities = [...]CapabilityID{
+	CapabilityAgentPlanning,
+	CapabilityAgentRun,
+	CapabilityAgentWorkspaceAware,
 	CapabilityProviderCompletion,
 	CapabilityProviderEmbedding,
 	CapabilityProviderModelDiscovery,
@@ -40,6 +47,7 @@ var knownCapabilities = [...]CapabilityID{
 	CapabilityRuntimeReload,
 	CapabilityRuntimeStart,
 	CapabilityRuntimeStop,
+	CapabilityToolInvoke,
 }
 
 // KnownCapabilities returns a defensive copy in lexical order. This order is
