@@ -24,11 +24,21 @@ type generationRuntime interface {
 	Stream(context.Context, provider.ID, provider.CompletionRequest) (provider.Stream, error)
 }
 
+type workspaceBinder interface {
+	Bind(pkgTool.RunID, pkgContext.Workspace) error
+	Unbind(pkgTool.RunID)
+}
+
+type executionStartObserver interface {
+	ObserveExecutionStart(func(pkgTool.PreparedInvocation)) error
+}
+
 type Options struct {
 	MaxSessions int
 	Permissions pkgTool.Runtime
 	Providers   generationRuntime
 	Tools       pkgTool.Runtime
+	Workspaces  workspaceBinder
 }
 
 func DefaultOptions() Options { return Options{MaxSessions: 1024} }
@@ -65,9 +75,33 @@ func NewRuntimeWithOptions(contextEngine pkgContext.Engine, options Options) (*R
 		agents: make(map[pkgAgent.ID]pkgAgent.Agent), sessions: make(map[pkgAgent.RunID]*session),
 	}
 	if options.Providers != nil && !typedNil(options.Providers) && options.Tools != nil && !typedNil(options.Tools) {
-		runtime.loop = &agentLoop{providers: options.Providers, tools: options.Tools, permissions: permissions}
+		runtime.loop = &agentLoop{providers: options.Providers, tools: options.Tools, permissions: permissions, context: contextEngine}
+	}
+	if observable, ok := options.Tools.(executionStartObserver); ok {
+		if err := observable.ObserveExecutionStart(runtime.executionStarted); err != nil {
+			return nil, err
+		}
 	}
 	return runtime, nil
+}
+
+func (runtime *Runtime) executionStarted(prepared pkgTool.PreparedInvocation) {
+	mutating := false
+	for _, action := range prepared.Actions() {
+		if action.Effect() == pkgTool.EffectWorkspaceMutate {
+			mutating = true
+			break
+		}
+	}
+	if !mutating {
+		return
+	}
+	runtime.mu.RLock()
+	current := runtime.sessions[pkgAgent.RunID(prepared.Invocation().Run())]
+	runtime.mu.RUnlock()
+	if current != nil {
+		_ = current.markStale()
+	}
 }
 
 func (runtime *Runtime) Register(candidate pkgAgent.Agent) error {
@@ -131,6 +165,13 @@ func (runtime *Runtime) Run(ctx context.Context, request pkgAgent.RunRequest) (p
 	}
 	runtime.sessions[request.Run()] = current
 	runtime.mu.Unlock()
+	if workspace, ok := request.WorkspaceTarget(); ok && runtime.options.Workspaces != nil {
+		toolRun := pkgTool.RunID(request.Run())
+		if err := runtime.options.Workspaces.Bind(toolRun, workspace); err != nil {
+			return current.fail(pkgAgent.TerminalInternalFailure, pkgAgent.ErrorInternal, "workspace_bind", err)
+		}
+		defer runtime.options.Workspaces.Unbind(toolRun)
+	}
 
 	runContext, cancel := context.WithTimeout(ctx, request.Limits().MaxDuration)
 	defer cancel()

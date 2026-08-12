@@ -67,6 +67,24 @@ func TestRunRequestRequiresExplicitTargetsLimitsContextAndTools(t *testing.T) {
 	if request.Provider() != "ollama" || request.Model() != "model" || request.Workspace() != "workspace" {
 		t.Fatalf("explicit targets were not preserved: %#v", request)
 	}
+	workspace, err := contextengine.NewWorkspace("workspace", t.TempDir(), contextengine.WorkspaceOptions{Source: contextengine.SourceFilesystem, Policy: contextengine.DefaultScanPolicy()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	withTarget, err := agent.NewRunRequest(
+		"run-target", "agent.general", "ollama", "model", "workspace", "policy.default-deny",
+		"task", validLimits(), agent.RunRequestOptions{Context: build, Tools: []tool.ID{"workspace.read"}, Workspace: &workspace},
+	)
+	if target, ok := withTarget.WorkspaceTarget(); err != nil || !ok || target.Root() != workspace.Root() {
+		t.Fatalf("workspace target was not preserved: target=%#v ok=%v err=%v", target, ok, err)
+	}
+	otherWorkspace, _ := contextengine.NewWorkspace("other", t.TempDir(), contextengine.WorkspaceOptions{Source: contextengine.SourceFilesystem, Policy: contextengine.DefaultScanPolicy()})
+	if _, err := agent.NewRunRequest(
+		"run-target", "agent.general", "ollama", "model", "workspace", "policy.default-deny",
+		"task", validLimits(), agent.RunRequestOptions{Context: build, Tools: []tool.ID{"workspace.read"}, Workspace: &otherWorkspace},
+	); !errors.Is(err, agent.ErrInvalidRequest) {
+		t.Fatalf("expected mismatched workspace target rejection, got %v", err)
+	}
 	if _, err := agent.NewRunRequest(
 		"run-1", "agent.general", "", "model", "workspace", "policy.default-deny",
 		"task", validLimits(), agent.RunRequestOptions{Context: build, Tools: []tool.ID{"workspace.read"}},

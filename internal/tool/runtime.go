@@ -30,12 +30,13 @@ func (denyAuthorizer) Authorize(
 type Runtime struct {
 	mu sync.RWMutex
 
-	tools       map[pkgTool.ID]pkgTool.Tool
-	descriptors map[pkgTool.ID]pkgTool.Descriptor
-	names       map[pkgTool.Name]pkgTool.ID
-	policies    map[pkgTool.PolicyID]pkgTool.Policy
-	grants      map[grantKey]struct{}
-	authorizer  authorizer
+	tools              map[pkgTool.ID]pkgTool.Tool
+	descriptors        map[pkgTool.ID]pkgTool.Descriptor
+	names              map[pkgTool.Name]pkgTool.ID
+	policies           map[pkgTool.PolicyID]pkgTool.Policy
+	grants             map[grantKey]struct{}
+	authorizer         authorizer
+	executionObservers []func(pkgTool.PreparedInvocation)
 }
 
 func NewRuntime() *Runtime {
@@ -117,6 +118,19 @@ func (runtime *Runtime) Policies() []pkgTool.PolicyID {
 	return ids
 }
 
+// ObserveExecutionStart registers a best-effort callback invoked after allow
+// and immediately before Execute. Callbacks run outside runtime locks and do
+// not receive tool output.
+func (runtime *Runtime) ObserveExecutionStart(observer func(pkgTool.PreparedInvocation)) error {
+	if observer == nil {
+		return fmt.Errorf("execution observer is nil: %w", pkgTool.ErrInvalidTool)
+	}
+	runtime.mu.Lock()
+	runtime.executionObservers = append(runtime.executionObservers, observer)
+	runtime.mu.Unlock()
+	return nil
+}
+
 func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionRequest) (result pkgTool.Result, err error) {
 	if ctx == nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInvalid, "nil_context", pkgTool.ErrInvalidExecutionRequest)
@@ -172,11 +186,24 @@ func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionReq
 	}
 
 	permit := runtime.issue(permission)
+	runtime.notifyExecutionStart(prepared)
 	result, err = runtime.execute(executionContext, candidate, prepared, permission.Fingerprint(), permit)
 	if err != nil {
 		return pkgTool.Result{}, classifyExecutionError(request, "execute_failed", err)
 	}
 	return limitResult(request, result)
+}
+
+func (runtime *Runtime) notifyExecutionStart(prepared pkgTool.PreparedInvocation) {
+	runtime.mu.RLock()
+	observers := slices.Clone(runtime.executionObservers)
+	runtime.mu.RUnlock()
+	for _, observer := range observers {
+		func() {
+			defer func() { _ = recover() }()
+			observer(prepared)
+		}()
+	}
 }
 
 func (runtime *Runtime) AuthorizeModel(

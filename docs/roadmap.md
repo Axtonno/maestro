@@ -495,7 +495,7 @@ I sei report di fase e `reports/milestone-6-final.md` documentano i gate.
 
 # Milestone 7 — Agent System
 
-Stato: In corso — Fasi 1–5 completate, Fase 6 pianificata
+Stato: In corso — Fasi 1–6 completate, Fase 7 pianificata
 
 Obiettivi:
 
@@ -514,7 +514,7 @@ Fasi di sviluppo:
 | 3 | Permission model e approval flow | Completata |
 | 4 | Sessioni, piani e budget | Completata |
 | 5 | Loop agentico e tool calling | Completata |
-| 6 | Workspace awareness e reference tool | Pianificata |
+| 6 | Workspace awareness e reference tool | Completata |
 | 7 | Integrazione, osservabilità e gate finale | Pianificata |
 
 Il design è descritto in `agent-system-design.md`; il piano operativo, i gate

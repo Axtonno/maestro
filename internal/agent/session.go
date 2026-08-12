@@ -177,6 +177,45 @@ func (current *session) planHistory() []pkgAgent.Plan {
 	return append([]pkgAgent.Plan(nil), current.history...)
 }
 
+func (current *session) markStale() error {
+	current.mu.Lock()
+	defer current.mu.Unlock()
+	if !current.active || current.snapshot.State() != pkgAgent.SessionRunning {
+		return pkgAgent.ErrInvalidTransition
+	}
+	return current.replaceFreshnessLocked(true, current.snapshot.WorkspaceGeneration())
+}
+
+func (current *session) markFresh(generation uint64) error {
+	current.mu.Lock()
+	defer current.mu.Unlock()
+	if !current.active || current.snapshot.State() != pkgAgent.SessionRunning || generation == 0 ||
+		generation < current.snapshot.WorkspaceGeneration() || (current.snapshot.ContextStale() && generation <= current.snapshot.WorkspaceGeneration()) {
+		return pkgAgent.ErrInvalidTransition
+	}
+	return current.replaceFreshnessLocked(false, generation)
+}
+
+func (current *session) replaceFreshnessLocked(stale bool, generation uint64) error {
+	plan, ok := current.snapshot.Plan()
+	if !ok {
+		return pkgAgent.ErrInvalidPlan
+	}
+	snapshot, err := pkgAgent.NewSessionSnapshot(
+		current.snapshot.Run(), current.snapshot.Agent(), current.snapshot.Workspace(),
+		pkgAgent.SessionSnapshotOptions{
+			Generation: current.snapshot.Generation() + 1, State: current.snapshot.State(),
+			WorkspaceGeneration: generation, Plan: &plan, Counters: current.snapshot.Counters(),
+			ContextStale: stale, Terminal: current.snapshot.Terminal(),
+		},
+	)
+	if err != nil {
+		return err
+	}
+	current.snapshot = snapshot
+	return nil
+}
+
 func (current *session) replaceLocked(plan pkgAgent.Plan, counters pkgAgent.Counters) error {
 	snapshot, err := pkgAgent.NewSessionSnapshot(
 		current.snapshot.Run(), current.snapshot.Agent(), current.snapshot.Workspace(),

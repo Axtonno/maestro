@@ -17,6 +17,7 @@ type agentLoop struct {
 	providers   generationRuntime
 	tools       pkgTool.Runtime
 	permissions pkgTool.Runtime
+	context     pkgContext.Engine
 }
 
 func (loop *agentLoop) Run(
@@ -147,9 +148,18 @@ func (loop *agentLoop) Run(
 				if err != nil {
 					return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, err)
 				}
+				mutating := descriptorHasEffect(descriptor, pkgTool.EffectWorkspaceMutate)
 				result, err := loop.tools.Invoke(ctx, execution)
 				if err != nil {
+					if mutating && !current.snapshotValue().ContextStale() {
+						_ = current.markStale()
+					}
 					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
+				}
+				if mutating && result.Outcome() != pkgTool.ResultDenied && !current.snapshotValue().ContextStale() {
+					if err := current.markStale(); err != nil {
+						return "", pkgAgent.TerminalInternalFailure, err
+					}
 				}
 				messageContent, err := encodeToolResult(result)
 				if err != nil {
@@ -169,9 +179,39 @@ func (loop *agentLoop) Run(
 				if result.Outcome() == pkgTool.ResultCanceled {
 					return "", reasonForError(ctx, pkgAgent.TerminalCanceled), pkgAgent.ErrRunCanceled
 				}
+				if mutating && current.snapshotValue().ContextStale() {
+					workspace, ok := request.WorkspaceTarget()
+					if !ok {
+						return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, pkgContext.ErrInvalidWorkspace)
+					}
+					snapshot, refreshErr := loop.context.Index(ctx, workspace)
+					if refreshErr != nil {
+						return "", reasonForError(ctx, pkgAgent.TerminalToolFailure), errors.Join(pkgAgent.ErrToolFailed, refreshErr)
+					}
+					refreshed, refreshErr := loop.context.Build(ctx, request.Context())
+					if refreshErr != nil {
+						return "", reasonForError(ctx, pkgAgent.TerminalToolFailure), errors.Join(pkgAgent.ErrToolFailed, refreshErr)
+					}
+					if refreshed.Generation() != snapshot.Metadata().Generation {
+						return "", pkgAgent.TerminalInternalFailure, errors.New("context refresh returned a stale generation")
+					}
+					if err := current.markFresh(refreshed.Generation()); err != nil {
+						return "", pkgAgent.TerminalInternalFailure, err
+					}
+					bundle = refreshed
+				}
 			}
 		}
 	}
+}
+
+func descriptorHasEffect(descriptor pkgTool.Descriptor, effect pkgTool.Effect) bool {
+	for _, candidate := range descriptor.Effects() {
+		if candidate == effect {
+			return true
+		}
+	}
+	return false
 }
 
 func (loop *agentLoop) resolveTools(ids []pkgTool.ID) ([]provider.Tool, map[string]pkgTool.Descriptor, error) {

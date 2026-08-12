@@ -17,21 +17,23 @@ type RunRequestOptions struct {
 	Tools     []tool.ID
 	Approver  tool.Approver
 	Streaming bool
+	Workspace *contextengine.Workspace
 }
 
 type RunRequest struct {
-	run         RunID
-	agent       ID
-	provider    provider.ID
-	model       string
-	workspace   contextengine.WorkspaceID
-	policy      tool.PolicyID
-	instruction string
-	limits      Limits
-	context     contextengine.BuildRequest
-	tools       []tool.ID
-	approver    tool.Approver
-	streaming   bool
+	run             RunID
+	agent           ID
+	provider        provider.ID
+	model           string
+	workspace       contextengine.WorkspaceID
+	policy          tool.PolicyID
+	instruction     string
+	limits          Limits
+	context         contextengine.BuildRequest
+	tools           []tool.ID
+	approver        tool.Approver
+	streaming       bool
+	workspaceTarget *contextengine.Workspace
 }
 
 func NewRunRequest(
@@ -89,11 +91,19 @@ func NewRunRequest(
 	if options.Approver != nil && nilInterface(options.Approver) {
 		return RunRequest{}, fmt.Errorf("agent approver is typed nil: %w", ErrInvalidRequest)
 	}
+	var workspaceTarget *contextengine.Workspace
+	if options.Workspace != nil {
+		if err := options.Workspace.Validate(); err != nil || options.Workspace.ID() != workspace {
+			return RunRequest{}, fmt.Errorf("agent workspace target is invalid or has another ID: %w", ErrInvalidRequest)
+		}
+		copyWorkspace := *options.Workspace
+		workspaceTarget = &copyWorkspace
+	}
 	return RunRequest{
 		run: run, agent: agent, provider: providerID, model: model,
 		workspace: workspace, policy: policy, instruction: instruction, limits: limits,
 		context: options.Context, tools: tools, approver: options.Approver,
-		streaming: options.Streaming,
+		streaming: options.Streaming, workspaceTarget: workspaceTarget,
 	}, nil
 }
 
@@ -109,12 +119,18 @@ func (request RunRequest) Context() contextengine.BuildRequest  { return request
 func (request RunRequest) Tools() []tool.ID                     { return slices.Clone(request.tools) }
 func (request RunRequest) Approver() tool.Approver              { return request.approver }
 func (request RunRequest) Streaming() bool                      { return request.streaming }
+func (request RunRequest) WorkspaceTarget() (contextengine.Workspace, bool) {
+	if request.workspaceTarget == nil {
+		return contextengine.Workspace{}, false
+	}
+	return *request.workspaceTarget, true
+}
 
 func (request RunRequest) Validate() error {
 	_, err := NewRunRequest(
 		request.run, request.agent, request.provider, request.model,
 		request.workspace, request.policy, request.instruction, request.limits,
-		RunRequestOptions{Context: request.context, Tools: request.tools, Approver: request.approver, Streaming: request.streaming},
+		RunRequestOptions{Context: request.context, Tools: request.tools, Approver: request.approver, Streaming: request.streaming, Workspace: request.workspaceTarget},
 	)
 	return err
 }

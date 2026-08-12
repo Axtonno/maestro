@@ -11,6 +11,7 @@ import (
 
 	internalTool "github.com/antonio-cafeo/maestro/internal/tool"
 	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	"github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
@@ -150,6 +151,67 @@ func TestStreamingAssemblerRejectsMidStreamFailureAndCloses(t *testing.T) {
 	}
 }
 
+func TestMutationMarksContextStaleRefreshesAndUsesNewGeneration(t *testing.T) {
+	workspace, initial, refreshed, refreshedSnapshot := refreshFixture(t)
+	contexts := &refreshContext{initial: initial, refreshed: refreshed, snapshot: refreshedSnapshot}
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-mutate", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}}, FinishReason: provider.FinishReasonToolCalls},
+		{Message: provider.Message{Role: provider.RoleAssistant, Content: "mutation complete"}, FinishReason: provider.FinishReasonStop},
+		{Message: provider.Message{Role: provider.RoleAssistant, Content: "fresh context used"}, FinishReason: provider.FinishReasonStop},
+	}}
+	registry := internalTool.NewWorkspaceRegistry()
+	tools := allowedToolRuntime(t, &mutationTool{descriptor: mutationDescriptor(t), workspace: workspace.ID()})
+	options := DefaultOptions()
+	options.Providers = providers
+	options.Tools = tools
+	options.Workspaces = registry
+	runtime, err := NewRuntimeWithOptions(contexts, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := runtime.Register(newAgentFixture(t, "agent.general", pendingPlan(t, "mutate", "verify"))); err != nil {
+		t.Fatal(err)
+	}
+	request := requestWithWorkspace(t, requestWithTools(t, runRequest(t, "run-refresh", "agent.general", "workspace", 5), []pkgTool.ID{"fixture.mutate"}, false), workspace)
+
+	result, err := runtime.Run(context.Background(), request)
+	if err != nil {
+		t.Fatalf("mutation run: %v", err)
+	}
+	if result.Session().ContextStale() || result.Session().WorkspaceGeneration() != 2 || contexts.indexCalls != 1 {
+		t.Fatalf("context was not refreshed: snapshot=%#v index_calls=%d", result.Session(), contexts.indexCalls)
+	}
+	requests := providers.Requests()
+	if len(requests) != 3 || !strings.Contains(requests[2].Messages[1].Content, "fresh evidence") {
+		t.Fatalf("next step did not use refreshed evidence: %#v", requests)
+	}
+}
+
+func TestRefreshFailurePreservesStaleSession(t *testing.T) {
+	workspace, initial, refreshed, refreshedSnapshot := refreshFixture(t)
+	contexts := &refreshContext{initial: initial, refreshed: refreshed, snapshot: refreshedSnapshot, indexErr: errors.New("refresh failed")}
+	providers := &generationStub{responses: []provider.CompletionResponse{{
+		Message:      provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-mutate", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}},
+		FinishReason: provider.FinishReasonToolCalls,
+	}}}
+	registry := internalTool.NewWorkspaceRegistry()
+	tools := allowedToolRuntime(t, &mutationTool{descriptor: mutationDescriptor(t), workspace: workspace.ID()})
+	options := DefaultOptions()
+	options.Providers, options.Tools, options.Workspaces = providers, tools, registry
+	runtime, _ := NewRuntimeWithOptions(contexts, options)
+	_ = runtime.Register(newAgentFixture(t, "agent.general", pendingPlan(t, "mutate")))
+	request := requestWithWorkspace(t, requestWithTools(t, runRequest(t, "run-refresh-fail", "agent.general", "workspace", 5), []pkgTool.ID{"fixture.mutate"}, false), workspace)
+
+	_, err := runtime.Run(context.Background(), request)
+	if !errors.Is(err, pkgAgent.ErrToolFailed) {
+		t.Fatalf("expected refresh failure, got %v", err)
+	}
+	snapshot, _ := runtime.Session("run-refresh-fail")
+	if !snapshot.ContextStale() || snapshot.WorkspaceGeneration() != 1 || snapshot.Terminal() != pkgAgent.TerminalToolFailure {
+		t.Fatalf("last valid generation was not preserved: %#v", snapshot)
+	}
+}
+
 type generationStub struct {
 	mu            sync.Mutex
 	responses     []provider.CompletionResponse
@@ -218,6 +280,20 @@ type loopTool struct {
 	order      *[]string
 }
 
+type mutationTool struct {
+	descriptor pkgTool.Descriptor
+	workspace  pkgContext.WorkspaceID
+}
+
+func (fixture *mutationTool) Descriptor() pkgTool.Descriptor { return fixture.descriptor }
+func (fixture *mutationTool) Prepare(_ context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
+	action, _ := pkgTool.NewAction(pkgTool.EffectWorkspaceMutate, "main.go", fixture.workspace)
+	return pkgTool.NewPreparedInvocation(invocation, fixture.descriptor.Version(), invocation.Arguments(), []pkgTool.Action{action})
+}
+func (*mutationTool) Execute(context.Context, pkgTool.PreparedInvocation) (pkgTool.Result, error) {
+	return pkgTool.NewResult(pkgTool.ResultSuccess, "mutated", "text/plain", "completed", 1, false, "")
+}
+
 type subjectPolicy struct {
 	id    pkgTool.PolicyID
 	model pkgTool.Decision
@@ -248,6 +324,15 @@ func (fixture *loopTool) Execute(context.Context, pkgTool.PreparedInvocation) (p
 func loopToolDescriptor(t *testing.T, id pkgTool.ID, name pkgTool.Name) pkgTool.Descriptor {
 	t.Helper()
 	descriptor, err := pkgTool.NewDescriptor(id, name, "1", "Loop fixture tool.", json.RawMessage(`{"type":"object"}`), []pkgTool.Effect{pkgTool.EffectLocalCompute})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return descriptor
+}
+
+func mutationDescriptor(t *testing.T) pkgTool.Descriptor {
+	t.Helper()
+	descriptor, err := pkgTool.NewDescriptor("fixture.mutate", "fixture_mutate", "1", "Mutation fixture tool.", json.RawMessage(`{"type":"object"}`), []pkgTool.Effect{pkgTool.EffectWorkspaceMutate})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -294,6 +379,65 @@ func requestWithTools(t *testing.T, source pkgAgent.RunRequest, tools []pkgTool.
 		t.Fatal(err)
 	}
 	return request
+}
+
+func requestWithWorkspace(t *testing.T, source pkgAgent.RunRequest, workspace pkgContext.Workspace) pkgAgent.RunRequest {
+	t.Helper()
+	request, err := pkgAgent.NewRunRequest(
+		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), source.Instruction(), source.Limits(),
+		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: source.Tools(), Approver: source.Approver(), Streaming: source.Streaming(), Workspace: &workspace},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return request
+}
+
+type refreshContext struct {
+	mu         sync.Mutex
+	initial    pkgContext.ContextBundle
+	refreshed  pkgContext.ContextBundle
+	snapshot   pkgContext.Snapshot
+	indexErr   error
+	indexCalls int
+}
+
+func (*refreshContext) RegisterSource(pkgContext.Source) error            { return nil }
+func (*refreshContext) RegisterAnalyzer(pkgContext.Analyzer) error        { return nil }
+func (*refreshContext) RegisterEstimator(pkgContext.TokenEstimator) error { return nil }
+func (engine *refreshContext) Index(context.Context, pkgContext.Workspace) (pkgContext.Snapshot, error) {
+	engine.mu.Lock()
+	defer engine.mu.Unlock()
+	engine.indexCalls++
+	return engine.snapshot, engine.indexErr
+}
+func (engine *refreshContext) Snapshot(pkgContext.WorkspaceID) (pkgContext.Snapshot, bool) {
+	return engine.snapshot, true
+}
+func (*refreshContext) Retrieve(context.Context, pkgContext.RetrievalQuery) ([]pkgContext.RetrievalResult, error) {
+	return nil, nil
+}
+func (engine *refreshContext) Build(context.Context, pkgContext.BuildRequest) (pkgContext.ContextBundle, error) {
+	engine.mu.Lock()
+	defer engine.mu.Unlock()
+	if engine.indexCalls == 0 {
+		return engine.initial, nil
+	}
+	return engine.refreshed, nil
+}
+func (*refreshContext) CacheStats() pkgContext.CacheStats { return pkgContext.CacheStats{} }
+
+func refreshFixture(t *testing.T) (pkgContext.Workspace, pkgContext.ContextBundle, pkgContext.ContextBundle, pkgContext.Snapshot) {
+	t.Helper()
+	workspace, err := pkgContext.NewWorkspace("workspace", t.TempDir(), pkgContext.WorkspaceOptions{Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	document1, _ := pkgContext.NewDocument("main.go", "text/plain", "", "old evidence")
+	snapshot1, _ := pkgContext.NewSnapshot(workspace, 1, []pkgContext.Document{document1}, nil, nil)
+	document2, _ := pkgContext.NewDocument("main.go", "text/plain", "", "fresh evidence")
+	snapshot2, _ := pkgContext.NewSnapshot(workspace, 2, []pkgContext.Document{document2}, nil, nil)
+	return workspace, mustBundle(t, snapshot1, document1), mustBundle(t, snapshot2, document2), snapshot2
 }
 
 func containsAll(value string, fragments ...string) bool {

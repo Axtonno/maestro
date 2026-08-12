@@ -91,6 +91,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 45. `agent-permissions.md`
 46. `agent-sessions.md`
 47. `agent-runtime.md`
+48. `agent-workspace.md`
 
 ---
 
@@ -292,6 +293,13 @@ con target e tool set espliciti, ruoli separati, call correlate, risultati JSON
 tipizzati e hard ceiling. Completion e streaming, inclusi delta tool
 frammentati, convergono sulla stessa validazione; non esistono retry impliciti
 degli effetti.
+
+La Fase 6 è completata: un binding per-run mantiene la root fuori dal modello;
+listing, read, search, write e patch operano su path logici con `os.Root`,
+rifiuto dei symlink e precondizioni SHA-256. Le mutazioni marcano il contesto
+stale all'inizio di Execute e il loop reindicizza prima di usare una nuova
+generazione. Il percorso resta framework-neutral ed è verificato anche con il
+WorkspaceProvider Laravel.
 
 Uso essenziale:
 

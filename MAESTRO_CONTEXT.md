@@ -52,6 +52,7 @@ Completati:
 * agent-permissions.md
 * agent-sessions.md
 * agent-runtime.md
+* agent-workspace.md
 
 In progettazione:
 
@@ -1681,7 +1682,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fasi 1–5 completate, Fase 6 pianificata.
+Stato: in corso — Fasi 1–6 completate, Fase 7 pianificata.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1705,7 +1706,7 @@ Le sette fasi pianificate sono:
 3. permission model e approval flow — completata;
 4. sessioni, piani e budget — completata;
 5. loop agentico e tool calling — completata;
-6. workspace awareness e reference tool;
+6. workspace awareness e reference tool — completata;
 7. integrazione, osservabilità e gate finale.
 
 Decisioni iniziali del design:
@@ -1869,6 +1870,25 @@ correlazione; i result vengono restituiti come JSON tipizzato e attraversano
 sempre `Tool Runtime.Invoke`. Completion e streaming condividono validation e
 terminali; l'assembler limita testo, cardinalità e delta arguments. Budget,
 cancellazione e deadline vengono applicati prima di ogni nuova iterazione.
+
+### Fase 6 — Workspace awareness e reference tool
+
+Completata in:
+
+```text
+internal/tool/workspace_registry.go
+internal/tool/workspace_tools.go
+docs/agent-workspace.md
+docs/reports/milestone-7-phase-6.md
+```
+
+La request può associare un Workspace immutabile al run senza mostrare la root
+al modello. I reference tool list/read/search/write/patch usano path logici,
+`os.Root`, controllo Lstat di ogni componente, rifiuto dei symlink e
+precondizioni SHA-256. Una mutazione marca la sessione stale quando Execute
+inizia; Index e Build devono pubblicare una generazione successiva prima di
+renderla fresh. Il percorso usa il contratto WorkspaceProvider ed è verificato
+con Laravel senza dipendenze framework nel runtime.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e
