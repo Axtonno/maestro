@@ -87,6 +87,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 41. `agent-system-design.md`
 42. `agent-system-development-plan.md`
 43. `agent-system-api-compatibility-audit.md`
+44. `tool-runtime.md`
 
 ---
 
@@ -272,7 +273,9 @@ La Milestone 7 — Agent System è aperta e pianificata in sette fasi. La Fase 1
 permission request, sessioni, piani, limiti e terminali. ADR-0025 stabilisce che
 una `Decision` pubblica non è un permit, le action sono autorizzate atomicamente
 e gli eventi usano allowlist esatte. Catalogo ed executor appartengono alla
-Fase 2 e non sono ancora presentati come implementati.
+Fase 2, ora completata con permit privati one-shot, validation boundary,
+default-deny e limiti di output. Policy e approval flow appartengono alla Fase
+3.
 
 Uso essenziale:
 

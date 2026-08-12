@@ -48,6 +48,7 @@ Completati:
 * context-engine-design.md
 * context-engine-development-plan.md
 * agent-system-api-compatibility-audit.md
+* tool-runtime.md
 
 In progettazione:
 
@@ -1677,7 +1678,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fase 1 completata, Fase 2 pianificata.
+Stato: in corso — Fasi 1–2 completate, Fase 3 pianificata.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1697,7 +1698,7 @@ duplicherà registry, snapshot o lifecycle autorevoli.
 Le sette fasi pianificate sono:
 
 1. contratti, ownership e ADR-0025 — completata;
-2. Tool catalog ed execution boundary;
+2. Tool catalog ed execution boundary — completata;
 3. permission model e approval flow;
 4. sessioni, piani e budget;
 5. loop agentico e tool calling;
@@ -1772,6 +1773,32 @@ su errore o esito ambiguo.
 Nessuna API Runtime, Provider, Context Engine, Gestor, Plugin o composition root
 è stata modificata. I contratti nuovi dipendono soltanto da package pubblici e
 non importano implementazioni interne.
+
+### Fase 2 — Tool catalog ed execution boundary
+
+Completata in:
+
+```text
+internal/tool
+docs/tool-runtime.md
+docs/reports/milestone-7-phase-2.md
+```
+
+Il catalogo registra tool trusted in-process con ID e nome provider univoci e
+listing deterministico. `Prepare`, authorizer ed `Execute` vengono invocati
+fuori lock. Il Runtime valida nuovamente identità, versione, fingerprint e
+effect dichiarati prima di costruire la permission request atomica.
+
+Il permit operativo è privato, issuer-bound, legato a run, permission e
+prepared fingerprint e consumato con compare-and-swap. Replay, issuer diverso
+o mismatch vengono rifiutati. Il runtime di produzione resta default-deny; la
+suite usa un authorizer deterministico interno per testare l'executor senza
+anticipare le policy della Fase 3.
+
+Deadline, item e byte limit sono applicati al boundary. Output eccedente viene
+troncato su confini UTF-8; panic di tool e cancellazione sono classificati senza
+retry implicito. Test bloccanti dimostrano assenza di callback sotto lock e il
+race detector copre registrazioni concorrenti e consumo dei permit.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e
