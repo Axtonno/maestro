@@ -34,11 +34,14 @@ type Runtime struct {
 	descriptors map[pkgTool.ID]pkgTool.Descriptor
 	names       map[pkgTool.Name]pkgTool.ID
 	policies    map[pkgTool.PolicyID]pkgTool.Policy
+	grants      map[grantKey]struct{}
 	authorizer  authorizer
 }
 
 func NewRuntime() *Runtime {
-	return newRuntime(denyAuthorizer{})
+	runtime := newRuntime(nil)
+	runtime.authorizer = runtime
+	return runtime
 }
 
 func newRuntime(authorizer authorizer) *Runtime {
@@ -48,6 +51,7 @@ func newRuntime(authorizer authorizer) *Runtime {
 	return &Runtime{
 		tools: make(map[pkgTool.ID]pkgTool.Tool), descriptors: make(map[pkgTool.ID]pkgTool.Descriptor),
 		names: make(map[pkgTool.Name]pkgTool.ID), policies: make(map[pkgTool.PolicyID]pkgTool.Policy),
+		grants:     make(map[grantKey]struct{}),
 		authorizer: authorizer,
 	}
 }

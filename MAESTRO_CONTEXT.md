@@ -49,6 +49,7 @@ Completati:
 * context-engine-development-plan.md
 * agent-system-api-compatibility-audit.md
 * tool-runtime.md
+* agent-permissions.md
 
 In progettazione:
 
@@ -1678,7 +1679,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fasi 1–2 completate, Fase 3 pianificata.
+Stato: in corso — Fasi 1–3 completate, Fase 4 pianificata.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1699,7 +1700,7 @@ Le sette fasi pianificate sono:
 
 1. contratti, ownership e ADR-0025 — completata;
 2. Tool catalog ed execution boundary — completata;
-3. permission model e approval flow;
+3. permission model e approval flow — completata;
 4. sessioni, piani e budget;
 5. loop agentico e tool calling;
 6. workspace awareness e reference tool;
@@ -1799,6 +1800,34 @@ Deadline, item e byte limit sono applicati al boundary. Output eccedente viene
 troncato su confini UTF-8; panic di tool e cancellazione sono classificati senza
 retry implicito. Test bloccanti dimostrano assenza di callback sotto lock e il
 race detector copre registrazioni concorrenti e consumo dei permit.
+
+### Fase 3 — Permission model e approval flow
+
+Completata in:
+
+```text
+pkg/tool/rule.go
+internal/tool/policy.go
+internal/tool/authorization.go
+docs/agent-permissions.md
+docs/reports/milestone-7-phase-3.md
+```
+
+`StaticPolicy` applica esclusivamente matcher exact effect/resource/workspace;
+non esistono wildcard, prefix grant o ordine di preferenza. Regole duplicate
+sono invalide e una action senza regola produce deny terminale. Su richieste
+multi-action deny prevale, prompt richiede approval atomica e allow richiede
+tutte le action consentite.
+
+Il Runtime risolve il `PolicyID` esatto senza fallback. Prompt senza Approver
+diventa deny terminale; approval allow/deny conserva scope o disposition. Grant
+run-scoped sono indicizzati da policy, run e permission fingerprint; allow
+one-shot non viene memorizzato e usa soltanto il permit consumabile della Fase
+2.
+
+Policy e Approver vengono invocati fuori lock e i loro output vengono validati.
+Errori, cancellazioni e panic non producono grant. Lo stesso authorizer governa
+le permission modello con subject distinto dalle tool invocation.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e

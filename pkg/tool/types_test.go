@@ -197,6 +197,23 @@ func TestDecisionAndApprovalValidation(t *testing.T) {
 	}
 }
 
+func TestRuleUsesExactActionMatching(t *testing.T) {
+	decision, _ := tool.NewDecision(tool.DecisionAllow, "exact_allow", "", tool.GrantOneShot)
+	rule, err := tool.NewRule(tool.EffectWorkspaceInspect, "src/main.go", "workspace", decision)
+	if err != nil {
+		t.Fatalf("construct rule: %v", err)
+	}
+	exact, _ := tool.NewAction(tool.EffectWorkspaceInspect, "src/main.go", "workspace")
+	prefix, _ := tool.NewAction(tool.EffectWorkspaceInspect, "src/main.go/child", "workspace")
+	otherWorkspace, _ := tool.NewAction(tool.EffectWorkspaceInspect, "src/main.go", "other")
+	if !rule.Matches(exact) || rule.Matches(prefix) || rule.Matches(otherWorkspace) {
+		t.Fatal("rule did not apply exact effect/resource/workspace semantics")
+	}
+	if _, err := tool.NewRule(tool.EffectWorkspaceInspect, "", "workspace", decision); !errors.Is(err, tool.ErrInvalidPolicy) {
+		t.Fatalf("expected empty resource rejection, got %v", err)
+	}
+}
+
 func TestExecutionRequestRejectsTypedNilAndHasNoDecisionInput(t *testing.T) {
 	invocation, _ := tool.NewInvocation("workspace.file", "call-1", "run-1", json.RawMessage(`{}`))
 	limits := tool.ExecutionLimits{MaxDuration: time.Second, MaxOutputBytes: 1024, MaxItems: 10}

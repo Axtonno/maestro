@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: Attivo — Fasi 1–2 completate, Fase 3 pianificata
+Stato: Attivo — Fasi 1–3 completate, Fase 4 pianificata
 
 Data: 2026-08-11
 
@@ -28,7 +28,7 @@ lungo periodo, sandbox di codice non fidato, multi-agent o una CLI completa.
 |---|---|---|---|
 | 1 | Contratti, ownership e ADR-0025 | Completata | Design iniziale |
 | 2 | Tool catalog e execution boundary | Completata | Fase 1 |
-| 3 | Permission model e approval flow | Pianificata | Fasi 1–2 |
+| 3 | Permission model e approval flow | Completata | Fasi 1–2 |
 | 4 | Sessioni, piani e budget | Pianificata | Fasi 1–3 |
 | 5 | Loop agentico e tool calling | Pianificata | Fasi 1–4 |
 | 6 | Workspace awareness e reference tool | Pianificata | Fasi 1–5 |

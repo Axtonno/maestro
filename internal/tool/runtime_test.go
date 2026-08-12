@@ -85,12 +85,15 @@ func TestInvokeRunsPrepareAuthorizeExecuteWithoutCatalogLock(t *testing.T) {
 }
 
 func TestInvokeDefaultDenyAndExplicitDenyNeverExecute(t *testing.T) {
+	defaultRuntime := NewRuntime()
+	defaultPolicy, _ := NewStaticPolicy("policy.test", nil)
+	_ = defaultRuntime.RegisterPolicy(defaultPolicy)
 	tests := []struct {
 		name        string
 		runtime     *Runtime
 		disposition pkgTool.DenyDisposition
 	}{
-		{name: "default deny", runtime: NewRuntime(), disposition: pkgTool.DenyTerminal},
+		{name: "default deny", runtime: defaultRuntime, disposition: pkgTool.DenyTerminal},
 		{name: "recoverable deny", runtime: newRuntime(&fixtureAuthorizer{decision: denyDecision(t, pkgTool.DenyRecoverable)}), disposition: pkgTool.DenyRecoverable},
 	}
 	for _, test := range tests {

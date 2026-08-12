@@ -1,8 +1,8 @@
 # Maestro Tool Runtime
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Implementato — Milestone 7, Fase 2
+Stato: Implementato — Milestone 7, Fasi 2–3
 
 Data: 2026-08-12
 
@@ -14,10 +14,9 @@ Il Tool Runtime possiede il catalogo trusted in-process e il confine obbligatori
 tra input prodotto dal modello ed effetto. L'API pubblica vive in `pkg/tool`;
 l'implementazione concreta vive in `internal/tool`.
 
-La Fase 2 non implementa ancora regole di policy o grant riusabili. Il runtime
-di produzione è default-deny; un authorizer deterministico interno permette di
-verificare permit ed executor senza introdurre un percorso temporaneamente
-permissivo.
+La Fase 3 collega il registry a regole exact-match, approval flow e grant
+run-scoped. Nessuna policy viene scelta implicitamente e una regola assente
+nega l'intera permission request.
 
 ---
 
@@ -31,9 +30,8 @@ Registrazione, listing e resolution usano un lock interno. `Prepare`,
 authorization ed `Execute` vengono sempre invocati dopo aver rilasciato il
 lock. Non sono previsti unload o replacement.
 
-Il policy registry è già presente per soddisfare il contratto pubblico, ma le
-policy non vengono ancora usate come authorizer: il collegamento appartiene
-alla Fase 3.
+Il policy registry risolve soltanto ID esatti. Policy e Approver vengono
+invocati fuori lock; grant run-scoped sono legati a policy, run e fingerprint.
 
 ---
 
@@ -117,11 +115,8 @@ ritenta tool mutanti o non mutanti.
 
 ---
 
-# Fuori scope della Fase 2
+# Fuori scope delle Fasi 2–3
 
-- matcher e regole di policy;
-- prompt e Approver flow;
-- grant one-shot/run-scoped reali;
 - eventi sul bus condiviso;
 - reference tool filesystem;
 - wiring nel composition root.

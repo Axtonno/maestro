@@ -88,6 +88,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 42. `agent-system-development-plan.md`
 43. `agent-system-api-compatibility-audit.md`
 44. `tool-runtime.md`
+45. `agent-permissions.md`
 
 ---
 
@@ -275,7 +276,8 @@ una `Decision` pubblica non è un permit, le action sono autorizzate atomicament
 e gli eventi usano allowlist esatte. Catalogo ed executor appartengono alla
 Fase 2, ora completata con permit privati one-shot, validation boundary,
 default-deny e limiti di output. Policy e approval flow appartengono alla Fase
-3.
+3, ora completata con regole exact-match, decisione atomica, Approver e grant
+run-scoped vincolati a policy/run/fingerprint.
 
 Uso essenziale:
 
