@@ -51,6 +51,7 @@ Completati:
 * tool-runtime.md
 * agent-permissions.md
 * agent-sessions.md
+* agent-runtime.md
 
 In progettazione:
 
@@ -1680,7 +1681,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fasi 1–4 completate, Fase 5 pianificata.
+Stato: in corso — Fasi 1–5 completate, Fase 6 pianificata.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1703,7 +1704,7 @@ Le sette fasi pianificate sono:
 2. Tool catalog ed execution boundary — completata;
 3. permission model e approval flow — completata;
 4. sessioni, piani e budget — completata;
-5. loop agentico e tool calling;
+5. loop agentico e tool calling — completata;
 6. workspace awareness e reference tool;
 7. integrazione, osservabilità e gate finale.
 
@@ -1850,6 +1851,24 @@ mentre le revisioni sequenziali conservano una storia bounded.
 provider. Durata, turni, tool, token, step, revisioni e byte restano hard
 ceiling locali. Il confine della fase termina con `blocked`; il loop
 modello-tool appartiene alla Fase 5.
+
+### Fase 5 — Loop agentico e tool calling
+
+Completata in:
+
+```text
+internal/agent/loop.go
+internal/agent/stream.go
+docs/agent-runtime.md
+docs/reports/milestone-7-phase-5.md
+```
+
+Il loop esegue step ready in sequenza usando il Provider Runtime e soltanto i
+tool registrati e inclusi nella request. Call multiple mantengono ordine e
+correlazione; i result vengono restituiti come JSON tipizzato e attraversano
+sempre `Tool Runtime.Invoke`. Completion e streaming condividono validation e
+terminali; l'assembler limita testo, cardinalità e delta arguments. Budget,
+cancellazione e deadline vengono applicati prima di ogni nuova iterazione.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e

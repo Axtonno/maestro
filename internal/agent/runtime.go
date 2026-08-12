@@ -19,9 +19,16 @@ type loop interface {
 	Run(context.Context, *session, pkgAgent.RunRequest, pkgContext.ContextBundle) (string, pkgAgent.TerminalReason, error)
 }
 
+type generationRuntime interface {
+	Complete(context.Context, provider.ID, provider.CompletionRequest) (provider.CompletionResponse, error)
+	Stream(context.Context, provider.ID, provider.CompletionRequest) (provider.Stream, error)
+}
+
 type Options struct {
 	MaxSessions int
 	Permissions pkgTool.Runtime
+	Providers   generationRuntime
+	Tools       pkgTool.Runtime
 }
 
 func DefaultOptions() Options { return Options{MaxSessions: 1024} }
@@ -49,10 +56,18 @@ func NewRuntimeWithOptions(contextEngine pkgContext.Engine, options Options) (*R
 	if contextEngine == nil || typedNil(contextEngine) || options.MaxSessions <= 0 || options.MaxSessions > 1_000_000 {
 		return nil, fmt.Errorf("agent runtime dependencies or limits are invalid: %w", pkgAgent.ErrInvalidRequest)
 	}
-	return &Runtime{
-		context: contextEngine, permissions: options.Permissions, options: options,
+	permissions := options.Permissions
+	if permissions == nil {
+		permissions = options.Tools
+	}
+	runtime := &Runtime{
+		context: contextEngine, permissions: permissions, options: options,
 		agents: make(map[pkgAgent.ID]pkgAgent.Agent), sessions: make(map[pkgAgent.RunID]*session),
-	}, nil
+	}
+	if options.Providers != nil && !typedNil(options.Providers) && options.Tools != nil && !typedNil(options.Tools) {
+		runtime.loop = &agentLoop{providers: options.Providers, tools: options.Tools, permissions: permissions}
+	}
+	return runtime, nil
 }
 
 func (runtime *Runtime) Register(candidate pkgAgent.Agent) error {

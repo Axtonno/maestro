@@ -90,6 +90,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 44. `tool-runtime.md`
 45. `agent-permissions.md`
 46. `agent-sessions.md`
+47. `agent-runtime.md`
 
 ---
 
@@ -285,6 +286,12 @@ bounded, snapshot immutabili, piani dependency-aware, revisioni, budget e
 terminale unico. Il planner provider-backed usa structured output e viene
 invocato soltanto dopo l'autorizzazione di model invocation e context
 disclosure; il loop operativo appartiene alla Fase 5.
+
+La Fase 5 è completata: il loop agentico usa Provider Runtime e Tool Runtime
+con target e tool set espliciti, ruoli separati, call correlate, risultati JSON
+tipizzati e hard ceiling. Completion e streaming, inclusi delta tool
+frammentati, convergono sulla stessa validazione; non esistono retry impliciti
+degli effetti.
 
 Uso essenziale:
 

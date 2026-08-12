@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: Attivo — Fasi 1–4 completate, Fase 5 pianificata
+Stato: Attivo — Fasi 1–5 completate, Fase 6 pianificata
 
 Data: 2026-08-11
 
@@ -30,7 +30,7 @@ lungo periodo, sandbox di codice non fidato, multi-agent o una CLI completa.
 | 2 | Tool catalog e execution boundary | Completata | Fase 1 |
 | 3 | Permission model e approval flow | Completata | Fasi 1–2 |
 | 4 | Sessioni, piani e budget | Completata | Fasi 1–3 |
-| 5 | Loop agentico e tool calling | Pianificata | Fasi 1–4 |
+| 5 | Loop agentico e tool calling | Completata | Fasi 1–4 |
 | 6 | Workspace awareness e reference tool | Pianificata | Fasi 1–5 |
 | 7 | Integrazione, osservabilità e gate finale | Pianificata | Fasi 1–6 |
 

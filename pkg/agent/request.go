@@ -13,9 +13,10 @@ import (
 )
 
 type RunRequestOptions struct {
-	Context  contextengine.BuildRequest
-	Tools    []tool.ID
-	Approver tool.Approver
+	Context   contextengine.BuildRequest
+	Tools     []tool.ID
+	Approver  tool.Approver
+	Streaming bool
 }
 
 type RunRequest struct {
@@ -30,6 +31,7 @@ type RunRequest struct {
 	context     contextengine.BuildRequest
 	tools       []tool.ID
 	approver    tool.Approver
+	streaming   bool
 }
 
 func NewRunRequest(
@@ -91,6 +93,7 @@ func NewRunRequest(
 		run: run, agent: agent, provider: providerID, model: model,
 		workspace: workspace, policy: policy, instruction: instruction, limits: limits,
 		context: options.Context, tools: tools, approver: options.Approver,
+		streaming: options.Streaming,
 	}, nil
 }
 
@@ -105,12 +108,13 @@ func (request RunRequest) Limits() Limits                       { return request
 func (request RunRequest) Context() contextengine.BuildRequest  { return request.context }
 func (request RunRequest) Tools() []tool.ID                     { return slices.Clone(request.tools) }
 func (request RunRequest) Approver() tool.Approver              { return request.approver }
+func (request RunRequest) Streaming() bool                      { return request.streaming }
 
 func (request RunRequest) Validate() error {
 	_, err := NewRunRequest(
 		request.run, request.agent, request.provider, request.model,
 		request.workspace, request.policy, request.instruction, request.limits,
-		RunRequestOptions{Context: request.context, Tools: request.tools, Approver: request.approver},
+		RunRequestOptions{Context: request.context, Tools: request.tools, Approver: request.approver, Streaming: request.streaming},
 	)
 	return err
 }
