@@ -130,6 +130,20 @@ func TestPlanValidationTransitionsAndDefensiveCopies(t *testing.T) {
 	if _, err := agent.NewPlanStep("step", "objective", nil, agent.StepFailed, ""); !errors.Is(err, agent.ErrInvalidStep) {
 		t.Fatalf("expected missing terminal reason rejection, got %v", err)
 	}
+	if _, err := plan.TransitionStep("modify", agent.StepRunning, ""); !errors.Is(err, agent.ErrInvalidTransition) {
+		t.Fatalf("expected incomplete dependency rejection, got %v", err)
+	}
+	plan, err = plan.TransitionStep("inspect", agent.StepRunning, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err = plan.TransitionStep("inspect", agent.StepCompleted, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := plan.TransitionStep("modify", agent.StepRunning, ""); err != nil {
+		t.Fatalf("completed dependency did not unlock step: %v", err)
+	}
 }
 
 func TestTerminalPrecedenceAndSessionInvariants(t *testing.T) {

@@ -161,6 +161,44 @@ func (plan Plan) Validate() error {
 	return err
 }
 
+// TransitionStep returns a new immutable plan with one validated state
+// transition. A step can start only after all dependencies are completed or
+// skipped.
+func (plan Plan) TransitionStep(id StepID, status StepStatus, reason string) (Plan, error) {
+	if err := plan.Validate(); err != nil {
+		return Plan{}, err
+	}
+	steps := plan.Steps()
+	index := -1
+	states := make(map[StepID]StepStatus, len(steps))
+	for candidateIndex, step := range steps {
+		states[step.ID()] = step.Status()
+		if step.ID() == id {
+			index = candidateIndex
+		}
+	}
+	if index < 0 {
+		return Plan{}, fmt.Errorf("plan step %q is absent: %w", id, ErrInvalidTransition)
+	}
+	current := steps[index]
+	if !CanTransitionStep(current.Status(), status) {
+		return Plan{}, fmt.Errorf("plan step %q cannot transition from %q to %q: %w", id, current.Status(), status, ErrInvalidTransition)
+	}
+	if status == StepRunning {
+		for _, dependency := range current.Dependencies() {
+			if states[dependency] != StepCompleted && states[dependency] != StepSkipped {
+				return Plan{}, fmt.Errorf("plan step %q dependency %q is not complete: %w", id, dependency, ErrInvalidTransition)
+			}
+		}
+	}
+	updated, err := NewPlanStep(current.ID(), current.Objective(), current.Dependencies(), status, reason)
+	if err != nil {
+		return Plan{}, err
+	}
+	steps[index] = updated
+	return NewPlan(plan.version, steps)
+}
+
 type PlanningRequest struct {
 	run         RunID
 	instruction string

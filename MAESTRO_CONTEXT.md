@@ -50,6 +50,7 @@ Completati:
 * agent-system-api-compatibility-audit.md
 * tool-runtime.md
 * agent-permissions.md
+* agent-sessions.md
 
 In progettazione:
 
@@ -1679,7 +1680,7 @@ persistenza e ranking LLM restano fuori scope.
 
 ## Milestone 7 — Agent System
 
-Stato: in corso — Fasi 1–3 completate, Fase 4 pianificata.
+Stato: in corso — Fasi 1–4 completate, Fase 5 pianificata.
 
 Il design iniziale è definito in `docs/agent-system-design.md` e il piano
 operativo in `docs/agent-system-development-plan.md`.
@@ -1701,7 +1702,7 @@ Le sette fasi pianificate sono:
 1. contratti, ownership e ADR-0025 — completata;
 2. Tool catalog ed execution boundary — completata;
 3. permission model e approval flow — completata;
-4. sessioni, piani e budget;
+4. sessioni, piani e budget — completata;
 5. loop agentico e tool calling;
 6. workspace awareness e reference tool;
 7. integrazione, osservabilità e gate finale.
@@ -1828,6 +1829,27 @@ one-shot non viene memorizzato e usa soltanto il permit consumabile della Fase
 Policy e Approver vengono invocati fuori lock e i loro output vengono validati.
 Errori, cancellazioni e panic non producono grant. Lo stesso authorizer governa
 le permission modello con subject distinto dalle tool invocation.
+
+### Fase 4 — Sessioni, piani e budget
+
+Completata in:
+
+```text
+internal/agent
+docs/agent-sessions.md
+docs/reports/milestone-7-phase-4.md
+```
+
+Il registry bounded assegna un solo coordinatore a ogni run e non riusa ID
+terminali. Snapshot, generazioni e contatori sono monotoni; il terminale viene
+committato una sola volta. I piani immutabili validano dipendenze e transizioni,
+mentre le revisioni sequenziali conservano una storia bounded.
+
+`ProviderPlanner` richiede structured output e il runtime autorizza
+`model.invoke` e `model.disclose` prima di inviare istruzione o contesto al
+provider. Durata, turni, tool, token, step, revisioni e byte restano hard
+ceiling locali. Il confine della fase termina con `blocked`; il loop
+modello-tool appartiene alla Fase 5.
 
 La baseline workspace prevista comprende listing, read, search e write/patch
 con path logici, containment, controllo symlink, output limitati e

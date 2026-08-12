@@ -89,6 +89,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 43. `agent-system-api-compatibility-audit.md`
 44. `tool-runtime.md`
 45. `agent-permissions.md`
+46. `agent-sessions.md`
 
 ---
 
@@ -278,6 +279,12 @@ Fase 2, ora completata con permit privati one-shot, validation boundary,
 default-deny e limiti di output. Policy e approval flow appartengono alla Fase
 3, ora completata con regole exact-match, decisione atomica, Approver e grant
 run-scoped vincolati a policy/run/fingerprint.
+
+La Fase 4 è completata: `internal/agent` implementa catalogo agenti, sessioni
+bounded, snapshot immutabili, piani dependency-aware, revisioni, budget e
+terminale unico. Il planner provider-backed usa structured output e viene
+invocato soltanto dopo l'autorizzazione di model invocation e context
+disclosure; il loop operativo appartiene alla Fase 5.
 
 Uso essenziale:
 

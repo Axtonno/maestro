@@ -495,7 +495,7 @@ I sei report di fase e `reports/milestone-6-final.md` documentano i gate.
 
 # Milestone 7 — Agent System
 
-Stato: In corso — Fasi 1–3 completate, Fase 4 pianificata
+Stato: In corso — Fasi 1–4 completate, Fase 5 pianificata
 
 Obiettivi:
 
@@ -512,7 +512,7 @@ Fasi di sviluppo:
 | 1 | Contratti, ownership e ADR-0025 | Completata |
 | 2 | Tool catalog e execution boundary | Completata |
 | 3 | Permission model e approval flow | Completata |
-| 4 | Sessioni, piani e budget | Pianificata |
+| 4 | Sessioni, piani e budget | Completata |
 | 5 | Loop agentico e tool calling | Pianificata |
 | 6 | Workspace awareness e reference tool | Pianificata |
 | 7 | Integrazione, osservabilità e gate finale | Pianificata |
