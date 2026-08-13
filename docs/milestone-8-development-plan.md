@@ -308,14 +308,16 @@ Stato: Da avviare.
 
 ## Obiettivo
 
-Produrre un release candidate installabile fuori dal repository e ripetibile
-dallo stesso commit.
+Produrre un packaging candidate installabile fuori dal repository e ripetibile
+dallo stesso commit. La validazione live che lo promuove a release candidate
+appartiene alla Fase 5.
 
 ## Sviluppo
 
 - definire build riproducibile del binario Linux `amd64`;
 - incorporare versione e commit;
 - produrre archivio e checksum SHA-256;
+- scegliere e aggiungere la licenza con decisione esplicita del maintainer;
 - includere licenza e documenti richiesti nell'archive/source release;
 - creare procedura di installazione, verifica, upgrade e uninstall;
 - aggiungere `configs/maestro.example.yaml` coerente con lo schema;
@@ -345,7 +347,7 @@ dallo stesso commit.
 ## Deliverable
 
 - pipeline/script di release;
-- artifact RC Linux `amd64` e checksum;
+- packaging candidate Linux `amd64` e checksum;
 - configurazione di esempio;
 - fixture Laravel di release;
 - guida d'installazione preliminare;
@@ -353,8 +355,9 @@ dallo stesso commit.
 
 ## Gate di uscita
 
-Esiste un artifact RC identificabile che un tester può installare e avviare
-senza accesso al checkout di sviluppo.
+Esiste un packaging candidate identificabile che un tester può installare e
+avviare senza accesso al checkout di sviluppo. Non è ancora presentato come
+release candidate o candidato alla pubblicazione.
 
 ---
 
@@ -446,7 +449,7 @@ comportamento osservato coincidono.
 - pubblicare compatibility matrix per piattaforma/provider/modello;
 - aggiungere troubleshooting basato sui failure osservati;
 - creare changelog e note v0.1.0;
-- scegliere e aggiungere la licenza con decisione del maintainer;
+- verificare e pubblicare definitivamente la licenza scelta nella Fase 4;
 - completare compatibility audit dei package pubblici sperimentali;
 - dichiarare esplicitamente gli ambiti esclusi e i known issue;
 - creare tag e artifact finali v0.1.0 con checksum.

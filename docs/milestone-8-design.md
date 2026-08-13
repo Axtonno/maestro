@@ -363,6 +363,10 @@ sono dichiarati sperimentali finché non vengono costruiti e sottoposti almeno a
 smoke di avvio, help, version e doctor locale; diventano supportati soltanto
 dopo una prova documentata sulla piattaforma.
 
+Apache License 2.0 è la licenza scelta dal maintainer in ADR-0027. Artifact e
+packaging candidate includono `LICENSE`, `NOTICE` e i termini delle dipendenze
+distribuite.
+
 `go install ...@v0.1.0` può essere un percorso aggiuntivo, non sostituisce la
 verifica dell'artifact pubblicato. La pipeline di release deve essere
 riproducibile e non dipendere da file non tracciati.

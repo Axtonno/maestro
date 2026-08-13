@@ -15,7 +15,9 @@ eseguire il reference agent. Non sostituisce `pkg/runtime.Config`, che resta il
 contratto generico dei componenti Go.
 
 La configurazione completa di esempio è in
-`configs/maestro.example.yaml`.
+`configs/maestro.example.yaml`. Nel packaging candidate il relativo
+`workspace.root` seleziona `../fixtures/laravel-v1`; quando il file viene
+copiato altrove deve essere sostituito con il progetto reale.
 
 # Risoluzione del file
 

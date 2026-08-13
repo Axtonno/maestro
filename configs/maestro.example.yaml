@@ -12,7 +12,9 @@ models:
 
 workspace:
   id: laravel
-  root: /absolute/path/to/laravel-project
+  # Relative paths are resolved from this configuration file. In the
+  # packaging candidate this selects the bundled versioned fixture.
+  root: ../fixtures/laravel-v1
   framework: laravel
 
 agent:

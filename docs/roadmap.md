@@ -584,6 +584,11 @@ invalido o no-TTY. stdout contiene soltanto il risultato stabile, stderr
 contiene progresso e interazione; SIGINT cancella il run. Il report è
 `reports/milestone-8-phase-3.md`.
 
+La Fase 4 produce un packaging candidate installabile e ripetibile, non ancora
+un release candidate: la promozione avviene soltanto dopo la validazione live
+della Fase 5. La scelta della licenza è anticipata all'inizio della Fase 4; la
+Fase 6 ne verifica la pubblicazione definitiva.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.

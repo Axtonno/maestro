@@ -98,6 +98,8 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 52. `configuration.md`
 53. `cli.md`
 54. `operational-experience.md`
+55. `installation.md`
+56. `packaging-candidate.md`
 
 ---
 
@@ -337,6 +339,10 @@ contenuto. Le scelte sono deny, one-shot e grant exact-action per il run; non
 esiste `--yes`. I contratti sono descritti in `docs/configuration.md`,
 `docs/cli.md` e `docs/operational-experience.md`; i gate sono registrati nei
 report delle Fasi 2–3.
+
+Maestro è distribuito sotto Apache License 2.0. Il testo e le attribution delle
+dipendenze sono in `LICENSE`, `NOTICE` e `THIRD_PARTY_LICENSES.txt`; la decisione
+è registrata in `docs/adr/ADR-0027.md`.
 
 Uso essenziale:
 

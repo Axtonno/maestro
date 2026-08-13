@@ -61,6 +61,8 @@ Completati:
 * configuration.md
 * cli.md
 * operational-experience.md
+* installation.md
+* packaging-candidate.md
 
 ---
 
@@ -164,6 +166,17 @@ piattaforma iniziale supportata è Linux `amd64`; Ollama con `llama3.1:8b` e
 condizionato alla presenza del report live. CLI, configurazione e package
 pubblici sono sperimentali; il modello resta trusted in-process e gli ambiti
 rinviati non entrano nella v0.1.0.
+
+---
+
+## ADR-0027
+
+Apache License 2.0 for Maestro.
+
+Il repository e ogni artifact includono il testo Apache-2.0. `NOTICE` e
+`THIRD_PARTY_LICENSES.txt` conservano attribution e termini delle dipendenze
+distribuite. La scelta è vincolante dalla Fase 4; la Fase 6 ne verifica la
+pubblicazione definitiva.
 
 ---
 
@@ -2015,7 +2028,7 @@ Le fasi approvate sono:
 1. Release contract e audit — completata;
 2. Configurazione e CLI minima — completata;
 3. Esperienza operativa — completata;
-4. Packaging e installazione;
+4. Packaging e installazione — packaging candidate, non release candidate;
 5. Validazione live e release candidate;
 6. Documentazione pubblica e v0.1.0.
 

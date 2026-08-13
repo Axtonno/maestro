@@ -29,7 +29,9 @@ l'authority del runtime.
 
 - approve one-shot e run-scoped restituiscono scope distinti;
 - deny esplicito/default, EOF, input invalido e no-TTY falliscono chiusi;
+- una policy `prompt` senza TTY termina al confine CLI con exit code 3;
 - cancellation e deadline interrompono un input bloccato;
+- SIGINT/cancellazione del comando termina al confine CLI con exit code 130;
 - una patch Laravel preparata viene mostrata come action logica, approvata e
   applicata attraversando Agent e Tool Runtime;
 - disclosure fingerprint, invocation arguments e instruction non compaiono
