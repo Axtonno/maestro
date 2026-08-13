@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: In corso — Fasi 1–3 completate
+Stato: In corso — Fasi 1–4 completate
 
 Obiettivo:
 
@@ -555,7 +555,7 @@ Fasi previste:
 | 1 | Release contract e audit | Completata |
 | 2 | Configurazione e CLI minima | Completata |
 | 3 | Esperienza operativa | Completata |
-| 4 | Packaging e installazione | Da avviare |
+| 4 | Packaging e installazione | Completata |
 | 5 | Validazione live e release candidate | Da avviare |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare |
 
@@ -588,6 +588,11 @@ La Fase 4 produce un packaging candidate installabile e ripetibile, non ancora
 un release candidate: la promozione avviene soltanto dopo la validazione live
 della Fase 5. La scelta della licenza è anticipata all'inizio della Fase 4; la
 Fase 6 ne verifica la pubblicazione definitiva.
+
+La Fase 4 è completata con `v0.1.0-pc.1` Linux `amd64`: build normalizzata e
+ripetuta dallo stesso commit, checksum, manifest, Apache-2.0, documentazione,
+configurazione e fixture Laravel sono verificati fuori dal checkout. Il report
+è `reports/milestone-8-phase-4.md`.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

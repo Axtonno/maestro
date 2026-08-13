@@ -1,8 +1,8 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.3.0
+Versione: 0.4.0
 
-Stato: In esecuzione — Fasi 1–3 completate, Fasi 4–6 da avviare
+Stato: In esecuzione — Fasi 1–4 completate, Fasi 5–6 da avviare
 
 Data: 2026-08-13
 
@@ -34,7 +34,7 @@ sviluppo o conoscere le API Go interne.
 | 1 | Release contract e audit | Completata | Milestone 7 |
 | 2 | Configurazione e CLI minima | Completata | Fase 1 |
 | 3 | Esperienza operativa | Completata | Fase 2 |
-| 4 | Packaging e installazione | Da avviare | Fasi 2–3 |
+| 4 | Packaging e installazione | Completata | Fasi 2–3 |
 | 5 | Validazione live e release candidate | Da avviare | Fasi 2–4 |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare | Fasi 1–5 |
 
@@ -304,7 +304,7 @@ Gate: **superato**. Report: `reports/milestone-8-phase-3.md`.
 
 # Fase 4 — Packaging e installazione
 
-Stato: Da avviare.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -317,7 +317,7 @@ appartiene alla Fase 5.
 - definire build riproducibile del binario Linux `amd64`;
 - incorporare versione e commit;
 - produrre archivio e checksum SHA-256;
-- scegliere e aggiungere la licenza con decisione esplicita del maintainer;
+- adottare Apache-2.0 secondo la decisione esplicita del maintainer e ADR-0027;
 - includere licenza e documenti richiesti nell'archive/source release;
 - creare procedura di installazione, verifica, upgrade e uninstall;
 - aggiungere `configs/maestro.example.yaml` coerente con lo schema;
@@ -328,7 +328,8 @@ appartiene alla Fase 5.
 
 ## Invarianti
 
-- tag, `maestro version`, nome artifact e note RC coincidono;
+- versione di packaging, `maestro version`, nome artifact e manifest
+  coincidono e il commit è esatto;
 - il binario non dipende dal checkout o dalla directory corrente;
 - la configurazione di esempio non contiene secret o default permissivi;
 - l'artifact non scarica modelli/plugin durante installazione;
@@ -358,6 +359,8 @@ appartiene alla Fase 5.
 Esiste un packaging candidate identificabile che un tester può installare e
 avviare senza accesso al checkout di sviluppo. Non è ancora presentato come
 release candidate o candidato alla pubblicazione.
+
+Gate: **superato**. Report: `reports/milestone-8-phase-4.md`.
 
 ---
 

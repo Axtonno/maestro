@@ -344,6 +344,13 @@ Maestro è distribuito sotto Apache License 2.0. Il testo e le attribution delle
 dipendenze sono in `LICENSE`, `NOTICE` e `THIRD_PARTY_LICENSES.txt`; la decisione
 è registrata in `docs/adr/ADR-0027.md`.
 
+La Fase 4 è completata: gli script sotto `scripts/` producono e verificano il
+packaging candidate Linux `amd64` `v0.1.0-pc.1` con build riproducibile,
+manifest, checksum, licenza, configurazione e fixture Laravel. Il candidate è
+installabile fuori dal checkout ma non è ancora una release candidate; i gate
+live appartengono alla Fase 5. Dettagli in `docs/packaging-candidate.md` e
+`docs/reports/milestone-8-phase-4.md`.
+
 Uso essenziale:
 
 ```go

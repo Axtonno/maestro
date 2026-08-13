@@ -1957,14 +1957,14 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 
 ## Gate post-Milestone 7 e percorso v0.1.0
 
-Stato: GO alla Milestone 8; Fasi 1–3 completate; v0.1.0 non ancora pronta.
+Stato: GO alla Milestone 8; Fasi 1–4 completate; v0.1.0 non ancora pronta.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
-l'architettura. Suite e scenario deterministico sono verdi. Le Fasi 2–3 hanno
-chiuso configurazione, CLI minima e controllo operativo; restano artifact,
-documentazione di sicurezza, scenario agentico live su Laravel e prova
-d'installazione pulita.
+l'architettura. Suite e scenario deterministico sono verdi. Le Fasi 2–4 hanno
+chiuso configurazione, CLI minima, controllo operativo, packaging e prova
+d'installazione pulita; restano documentazione pubblica di sicurezza e
+scenario agentico live su Laravel.
 
 La Milestone 8 è ridefinita come productization per v0.1.0. Il release
 contract, il design e il piano sono approvati in:
@@ -2028,10 +2028,17 @@ Le fasi approvate sono:
 1. Release contract e audit — completata;
 2. Configurazione e CLI minima — completata;
 3. Esperienza operativa — completata;
-4. Packaging e installazione — packaging candidate, non release candidate;
+4. Packaging e installazione — completata con packaging candidate, non release candidate;
 5. Validazione live e release candidate;
 6. Documentazione pubblica e v0.1.0.
 
 SDK stabile, packaging di plugin/tool terzi, sandbox, recovery persistente,
 multi-agent, shell, Git, Docker e selezione automatica di provider/modello sono
 rinviati oltre v0.1.0.
+
+La Fase 4 produce `maestro-v0.1.0-pc.1-linux-amd64.tar.gz` dal commit
+`4578c132682e6b715317a6b4d1de958459cfc086`. Due build indipendenti sono
+byte-identiche; archive, checksum, manifest, installazione pulita, config e
+fixture Laravel superano il gate deterministico. Apache-2.0 è registrata in
+ADR-0027. La promozione a release candidate e ogni validazione provider live
+restano responsabilità della Fase 5.
