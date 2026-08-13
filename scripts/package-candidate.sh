@@ -46,7 +46,8 @@ for command in git go tar gzip sha256sum mktemp; do
         exit 1
     }
 done
-tar --version | head -n 1 | grep -q 'GNU tar' || {
+tar_version="$(tar --version)"
+[[ "$tar_version" == *"GNU tar"* ]] || {
     printf 'GNU tar is required for normalized archives\n' >&2
     exit 1
 }
