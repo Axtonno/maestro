@@ -60,6 +60,7 @@ Completati:
 * milestone-8-development-plan.md
 * configuration.md
 * cli.md
+* operational-experience.md
 
 ---
 
@@ -1943,14 +1944,14 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 
 ## Gate post-Milestone 7 e percorso v0.1.0
 
-Stato: GO alla Milestone 8; Fasi 1–2 completate; v0.1.0 non ancora pronta.
+Stato: GO alla Milestone 8; Fasi 1–3 completate; v0.1.0 non ancora pronta.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
-l'architettura. Suite e scenario deterministico sono verdi. La Fase 2 ha chiuso
-il divario relativo a configurazione e CLI minima; restano approval terminale,
-artifact, documentazione di sicurezza, scenario agentico live su Laravel e
-prova d'installazione pulita.
+l'architettura. Suite e scenario deterministico sono verdi. Le Fasi 2–3 hanno
+chiuso configurazione, CLI minima e controllo operativo; restano artifact,
+documentazione di sicurezza, scenario agentico live su Laravel e prova
+d'installazione pulita.
 
 La Milestone 8 è ridefinita come productization per v0.1.0. Il release
 contract, il design e il piano sono approvati in:
@@ -1993,8 +1994,14 @@ docs/reports/milestone-8-phase-2.md
 Il loader rifiuta unknown/duplicate fields, multi-document e alias. La
 composition registra un solo provider, il plugin Laravel e una policy che
 valida PermissionRequest concrete. Doctor usa probe read-only; run indicizza il
-Workspace autorevole ed esegue `agent.reference`. In assenza dell'Approver
-della Fase 3, una decisione `prompt` resta deny sicuro.
+Workspace autorevole ed esegue `agent.reference`.
+
+La Fase 3 aggiunge Approver terminale cancellabile, renderer degli eventi
+redatti e output finale stabile. Una decisione `prompt` può essere negata,
+approvata one-shot o concessa per la stessa action durante il run; EOF, input
+invalido e no-TTY negano in sicurezza. I dettagli sono in
+`docs/operational-experience.md` e nel report
+`docs/reports/milestone-8-phase-3.md`.
 
 La matrice live llama.cpp resta il debito formale della Milestone 3. Il report
 indicato da decisioni successive non è presente nel repository né nella
@@ -2007,7 +2014,7 @@ Le fasi approvate sono:
 
 1. Release contract e audit — completata;
 2. Configurazione e CLI minima — completata;
-3. Esperienza operativa;
+3. Esperienza operativa — completata;
 4. Packaging e installazione;
 5. Validazione live e release candidate;
 6. Documentazione pubblica e v0.1.0.

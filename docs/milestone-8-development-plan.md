@@ -1,8 +1,8 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.2.0
+Versione: 0.3.0
 
-Stato: In esecuzione — Fasi 1–2 completate, Fasi 3–6 da avviare
+Stato: In esecuzione — Fasi 1–3 completate, Fasi 4–6 da avviare
 
 Data: 2026-08-13
 
@@ -33,7 +33,7 @@ sviluppo o conoscere le API Go interne.
 |---|---|---|---|
 | 1 | Release contract e audit | Completata | Milestone 7 |
 | 2 | Configurazione e CLI minima | Completata | Fase 1 |
-| 3 | Esperienza operativa | Da avviare | Fase 2 |
+| 3 | Esperienza operativa | Completata | Fase 2 |
 | 4 | Packaging e installazione | Da avviare | Fasi 2–3 |
 | 5 | Validazione live e release candidate | Da avviare | Fasi 2–4 |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare | Fasi 1–5 |
@@ -105,7 +105,7 @@ di entrambe, una decisione esplicita deve classificare llama.cpp sperimentale.
 - release gate e prova pulita descritti;
 - nessun requisito di sandbox, ecosistema o SDK stabile nascosto nel piano.
 
-Gate: **superato**.
+Gate: **superato**. Report: `reports/milestone-8-phase-1.md`.
 
 ---
 
@@ -240,7 +240,7 @@ Gate: **superato**. Report: `reports/milestone-8-phase-2.md`.
 
 # Fase 3 — Esperienza operativa
 
-Stato: Da avviare.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -297,6 +297,8 @@ senza ampliare l'autorità del runtime.
 
 Un utente comprende cosa Maestro intende fare, può negare o approvare l'effetto,
 può cancellare il run e riceve un terminale chiaro senza leakage implicito.
+
+Gate: **superato**. Report: `reports/milestone-8-phase-3.md`.
 
 ---
 

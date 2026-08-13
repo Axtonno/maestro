@@ -1,12 +1,14 @@
 package application
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -49,6 +51,41 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 	updated, err := os.ReadFile(filename)
 	if err != nil || string(updated) != "<?php\nfinal class Order {}\n" {
 		t.Fatalf("unexpected workspace content %q: %v", updated, err)
+	}
+}
+
+func TestApplicationExecutesPromptedMutationWithTerminalApprover(t *testing.T) {
+	root := newLaravelWorkspace(t)
+	filename := filepath.Join(root, "app", "Order.php")
+	original, err := os.ReadFile(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(original)
+	arguments, _ := json.Marshal(map[string]string{
+		"path": "app/Order.php", "old": "class Order", "new": "final class Order",
+		"expected_digest": fmt.Sprintf("%x", digest),
+	})
+	provider := &fixtureProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "patch-1", Name: "workspace_patch", Arguments: arguments}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Approved update."}, FinishReason: pkgProvider.FinishReasonStop},
+	}}
+	config := testConfig(root)
+	config.Policy.WorkspaceMutation = "prompt"
+	configured, err := Build(config, testDependencies(provider))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer configured.Close(context.Background())
+	var approvalOutput bytes.Buffer
+	result, err := configured.ExecuteWithOptions(t.Context(), "Update Order", ExecuteOptions{
+		Approver: NewTerminalApprover(strings.NewReader("once\n"), &approvalOutput, true),
+	})
+	if err != nil || result.Session().Terminal() != pkgAgent.TerminalCompleted {
+		t.Fatalf("result=%#v err=%v", result, err)
+	}
+	if !strings.Contains(approvalOutput.String(), "workspace.mutate resource=app/Order.php workspace=laravel") || strings.Contains(approvalOutput.String(), "expected_digest") {
+		t.Fatalf("unsafe or incomplete approval output: %q", approvalOutput.String())
 	}
 }
 

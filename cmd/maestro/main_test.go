@@ -5,10 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/antonio-cafeo/maestro/internal/application"
 	"github.com/antonio-cafeo/maestro/internal/buildinfo"
@@ -265,12 +267,13 @@ func TestProductCommandsUseStrictConfigAndStableOutputs(t *testing.T) {
 		args     []string
 		stdin    string
 		contains []string
+		progress bool
 	}{
 		{name: "doctor", args: []string{"doctor", "--config", configPath}, contains: []string{"pass\tconfig", "pass\tprovider", "pass\tlaravel"}},
 		{name: "models", args: []string{"models", "--config", configPath}, contains: []string{"provider\tollama", "fixture-model"}},
 		{name: "agents", args: []string{"agents", "--config", configPath}, contains: []string{"agent.reference", "agent.run"}},
-		{name: "run argument", args: []string{"run", "--config", configPath, "Inspect", "Order"}, contains: []string{"run\trun-cli", "terminal\tcompleted", "CLI completed."}},
-		{name: "run stdin", args: []string{"run", "--config", configPath}, stdin: "Inspect Order\n", contains: []string{"terminal\tcompleted", "CLI completed."}},
+		{name: "run argument", args: []string{"run", "--config", configPath, "Inspect", "Order"}, contains: []string{"run\trun-cli", "terminal\tcompleted", "model_turns\t1", "result\nCLI completed."}, progress: true},
+		{name: "run stdin", args: []string{"run", "--config", configPath}, stdin: "Inspect Order\n", contains: []string{"terminal\tcompleted", "result\nCLI completed."}, progress: true},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -279,8 +282,15 @@ func TestProductCommandsUseStrictConfigAndStableOutputs(t *testing.T) {
 			var stdout bytes.Buffer
 			var stderr bytes.Buffer
 			exitCode := runWithIO(testCase.args, strings.NewReader(testCase.stdin), &stdout, &stderr, dependencies)
-			if exitCode != 0 || stderr.Len() != 0 {
+			if exitCode != 0 {
 				t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+			}
+			if testCase.progress {
+				if !strings.Contains(stderr.String(), "plan\trun=run-cli") || !strings.Contains(stderr.String(), "terminal\trun=run-cli reason=completed") {
+					t.Fatalf("missing run progress: %q", stderr.String())
+				}
+			} else if stderr.Len() != 0 {
+				t.Fatalf("unexpected stderr: %q", stderr.String())
 			}
 			for _, expected := range testCase.contains {
 				if !strings.Contains(stdout.String(), expected) {
@@ -352,6 +362,53 @@ func TestRunMapsPermissionAndProviderFailures(t *testing.T) {
 	}
 }
 
+func TestRunInteractiveApprovalAndFailClosedInputs(t *testing.T) {
+	for _, testCase := range []struct {
+		name     string
+		input    string
+		terminal bool
+		wantCode int
+		approved bool
+	}{
+		{name: "one shot", input: "once\n", terminal: true, wantCode: 0, approved: true},
+		{name: "deny", input: "deny\n", terminal: true, wantCode: 3},
+		{name: "invalid", input: "yes\n", terminal: true, wantCode: 3},
+		{name: "eof", terminal: true, wantCode: 3},
+		{name: "non tty", input: "once\n", wantCode: 3},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
+				Message:      pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Safe result."},
+				FinishReason: pkgProvider.FinishReasonStop,
+			}}}
+			dependencies := cliTestDependencies(provider)
+			dependencies.isTerminal = func(io.Reader) bool { return testCase.terminal }
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(
+				[]string{"run", "--config", newCLIConfig(t, "prompt"), "TOP-SECRET-INSTRUCTION"},
+				strings.NewReader(testCase.input), &stdout, &stderr, dependencies,
+			)
+			if code != testCase.wantCode {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+			if testCase.terminal != strings.Contains(stderr.String(), "approval required") {
+				t.Fatalf("unexpected approval rendering: %q", stderr.String())
+			}
+			if strings.Contains(stderr.String(), "TOP-SECRET-INSTRUCTION") {
+				t.Fatalf("instruction leaked to stderr: %q", stderr.String())
+			}
+			if testCase.approved {
+				if !strings.Contains(stdout.String(), "terminal\tcompleted") || !strings.Contains(stdout.String(), "result\nSafe result.") {
+					t.Fatalf("unexpected success output: %q", stdout.String())
+				}
+			} else if stdout.Len() != 0 {
+				t.Fatalf("failed run wrote stdout: %q", stdout.String())
+			}
+		})
+	}
+}
+
 func TestRunMapsCanceledCommandContextToInterrupt(t *testing.T) {
 	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
 	dependencies.context = func() (context.Context, context.CancelFunc) {
@@ -366,6 +423,50 @@ func TestRunMapsCanceledCommandContextToInterrupt(t *testing.T) {
 		strings.NewReader(""), &stdout, &stderr, dependencies,
 	)
 	if code != 130 || !strings.Contains(stderr.String(), "run failed") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestRunCancelsWhileWaitingForInstruction(t *testing.T) {
+	for _, interactive := range []bool{true, false} {
+		t.Run(fmt.Sprintf("interactive=%t", interactive), func(t *testing.T) {
+			reader, writer := io.Pipe()
+			defer reader.Close()
+			defer writer.Close()
+			dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
+			dependencies.isTerminal = func(io.Reader) bool { return interactive }
+			dependencies.context = func() (context.Context, context.CancelFunc) {
+				ctx, cancel := context.WithCancel(context.Background())
+				go func() {
+					time.Sleep(time.Millisecond)
+					cancel()
+				}()
+				return ctx, cancel
+			}
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(
+				[]string{"run", "--config", newCLIConfig(t, "allow")}, reader,
+				&stdout, &stderr, dependencies,
+			)
+			if code != 130 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "context canceled") {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+		})
+	}
+}
+
+func TestRunBoundsInteractiveInstruction(t *testing.T) {
+	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
+	dependencies.isTerminal = func(io.Reader) bool { return true }
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"run", "--config", newCLIConfig(t, "allow")},
+		strings.NewReader(strings.Repeat("x", maxInstructionBytes+1)+"\n"),
+		&stdout, &stderr, dependencies,
+	)
+	if code != 2 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "instruction exceeds") {
 		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
 	}
 }

@@ -265,8 +265,9 @@ network access ai tool.
 In modalità interattiva, una decisione `prompt` mostra subject, effect,
 workspace, tool e resource necessari alla decisione locale. Le scelte iniziali
 sono deny, allow one-shot e allow per il run quando il contratto lo consente.
-EOF, timeout, cancellazione, input invalido o terminale non interattivo
-equivalgono a deny.
+EOF, input invalido o terminale non interattivo equivalgono a deny. Timeout e
+cancellazione non concedono authority e preservano il relativo terminale del
+run.
 
 Non esiste un flag globale `--yes` nella baseline. L'automazione non interattiva
 deve usare una policy esplicitamente `allow` per le sole classi necessarie.

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"flag"
@@ -94,41 +95,103 @@ func runAgent(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.W
 	if code != 0 || help {
 		return code
 	}
+	ctx, cancel := commandContext(dependencies)
+	defer cancel()
+	interactive := dependencies.isTerminal != nil && dependencies.isTerminal(stdin)
+	input := bufio.NewReader(stdin)
 	instruction := strings.TrimSpace(strings.Join(positionals, " "))
 	if instruction == "" {
-		encoded, err := io.ReadAll(io.LimitReader(stdin, maxInstructionBytes+1))
+		encoded, err := readInstruction(ctx, input, interactive, stderr)
 		if err != nil {
 			fmt.Fprintf(stderr, "read instruction: %v\n", err)
+			if ctx.Err() != nil {
+				return 130
+			}
 			return 2
 		}
-		if len(encoded) > maxInstructionBytes {
-			fmt.Fprintln(stderr, "instruction exceeds 1048576 bytes")
-			return 2
-		}
-		instruction = strings.TrimSpace(string(encoded))
+		instruction = strings.TrimSpace(encoded)
 	}
 	if instruction == "" {
 		fmt.Fprintln(stderr, "maestro run requires an instruction argument or stdin")
 		return 2
 	}
-	ctx, cancel := commandContext(dependencies)
-	defer cancel()
 	configured, err := application.Build(config, dependencies.application)
 	if err != nil {
 		fmt.Fprintf(stderr, "run configuration failed: %v\n", err)
 		return 2
 	}
 	defer closeApplication(configured)
-	result, err := configured.Execute(ctx, instruction)
+	renderer := application.NewProgressRenderer(stderr)
+	if err := renderer.Subscribe(configured.Runtime().EventBus()); err != nil {
+		fmt.Fprintln(stderr, "run setup failed: progress_unavailable")
+		return 1
+	}
+	renderer.RenderLimits(config.AgentLimits())
+	approver := application.NewTerminalApprover(input, stderr, interactive)
+	result, err := configured.ExecuteWithOptions(ctx, instruction, application.ExecuteOptions{Approver: approver})
 	if err != nil {
-		fmt.Fprintf(stderr, "run failed: %v\n", err)
+		fmt.Fprintf(stderr, "run failed: %s\n", runFailureCode(ctx, err))
 		return exitCodeForRunError(ctx, err)
 	}
 	session := result.Session()
+	counters := session.Counters()
 	fmt.Fprintf(stdout, "run\t%s\n", session.Run())
 	fmt.Fprintf(stdout, "terminal\t%s\n", session.Terminal())
+	fmt.Fprintf(stdout, "model_turns\t%d\n", counters.ModelTurns)
+	fmt.Fprintf(stdout, "tool_calls\t%d\n", counters.ToolCalls)
+	fmt.Fprintf(stdout, "input_tokens\t%d\n", counters.InputTokens)
+	fmt.Fprintf(stdout, "output_tokens\t%d\n", counters.OutputTokens)
+	fmt.Fprintln(stdout, "result")
 	fmt.Fprintln(stdout, result.Content())
 	return 0
+}
+
+func readInstruction(ctx context.Context, input *bufio.Reader, interactive bool, stderr io.Writer) (string, error) {
+	type result struct {
+		line string
+		err  error
+	}
+	if interactive {
+		fmt.Fprint(stderr, "instruction: ")
+	}
+	completed := make(chan result, 1)
+	go func() {
+		if interactive {
+			line, err := readBoundedLine(input, maxInstructionBytes)
+			completed <- result{line: line, err: err}
+			return
+		}
+		encoded, err := io.ReadAll(io.LimitReader(input, maxInstructionBytes+1))
+		if err == nil && len(encoded) > maxInstructionBytes {
+			err = errors.New("instruction exceeds 1048576 bytes")
+		}
+		completed <- result{line: string(encoded), err: err}
+	}()
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case value := <-completed:
+		return value.line, value.err
+	}
+}
+
+func readBoundedLine(input *bufio.Reader, maximum int) (string, error) {
+	var value strings.Builder
+	for {
+		fragment, err := input.ReadSlice('\n')
+		if value.Len()+len(fragment) > maximum {
+			return "", errors.New("instruction exceeds 1048576 bytes")
+		}
+		value.Write(fragment)
+		switch {
+		case err == nil:
+			return value.String(), nil
+		case errors.Is(err, bufio.ErrBufferFull):
+			continue
+		default:
+			return "", err
+		}
+	}
 }
 
 func runVersion(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
@@ -229,6 +292,24 @@ func exitCodeForRunError(ctx context.Context, err error) int {
 		return 2
 	}
 	return 1
+}
+
+func runFailureCode(ctx context.Context, err error) string {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "deadline_exceeded"
+	}
+	switch exitCodeForRunError(ctx, err) {
+	case 130:
+		return "canceled"
+	case 3:
+		return "permission_denied"
+	case 4:
+		return "provider_unavailable"
+	case 2:
+		return "invalid_request"
+	default:
+		return "execution_failed"
+	}
 }
 
 func closeApplication(configured *application.Application) {

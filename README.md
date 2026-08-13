@@ -97,6 +97,7 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 51. `milestone-8-development-plan.md`
 52. `configuration.md`
 53. `cli.md`
+54. `operational-experience.md`
 
 ---
 
@@ -328,10 +329,14 @@ contract e audit — è completata da ADR-0026. Design e sequenza sono descritti
 La Fase 2 è completata: `configs/maestro.example.yaml` definisce il primo
 contratto YAML strict e la CLI espone `doctor`, `models`, `agents`, `run` e
 `version` con target espliciti ed exit code stabili. `doctor` usa soltanto probe
-read-only e non invoca il modello; `run` attraversa Agent e Tool Runtime. Le
-approvazioni interattive e il rendering operativo avanzato appartengono alla
-Fase 3. I contratti sono descritti in `docs/configuration.md` e `docs/cli.md`;
-il gate è registrato in `docs/reports/milestone-8-phase-2.md`.
+read-only e non invoca il modello; `run` attraversa Agent e Tool Runtime.
+
+La Fase 3 è completata con un Approver terminale fail-closed, progress redatto
+per piano/step/contatori, cancellazione e un terminale finale separato dal
+contenuto. Le scelte sono deny, one-shot e grant exact-action per il run; non
+esiste `--yes`. I contratti sono descritti in `docs/configuration.md`,
+`docs/cli.md` e `docs/operational-experience.md`; i gate sono registrati nei
+report delle Fasi 2–3.
 
 Uso essenziale:
 

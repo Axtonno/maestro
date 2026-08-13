@@ -2,7 +2,7 @@
 
 Versione schema: 1
 
-Stato: Implementato — Milestone 8, Fase 2
+Stato: Implementato — Milestone 8, Fasi 2–3
 
 Data: 2026-08-13
 
@@ -109,9 +109,11 @@ policy:
 del workspace selezionato. Le classi workspace valgono soltanto per tool
 inclusi esplicitamente e action sul workspace `laravel`.
 
-Nella Fase 2 non esiste ancora un Approver terminale: `prompt` produce quindi
-deny e `maestro run` termina con exit code 3. L'approvazione interattiva è il
-primo obiettivo della Fase 3. Non esiste auto-approval.
+Con un TTY attendibile, `prompt` mostra le action preparate e accetta deny,
+allow one-shot o allow per la stessa action durante il run. EOF, input invalido
+e modalità non interattiva negano in sicurezza; cancellazione e deadline non
+concedono authority e interrompono il run. Non esiste auto-approval né un flag
+globale `--yes`.
 
 ## `limits`
 
@@ -125,7 +127,7 @@ Tutti i limiti sono obbligatori e devono rispettare i bound di `pkg/agent`:
 - `input_tokens` e `output_tokens`.
 
 Il modello non può aumentarli. `session_bytes` non può essere inferiore a
-`tool_result_bytes`.
+`tool_result_bytes`. `maestro run` li stampa su stderr prima dell'esecuzione.
 
 ## `context`
 
@@ -149,4 +151,3 @@ maestro doctor --config /path/to/config.yaml
 
 Il parsing/configuration failure usa exit code 2. I failure operativi del
 preflight usano exit code 1 e sono rappresentati come check separati.
-

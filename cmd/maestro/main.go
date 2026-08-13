@@ -26,6 +26,7 @@ type commandDependencies struct {
 	application application.Dependencies
 	buildInfo   func() buildinfo.Info
 	context     func() (context.Context, context.CancelFunc)
+	isTerminal  func(io.Reader) bool
 }
 
 func defaultCommandDependencies() commandDependencies {
@@ -35,7 +36,17 @@ func defaultCommandDependencies() commandDependencies {
 		context: func() (context.Context, context.CancelFunc) {
 			return signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		},
+		isTerminal: isTerminalReader,
 	}
+}
+
+func isTerminalReader(reader io.Reader) bool {
+	file, ok := reader.(*os.File)
+	if !ok {
+		return false
+	}
+	info, err := file.Stat()
+	return err == nil && info.Mode()&os.ModeCharDevice != 0
 }
 
 func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {

@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: In corso — Fasi 1–2 completate
+Stato: In corso — Fasi 1–3 completate
 
 Obiettivo:
 
@@ -554,7 +554,7 @@ Fasi previste:
 |---|---|---|
 | 1 | Release contract e audit | Completata |
 | 2 | Configurazione e CLI minima | Completata |
-| 3 | Esperienza operativa | Da avviare |
+| 3 | Esperienza operativa | Completata |
 | 4 | Packaging e installazione | Da avviare |
 | 5 | Validazione live e release candidate | Da avviare |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare |
@@ -574,9 +574,15 @@ e prova d'installazione da ambiente pulito.
 La Fase 2 consegna il loader YAML strict `version: 1`, la composition
 applicativa e i cinque comandi minimi. Doctor esegue soltanto preflight
 read-only; models e agents non selezionano target; run attraversa Agent e Tool
-Runtime con policy e hard limit configurati. `prompt` resta deny fino
-all'Approver terminale della Fase 3. Il report è
+Runtime con policy e hard limit configurati. Il report è
 `reports/milestone-8-phase-2.md`.
+
+La Fase 3 rende `maestro run` controllabile dal terminale: mostra limiti,
+piano, step, contatori e terminale tramite eventi redatti; l'Approver offre
+deny, one-shot e grant exact-action per il run, fallendo chiuso su EOF, input
+invalido o no-TTY. stdout contiene soltanto il risultato stabile, stderr
+contiene progresso e interazione; SIGINT cancella il run. Il report è
+`reports/milestone-8-phase-3.md`.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

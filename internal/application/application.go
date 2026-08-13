@@ -44,6 +44,10 @@ type Application struct {
 	runID     func() (pkgAgent.RunID, error)
 }
 
+type ExecuteOptions struct {
+	Approver pkgTool.Approver
+}
+
 func Build(config productconfig.Config, dependencies Dependencies) (*Application, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -141,6 +145,10 @@ func AgentDescriptors() []pkgAgent.Descriptor {
 }
 
 func (application *Application) Execute(ctx context.Context, instruction string) (pkgAgent.RunResult, error) {
+	return application.ExecuteWithOptions(ctx, instruction, ExecuteOptions{})
+}
+
+func (application *Application) ExecuteWithOptions(ctx context.Context, instruction string, options ExecuteOptions) (pkgAgent.RunResult, error) {
 	if strings.TrimSpace(instruction) == "" {
 		return pkgAgent.RunResult{}, fmt.Errorf("instruction is blank: %w", pkgAgent.ErrInvalidRequest)
 	}
@@ -180,6 +188,7 @@ func (application *Application) Execute(ctx context.Context, instruction string)
 				Estimator: "context.utf8-estimator",
 			},
 			Tools:     application.config.ToolIDs(),
+			Approver:  options.Approver,
 			Streaming: application.config.Agent.Streaming,
 			Workspace: &application.workspace,
 		},

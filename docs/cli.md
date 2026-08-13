@@ -1,6 +1,6 @@
 # Maestro v0.1 CLI
 
-Stato: Implementato — Milestone 8, Fase 2
+Stato: Implementato — Milestone 8, Fasi 2–3
 
 Data: 2026-08-13
 
@@ -79,9 +79,28 @@ Il comando carica e avvia il plugin Laravel, ottiene il Workspace autorevole,
 indicizza il contesto, costruisce una query lessicale, crea una `RunRequest` con
 target e hard limit configurati e invoca `Agent Runtime.Run`.
 
-Il risultato iniziale stampa run ID, terminale e contenuto finale. Piano e UX
-interattiva avanzata appartengono alla Fase 3. Una policy `prompt` viene negata
-in sicurezza finché non è disponibile l'Approver terminale.
+Prima del run, stderr mostra i limiti configurati. Durante l'esecuzione mostra
+eventi sintetici di sessione, piano, step, permission, contatori e terminale.
+Questi eventi derivano esclusivamente dalle allowlist pubbliche e non includono
+istruzione, prompt, contenuti, arguments o output tool.
+
+stdout è riservato al risultato stabile:
+
+```text
+run\trun-...
+terminal\tcompleted
+model_turns\t1
+tool_calls\t0
+input_tokens\t...
+output_tokens\t...
+result
+<contenuto finale>
+```
+
+Su terminale interattivo una policy `prompt` attiva l'Approver descritto in
+`operational-experience.md`. Con stdin non interattivo non viene chiesta
+approvazione: la decisione è deny. Per automazione occorre configurare
+esplicitamente `allow` soltanto sulle classi necessarie; non esiste `--yes`.
 
 ## `version`
 
@@ -106,8 +125,9 @@ artifact di release dovranno incorporare `v0.1.0` e il commit durante la Fase 4.
 
 # Stream e redazione
 
-Output ordinario va su stdout; usage error e failure vanno su stderr. Doctor
-usa reason code sintetici e non stampa secret, prompt, contenuti, arguments o
-root. `run` stampa intenzionalmente il contenuto finale del modello all'utente
-locale; eventi e report continuano a usare le allowlist redatte della Milestone
-7.
+Output finale ordinario va su stdout; progress, approval, usage error e failure
+vanno su stderr. I failure di run usano codici sintetici e non serializzano la
+catena d'errore esterna. Doctor non stampa secret, prompt, contenuti, arguments
+o root. `run` stampa intenzionalmente il solo contenuto finale del modello
+all'utente locale; eventi e report continuano a usare le allowlist redatte
+della Milestone 7.
