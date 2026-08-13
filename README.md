@@ -312,12 +312,15 @@ invocation; uno scenario deterministico completa read, patch, refresh e
 risposta finale senza rete.
 
 Il gate post-Milestone 7 accetta questa baseline ingegneristica e registra il
-percorso mancante verso un prodotto pubblico. La Milestone 8 è ora progettata
+percorso mancante verso un prodotto pubblico. Il verdetto dà GO alla Milestone
+8, ora progettata
 attorno alla productization per v0.1.0: configurazione YAML strict, CLI minima
 `doctor`, `models`, `agents`, `run` e `version`, approval terminale, quick start
 Laravel, packaging, security model e validazione live. La matrice llama.cpp
-resta il prerequisito operativo pendente della Milestone 3. Design e sequenza
-sono descritti in `docs/release-readiness-audit.md`,
+resta il prerequisito operativo pendente della Milestone 3 perché il relativo
+report non è presente nella baseline Git disponibile. La Fase 1 — release
+contract e audit — è completata da ADR-0026. Design e sequenza sono descritti in
+`docs/release-readiness-audit.md`, `docs/adr/ADR-0026.md`,
 `docs/milestone-8-design.md` e `docs/milestone-8-development-plan.md`.
 
 Uso essenziale:

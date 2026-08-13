@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Gate post-Milestone 7 completato — release non ancora pronta
+Stato: GO alla Milestone 8 — release non ancora pronta
 
 Data: 2026-08-13
 
@@ -31,11 +31,14 @@ Questo audit usa come evidenza primaria:
 
 # Verdetto
 
+**GO alla Milestone 8**, con un perimetro ridefinito intorno alla v0.1.0.
+
 La Milestone 7 supera il gate post-milestone come baseline ingegneristica. Tool
 System e Agent System sono composti, bounded, default-deny e verificati nello
 scenario deterministico `read -> patch -> reindex -> final`.
 
-La v0.1.0 non è ancora pronta. Il runtime è consumabile da codice Go e la CLI
+Il GO autorizza il percorso di productization, non la pubblicazione. La v0.1.0
+non è ancora pronta. Il runtime è consumabile da codice Go e la CLI
 espone i benchmark, ma manca ancora il percorso di prodotto che trasformi i
 contratti esistenti in un'esperienza installabile, configurabile e riproducibile
 da un utilizzatore esterno.
@@ -197,6 +200,12 @@ Restano da validare prima della release candidate:
 - comportamento di `doctor`, help, version e codici di uscita sul sistema
   dichiarato supportato.
 
+Nel repository corrente e nella cronologia Git disponibile non è presente un
+report `milestone-3-live-llamacpp-validation.md`. Le decisioni successive che
+indicano la matrice llama.cpp come completata non sono quindi verificabili dalla
+baseline locale: prima del gate release occorre recuperare il report oppure
+rieseguire la matrice.
+
 Il gate Ollama già completato resta valido. Il caso negativo
 `qwen2.5-coder:7b` e la fixture positiva `llama3.1:8b` devono rimanere
 documentati senza trasformare una capability dichiarata in supporto implicito.
@@ -207,13 +216,18 @@ documentati senza trasformare una capability dichiarata in supporto implicito.
 
 - La Milestone 7 è accettata e non viene riaperta.
 - La prima parte della Milestone 8 è ridefinita come productization per v0.1.0.
-- Ollama e llama.cpp sono i provider locali candidati al supporto ufficiale;
-  llama.cpp lo diventa soltanto dopo la matrice live verde.
+- La piattaforma ufficiale iniziale è Linux `amd64`; altri target restano
+  sperimentali finché non superano una prova documentata.
+- Ollama con `llama3.1:8b` e `embeddinggemma:latest` è il percorso locale già
+  validato; `qwen2.5-coder:7b` resta il caso negativo canonico per tool calling.
+- llama.cpp è candidato al supporto ufficiale e lo diventa soltanto dopo la
+  presenza e la verifica della matrice live verde.
 - Se la matrice llama.cpp non può essere completata, la release richiede una
   decisione esplicita di scope e la classificazione dell'adapter come
   sperimentale; non è consentito lasciare lo stato ambiguo.
 - SDK stabile, plugin/tool terzi, sandbox, memoria persistente, multi-agent,
   shell/Git/Docker e selezione automatica restano fuori dalla v0.1.0.
+- ADR-0026 rende vincolanti il perimetro, il supporto iniziale e i gate.
 
 ---
 
@@ -242,4 +256,3 @@ Dopo la release candidate sono inoltre obbligatori:
 - verifica checksum e `maestro version`;
 - nessun blocker noto di severità release e nessuna credenziale negli artifact;
 - note di release con capability supportate, limiti e problemi noti.
-

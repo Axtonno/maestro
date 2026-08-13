@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: Progettata — implementazione non avviata
+Stato: In corso — Fase 1 completata
 
 Obiettivo:
 
@@ -552,23 +552,24 @@ Fasi previste:
 
 | Fase | Ambito | Stato |
 |---|---|---|
-| 0 | Gate post-Milestone 7 | Completata |
-| 1 | Contratti di prodotto e configurazione | Da avviare |
-| 2 | Composition applicativa e diagnostica | Da avviare |
-| 3 | CLI di discovery e metadata | Da avviare |
-| 4 | Run, policy, approval e quick start Laravel | Da avviare |
-| 5 | Packaging, documentazione e compatibility audit | Da avviare |
-| 6 | Validazione live, RC e installazione pulita | Da avviare |
+| 1 | Release contract e audit | Completata |
+| 2 | Configurazione e CLI minima | Da avviare |
+| 3 | Esperienza operativa | Da avviare |
+| 4 | Packaging e installazione | Da avviare |
+| 5 | Validazione live e release candidate | Da avviare |
+| 6 | Documentazione pubblica e v0.1.0 | Da avviare |
 
 La CLI minima comprende `doctor`, `models`, `agents`, `run` e `version`. La
 configurazione versionata rende espliciti provider, modello, workspace, agente,
 policy, tool e limiti. Il percorso ufficiale usa il reference agent, i
 workspace tool built-in e il plugin Laravel.
 
-La matrice live llama.cpp è una track parallela e un prerequisito della release
-candidate, salvo decisione esplicita che delimiti l'adapter come sperimentale.
-La pubblicazione richiede inoltre artifact versionato, checksum, licenza,
-security model, quick start live e prova d'installazione da ambiente pulito.
+La Fase 1 ha prodotto audit, design e ADR-0026. Il report live llama.cpp indicato
+da decisioni successive non è presente nella baseline Git disponibile: la Fase
+5 deve recuperarlo e verificarlo o rieseguire la matrice, salvo decisione
+esplicita che delimiti l'adapter come sperimentale. La pubblicazione richiede
+inoltre artifact versionato, checksum, licenza, security model, quick start live
+e prova d'installazione da ambiente pulito.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
@@ -605,6 +606,7 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - context-engine-development-plan.md
 - agent-system-design.md
 - agent-system-development-plan.md
+- adr/ADR-0026.md
 - release-readiness-audit.md
 - milestone-8-design.md
 - milestone-8-development-plan.md

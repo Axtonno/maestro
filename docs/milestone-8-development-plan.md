@@ -1,8 +1,8 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Proposto — implementazione non avviata
+Stato: Approvato — Fase 1 completata, Fasi 2–6 da avviare
 
 Data: 2026-08-13
 
@@ -10,6 +10,7 @@ Documenti di riferimento:
 
 - `release-readiness-audit.md`;
 - `milestone-8-design.md`;
+- `adr/ADR-0026.md`;
 - `reports/milestone-7-final.md`.
 
 ---
@@ -17,23 +18,12 @@ Documenti di riferimento:
 # Obiettivo operativo
 
 Consegnare v0.1.0 come primo percorso installabile e controllato per eseguire
-il reference agent di Maestro su un progetto locale reale, chiudendo prima
-della release il debito live della Milestone 3 oppure delimitandolo tramite una
-decisione di scope esplicita.
+il reference agent di Maestro su un progetto locale reale.
 
----
-
-# Regole di esecuzione
-
-- Le fasi 1–5 sono incrementi implementativi; la Fase 6 è il gate di release.
-- Ogni fase termina con test, documentazione e un report sotto `docs/reports/`.
-- Nessuna fase può introdurre default impliciti per provider, modello,
-  workspace, agente o policy.
-- Nessun comando può aggirare Provider, Context, Tool o Agent Runtime.
-- I test live sono separati dai gate deterministici e richiedono configurazione
-  esplicita; la loro assenza non deve produrre un falso PASS.
-- La matrice llama.cpp può procedere mentre vengono implementate le prime fasi,
-  ma è un prerequisito della release candidate salvo decisione di scope.
+Il gate ha dato GO alla Milestone 8, non alla release. La milestone termina
+soltanto quando un nuovo utilizzatore può installare un artifact, configurarlo,
+diagnosticarlo ed eseguire il percorso Laravel live senza usare il checkout di
+sviluppo o conoscere le API Go interne.
 
 ---
 
@@ -41,371 +31,468 @@ decisione di scope esplicita.
 
 | Fase | Titolo | Stato | Dipende da |
 |---|---|---|---|
-| 0 | Gate post-Milestone 7 | Completata | Milestone 7 |
-| 1 | Contratti di prodotto e configurazione | Da avviare | Fase 0 |
-| 2 | Composition applicativa e diagnostica | Da avviare | Fase 1 |
-| 3 | CLI di discovery e metadata | Da avviare | Fase 2 |
-| 4 | Run, policy, approval e quick start Laravel | Da avviare | Fasi 2–3 |
-| 5 | Packaging, documentazione pubblica e compatibility audit | Da avviare | Fasi 1–4 |
-| 6 | Validazione live, release candidate e installazione pulita | Da avviare | Fasi 1–5 e matrice llama.cpp |
+| 1 | Release contract e audit | Completata | Milestone 7 |
+| 2 | Configurazione e CLI minima | Da avviare | Fase 1 |
+| 3 | Esperienza operativa | Da avviare | Fase 2 |
+| 4 | Packaging e installazione | Da avviare | Fasi 2–3 |
+| 5 | Validazione live e release candidate | Da avviare | Fasi 2–4 |
+| 6 | Documentazione pubblica e v0.1.0 | Da avviare | Fasi 1–5 |
 
-La Fase 0 è documentata in `release-readiness-audit.md` e non richiede un
-ulteriore report.
-
----
-
-# Track live parallela — chiusura Milestone 3
-
-## Obiettivo
-
-Eseguire su llama.cpp la matrice già completata per Ollama, idealmente con lo
-stesso modello base Llama 3.1, per distinguere comportamento del modello da
-differenze del runtime provider.
-
-## Attività
-
-- registrare versione di llama.cpp, modalità server/router, hardware e modelli;
-- eseguire integration suite con listing, completion, streaming,
-  cancellazione, embedding e, quando disponibile, discovery/lifecycle;
-- eseguire `maestro bench smoke --provider llama.cpp` con mutation guard
-  disabilitata salvo ambiente sacrificabile;
-- verificare structured output, tool calling non-stream e streaming;
-- classificare ogni skip come previsto, capability unavailable o gap di
-  fixture;
-- conservare report JSON canonico e Markdown derivato con permessi sicuri;
-- rieseguire suite deterministica, race detector e vet dopo eventuali fix;
-- produrre `reports/milestone-3-live-llamacpp-validation.md` e report finale
-  della Milestone 3.
-
-## Gate
-
-- zero failure negli scenari obbligatori per le capability dichiarate e usate
-  dal reference agent;
-- cleanup e assenza di mutazioni non autorizzate;
-- differenze version-sensitive documentate;
-- nessuna regressione su Ollama;
-- Milestone 3 formalmente chiusa.
-
-Se l'ambiente live non consente di completare il gate, prima della RC deve
-essere approvata una decisione che classifichi llama.cpp sperimentale nella
-v0.1.0 e delimiti comandi, documentazione e supporto. Il semplice rinvio non è
-un esito valido.
+Le fasi sono sequenziali rispetto al gate, ma documentazione e test vengono
+aggiornati in ogni incremento. Ogni fase produce un report sotto
+`docs/reports/`; la Fase 6 produce anche `reports/milestone-8-final.md`.
 
 ---
 
-# Fase 1 — Contratti di prodotto e configurazione
+# Regole di esecuzione
+
+- Nessun comando può aggirare Provider, Context, Tool o Agent Runtime.
+- Provider, modello, workspace, agente, policy, tool set e limiti restano
+  espliciti.
+- L'assenza di configurazione o capability richiesta è un errore osservabile,
+  non un fallback implicito.
+- I test live sono separati dai gate deterministici e richiedono configurazione
+  esplicita; la loro assenza non produce PASS.
+- Nessuna fase anticipa sandbox, multi-agent, recovery, shell o packaging di
+  estensioni terze.
+- Una fase non è completata dalla sola presenza del codice: servono test,
+  documentazione e verifica dei criteri di uscita.
+
+---
+
+# Fase 1 — Release contract e audit
+
+Stato: Completata.
 
 ## Obiettivo
 
-Definire e implementare il confine strict tra input utente e composition root,
-senza ancora eseguire un agente dalla CLI.
+Definire formalmente ciò che v0.1.0 promette e ciò che esclude, trasformando il
+risultato della Milestone 7 in criteri di prodotto verificabili.
 
-## Sviluppo
+## Decisioni registrate
 
-- introdurre tipi di configurazione prodotto separati da `runtime.Config`;
-- implementare schema YAML `version: 1` e decoder strict;
-- definire risoluzione `--config`, `MAESTRO_CONFIG`, XDG senza merge implicito;
+- piattaforma ufficiale iniziale: Linux `amd64`;
+- provider ufficiale già validato: Ollama;
+- fixture positiva: `llama3.1:8b` per chat/tool calling e
+  `embeddinggemma:latest` per embedding;
+- caso negativo canonico: `qwen2.5-coder:7b` per tool calling;
+- llama.cpp candidato e condizionato alla presenza della matrice live;
+- CLI e configurazione pubbliche ma sperimentali nella serie 0.x;
+- runtime, tool, agenti e plugin built-in trusted in-process;
+- configuration contract YAML strict `version: 1`;
+- esclusioni e criteri di accettazione della release.
+
+## Evidenza llama.cpp
+
+Il repository e la cronologia Git disponibili non contengono il report
+`reports/milestone-3-live-llamacpp-validation.md`. Le indicazioni esterne di
+completamento non possono essere certificate da questa baseline. La Fase 5
+deve recuperare e verificare il report oppure rieseguire la matrice; in assenza
+di entrambe, una decisione esplicita deve classificare llama.cpp sperimentale.
+
+## Deliverable
+
+- `docs/release-readiness-audit.md`;
+- `docs/milestone-8-design.md`;
+- `docs/adr/ADR-0026.md`;
+- riallineamento iniziale di roadmap, README e `MAESTRO_CONTEXT.md`.
+
+## Gate di uscita
+
+- GO alla Milestone 8 esplicito;
+- support matrix iniziale e limiti di sicurezza definiti;
+- contratti sperimentali e ambiti esclusi dichiarati;
+- release gate e prova pulita descritti;
+- nessun requisito di sandbox, ecosistema o SDK stabile nascosto nel piano.
+
+Gate: **superato**.
+
+---
+
+# Fase 2 — Configurazione e CLI minima
+
+Stato: Da avviare.
+
+## Obiettivo
+
+Implementare esclusivamente il percorso necessario per configurare,
+diagnosticare, ispezionare ed eseguire Maestro dalla CLI.
+
+## Configurazione
+
+- introdurre tipi prodotto separati da `runtime.Config`;
+- implementare un singolo documento YAML con campo obbligatorio `version: 1`;
+- usare parsing strict: campi sconosciuti o duplicati, documenti multipli,
+  alias ciclici e trailing data falliscono;
+- risolvere il file tramite `--config`, `MAESTRO_CONFIG`, poi percorso XDG,
+  senza merge implicito;
 - modellare provider Ollama/llama.cpp, modelli, workspace, agent, tool, policy,
   limiti e context budget;
-- supportare secret soltanto tramite nome di variabile d'ambiente;
-- implementare validazione field-level e cross-field;
-- definire errori tipizzati/reason code e redazione;
-- aggiungere una configurazione di esempio usata dai test e dal quick start;
-- fissare grammatica CLI, help ed exit code in test golden o strutturali.
+- referenziare secret soltanto tramite nome di variabile d'ambiente;
+- applicare validazione field-level e cross-field;
+- produrre errori stabili, redatti e associati al campo.
 
-## Invarianti
+## CLI minima
 
-- campi sconosciuti, duplicati e documenti multipli falliscono;
-- un file esplicitamente richiesto e assente fallisce;
-- nessun secret è memorizzato nel valore serializzabile o stampato;
-- root, URL e target finali sono normalizzati una sola volta e poi immutabili;
-- ogni limite viene validato contro i bound pubblici di Agent/Tool/Context;
-- la config non abilita shell, process, network tool o plugin terzi.
+- `maestro doctor`;
+- `maestro models`;
+- `maestro agents`;
+- `maestro run`;
+- `maestro version`;
+- root help, `help`, `--help` e help di ogni comando coerenti;
+- stdout, stderr e codici di uscita separati e documentati;
+- namespace `bench` esistente conservato.
 
-## Test
+## Composition applicativa
 
-- file minimo valido per Ollama e llama.cpp;
-- versione assente/non supportata, typo, duplicati e trailing document;
-- path relativi/assoluti, symlink e workspace inesistente;
-- durate, budget e cardinalità ai limiti;
-- env secret assente/presente senza leakage;
-- precedenza flag/ambiente/file e nessun merge inatteso;
-- error output stabile e redatto.
-
-## Deliverable
-
-- loader e tipi di configurazione;
-- fixture `configs/maestro.example.yaml`;
-- test del contratto;
-- report `reports/milestone-8-phase-1.md`.
-
-## Gate di uscita
-
-Una configurazione valida descrive senza ambiguità l'intero input di un run;
-una configurazione invalida non costruisce né avvia il runtime.
-
----
-
-# Fase 2 — Composition applicativa e diagnostica
-
-## Obiettivo
-
-Costruire da configurazione i servizi ufficiali e fornire un preflight
-read-only capace di spiegare ogni blocker operativo.
-
-## Sviluppo
-
-- creare un application builder per composition root, provider e plugin;
-- registrare esclusivamente l'adapter provider selezionato;
-- caricare il plugin Laravel quando richiesto e ottenere il Workspace pubblico;
-- compilare la policy di prodotto sulle PermissionRequest concrete;
-- costruire query, budget, estimator e `RunRequest` senza eseguirla;
-- implementare check diagnostici indipendenti e ordinati;
-- distinguere check locali da probe provider read-only;
+- costruire composition root, provider, plugin Laravel e policy dalla config;
+- registrare soltanto il provider selezionato;
+- ottenere il Workspace dal plugin Laravel quando richiesto;
+- costruire query, budget e `RunRequest` con target immutabili;
 - applicare timeout e shutdown bounded anche su failure parziale;
-- rendere gli output diagnostici redatti e testabili.
+- mantenere parsing/rendering separati dai servizi per consentire test senza
+  terminale o provider reale.
 
-## Invarianti
+## Semantica dei comandi
 
-- build e doctor non invocano completion/embedding e non mutano cataloghi;
-- discovery non seleziona automaticamente provider o modello;
-- una failure non nasconde check indipendenti successivi;
-- plugin e runtime vengono fermati se erano stati avviati;
-- la root non entra in eventi o richieste modello;
-- nessuna policy permissiva viene registrata per default.
+### `doctor`
 
-## Test
+Valida schema, workspace, provider, modelli, capability, plugin, agent, tool,
+policy e limiti. I probe provider sono read-only; non invoca il modello, non
+carica/rimuove modelli e non modifica il workspace. Ogni check produce
+`pass`, `warn`, `fail` o `skip` senza nascondere i check indipendenti.
 
-- composition Ollama e llama.cpp con trasporti in-memory;
-- provider/model mismatch e capability mancante;
-- Laravel valido, non rilevato e non leggibile;
-- agent/tool/policy assenti;
-- timeout, cancellazione e cleanup dopo failure;
-- prova negativa di assenza di model call e mutation;
-- output senza API key, prompt, contenuto o root non necessaria.
+### `models`
 
-## Deliverable
+Interroga soltanto il provider esplicito, elenca modelli e capability
+osservabili e non sceglie, carica, scarica o rimuove modelli.
 
-- application builder;
-- servizio doctor e check catalog;
-- documentazione diagnostica;
-- report `reports/milestone-8-phase-2.md`.
+### `agents`
 
-## Gate di uscita
+Elenca descriptor e capability tramite Agent Runtime/Gestor. Deve includere
+`agent.reference` e non eseguire I/O provider.
 
-Lo stesso input che verrà usato da `run` può essere validato end-to-end senza
-effetti e con una diagnosi actionable.
+### `run`
 
----
+Riceve l'istruzione come argomento o stdin, carica il workspace, indicizza il
+contesto, registra la policy e invoca `Agent Runtime.Run`. La Fase 2 consegna il
+percorso funzionale; rendering interattivo e UX completa vengono consolidati
+nella Fase 3.
 
-# Fase 3 — CLI di discovery e metadata
+### `version`
 
-## Obiettivo
+Stampa versione semantica e commit. I release build devono restituire
+esattamente la versione del tag e non un valore vuoto o `(devel)`.
 
-Consegnare una shell non interattiva coerente per help, diagnosi, cataloghi e
-identità dell'artifact.
+## Exit code iniziali
 
-## Sviluppo
-
-- sostituire il comportamento root implicito con help contrattualizzato;
-- implementare `doctor`, `models`, `agents` e `version`;
-- mantenere il namespace `bench` esistente e compatibile;
-- introdurre metadata build per versione e commit;
-- separare stdout, stderr e exit status;
-- gestire segnali e timeout per i probe;
-- documentare output umano ed eventuali reason code machine-readable;
-- aggiungere test da binario oltre ai test della funzione `run`.
+| Codice | Significato |
+|---:|---|
+| 0 | Operazione completata |
+| 1 | Failure operativa o run non completed |
+| 2 | Uso CLI o configurazione non valida |
+| 3 | Permission negata o approval non disponibile |
+| 4 | Provider, modello o capability non disponibile |
+| 130 | Cancellazione tramite interrupt |
 
 ## Invarianti
 
 - help e version non richiedono configurazione;
-- agents non effettua I/O provider;
-- models usa un solo provider esplicito e non muta il catalogo;
-- nessun comando diagnostico chiede approval;
-- gli artifact di release non riportano `(devel)` o versione vuota.
+- doctor non produce model call o mutation;
+- models e agents non selezionano target impliciti;
+- un file esplicitamente richiesto e assente fallisce;
+- nessun secret appare nel valore serializzabile, negli errori o nell'output;
+- la CLI usa `Agent Runtime.Run` e non invoca direttamente istanze tool;
+- nessuna policy permissiva è registrata per default.
 
 ## Test
 
-- root help, alias help e help per ogni comando;
-- comando sconosciuto e flag invalido;
-- config assente per comandi che la richiedono;
+- configurazioni minime Ollama e llama.cpp;
+- versione config assente/non supportata, typo, duplicati e trailing document;
+- path, URL, ID, durate, cardinalità e budget ai limiti;
+- env secret assente/presente senza leakage;
+- precedenza flag/ambiente/file;
+- help, comando sconosciuto e flag invalido;
+- doctor con failure multiple e assenza di effetti;
 - models ordinato, endpoint failure e capability unavailable;
-- agents contiene `agent.reference` e non esegue run;
-- version development/release con commit;
-- exit code 0/1/2/4 e interrupt.
+- agents senza I/O e con reference agent;
+- run deterministico read-only e mutante tramite provider scripted;
+- version development/release ed exit code 0/1/2/3/4/130.
 
 ## Deliverable
 
-- quattro comandi di prodotto;
-- metadata build;
-- reference CLI aggiornata;
+- loader e tipi di configurazione;
+- application builder;
+- cinque comandi minimi;
+- metadata di build;
+- test del contratto CLI/config;
+- report `reports/milestone-8-phase-2.md`.
+
+## Gate di uscita
+
+Un utilizzatore può descrivere un run senza leggere codice Go, validare la
+configurazione, ispezionare modelli/agenti ed eseguire il reference agent dal
+binario di sviluppo con target e codici di uscita deterministici.
+
+---
+
+# Fase 3 — Esperienza operativa
+
+Stato: Da avviare.
+
+## Obiettivo
+
+Rendere comprensibili e controllabili dal terminale le capacità esistenti,
+senza ampliare l'autorità del runtime.
+
+## Sviluppo
+
+- implementare Approver terminale cancellabile;
+- mostrare una sintesi delle action concrete prima dell'approvazione;
+- offrire deny, allow one-shot e allow per il run quando valido;
+- negare su EOF, timeout, input invalido, assenza di TTY o approver;
+- visualizzare piano, stato step, contatori e limiti in forma sintetica;
+- distinguere progresso, risultato finale, terminale ed errori;
+- gestire SIGINT e shutdown bounded;
+- redigere output e diagnostiche per evitare esposizione implicita di prompt,
+  contenuti workspace, arguments, output tool, API key o root assoluta;
+- mantenere un output non interattivo deterministico per automazione;
+- evitare un flag globale `--yes` nella baseline.
+
+## Invarianti
+
+- approval non fabbrica permit e non aggira Tool Runtime;
+- prompt senza input attendibile equivale a deny;
+- allow one-shot non sopravvive alla action;
+- allow run non sopravvive al run o al processo;
+- provider, modello, workspace, agente, policy e limiti non cambiano durante il
+  run;
+- il modello non può modificare piano visualizzato senza una revisione valida;
+- cancellazione non promette rollback di effetti già iniziati;
+- l'output umano può mostrare localmente ciò che serve ad approvare, ma eventi
+  e report mantengono le allowlist redatte.
+
+## Test
+
+- approval one-shot e run-scoped;
+- deny esplicito, EOF, no TTY, timeout e input invalido;
+- action cambiata dopo approval e replay del grant;
+- piano con transizioni, terminale completed e terminali di failure;
+- SIGINT prima/durante model call e tool call;
+- hard limit di durata, turni, tool, token e byte;
+- stdout/stderr separati e assenza di dati sensibili;
+- observer in errore/panic senza corruzione dello stato.
+
+## Deliverable
+
+- Approver terminale;
+- renderer di piano/stato/terminale;
+- gestione cancellazione e non-interactive mode;
+- documentazione dell'UX operativa;
 - report `reports/milestone-8-phase-3.md`.
 
 ## Gate di uscita
 
-Un utilizzatore può installare un build di sviluppo, ottenere help, validare la
-configurazione e ispezionare provider e agent senza leggere il codice.
+Un utente comprende cosa Maestro intende fare, può negare o approvare l'effetto,
+può cancellare il run e riceve un terminale chiaro senza leakage implicito.
 
 ---
 
-# Fase 4 — Run, policy, approval e quick start Laravel
+# Fase 4 — Packaging e installazione
+
+Stato: Da avviare.
 
 ## Obiettivo
 
-Esporre il reference agent tramite il percorso CLI ufficiale e dimostrare un
-run controllato su Laravel.
+Produrre un release candidate installabile fuori dal repository e ripetibile
+dallo stesso commit.
 
 ## Sviluppo
 
-- implementare `maestro run` con istruzione da argomento o stdin;
-- indicizzare il workspace e costruire context/query entro budget;
-- registrare policy compilata dalla configurazione;
-- implementare Approver terminale cancellabile;
-- mostrare action locali sufficienti alla decisione senza loggarle negli eventi;
-- negare prompt in assenza di TTY/approver;
-- renderizzare progresso bounded, risultato e terminale;
-- gestire SIGINT, shutdown e stale refresh;
-- creare quick start versionato sulla fixture Laravel;
-- aggiungere scenari deterministici CLI read-only, allow, prompt/deny e patch.
+- definire build riproducibile del binario Linux `amd64`;
+- incorporare versione e commit;
+- produrre archivio e checksum SHA-256;
+- includere licenza e documenti richiesti nell'archive/source release;
+- creare procedura di installazione, verifica, upgrade e uninstall;
+- aggiungere `configs/maestro.example.yaml` coerente con lo schema;
+- includere o materializzare una fixture Laravel versionata e priva di secret;
+- creare uno script/gate che non dipenda da file non tracciati;
+- verificare contenuto artifact e assenza di credenziali/path utente;
+- classificare sperimentali eventuali artifact non Linux `amd64`.
 
 ## Invarianti
 
-- la CLI chiama soltanto `Agent Runtime.Run` e non istanze tool;
-- provider, modello, workspace, agente, policy e tool set sono visibili e
-  immutabili per il run;
-- nessuna scelta del modello aumenta i limiti;
-- prompt senza input valido è deny;
-- allow one-shot non sopravvive alla action e allow run non sopravvive al run;
-- la mutazione usa digest precondition e il run non completa su contesto stale;
-- cancellazione non promette rollback di effetti già iniziati.
+- tag, `maestro version`, nome artifact e note RC coincidono;
+- il binario non dipende dal checkout o dalla directory corrente;
+- la configurazione di esempio non contiene secret o default permissivi;
+- l'artifact non scarica modelli/plugin durante installazione;
+- la fixture non contiene dipendenze installate o dati utente;
+- la build non dichiara supportata una piattaforma non provata.
 
-## Test
+## Verifiche
 
-- run read-only completed con provider scripted;
-- patch approvata one-shot, digest valido, reindex e final;
-- deny esplicito, EOF, no TTY, timeout e SIGINT;
-- action cambiata dopo approval e grant replay;
-- provider/tool failure con exit code corretto;
-- redazione di eventi e diagnostiche non verbose;
-- Laravel detection, index, read e patch dalla CLI.
-
-## Deliverable
-
-- comando `run`;
-- policy compiler e terminal Approver;
-- `docs/quick-start.md`;
-- report `reports/milestone-8-phase-4.md`.
-
-## Gate di uscita
-
-Il percorso deterministico CLI completa `read -> patch -> reindex -> final` su
-Laravel con policy e approval espliciti e senza bypass del runtime.
-
----
-
-# Fase 5 — Packaging, documentazione pubblica e compatibility audit
-
-## Obiettivo
-
-Produrre un artifact candidato alla release accompagnato da tutti i contratti e
-limiti necessari a un utilizzatore esterno.
-
-## Sviluppo
-
-- scegliere e aggiungere la licenza del progetto con decisione del maintainer;
-- creare security model e canale di segnalazione vulnerabilità;
-- documentare installazione, upgrade, uninstall e checksum;
-- aggiungere note di release e changelog iniziale;
-- produrre build riproducibili con versione/commit incorporati;
-- generare checksum SHA-256 e inventario artifact;
-- dichiarare piattaforme testate e supportate;
-- consolidare gli audit milestone in un compatibility statement v0.1.0;
-- dichiarare sperimentali CLI, config e package pubblici;
-- aggiornare README, roadmap e contesto senza promesse fuori scope.
-
-## Invarianti
-
-- nessuna credenziale o path utente entra negli artifact;
-- il source archive contiene licenza e documentazione referenziata;
-- versione CLI, tag e note di release coincidono;
-- i package `internal/` non sono dichiarati API;
-- sandbox, plugin terzi e recovery non sono descritti come capability presenti.
-
-## Test e verifiche
-
-- build due volte dallo stesso commit e confronto degli artifact dove
-  tecnicamente applicabile;
-- verifica versione e commit incorporati;
-- checksum e contenuto degli archivi;
-- link/documentation audit;
-- `go list`, API diff e compatibility audit;
-- scansione per secret e path locali negli artifact.
+- build ripetuta dallo stesso commit e confronto dove applicabile;
+- verifica checksum;
+- ispezione contenuto archive;
+- esecuzione `version`, help e doctor locale dall'artifact estratto;
+- scansione per secret e path locali;
+- installazione in directory pulita senza repository.
 
 ## Deliverable
 
 - pipeline/script di release;
-- `LICENSE`, security model, quick start, installazione e release notes;
-- `docs/v0.1.0-api-compatibility.md`;
+- artifact RC Linux `amd64` e checksum;
+- configurazione di esempio;
+- fixture Laravel di release;
+- guida d'installazione preliminare;
+- report `reports/milestone-8-phase-4.md`.
+
+## Gate di uscita
+
+Esiste un artifact RC identificabile che un tester può installare e avviare
+senza accesso al checkout di sviluppo.
+
+---
+
+# Fase 5 — Validazione live e release candidate
+
+Stato: Da avviare.
+
+## Obiettivo
+
+Provare l'intero percorso CLI con modelli reali e verificare la release
+candidate come farebbe un nuovo utilizzatore.
+
+## Matrice Ollama
+
+- usare `llama3.1:8b` come fixture positiva chat/tool calling;
+- usare `embeddinggemma:latest` per embedding quando richiesto;
+- eseguire doctor, models, agents e run dall'artifact;
+- completare uno scenario Laravel read-only;
+- completare `read -> patch -> reindex -> final` con approval one-shot;
+- verificare cancellazione, deny, hard limits e shutdown;
+- conservare il caso `qwen2.5-coder:7b` come failure negativa canonica senza
+  promuoverlo a fixture del reference agent.
+
+## Matrice llama.cpp
+
+- cercare/acquisire il report live indicato dalle decisioni successive;
+- verificarne commit, versioni, configurazione, artifact e risultati;
+- se il report non è recuperabile, rieseguire integration e Smoke matrix;
+- coprire listing, discovery disponibile, completion, streaming,
+  cancellazione, embedding, structured output e tool calling;
+- usare idealmente lo stesso modello base Llama 3.1 per isolare il runtime;
+- classificare skip e capability version-sensitive;
+- produrre `reports/milestone-3-live-llamacpp-validation.md`;
+- chiudere formalmente la Milestone 3 oppure adottare prima della RC una
+  decisione che renda llama.cpp sperimentale.
+
+## Installazione pulita
+
+- predisporre un ambiente Linux `amd64` privo del checkout;
+- installare e verificare checksum/versione;
+- creare la configurazione dalla guida pubblica;
+- eseguire l'intero quick start Laravel;
+- verificare file modificato, digest, nuova generazione e terminale completed;
+- ripetere approval deny, no TTY e SIGINT;
+- registrare hardware, versioni e risultati in forma redatta.
+
+## Gate release candidate
+
+- zero failure nello scenario Ollama supportato;
+- capability necessarie del reference agent validate live;
+- llama.cpp allineato con report verificato oppure esplicitamente sperimentale;
+- nessuna mutazione senza permission allow valida;
+- cancellazione e limiti osservati;
+- nessun secret, prompt o contenuto workspace negli eventi/report;
+- CLI completa eseguita dall'artifact installato;
+- nessun blocker di release aperto.
+
+## Deliverable
+
+- report live Ollama agentico;
+- report live llama.cpp verificato o nuovo;
+- report d'installazione pulita;
+- release candidate e checksum aggiornati;
 - report `reports/milestone-8-phase-5.md`.
 
 ## Gate di uscita
 
-Esiste un artifact RC identificabile e verificabile che può essere consegnato a
-un tester senza accesso al checkout di sviluppo.
+La release candidate soddisfa la definizione di prodotto su un modello reale e
+da un ambiente nuovo; la matrice di supporto è basata su evidenze presenti.
 
 ---
 
-# Fase 6 — Validazione live, release candidate e installazione pulita
+# Fase 6 — Documentazione pubblica e v0.1.0
+
+Stato: Da avviare.
 
 ## Obiettivo
 
-Dimostrare che l'artifact, non soltanto il repository, soddisfa la definizione
-di prodotto della v0.1.0.
+Pubblicare un prodotto la cui documentazione, matrice di supporto, artifact e
+comportamento osservato coincidono.
 
-## Prerequisiti
+## Sviluppo
+
+- riscrivere il README intorno a installazione e primo utilizzo;
+- pubblicare quick start riproducibile;
+- pubblicare guida completa alla configurazione `version: 1`;
+- documentare reference agent e scenario Laravel;
+- consolidare security model e canale di segnalazione vulnerabilità;
+- pubblicare compatibility matrix per piattaforma/provider/modello;
+- aggiungere troubleshooting basato sui failure osservati;
+- creare changelog e note v0.1.0;
+- scegliere e aggiungere la licenza con decisione del maintainer;
+- completare compatibility audit dei package pubblici sperimentali;
+- dichiarare esplicitamente gli ambiti esclusi e i known issue;
+- creare tag e artifact finali v0.1.0 con checksum.
+
+## Documenti minimi
+
+- README orientato all'utente;
+- guida installazione;
+- quick start;
+- reference della configurazione;
+- guida reference agent Laravel;
+- security model;
+- compatibility matrix;
+- troubleshooting;
+- changelog e release notes;
+- licenza;
+- `docs/v0.1.0-api-compatibility.md`;
+- `reports/milestone-8-final.md`.
+
+## Invarianti
+
+- nessun documento presenta permission come sandbox;
+- nessun provider/modello/piattaforma è detto supportato senza gate live;
+- `internal/` non è API;
+- i cambi futuri della config richiedono versione schema;
+- SDK stabile, plugin terzi e funzionalità rinviate non vengono promessi;
+- tutti i comandi copiabili corrispondono all'artifact pubblicato.
+
+## Gate di pubblicazione
 
 - Fasi 1–5 completate;
-- matrice llama.cpp verde e Milestone 3 chiusa, oppure decisione esplicita di
-  classificazione sperimentale;
-- gate Ollama precedente ancora valido o rieseguito se adapter/CLI sono cambiati
-  materialmente.
+- suite, race detector, vet, benchmark deterministico e diff check verdi;
+- installazione pulita e quick start ripetuti sull'artifact finale;
+- checksum e `maestro version` verificati;
+- licenza e security model presenti;
+- compatibility matrix coerente con i report live;
+- nessuna credenziale negli artifact;
+- zero blocker release;
+- tag, artifact, changelog e note indicano v0.1.0.
 
-## Esecuzione
+## Gate di uscita
 
-- creare tag release candidate e artifact con checksum;
-- predisporre ambiente pulito sulla piattaforma supportata;
-- installare senza usare il repository di lavoro;
-- eseguire help, version, doctor, models e agents;
-- eseguire quick start Laravel read-only;
-- eseguire patch Laravel con approval one-shot;
-- verificare contenuto, digest, reindex e terminale completed;
-- ripetere il deny non interattivo;
-- raccogliere un report redatto con hardware, provider, modello e versioni;
-- eseguire suite, race detector, vet, benchmark deterministico e diff check;
-- verificare note di release, problemi noti e artifact finali.
-
-## Gate release candidate
-
-- installazione e tutti i comandi minimi funzionano dall'artifact;
-- scenario live agentico completed entro hard limits;
-- nessuna mutazione avviene senza decisione allow valida;
-- nessun secret, prompt o contenuto workspace compare in eventi/report;
-- shutdown e cancellazione sono bounded;
-- documentazione riproduce i comandi osservati;
-- zero blocker di release aperti.
-
-## Deliverable
-
-- report live end-to-end;
-- report di installazione pulita;
-- `reports/milestone-8-final.md`;
-- artifact finali, checksum e note v0.1.0.
+Un nuovo utilizzatore può installare, configurare, diagnosticare ed eseguire
+Maestro seguendo soltanto la documentazione inclusa nella release.
 
 ---
 
 # Gate repository-wide
 
-Ogni fase implementativa deve eseguire almeno:
+Ogni fase implementativa esegue almeno:
 
 ```text
 GOCACHE=/tmp/maestro-go-build go test ./...
@@ -414,14 +501,14 @@ GOCACHE=/tmp/maestro-go-build go vet ./...
 git diff --check
 ```
 
-Le fasi che modificano il loop agentico ripetono inoltre lo scenario autonomo e
-il benchmark deterministico. Le fasi che modificano adapter o composition
-rieseguono i test di integrazione live pertinenti prima della RC.
+Le modifiche al loop ripetono scenario autonomo e benchmark deterministico. Le
+modifiche ad adapter, composition o CLI eseguono i relativi test live prima del
+gate RC. L'assenza di un servizio live produce skip esplicito durante sviluppo,
+mai completamento della Fase 5.
 
 # Definizione di completamento
 
 Milestone 8 e v0.1.0 sono completate soltanto quando codice, artifact,
-documentazione pubblica, audit, matrice live e prova pulita descrivono lo stesso
-prodotto. La sola presenza dei comandi o il solo tag Git non chiudono la
-milestone.
-
+documentazione pubblica, audit, matrici live e prova pulita descrivono lo stesso
+prodotto. La sola presenza dei comandi, di un tag o di un report non verificato
+non chiude la milestone.

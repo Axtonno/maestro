@@ -2,11 +2,11 @@
 
 Versione: 0.1.0
 
-Stato: Proposto — gate post-Milestone 7 completato
+Stato: Approvato — ADR-0026 Accepted
 
 Data: 2026-08-13
 
-Documento di ingresso: `release-readiness-audit.md`.
+Documenti di ingresso: `release-readiness-audit.md` e `adr/ADR-0026.md`.
 
 ---
 
@@ -31,7 +31,8 @@ richiede esplicitamente.
 - CLI minima: `doctor`, `models`, `agents`, `run`, `version`;
 - file di configurazione YAML versionato e strict;
 - selezione esplicita di provider, modello, workspace, agente e policy;
-- composizione ufficiale di Ollama, llama.cpp e plugin Laravel;
+- composizione ufficiale di Ollama e plugin Laravel, più il percorso candidato
+  llama.cpp soggetto al gate live;
 - policy di prodotto e approval terminale;
 - esecuzione del reference agent con hard limits;
 - packaging del binario, checksum e istruzioni di installazione;
@@ -56,6 +57,25 @@ richiede esplicitamente.
 
 I comandi `maestro bench` già esistenti restano supportati, ma non sono la UX
 principale della release.
+
+---
+
+# Matrice di supporto iniziale
+
+| Area | v0.1.0 | Condizione |
+|---|---|---|
+| Piattaforma | Linux `amd64` | Artifact e installazione pulita obbligatori |
+| Ollama | Supportato | Endpoint locale esplicito e matrice live verde |
+| Chat/tool model | `llama3.1:8b` | Fixture positiva canonica Ollama |
+| Embedding model | `embeddinggemma:latest` | Fixture positiva canonica Ollama |
+| `qwen2.5-coder:7b` | Caso negativo | Non supportato per il reference agent con tool calling |
+| llama.cpp | Candidato | Supportato solo dopo acquisizione o riesecuzione del report live |
+| Laravel | Percorso reference | Progetto/fixture locale, plugin built-in |
+| Altre piattaforme/provider/modelli | Sperimentali | Nessuna promessa finché non validati |
+
+La matrice pubblicata con la release deve riportare anche versioni effettive di
+server, modello e artifact osservate nei gate. La presenza di un adapter o di
+una capability dichiarata non equivale da sola a supporto operativo.
 
 ---
 
@@ -334,12 +354,12 @@ version control senza eseguire comandi Git.
 
 # Packaging e supporto
 
-Il release artifact è un singolo binario con versione incorporata, accompagnato
-da checksum SHA-256, licenza, README/quick start, security model, compatibility
-statement e note di release. Il target minimo obbligatorio è la piattaforma
-sulla quale viene completata la prova di installazione pulita; ulteriori target
-sono dichiarati supportati soltanto se costruiti e sottoposti almeno a smoke di
-avvio, help, version e doctor locale.
+Il release artifact obbligatorio è un singolo binario Linux `amd64` con versione
+incorporata, accompagnato da checksum SHA-256, licenza, README/quick start,
+security model, compatibility statement e note di release. Ulteriori target
+sono dichiarati sperimentali finché non vengono costruiti e sottoposti almeno a
+smoke di avvio, help, version e doctor locale; diventano supportati soltanto
+dopo una prova documentata sulla piattaforma.
 
 `go install ...@v0.1.0` può essere un percorso aggiuntivo, non sostituisce la
 verifica dell'artifact pubblicato. La pipeline di release deve essere
@@ -386,4 +406,3 @@ dalla documentazione pubblicata, può:
 - completare lo scenario Laravel live entro i limiti dichiarati;
 - comprendere cosa Maestro protegge e cosa non protegge;
 - ripetere la procedura da un ambiente pulito.
-

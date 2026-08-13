@@ -56,9 +56,6 @@ Completati:
 * agent-system-design.md
 * agent-system-development-plan.md
 * release-readiness-audit.md
-
-In progettazione:
-
 * milestone-8-design.md
 * milestone-8-development-plan.md
 
@@ -151,6 +148,19 @@ Capability-Based Model Discovery and Lifecycle.
 Discovery arricchita, load e unload sono capability provider opzionali e
 indipendenti. Lo stato modello è uno snapshot autorevole del provider e non
 viene duplicato nel Runtime.
+
+---
+
+## ADR-0026
+
+Release-Oriented v0.1.0 Product Boundary.
+
+Il gate post-Milestone 7 dà GO alla Milestone 8 come productization. La
+piattaforma iniziale supportata è Linux `amd64`; Ollama con `llama3.1:8b` e
+`embeddinggemma:latest` è la fixture positiva ufficiale. llama.cpp resta
+condizionato alla presenza del report live. CLI, configurazione e package
+pubblici sono sperimentali; il modello resta trusted in-process e gli ambiti
+rinviati non entrano nella v0.1.0.
 
 ---
 
@@ -1931,7 +1941,7 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 
 ## Gate post-Milestone 7 e percorso v0.1.0
 
-Stato: audit completato; v0.1.0 non ancora pronta.
+Stato: GO alla Milestone 8; Fase 1 completata; v0.1.0 non ancora pronta.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
@@ -1940,10 +1950,11 @@ file di configurazione utente, la CLI di prodotto, l'approval terminale, gli
 artifact, la documentazione di sicurezza, lo scenario agentico live su Laravel
 e la prova d'installazione pulita.
 
-La Milestone 8 è ridefinita come productization per v0.1.0. Design e piano sono
-in:
+La Milestone 8 è ridefinita come productization per v0.1.0. Il release
+contract, il design e il piano sono approvati in:
 
 ```text
+docs/adr/ADR-0026.md
 docs/milestone-8-design.md
 docs/milestone-8-development-plan.md
 ```
@@ -1964,10 +1975,21 @@ espliciti. Il formato di configurazione iniziale è YAML strict con
 file. Il permission model rimane default-deny e l'approvazione CLI non viene
 presentata come sandbox.
 
-La matrice live llama.cpp resta il debito formale della Milestone 3 e deve
-essere completata prima della release candidate. In alternativa è necessaria
-una decisione esplicita che classifichi llama.cpp sperimentale nella v0.1.0;
-uno stato ambiguo non soddisfa il gate.
+La matrice live llama.cpp resta il debito formale della Milestone 3. Il report
+indicato da decisioni successive non è presente nel repository né nella
+cronologia Git disponibile: deve essere recuperato e verificato o la matrice
+deve essere rieseguita prima della release candidate. In alternativa è
+necessaria una decisione esplicita che classifichi llama.cpp sperimentale nella
+v0.1.0; uno stato ambiguo non soddisfa il gate.
+
+Le fasi approvate sono:
+
+1. Release contract e audit — completata;
+2. Configurazione e CLI minima;
+3. Esperienza operativa;
+4. Packaging e installazione;
+5. Validazione live e release candidate;
+6. Documentazione pubblica e v0.1.0.
 
 SDK stabile, packaging di plugin/tool terzi, sandbox, recovery persistente,
 multi-agent, shell, Git, Docker e selezione automatica di provider/modello sono
