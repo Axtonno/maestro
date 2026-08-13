@@ -95,6 +95,8 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 49. `release-readiness-audit.md`
 50. `milestone-8-design.md`
 51. `milestone-8-development-plan.md`
+52. `configuration.md`
+53. `cli.md`
 
 ---
 
@@ -322,6 +324,14 @@ report non è presente nella baseline Git disponibile. La Fase 1 — release
 contract e audit — è completata da ADR-0026. Design e sequenza sono descritti in
 `docs/release-readiness-audit.md`, `docs/adr/ADR-0026.md`,
 `docs/milestone-8-design.md` e `docs/milestone-8-development-plan.md`.
+
+La Fase 2 è completata: `configs/maestro.example.yaml` definisce il primo
+contratto YAML strict e la CLI espone `doctor`, `models`, `agents`, `run` e
+`version` con target espliciti ed exit code stabili. `doctor` usa soltanto probe
+read-only e non invoca il modello; `run` attraversa Agent e Tool Runtime. Le
+approvazioni interattive e il rendering operativo avanzato appartengono alla
+Fase 3. I contratti sono descritti in `docs/configuration.md` e `docs/cli.md`;
+il gate è registrato in `docs/reports/milestone-8-phase-2.md`.
 
 Uso essenziale:
 

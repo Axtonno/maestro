@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/antonio-cafeo/maestro/internal/application"
 	internalBenchmark "github.com/antonio-cafeo/maestro/internal/benchmark"
-	"github.com/antonio-cafeo/maestro/internal/doctor"
+	"github.com/antonio-cafeo/maestro/internal/buildinfo"
 )
 
 func main() {
@@ -15,27 +19,51 @@ func main() {
 }
 
 func run(arguments []string, stdout io.Writer, stderr io.Writer) int {
-	if len(arguments) > 0 && arguments[0] == "bench" {
-		return runBench(arguments[1:], stdout, stderr)
+	return runWithIO(arguments, os.Stdin, stdout, stderr, defaultCommandDependencies())
+}
+
+type commandDependencies struct {
+	application application.Dependencies
+	buildInfo   func() buildinfo.Info
+	context     func() (context.Context, context.CancelFunc)
+}
+
+func defaultCommandDependencies() commandDependencies {
+	return commandDependencies{
+		application: application.DefaultDependencies(),
+		buildInfo:   buildinfo.Current,
+		context: func() (context.Context, context.CancelFunc) {
+			return signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		},
 	}
-	if len(arguments) > 0 {
+}
+
+func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	if len(arguments) == 0 || arguments[0] == "--help" || arguments[0] == "-h" || (arguments[0] == "help" && len(arguments) == 1) {
+		printRootUsage(stdout)
+		return 0
+	}
+	if arguments[0] == "help" {
+		return runWithIO([]string{arguments[1], "--help"}, stdin, stdout, stderr, dependencies)
+	}
+	switch arguments[0] {
+	case "doctor":
+		return runDoctor(arguments[1:], stdout, stderr, dependencies)
+	case "models":
+		return runModels(arguments[1:], stdout, stderr, dependencies)
+	case "agents":
+		return runAgents(arguments[1:], stdout, stderr, dependencies)
+	case "run":
+		return runAgent(arguments[1:], stdin, stdout, stderr, dependencies)
+	case "version":
+		return runVersion(arguments[1:], stdout, stderr, dependencies)
+	case "bench":
+		return runBench(arguments[1:], stdout, stderr)
+	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", arguments[0])
 		printRootUsage(stderr)
 		return 2
 	}
-
-	fmt.Fprintln(stdout, "Maestro AI Runtime")
-	fmt.Fprintln(stdout)
-
-	info := doctor.CollectSystemInfo()
-
-	fmt.Fprintln(stdout, "System")
-	fmt.Fprintln(stdout, " OS:", info.OS)
-	fmt.Fprintln(stdout, " Arch:", info.Arch)
-	fmt.Fprintln(stdout, " CPU:", info.CPU)
-	fmt.Fprintln(stdout, " Home:", info.HomeDir)
-
-	return 0
 }
 
 func runBench(arguments []string, stdout io.Writer, stderr io.Writer) int {
@@ -100,7 +128,15 @@ func runBenchValidate(arguments []string, stdout io.Writer, stderr io.Writer) in
 }
 
 func printRootUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: maestro [bench]")
+	fmt.Fprintln(writer, "usage: maestro <command>")
+	fmt.Fprintln(writer)
+	fmt.Fprintln(writer, "commands:")
+	fmt.Fprintln(writer, "  doctor   validate configuration and operational prerequisites")
+	fmt.Fprintln(writer, "  models   list models from the explicitly configured provider")
+	fmt.Fprintln(writer, "  agents   list registered agents and capabilities")
+	fmt.Fprintln(writer, "  run      execute the configured reference agent")
+	fmt.Fprintln(writer, "  version  print build version and commit")
+	fmt.Fprintln(writer, "  bench    run benchmark and evaluation commands")
 }
 
 func printBenchUsage(writer io.Writer) {

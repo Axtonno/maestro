@@ -1,0 +1,50 @@
+version: 1
+
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 2m
+  api_key_env: ""
+
+models:
+  chat: llama3.1:8b
+  embedding: embeddinggemma:latest
+
+workspace:
+  id: laravel
+  root: /absolute/path/to/laravel-project
+  framework: laravel
+
+agent:
+  id: agent.reference
+  streaming: true
+  tools:
+    - workspace.list
+    - workspace.patch
+    - workspace.read
+    - workspace.search
+
+policy:
+  id: policy.local-review
+  model: allow
+  workspace_inspect: allow
+  workspace_mutate: prompt
+
+limits:
+  duration: 5m
+  model_turns: 12
+  tool_calls: 24
+  tool_calls_per_turn: 4
+  plan_steps: 8
+  plan_revisions: 2
+  tool_result_bytes: 65536
+  session_bytes: 1048576
+  input_tokens: 32768
+  output_tokens: 8192
+
+context:
+  retrieval: lexical
+  top_k: 12
+  max_tokens: 8192
+  reserved_tokens: 1024
+  safety_tokens: 512

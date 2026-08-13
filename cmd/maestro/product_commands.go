@@ -1,0 +1,238 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"strings"
+	"time"
+
+	"github.com/antonio-cafeo/maestro/internal/application"
+	"github.com/antonio-cafeo/maestro/internal/buildinfo"
+	"github.com/antonio-cafeo/maestro/internal/productconfig"
+	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
+)
+
+const maxInstructionBytes = 1 << 20
+
+func runDoctor(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	config, help, code := loadConfigForCommand("maestro doctor", arguments, stdout, stderr, dependencies, false)
+	if code != 0 || help {
+		return code
+	}
+	ctx, cancel := commandContext(dependencies)
+	defer cancel()
+	checks := application.Doctor(ctx, config, dependencies.application)
+	failed := false
+	for _, check := range checks {
+		fmt.Fprintf(stdout, "%s\t%s\t%s\n", check.Status, check.Name, check.Detail)
+		failed = failed || check.Status == application.CheckFail
+	}
+	if ctx.Err() != nil {
+		return 130
+	}
+	if failed {
+		return 1
+	}
+	return 0
+}
+
+func runModels(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	config, help, code := loadConfigForCommand("maestro models", arguments, stdout, stderr, dependencies, false)
+	if code != 0 || help {
+		return code
+	}
+	ctx, cancel := commandContext(dependencies)
+	defer cancel()
+	configured, err := application.Build(config, dependencies.application)
+	if err != nil {
+		fmt.Fprintf(stderr, "models configuration failed: %v\n", err)
+		return 2
+	}
+	defer closeApplication(configured)
+	models, err := configured.Models(ctx)
+	if err != nil {
+		fmt.Fprintf(stderr, "models unavailable: %v\n", err)
+		if ctx.Err() != nil {
+			return 130
+		}
+		return 4
+	}
+	fmt.Fprintf(stdout, "provider\t%s\n", config.Provider.ID)
+	for _, model := range models {
+		fmt.Fprintln(stdout, model.ID)
+	}
+	return 0
+}
+
+func runAgents(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	config, help, code := loadConfigForCommand("maestro agents", arguments, stdout, stderr, dependencies, false)
+	if code != 0 || help {
+		return code
+	}
+	found := false
+	for _, descriptor := range application.AgentDescriptors() {
+		capabilities := descriptor.Capabilities()
+		values := make([]string, len(capabilities))
+		for index, capability := range capabilities {
+			values[index] = string(capability)
+		}
+		fmt.Fprintf(stdout, "%s\t%s\t%s\n", descriptor.ID(), descriptor.Version(), strings.Join(values, ","))
+		found = found || string(descriptor.ID()) == config.Agent.ID
+	}
+	if !found {
+		fmt.Fprintf(stderr, "configured agent %q is not registered\n", config.Agent.ID)
+		return 1
+	}
+	return 0
+}
+
+func runAgent(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	config, positionals, help, code := loadRunConfig(arguments, stdout, stderr, dependencies)
+	if code != 0 || help {
+		return code
+	}
+	instruction := strings.TrimSpace(strings.Join(positionals, " "))
+	if instruction == "" {
+		encoded, err := io.ReadAll(io.LimitReader(stdin, maxInstructionBytes+1))
+		if err != nil {
+			fmt.Fprintf(stderr, "read instruction: %v\n", err)
+			return 2
+		}
+		if len(encoded) > maxInstructionBytes {
+			fmt.Fprintln(stderr, "instruction exceeds 1048576 bytes")
+			return 2
+		}
+		instruction = strings.TrimSpace(string(encoded))
+	}
+	if instruction == "" {
+		fmt.Fprintln(stderr, "maestro run requires an instruction argument or stdin")
+		return 2
+	}
+	ctx, cancel := commandContext(dependencies)
+	defer cancel()
+	configured, err := application.Build(config, dependencies.application)
+	if err != nil {
+		fmt.Fprintf(stderr, "run configuration failed: %v\n", err)
+		return 2
+	}
+	defer closeApplication(configured)
+	result, err := configured.Execute(ctx, instruction)
+	if err != nil {
+		fmt.Fprintf(stderr, "run failed: %v\n", err)
+		return exitCodeForRunError(ctx, err)
+	}
+	session := result.Session()
+	fmt.Fprintf(stdout, "run\t%s\n", session.Run())
+	fmt.Fprintf(stdout, "terminal\t%s\n", session.Terminal())
+	fmt.Fprintln(stdout, result.Content())
+	return 0
+}
+
+func runVersion(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	flags := flag.NewFlagSet("maestro version", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro version") }
+	if err := flags.Parse(arguments); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "maestro version does not accept positional arguments")
+		return 2
+	}
+	current := buildinfo.Current()
+	if dependencies.buildInfo != nil {
+		current = dependencies.buildInfo()
+	}
+	fmt.Fprintf(stdout, "maestro %s\n", current.Version)
+	fmt.Fprintf(stdout, "commit %s\n", current.Commit)
+	if current.Dirty {
+		fmt.Fprintln(stdout, "dirty true")
+	}
+	return 0
+}
+
+func loadConfigForCommand(name string, arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies, allowPositionals bool) (productconfig.Config, bool, int) {
+	flags := flag.NewFlagSet(name, flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() { fmt.Fprintf(stdout, "usage: %s [--config path]\n", name) }
+	configPath := flags.String("config", "", "path to Maestro configuration")
+	if err := flags.Parse(arguments); err != nil {
+		if err == flag.ErrHelp {
+			return productconfig.Config{}, true, 0
+		}
+		return productconfig.Config{}, false, 2
+	}
+	if !allowPositionals && flags.NArg() != 0 {
+		fmt.Fprintf(stderr, "%s does not accept positional arguments\n", name)
+		return productconfig.Config{}, false, 2
+	}
+	config, err := resolveAndLoad(*configPath, dependencies)
+	if err != nil {
+		fmt.Fprintf(stderr, "configuration invalid: %v\n", err)
+		return productconfig.Config{}, false, 2
+	}
+	return config, false, 0
+}
+
+func loadRunConfig(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) (productconfig.Config, []string, bool, int) {
+	flags := flag.NewFlagSet("maestro run", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro run [--config path] [instruction]") }
+	configPath := flags.String("config", "", "path to Maestro configuration")
+	if err := flags.Parse(arguments); err != nil {
+		if err == flag.ErrHelp {
+			return productconfig.Config{}, nil, true, 0
+		}
+		return productconfig.Config{}, nil, false, 2
+	}
+	config, err := resolveAndLoad(*configPath, dependencies)
+	if err != nil {
+		fmt.Fprintf(stderr, "configuration invalid: %v\n", err)
+		return productconfig.Config{}, nil, false, 2
+	}
+	return config, flags.Args(), false, 0
+}
+
+func resolveAndLoad(explicit string, dependencies commandDependencies) (productconfig.Config, error) {
+	getenv := dependencies.application.Getenv
+	path, err := productconfig.ResolvePath(explicit, getenv)
+	if err != nil {
+		return productconfig.Config{}, err
+	}
+	return productconfig.Load(path)
+}
+
+func commandContext(dependencies commandDependencies) (context.Context, context.CancelFunc) {
+	if dependencies.context != nil {
+		return dependencies.context()
+	}
+	return context.WithCancel(context.Background())
+}
+
+func exitCodeForRunError(ctx context.Context, err error) int {
+	if ctx.Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, pkgAgent.ErrRunCanceled) {
+		return 130
+	}
+	if errors.Is(err, pkgAgent.ErrPermissionDenied) {
+		return 3
+	}
+	if errors.Is(err, pkgAgent.ErrProviderFailed) || errors.Is(err, pkgAgent.ErrNotFound) {
+		return 4
+	}
+	if errors.Is(err, pkgAgent.ErrInvalidRequest) {
+		return 2
+	}
+	return 1
+}
+
+func closeApplication(configured *application.Application) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	_ = configured.Close(ctx)
+}

@@ -2,13 +2,20 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/antonio-cafeo/maestro/internal/application"
+	"github.com/antonio-cafeo/maestro/internal/buildinfo"
+	"github.com/antonio-cafeo/maestro/internal/productconfig"
+	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 	pkgBenchmark "github.com/antonio-cafeo/maestro/pkg/benchmark"
+	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 )
 
 func TestBenchValidateLoadsVersionedManifest(t *testing.T) {
@@ -245,7 +252,228 @@ func TestRootOutputIsWrittenOnlyToProvidedWriter(t *testing.T) {
 	if exitCode := run(nil, &stdout, &stderr); exitCode != 0 {
 		t.Fatalf("root exit code: %d", exitCode)
 	}
-	if strings.Count(stdout.String(), "Maestro AI Runtime") != 1 || stderr.Len() != 0 {
+	if !strings.Contains(stdout.String(), "usage: maestro <command>") ||
+		!strings.Contains(stdout.String(), "doctor") || stderr.Len() != 0 {
 		t.Fatalf("stdout=%q stderr=%q", stdout.String(), stderr.String())
 	}
+}
+
+func TestProductCommandsUseStrictConfigAndStableOutputs(t *testing.T) {
+	configPath := newCLIConfig(t, "allow")
+	tests := []struct {
+		name     string
+		args     []string
+		stdin    string
+		contains []string
+	}{
+		{name: "doctor", args: []string{"doctor", "--config", configPath}, contains: []string{"pass\tconfig", "pass\tprovider", "pass\tlaravel"}},
+		{name: "models", args: []string{"models", "--config", configPath}, contains: []string{"provider\tollama", "fixture-model"}},
+		{name: "agents", args: []string{"agents", "--config", configPath}, contains: []string{"agent.reference", "agent.run"}},
+		{name: "run argument", args: []string{"run", "--config", configPath, "Inspect", "Order"}, contains: []string{"run\trun-cli", "terminal\tcompleted", "CLI completed."}},
+		{name: "run stdin", args: []string{"run", "--config", configPath}, stdin: "Inspect Order\n", contains: []string{"terminal\tcompleted", "CLI completed."}},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "CLI completed."}, FinishReason: pkgProvider.FinishReasonStop}}}
+			dependencies := cliTestDependencies(provider)
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			exitCode := runWithIO(testCase.args, strings.NewReader(testCase.stdin), &stdout, &stderr, dependencies)
+			if exitCode != 0 || stderr.Len() != 0 {
+				t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+			}
+			for _, expected := range testCase.contains {
+				if !strings.Contains(stdout.String(), expected) {
+					t.Fatalf("output %q does not contain %q", stdout.String(), expected)
+				}
+			}
+		})
+	}
+}
+
+func TestProductCommandHelpVersionAndErrorExitCodes(t *testing.T) {
+	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
+	dependencies.buildInfo = func() buildinfo.Info { return buildinfo.Info{Version: "v0.1.0", Commit: "abc123"} }
+	for _, testCase := range []struct {
+		name     string
+		args     []string
+		wantCode int
+		output   string
+	}{
+		{name: "root help", args: []string{"--help"}, wantCode: 0, output: "maestro <command>"},
+		{name: "command help", args: []string{"doctor", "--help"}, wantCode: 0, output: "maestro doctor"},
+		{name: "help command", args: []string{"help", "run"}, wantCode: 0, output: "maestro run"},
+		{name: "version", args: []string{"version"}, wantCode: 0, output: "maestro v0.1.0\ncommit abc123"},
+		{name: "unknown", args: []string{"unknown"}, wantCode: 2, output: "unknown command"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(testCase.args, strings.NewReader(""), &stdout, &stderr, dependencies)
+			combined := stdout.String() + stderr.String()
+			if code != testCase.wantCode || !strings.Contains(combined, testCase.output) {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+		})
+	}
+
+	invalidPath := filepath.Join(t.TempDir(), "invalid.yaml")
+	if err := os.WriteFile(invalidPath, []byte("version: 1\nunknown: true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	if code := runWithIO([]string{"doctor", "--config", invalidPath}, strings.NewReader(""), &stdout, &stderr, dependencies); code != 2 || !strings.Contains(stderr.String(), "configuration invalid") {
+		t.Fatalf("invalid config code=%d stderr=%q", code, stderr.String())
+	}
+}
+
+func TestRunMapsPermissionAndProviderFailures(t *testing.T) {
+	for _, testCase := range []struct {
+		name       string
+		policyMode string
+		provider   *cliProvider
+		wantCode   int
+	}{
+		{name: "prompt without approver", policyMode: "prompt", provider: &cliProvider{id: "ollama"}, wantCode: 3},
+		{name: "provider failure", policyMode: "allow", provider: &cliProvider{id: "ollama"}, wantCode: 4},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(
+				[]string{"run", "--config", newCLIConfig(t, testCase.policyMode), "Inspect Order"},
+				strings.NewReader(""), &stdout, &stderr, cliTestDependencies(testCase.provider),
+			)
+			if code != testCase.wantCode || !strings.Contains(stderr.String(), "run failed") {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+		})
+	}
+}
+
+func TestRunMapsCanceledCommandContextToInterrupt(t *testing.T) {
+	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
+	dependencies.context = func() (context.Context, context.CancelFunc) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		return ctx, func() {}
+	}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"run", "--config", newCLIConfig(t, "allow"), "Inspect Order"},
+		strings.NewReader(""), &stdout, &stderr, dependencies,
+	)
+	if code != 130 || !strings.Contains(stderr.String(), "run failed") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+type cliProvider struct {
+	id        pkgProvider.ID
+	responses []pkgProvider.CompletionResponse
+}
+
+func (provider *cliProvider) ID() pkgProvider.ID { return provider.id }
+
+func (provider *cliProvider) Complete(context.Context, pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+	if len(provider.responses) == 0 {
+		return pkgProvider.CompletionResponse{}, fmt.Errorf("fixture provider failure")
+	}
+	response := provider.responses[0]
+	provider.responses = provider.responses[1:]
+	return response, nil
+}
+
+func (provider *cliProvider) DiscoverModels(context.Context) ([]pkgProvider.ModelInfo, error) {
+	return []pkgProvider.ModelInfo{{Model: pkgProvider.Model{ID: "fixture-model"}, State: pkgProvider.ModelStateLoaded}}, nil
+}
+
+func (provider *cliProvider) Models(context.Context) ([]pkgProvider.Model, error) {
+	return []pkgProvider.Model{{ID: "fixture-model"}}, nil
+}
+
+func (provider *cliProvider) InspectCapabilities(_ context.Context, request pkgProvider.CapabilityRequest) (pkgProvider.CapabilityReport, error) {
+	descriptors := make([]pkgProvider.CapabilityDescriptor, 0, len(pkgProvider.KnownCapabilities()))
+	for _, capability := range pkgProvider.KnownCapabilities() {
+		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{Capability: capability, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable})
+	}
+	return pkgProvider.CapabilityReport{Provider: provider.id, Target: request.Target, Model: request.Model, Capabilities: descriptors}, nil
+}
+
+func cliTestDependencies(provider pkgProvider.Provider) commandDependencies {
+	return commandDependencies{
+		application: application.Dependencies{
+			Getenv:          func(string) string { return "" },
+			ProviderFactory: func(productconfig.Config, string) (pkgProvider.Provider, error) { return provider, nil },
+			RunID:           func() (pkgAgent.RunID, error) { return "run-cli", nil },
+		},
+		buildInfo: func() buildinfo.Info { return buildinfo.Info{Version: "devel", Commit: "fixture"} },
+		context:   func() (context.Context, context.CancelFunc) { return context.WithCancel(context.Background()) },
+	}
+}
+
+func newCLIConfig(t *testing.T, modelPolicy string) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "app"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range map[string]string{
+		"artisan":       "#!/usr/bin/env php\n",
+		"composer.json": `{"require":{"laravel/framework":"^12.0"}}`,
+		"app/Order.php": "<?php\nclass Order {}\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	content := fmt.Sprintf(`version: 1
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 1m
+  api_key_env: ""
+models:
+  chat: fixture-model
+  embedding: ""
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+agent:
+  id: agent.reference
+  streaming: false
+  tools:
+    - workspace.patch
+    - workspace.read
+policy:
+  id: policy.test
+  model: %s
+  workspace_inspect: allow
+  workspace_mutate: allow
+limits:
+  duration: 1m
+  model_turns: 5
+  tool_calls: 4
+  tool_calls_per_turn: 2
+  plan_steps: 3
+  plan_revisions: 2
+  tool_result_bytes: 65536
+  session_bytes: 1048576
+  input_tokens: 10000
+  output_tokens: 10000
+context:
+  retrieval: lexical
+  top_k: 5
+  max_tokens: 1024
+  reserved_tokens: 128
+  safety_tokens: 64
+`, root, modelPolicy)
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path
 }

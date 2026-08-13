@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: In corso — Fase 1 completata
+Stato: In corso — Fasi 1–2 completate
 
 Obiettivo:
 
@@ -553,7 +553,7 @@ Fasi previste:
 | Fase | Ambito | Stato |
 |---|---|---|
 | 1 | Release contract e audit | Completata |
-| 2 | Configurazione e CLI minima | Da avviare |
+| 2 | Configurazione e CLI minima | Completata |
 | 3 | Esperienza operativa | Da avviare |
 | 4 | Packaging e installazione | Da avviare |
 | 5 | Validazione live e release candidate | Da avviare |
@@ -570,6 +570,13 @@ da decisioni successive non è presente nella baseline Git disponibile: la Fase
 esplicita che delimiti l'adapter come sperimentale. La pubblicazione richiede
 inoltre artifact versionato, checksum, licenza, security model, quick start live
 e prova d'installazione da ambiente pulito.
+
+La Fase 2 consegna il loader YAML strict `version: 1`, la composition
+applicativa e i cinque comandi minimi. Doctor esegue soltanto preflight
+read-only; models e agents non selezionano target; run attraversa Agent e Tool
+Runtime con policy e hard limit configurati. `prompt` resta deny fino
+all'Approver terminale della Fase 3. Il report è
+`reports/milestone-8-phase-2.md`.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
@@ -610,4 +617,6 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - release-readiness-audit.md
 - milestone-8-design.md
 - milestone-8-development-plan.md
+- configuration.md
+- cli.md
 - MAESTRO_CONTEXT.md

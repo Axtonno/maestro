@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: Approvato — Fase 1 completata, Fasi 2–6 da avviare
+Stato: In esecuzione — Fasi 1–2 completate, Fasi 3–6 da avviare
 
 Data: 2026-08-13
 
@@ -32,7 +32,7 @@ sviluppo o conoscere le API Go interne.
 | Fase | Titolo | Stato | Dipende da |
 |---|---|---|---|
 | 1 | Release contract e audit | Completata | Milestone 7 |
-| 2 | Configurazione e CLI minima | Da avviare | Fase 1 |
+| 2 | Configurazione e CLI minima | Completata | Fase 1 |
 | 3 | Esperienza operativa | Da avviare | Fase 2 |
 | 4 | Packaging e installazione | Da avviare | Fasi 2–3 |
 | 5 | Validazione live e release candidate | Da avviare | Fasi 2–4 |
@@ -111,7 +111,7 @@ Gate: **superato**.
 
 # Fase 2 — Configurazione e CLI minima
 
-Stato: Da avviare.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -233,6 +233,8 @@ esattamente la versione del tag e non un valore vuoto o `(devel)`.
 Un utilizzatore può descrivere un run senza leggere codice Go, validare la
 configurazione, ispezionare modelli/agenti ed eseguire il reference agent dal
 binario di sviluppo con target e codici di uscita deterministici.
+
+Gate: **superato**. Report: `reports/milestone-8-phase-2.md`.
 
 ---
 

@@ -157,15 +157,16 @@ Risoluzione del file, in ordine:
 
 1. `--config <path>`;
 2. `MAESTRO_CONFIG`;
-3. percorso XDG `~/.config/maestro/config.yaml`.
+3. `$XDG_CONFIG_HOME/maestro/config.yaml`;
+4. `$HOME/.config/maestro/config.yaml` come fallback XDG.
 
-Non vengono uniti più file. Il comando comunica il path effettivamente usato;
-un path esplicito mancante è un errore. Help e `version` non richiedono il file.
+Non vengono uniti più file. Un path esplicito mancante è un errore. Help e
+`version` non richiedono il file.
 
-I flag di target possono sovrascrivere singoli valori soltanto quando il
-comando li dichiara. La precedenza è `flag > ambiente consentito > file`; il
-valore finale e la sua origine possono essere mostrati da `doctor` senza
-stampare secret.
+Nella Fase 2 `--config` seleziona il documento ma i flag non sovrascrivono
+singoli target: provider, modelli, workspace, agent e policy provengono da un
+solo snapshot validato. L'ambiente fornisce esclusivamente path del documento e
+secret referenziati, non valori impliciti dei target.
 
 ## Schema iniziale
 
@@ -185,7 +186,7 @@ models:
   embedding: embeddinggemma:latest
 
 workspace:
-  id: project
+  id: laravel
   root: /absolute/path/to/project
   framework: laravel
 
