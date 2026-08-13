@@ -53,6 +53,43 @@ func TestAgentLoopExecutesCorrelatedToolCallAndCompletesPlan(t *testing.T) {
 	}
 }
 
+func TestEncodeToolResultPreservesStructuredJSON(t *testing.T) {
+	result, err := pkgTool.NewResult(
+		pkgTool.ResultSuccess,
+		`{"path":"main.go","digest":"abc"}`,
+		"application/json",
+		"read",
+		1,
+		false,
+		"",
+	)
+	if err != nil {
+		t.Fatalf("construct result: %v", err)
+	}
+	encoded, err := encodeToolResult(result)
+	if err != nil {
+		t.Fatalf("encode result: %v", err)
+	}
+	if !containsAll(encoded, `"content":{"path":"main.go","digest":"abc"}`, `"media_type":"application/json"`) {
+		t.Fatalf("structured JSON was not preserved: %s", encoded)
+	}
+}
+
+func TestInitialMessagesRequireSequentialGuardedMutations(t *testing.T) {
+	request := runRequest(t, "run-protocol", "agent.general", "workspace", 5)
+	plan := pendingPlan(t, "inspect")
+	messages := initialMessages(request, plan.Steps()[0], testBundle(t, "workspace"))
+	if len(messages) != 2 || !containsAll(
+		messages[0].Content,
+		"at most one tool call per response",
+		"invoke it through the declared tool interface",
+		"copy expected_digest exactly",
+		"preserving whitespace and real newline characters",
+	) {
+		t.Fatalf("guarded mutation protocol is missing: %#v", messages)
+	}
+}
+
 func TestAgentLoopRejectsUnknownToolWithoutInvocation(t *testing.T) {
 	providers := &generationStub{responses: []provider.CompletionResponse{{
 		Message:      provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-1", Name: "not_allowed", Arguments: json.RawMessage(`{}`)}}},

@@ -1957,7 +1957,8 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 
 ## Gate post-Milestone 7 e percorso v0.1.0
 
-Stato: GO alla Milestone 8; Fasi 1–4 completate; v0.1.0 non ancora pronta.
+Stato: GO alla Milestone 8; Fasi 1–4 completate; Fase 5 in corso con NO-GO RC;
+v0.1.0 non ancora pronta.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
@@ -2042,3 +2043,12 @@ byte-identiche; archive, checksum, manifest, installazione pulita, config e
 fixture Laravel superano il gate deterministico. Apache-2.0 è registrata in
 ADR-0027. La promozione a release candidate e ogni validazione provider live
 restano responsabilità della Fase 5.
+
+Il gate intermedio della Fase 5 ha riconfermato il candidate e chiuso la Smoke
+matrix Ollama provider-level con 13 passed, 1 skipped e 0 failed. Un run Laravel
+read-only completa con profilo CPU ridotto; lo scenario
+`read -> patch -> reindex -> final` resta invece aperto, con guardrail che hanno
+impedito ogni patch non valida. Due tentativi llama.cpp in router mode hanno
+esaurito i 15 GiB dell'host e causato la terminazione OOM di `llama-server`,
+destabilizzando VS Code; le prove sono invalidate e nessun RC è stato prodotto.
+Il dettaglio è in `docs/reports/milestone-8-phase-5-interim.md`.

@@ -366,7 +366,7 @@ Gate: **superato**. Report: `reports/milestone-8-phase-4.md`.
 
 # Fase 5 — Validazione live e release candidate
 
-Stato: Da avviare.
+Stato: In corso — validazione live sospesa dopo incidente OOM; NO-GO RC.
 
 ## Obiettivo
 
@@ -430,6 +430,15 @@ candidate come farebbe un nuovo utilizzatore.
 
 La release candidate soddisfa la definizione di prodotto su un modello reale e
 da un ambiente nuovo; la matrice di supporto è basata su evidenze presenti.
+
+## Gate intermedio 2026-08-13
+
+Il preflight del candidate e la Smoke matrix Ollama provider-level sono verdi,
+ma lo scenario mutativo agentico non è ancora concluso. Due tentativi della
+matrice llama.cpp in router mode hanno causato OOM sull'host da 15 GiB e
+destabilizzato VS Code; le relative prove sono invalidate. Nessun RC è stato
+prodotto. Evidenze, contenimento e strategia di ripresa sono in
+`reports/milestone-8-phase-5-interim.md`.
 
 ---
 

@@ -3,7 +3,7 @@ version: 1
 provider:
   id: ollama
   base_url: http://127.0.0.1:11434
-  timeout: 2m
+  timeout: 5m
   api_key_env: ""
 
 models:
@@ -33,7 +33,7 @@ policy:
   workspace_mutate: prompt
 
 limits:
-  duration: 5m
+  duration: 10m
   model_turns: 12
   tool_calls: 24
   tool_calls_per_turn: 4
@@ -46,7 +46,7 @@ limits:
 
 context:
   retrieval: lexical
-  top_k: 12
-  max_tokens: 8192
-  reserved_tokens: 1024
-  safety_tokens: 512
+  top_k: 2
+  max_tokens: 2048
+  reserved_tokens: 512
+  safety_tokens: 256

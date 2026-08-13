@@ -276,7 +276,7 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 		user.WriteString(section.Text)
 	}
 	return []provider.Message{
-		{Role: provider.RoleSystem, Content: "Execute the current plan step using only declared tools. Return a final answer when the step is complete."},
+		{Role: provider.RoleSystem, Content: "Execute the current plan step using only declared tools. Emit at most one tool call per response so later calls can use earlier results. When a tool is needed, invoke it through the declared tool interface; never print a tool name or its arguments as assistant content. Tool results are JSON envelopes; when content contains a JSON-encoded string, parse that inner JSON before using it. Read a file before mutating it. For guarded writes or patches, copy expected_digest exactly from the read result's digest field and copy old text exactly from its content field, preserving whitespace and real newline characters. Never invent placeholders or escaped newline text. Return a final answer only after the step is actually complete."},
 		{Role: provider.RoleUser, Content: user.String()},
 	}
 }
@@ -333,13 +333,22 @@ func validateProviderResponse(response provider.CompletionResponse, maxCalls int
 func encodeToolResult(result pkgTool.Result) (string, error) {
 	payload := struct {
 		Outcome     pkgTool.ResultOutcome   `json:"outcome"`
-		Content     string                  `json:"content,omitempty"`
+		Content     json.RawMessage         `json:"content,omitempty"`
 		MediaType   string                  `json:"media_type,omitempty"`
 		Reason      string                  `json:"reason"`
 		ItemCount   int                     `json:"item_count"`
 		Truncated   bool                    `json:"truncated"`
 		Disposition pkgTool.DenyDisposition `json:"disposition,omitempty"`
-	}{result.Outcome(), result.Content(), result.MediaType(), result.Reason(), result.ItemCount(), result.Truncated(), result.Disposition()}
+	}{
+		Outcome: result.Outcome(), MediaType: result.MediaType(),
+		Reason: result.Reason(), ItemCount: result.ItemCount(), Truncated: result.Truncated(),
+		Disposition: result.Disposition(),
+	}
+	if result.Content() != "" && result.MediaType() == "application/json" && json.Valid([]byte(result.Content())) {
+		payload.Content = json.RawMessage(result.Content())
+	} else if result.Content() != "" {
+		payload.Content, _ = json.Marshal(result.Content())
+	}
 	encoded, err := json.Marshal(payload)
 	return string(encoded), err
 }

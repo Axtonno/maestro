@@ -556,7 +556,7 @@ Fasi previste:
 | 2 | Configurazione e CLI minima | Completata |
 | 3 | Esperienza operativa | Completata |
 | 4 | Packaging e installazione | Completata |
-| 5 | Validazione live e release candidate | Da avviare |
+| 5 | Validazione live e release candidate | In corso — NO-GO RC |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare |
 
 La CLI minima comprende `doctor`, `models`, `agents`, `run` e `version`. La
@@ -593,6 +593,13 @@ La Fase 4 è completata con `v0.1.0-pc.1` Linux `amd64`: build normalizzata e
 ripetuta dallo stesso commit, checksum, manifest, Apache-2.0, documentazione,
 configurazione e fixture Laravel sono verificati fuori dal checkout. Il report
 è `reports/milestone-8-phase-4.md`.
+
+Il primo gate intermedio della Fase 5 conferma il preflight del candidate e una
+Smoke matrix Ollama con 13 scenari passed, 1 skipped e 0 failed. Il percorso
+Laravel read-only completa con un profilo CPU ridotto, mentre lo scenario
+mutativo resta aperto. La matrice llama.cpp in router mode ha causato due OOM
+su un host da 15 GiB ed è invalidata; nessuna release candidate è stata
+prodotta. Il report è `reports/milestone-8-phase-5-interim.md`.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
