@@ -92,6 +92,9 @@ Prima di contribuire al progetto è consigliata la lettura dei documenti nell'or
 46. `agent-sessions.md`
 47. `agent-runtime.md`
 48. `agent-workspace.md`
+49. `release-readiness-audit.md`
+50. `milestone-8-design.md`
+51. `milestone-8-development-plan.md`
 
 ---
 
@@ -272,9 +275,10 @@ generico `WorkspaceProvider`; Gestor ne risolve la capability senza eseguire la
 pipeline. Eventi di index, build e cache usano payload redatti e observer
 best-effort. Suite completa, race detector, vet e audit API chiudono il gate.
 
-La Milestone 7 — Agent System è aperta e pianificata in sette fasi. La Fase 1
-è completata: `pkg/tool` e `pkg/agent` definiscono descriptor, invocation,
-permission request, sessioni, piani, limiti e terminali. ADR-0025 stabilisce che
+La Milestone 7 — Agent System è completata nelle sette fasi previste e ha
+superato il gate finale. La Fase 1 ha definito in `pkg/tool` e `pkg/agent`
+descriptor, invocation, permission request, sessioni, piani, limiti e
+terminali. ADR-0025 stabilisce che
 una `Decision` pubblica non è un permit, le action sono autorizzate atomicamente
 e gli eventi usano allowlist esatte. Catalogo ed executor appartengono alla
 Fase 2, ora completata con permit privati one-shot, validation boundary,
@@ -306,6 +310,15 @@ La Fase 7 chiude la Milestone 7: `maestro.Runtime` espone le istanze condivise
 Gestor agent/tool. Eventi redatti coprono sessioni, piani, turni, permission e
 invocation; uno scenario deterministico completa read, patch, refresh e
 risposta finale senza rete.
+
+Il gate post-Milestone 7 accetta questa baseline ingegneristica e registra il
+percorso mancante verso un prodotto pubblico. La Milestone 8 è ora progettata
+attorno alla productization per v0.1.0: configurazione YAML strict, CLI minima
+`doctor`, `models`, `agents`, `run` e `version`, approval terminale, quick start
+Laravel, packaging, security model e validazione live. La matrice llama.cpp
+resta il prerequisito operativo pendente della Milestone 3. Design e sequenza
+sono descritti in `docs/release-readiness-audit.md`,
+`docs/milestone-8-design.md` e `docs/milestone-8-development-plan.md`.
 
 Uso essenziale:
 

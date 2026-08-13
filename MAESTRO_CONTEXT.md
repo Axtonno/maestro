@@ -53,11 +53,14 @@ Completati:
 * agent-sessions.md
 * agent-runtime.md
 * agent-workspace.md
+* agent-system-design.md
+* agent-system-development-plan.md
+* release-readiness-audit.md
 
 In progettazione:
 
-* agent-system-design.md
-* agent-system-development-plan.md
+* milestone-8-design.md
+* milestone-8-development-plan.md
 
 ---
 
@@ -1694,10 +1697,10 @@ pkg/tool     + internal/tool   -> catalogo, prepare, autorizzazione, execute
 pkg/agent    + internal/agent  -> sessione, piano, budget, loop modello-tool
 ```
 
-Il composition root li esporrà in modo additivo tramite `Runtime.Tools()` e
+Il composition root li espone in modo additivo tramite `Runtime.Tools()` e
 `Runtime.Agents()` senza modificare `pkg/runtime.Runtime`. L'Agent Runtime
-coordinerà Provider Runtime, Context Engine, Tool Runtime e Gestor; non
-duplicherà registry, snapshot o lifecycle autorevoli.
+coordina Provider Runtime, Context Engine, Tool Runtime e Gestor; non duplica
+registry, snapshot o lifecycle autorevoli.
 
 Le sette fasi pianificate sono:
 
@@ -1925,3 +1928,47 @@ Restano fuori scope memoria persistente, recovery dopo restart, multi-agent,
 esecuzione distribuita, sandbox, plugin/tool di terze parti, secret manager,
 CLI completa e selezione automatica di provider o modello. Questi confini sono
 assegnati alla Milestone 8 o a evoluzioni successive.
+
+## Gate post-Milestone 7 e percorso v0.1.0
+
+Stato: audit completato; v0.1.0 non ancora pronta.
+
+Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
+baseline ingegneristica e registra il divario di prodotto senza riaprirne
+l'architettura. Suite e scenario deterministico sono verdi; mancano ancora il
+file di configurazione utente, la CLI di prodotto, l'approval terminale, gli
+artifact, la documentazione di sicurezza, lo scenario agentico live su Laravel
+e la prova d'installazione pulita.
+
+La Milestone 8 è ridefinita come productization per v0.1.0. Design e piano sono
+in:
+
+```text
+docs/milestone-8-design.md
+docs/milestone-8-development-plan.md
+```
+
+La superficie minima prevista è:
+
+```text
+maestro doctor
+maestro models
+maestro agents
+maestro run
+maestro version
+```
+
+Provider, modello, workspace, agente, policy, tool set e limiti restano
+espliciti. Il formato di configurazione iniziale è YAML strict con
+`version: 1`; i secret sono referenziati tramite ambiente e non inseriti nel
+file. Il permission model rimane default-deny e l'approvazione CLI non viene
+presentata come sandbox.
+
+La matrice live llama.cpp resta il debito formale della Milestone 3 e deve
+essere completata prima della release candidate. In alternativa è necessaria
+una decisione esplicita che classifichi llama.cpp sperimentale nella v0.1.0;
+uno stato ambiguo non soddisfa il gate.
+
+SDK stabile, packaging di plugin/tool terzi, sandbox, recovery persistente,
+multi-agent, shell, Git, Docker e selezione automatica di provider/modello sono
+rinviati oltre v0.1.0.

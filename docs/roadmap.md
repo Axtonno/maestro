@@ -1,10 +1,10 @@
 # Maestro Roadmap
 
-Versione: 0.1.0
+Versione: 0.2.0
 
 Stato: Living Document
 
-Ultimo aggiornamento: 2026-08-11
+Ultimo aggiornamento: 2026-08-13
 
 Autori:
 - Antonio Cafeo
@@ -58,7 +58,7 @@ Obiettivi:
 - Lifecycle del runtime.
 - Gestione del workspace.
 
-Output atteso:
+Output consegnato:
 
 Un runtime funzionante senza alcun provider.
 
@@ -526,7 +526,7 @@ preparazione, autorizzazione default-deny ed esecuzione limitata. Provider,
 modello, workspace, agente e budget rimangono scelte esplicite; Gestor descrive
 le capability senza eseguirle.
 
-Output atteso:
+Output consegnato:
 
 Primo agente autonomo, provider-agnostic, workspace-aware e governato da
 permessi espliciti.
@@ -539,15 +539,44 @@ deterministici. Il report conclusivo è
 
 ---
 
-# Milestone 8 — Ecosistema
+# Milestone 8 — Productization v0.1.0
 
-Obiettivi:
+Stato: Progettata — implementazione non avviata
 
-- Plugin di terze parti.
-- CLI completa.
-- API pubbliche.
-- SDK.
-- Documentazione.
+Obiettivo:
+
+Rendere Maestro installabile, configurabile e utilizzabile da uno sviluppatore
+per eseguire il reference agent locale controllato su un progetto reale.
+
+Fasi previste:
+
+| Fase | Ambito | Stato |
+|---|---|---|
+| 0 | Gate post-Milestone 7 | Completata |
+| 1 | Contratti di prodotto e configurazione | Da avviare |
+| 2 | Composition applicativa e diagnostica | Da avviare |
+| 3 | CLI di discovery e metadata | Da avviare |
+| 4 | Run, policy, approval e quick start Laravel | Da avviare |
+| 5 | Packaging, documentazione e compatibility audit | Da avviare |
+| 6 | Validazione live, RC e installazione pulita | Da avviare |
+
+La CLI minima comprende `doctor`, `models`, `agents`, `run` e `version`. La
+configurazione versionata rende espliciti provider, modello, workspace, agente,
+policy, tool e limiti. Il percorso ufficiale usa il reference agent, i
+workspace tool built-in e il plugin Laravel.
+
+La matrice live llama.cpp è una track parallela e un prerequisito della release
+candidate, salvo decisione esplicita che delimiti l'adapter come sperimentale.
+La pubblicazione richiede inoltre artifact versionato, checksum, licenza,
+security model, quick start live e prova d'installazione da ambiente pulito.
+
+Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
+sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
+o selezione automatica di provider e modello.
+
+Il gate, il design e il piano operativo sono descritti in
+`release-readiness-audit.md`, `milestone-8-design.md` e
+`milestone-8-development-plan.md`.
 
 ---
 
@@ -561,7 +590,8 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 
 # Decisioni
 
-- Le milestone rappresentano capacità del sistema, non versioni software.
+- Le milestone rappresentano capacità del sistema; la Milestone 8 associa la
+  productization completata al gate di pubblicazione v0.1.0.
 - Nessuna milestone verrà considerata completata senza documentazione e test.
 
 ---
@@ -575,4 +605,7 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - context-engine-development-plan.md
 - agent-system-design.md
 - agent-system-development-plan.md
+- release-readiness-audit.md
+- milestone-8-design.md
+- milestone-8-development-plan.md
 - MAESTRO_CONTEXT.md
