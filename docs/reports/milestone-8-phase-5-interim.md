@@ -369,6 +369,43 @@ tool mutanti e reference agent mutante sono sperimentali/non supportati. La
 validazione mutativa viene rinviata almeno alla v0.2.0. Timeout, budget e
 criteri delle matrici concluse non vengono ampliati retroattivamente.
 
+# Candidate read-only `v0.1.0-pc.4`
+
+Il nuovo confine è incorporato dal commit
+`7117f8d93c247b302cd77fb92c484b550a1a7162`. Il doppio gate di packaging è
+byte-identico e produce l'archive di 3597448 byte con SHA-256
+`d62f5e4b49e81508f1256d0cf7ac8785a62a9ac92cf30c144047cea4f14f9fb3`.
+Manifest, checksum, versione, help, installazione pulita, 9 check di `doctor`,
+`models`, `agents`, tool set list/read/search e `workspace_mutate: deny` sono
+verdi dall'archive estratto.
+
+Il primo quick start read-only non completa:
+
+| Misura | Risultato |
+|---|---:|
+| Terminale | `tool_failure` |
+| Model turns | 1 |
+| Tool calls | 1 |
+| Input/output tokens | 1370 / 36 |
+| Durata | 169029 ms |
+| Exit code | 1 |
+
+Il terminale pubblico redatto non espone il dettaglio della call fallita e non
+consente di attribuire una causa precisa. Nessuna approval è presentata e il
+controller conserva SHA-256
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`.
+Il gate richiede due quick start consecutivi: `pc.4` è non promuovibile.
+
+L'audit del candidate trova però un disallineamento deterministico: il system
+prompt del reference agent continua a descrivere read-before-mutate, guarded
+write/patch ed `expected_digest` anche quando il tool set è esclusivamente
+read-only. Questo non prova che il modello abbia richiesto una patch, ma
+pubblicizza capacità assenti e contraddice il confine ADR-0029. L'hardening
+capability-aware rimuove le istruzioni mutative dai run read-only e le conserva
+soltanto quando write o patch sono dichiarati. `pc.5` deve incorporare la
+correzione e ripetere integralmente il gate; `pc.4` non viene rinominato o
+sovrascritto.
+
 # Verdetto
 
 **Fase 5 non conclusa. NO-GO alla release candidate e alla release.**

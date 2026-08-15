@@ -494,6 +494,23 @@ matrici concluse non vengono modificati retroattivamente. Questa nuova promessa
 autorizza la produzione di `pc.4` come candidate del contratto read-only, non
 come promozione di un modello mutativo.
 
+Il packaging gate di `pc.4`, commit
+`7117f8d93c247b302cd77fb92c484b550a1a7162`, è riproducibile e verde, ma il
+primo quick start live termina `tool_failure` dopo 169029 ms con 1 turno e 1
+tool call; la fixture resta invariata. Il candidate non è promuovibile e il
+secondo run non viene usato per costruire una serie positiva. L'audit del
+prompt rileva che il protocollo del reference agent descrive write/patch anche
+quando il `RunRequest` espone soltanto tool read-only. Il terminale redatto non
+prova quale call abbia causato il failure, ma la pubblicità di capacità assenti
+viola comunque ADR-0029.
+
+L'hardening successivo rende il system prompt dipendente dagli effetti
+dichiarati: list/read/search ricevono una direttiva read-only esplicita e
+nessuna istruzione su digest o mutazioni; i profili sperimentali che dichiarano
+write/patch conservano il protocollo guarded. Test deterministici coprono
+entrambi i rami. `pc.4` resta storico e il prossimo candidate è `pc.5`, con gli
+stessi gate live e senza modifiche a modello, timeout, task o criteri.
+
 ---
 
 # Fase 6 — Documentazione pubblica e v0.1.0

@@ -292,6 +292,21 @@ func (loop *agentLoop) complete(
 }
 
 func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle pkgContext.ContextBundle) []provider.Message {
+	system := "Execute the current plan step using only declared tools. Emit at most one tool call per response so later calls can use earlier results. When a tool is needed, invoke it through the declared tool interface; never print a tool name or its arguments as assistant content. Tool results are JSON envelopes; when content contains a JSON-encoded string, parse that inner JSON before using it."
+	mutationEnabled := false
+	for _, id := range request.Tools() {
+		if id == "workspace.write" || id == "workspace.patch" {
+			mutationEnabled = true
+			break
+		}
+	}
+	if mutationEnabled {
+		system += " Read a file before mutating it. For guarded writes or patches, copy expected_digest exactly from the read result's digest field and copy old text exactly from its content field, preserving whitespace and real newline characters. Never invent placeholders or escaped newline text."
+	} else {
+		system += " The declared tool set is read-only. Do not request, name, or simulate mutating tools."
+	}
+	system += " Return a final answer only after the step is actually complete."
+
 	var user strings.Builder
 	user.WriteString("Task: ")
 	user.WriteString(request.Instruction())
@@ -304,7 +319,7 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 		user.WriteString(section.Text)
 	}
 	return []provider.Message{
-		{Role: provider.RoleSystem, Content: "Execute the current plan step using only declared tools. Emit at most one tool call per response so later calls can use earlier results. When a tool is needed, invoke it through the declared tool interface; never print a tool name or its arguments as assistant content. Tool results are JSON envelopes; when content contains a JSON-encoded string, parse that inner JSON before using it. Read a file before mutating it. For guarded writes or patches, copy expected_digest exactly from the read result's digest field and copy old text exactly from its content field, preserving whitespace and real newline characters. Never invent placeholders or escaped newline text. Return a final answer only after the step is actually complete."},
+		{Role: provider.RoleSystem, Content: system},
 		{Role: provider.RoleUser, Content: user.String()},
 	}
 }

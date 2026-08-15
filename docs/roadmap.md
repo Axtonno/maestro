@@ -659,6 +659,15 @@ questa release e resta debito separato della Milestone 3. Il nuovo contratto
 autorizza `pc.4`, che deve superare packaging riproducibile, installazione
 pulita e due quick start read-only consecutivi prima della promozione a RC.
 
+`pc.4`, commit `7117f8d93c247b302cd77fb92c484b550a1a7162`, supera il
+doppio packaging ma fallisce il primo quick start read-only con
+`tool_failure`, 1 turno e 1 tool call dopo 169029 ms; la fixture resta
+invariata. Il prompt incorporato descrive ancora mutazioni anche quando il tool
+set ufficiale è read-only. Il candidate resta storico e non promuovibile. Un
+hardening capability-aware limita il prompt read-only alle capacità dichiarate
+e conserva il protocollo guarded soltanto per profili sperimentali mutativi;
+il gate riparte con `pc.5` senza cambiare modello, timeout, task o criteri.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.

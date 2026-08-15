@@ -77,10 +77,21 @@ func TestEncodeToolResultPreservesStructuredJSON(t *testing.T) {
 	}
 }
 
-func TestInitialMessagesRequireSequentialGuardedMutations(t *testing.T) {
+func TestInitialMessagesAreScopedToDeclaredToolEffects(t *testing.T) {
 	request := runRequest(t, "run-protocol", "agent.general", "workspace", 5)
 	plan := pendingPlan(t, "inspect")
 	messages := initialMessages(request, plan.Steps()[0], testBundle(t, "workspace"))
+	if len(messages) != 2 || !containsAll(
+		messages[0].Content,
+		"at most one tool call per response",
+		"invoke it through the declared tool interface",
+		"declared tool set is read-only",
+	) || strings.Contains(messages[0].Content, "copy expected_digest exactly") {
+		t.Fatalf("read-only protocol advertises mutation: %#v", messages)
+	}
+
+	mutating := requestWithTools(t, request, []pkgTool.ID{"workspace.read", "workspace.patch"}, false)
+	messages = initialMessages(mutating, plan.Steps()[0], testBundle(t, "workspace"))
 	if len(messages) != 2 || !containsAll(
 		messages[0].Content,
 		"at most one tool call per response",

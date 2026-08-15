@@ -2133,3 +2133,21 @@ live mancante resta debito della Milestone 3 ma non blocca la release read-only.
 Il nuovo contratto autorizza `v0.1.0-pc.4` come candidate del profilo
 read-only; deve ancora superare doppio packaging riproducibile, installazione
 pulita, CLI dall'artifact e due quick start live consecutivi prima della RC.
+
+`pc.4` viene prodotto dal commit
+`7117f8d93c247b302cd77fb92c484b550a1a7162`; il doppio packaging è
+byte-identico con SHA-256
+`d62f5e4b49e81508f1256d0cf7ac8785a62a9ac92cf30c144047cea4f14f9fb3`.
+Installazione pulita, config read-only, version/help, doctor 9/9, models e agents
+sono verdi. Il primo quick start termina però `tool_failure` dopo 169029 ms, 1
+turno e 1 tool call; il digest della fixture resta invariato e `pc.4` non è
+promuovibile.
+
+L'audit rileva che il system prompt descrive ancora write/patch e digest anche
+quando il `RunRequest` non dichiara tool mutanti. Il terminale redatto non prova
+la call esatta che ha fallito, ma il disallineamento viola il nuovo confine.
+L'hardening rende il prompt capability-aware: i run read-only vietano di
+richiedere o simulare mutazioni, mentre il protocollo guarded resta disponibile
+solo per tool set sperimentali mutativi. I due rami sono coperti da test. `pc.5`
+è il prossimo candidate e deve ripetere l'intero gate senza cambiare modello,
+timeout, task o criteri.

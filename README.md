@@ -364,8 +364,11 @@ conclusa senza vincitori e nessuna fixture è stata modificata. ADR-0029 sceglie
 quindi una v0.1.0 ufficialmente read-only:
 `llama3.1:8b` resta la fixture supportata, la configurazione inclusa espone solo
 list/read/search e nega le mutazioni; reference agent mutante, approval
-mutativa e llama.cpp sono sperimentali/non supportati. `pc.4` è il candidate
-read-only di questo nuovo confine, non la promozione di un modello.
+mutativa e llama.cpp sono sperimentali/non supportati. Il primo candidate del
+nuovo confine, `pc.4`, ha fallito il primo quick start con `tool_failure`: il
+prompt descriveva ancora capacità mutative non dichiarate. L'hardening
+successivo rende il protocollo capability-aware; `pc.5` è il nuovo candidate
+read-only, non la promozione di un modello.
 Evidenze e matrice sono in `docs/reports/milestone-8-phase-5-interim.md` e
 `docs/reports/milestone-8-model-selection.md`.
 
