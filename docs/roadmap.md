@@ -729,6 +729,107 @@ Il gate, il design e il piano operativo sono descritti in
 
 ---
 
+# Milestone 9 — Post-release & Benchmark Closure
+
+Stato: In corso — baseline locale raccolta, prove live pendenti
+
+Obiettivi:
+
+- osservare la v0.1.0 read-only su installazioni e workspace reali;
+- separare bug v0.1.x, limiti del modello, problemi ambientali, UX e richieste
+  evolutive;
+- verificare installazione, doctor, cancellazione, deadline e hard limit fuori
+  dalla fixture embedded;
+- chiudere senza ambiguità il debito llama.cpp della Milestone 3;
+- congelare le evidenze Ollama storiche e definire il profilo benchmark
+  mutativo.
+
+Output atteso:
+
+- `reports/v0.1.0-post-release-observation.md` conclusivo;
+- eventuali patch release v0.1.x ristrette al confine read-only;
+- decisione formale sulla chiusura della Milestone 3 e sullo stato llama.cpp;
+- GO/NO-GO verso il contratto mutativo.
+
+Nessuna capacità mutativa diventa supportata durante questa milestone.
+
+---
+
+# Milestone 10 — Controlled Mutation
+
+Stato: Pianificata — subordinata al gate della Milestone 9
+
+Obiettivo:
+
+Consegnare il percorso controllato:
+
+```text
+read -> prepare patch -> preview -> approval -> apply -> reindex -> final
+```
+
+Scope candidato:
+
+- `workspace.patch` su un file esistente;
+- diff concreta preparata prima dell'approvazione;
+- approval vincolata al fingerprint esatto della patch;
+- precondizione SHA-256, containment e rifiuto symlink;
+- commit atomico e nessun retry implicito;
+- invalidazione del contesto all'inizio dell'effetto;
+- reindex riuscito prima della risposta finale;
+- profilo mutativo separato e opt-in.
+
+`workspace.write` per creare file richiede qualificazione separata. Shell, Git,
+Composer, Artisan, PHPUnit, sandbox, recovery e multi-agent restano fuori
+scope.
+
+Il release contract viene fissato da un nuovo ADR soltanto dopo le evidenze
+della Milestone 9.
+
+---
+
+# Milestone 11 — Mutation Qualification
+
+Stato: Pianificata
+
+Obiettivi:
+
+- qualificare provider, modello e profilo hardware senza modificare i gate per
+  ottenere un pass;
+- applicare Gate A `3/3`, Gate B `2/2` e Gate C `3/3` in fail-fast;
+- introdurre il Developer Benchmark Laravel mutativo;
+- verificare outcome ed esatto stato fisico del workspace in ogni scenario;
+- documentare esplicitamente supporto sul profilo corrente, requisito hardware
+  superiore oppure rinvio della mutazione.
+
+Il benchmark include patch positiva, digest stale, traversal/symlink, deny,
+cancellazione, reindex, failure durante l'effetto, tool non dichiarato e replay
+di approval.
+
+---
+
+# Milestone 12 — Productization v0.2.0
+
+Stato: Pianificata
+
+Obiettivi:
+
+- configurazioni di esempio distinte read-only e mutating;
+- packaging candidate riproducibile e installazione pulita;
+- quick start read-only consecutivi e matrice mutativa completa;
+- gate deny, EOF, no-TTY, SIGINT, deadline e hard limit;
+- scansione anti-leak e aggiornamento di compatibility, security e known
+  issues;
+- release candidate immutabile e artifact finale costruito da un commit
+  successivo alla documentazione;
+- tag verificato contro il commit incorporato nel binario.
+
+La release è guidata dal contratto di sicurezza e dalla validazione live, non
+dalla sola presenza di `workspace.write` e `workspace.patch` nel codice.
+
+Il piano completo è in `v0.2.0-development-plan.md`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.
@@ -758,6 +859,8 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - release-readiness-audit.md
 - milestone-8-design.md
 - milestone-8-development-plan.md
+- v0.2.0-development-plan.md
+- reports/v0.1.0-post-release-observation.md
 - configuration.md
 - cli.md
 - MAESTRO_CONTEXT.md

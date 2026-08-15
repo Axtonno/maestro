@@ -63,6 +63,7 @@ Completati:
 * operational-experience.md
 * installation.md
 * packaging-candidate.md
+* v0.2.0-development-plan.md
 
 ---
 
@@ -2221,3 +2222,38 @@ della fixture resta invariato. Il medesimo binario osserva il limite
 `model_turns: 1` con exit 1 e SIGINT con exit 130/shutdown in 1.997 ms; anti-leak
 e gate repository-wide sono verdi. Il tag annotato `v0.1.0` punta al commit
 incorporato nel binario. Fase 6, Milestone 8 e v0.1.0 sono concluse.
+
+---
+
+# Direzione v0.2.0
+
+La v0.2.0 è pianificata come vertical slice mutativo controllato per il
+reference agent Laravel:
+
+```text
+read -> prepare patch -> preview -> approval -> apply -> reindex -> final
+```
+
+La prima attività è la Milestone 9 — Post-release & Benchmark Closure. La
+baseline locale è raccolta in
+`docs/reports/v0.1.0-post-release-observation.md`; le prove live restano
+pendenti perché nella sessione di apertura Ollama non era in esecuzione. La
+suite completa è verde con una cache Go isolata e non sono stati identificati
+bug v0.1.x dalla sola analisi statica.
+
+Le milestone successive sono:
+
+1. Milestone 10 — Controlled Mutation;
+2. Milestone 11 — Mutation Qualification;
+3. Milestone 12 — Productization v0.2.0.
+
+Il contratto candidato qualifica prima `workspace.patch` su un solo file
+esistente, con diff concreta e approval exact-fingerprint. La creazione tramite
+`workspace.write` richiede qualificazione separata. Shell, Git, esecuzione di
+processi, sandbox, recovery, multi-agent, tool esterni e modifiche coordinate
+multi-file restano fuori scope.
+
+Il piano operativo è in `docs/v0.2.0-development-plan.md`. Un nuovo ADR di
+release verrà scritto solo dopo il gate di osservazione e la decisione formale
+sullo stato llama.cpp; la presenza dei tool mutativi sperimentali non amplia la
+compatibility promise corrente.
