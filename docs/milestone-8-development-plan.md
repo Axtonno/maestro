@@ -367,7 +367,7 @@ Gate: **superato**. Report: `reports/milestone-8-phase-4.md`.
 
 # Fase 5 — Validazione live e release candidate
 
-Stato: In corso — validazione live e selezione del modello mutativo; NO-GO RC.
+Stato: In corso — matrice 8B conclusa, decisione di prodotto richiesta; NO-GO RC.
 
 ## Obiettivo
 
@@ -475,9 +475,23 @@ Gate C ha però raggiunto il limite complessivo pubblico dopo una read e una
 seconda tool call, terminando `deadline_exceeded` in 600077 ms prima di approval
 o patch. La fixture è rimasta invariata; i tentativi 2–3 non sono stati eseguiti
 in fail-fast. Anche Granite è escluso, non esiste un vincitore e `pc.4` non
-viene prodotto. Il prossimo candidato è `qwen3:8b` non-thinking, sottoposto
-agli stessi gate; un suo eventuale fallimento richiederà di rivalutare il
-contratto di release prima di modificare il profilo pubblico.
+viene prodotto. Il candidato successivo previsto era `qwen3:8b` non-thinking,
+da sottoporre agli stessi gate; un suo eventuale fallimento avrebbe richiesto
+di rivalutare il contratto di release prima di modificare il profilo pubblico.
+
+L'ultimo candidato della matrice, `qwen3:8b`, è stato provato in modalità
+non-thinking con una riga finale `/no_think` fissata prima dei gate e applicata
+nello stesso punto del protocollo. `maestro doctor` supera 9 check, ma la prima
+sequenza del Gate A termina dopo 100977 ms senza tool call, con 227/256 token e
+failure `tool_call_count`. Le sequenze 2–3 e i Gate B/C non sono eseguiti in
+fail-fast; fixture e artifact restano invariati. La ricerca corrente di modelli
+8B termina senza vincitori e `pc.4` non viene prodotto.
+
+Prima di riprendere l'implementazione occorre decidere formalmente se rendere
+v0.1.0 read-only rinviando le mutazioni, mantenere le mutazioni alzando il
+requisito hardware anche in termini di capacità computazionale, oppure rinviare
+la release finché non esiste una fixture adeguata. Timeout e limiti pubblici
+non vengono modificati retroattivamente.
 
 ---
 

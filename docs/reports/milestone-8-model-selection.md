@@ -2,10 +2,10 @@
 
 Data: 2026-08-15
 
-Stato: In corso — nessun modello vincente
+Stato: Matrice corrente conclusa — nessun modello vincente
 
-Verdetto: **`rnj-1:8b-instruct-q4_K_M` escluso al Gate B e
-`ibm/granite4.1:8b` escluso al Gate C; nessun `pc.4`**
+Verdetto: **rnj escluso al Gate B, Granite al Gate C e Qwen3 al Gate A;
+decisione sul contratto v0.1.0 richiesta, nessun `pc.4`**
 
 ---
 
@@ -172,7 +172,7 @@ digest originale: nessuna mutazione è avvenuta e nessun grant è stato emesso.
 Gate C: **0 successi su 1 tentativo eseguito**. I tentativi 2–3 non sono stati
 eseguiti per la regola fail-fast.
 
-## Matrice e verdetto aggiornati
+## Matrice dopo Granite
 
 | Modello | Tool diretto | Agent read-only | Agent mutante | Fixture v0.1.0 |
 |---|---|---|---|---|
@@ -186,6 +186,92 @@ riportava modelli residenti e la memoria disponibile era tornata a circa 11
 GiB.
 
 Non esiste ancora un modello vincente. `pc.3` resta una baseline storica non
-promuovibile, `pc.4` non viene prodotto e il prossimo candidato previsto è
-`qwen3:8b` in modalità non-thinking, sottoposto senza modifiche agli stessi
+promuovibile, `pc.4` non viene prodotto e il candidato successivo previsto era
+`qwen3:8b` in modalità non-thinking, da sottoporre senza modifiche agli stessi
 Gate A, B e C.
+
+# Candidate `qwen3:8b`
+
+## Profilo non-thinking fissato prima dei gate
+
+| Campo | Valore |
+|---|---|
+| Modello | `qwen3:8b` |
+| Ollama model ID | `500a1f067a9f` |
+| Dimensione locale | 5,2 GB |
+| Provider | Ollama `0.32.5` |
+| Baseline Maestro | `v0.1.0-pc.3` |
+| Commit codice | `d362b9910f68e5aecae3a489eb5852e339bc3939` |
+| Piattaforma | Linux `amd64`, CPU-only |
+| Thinking control | riga finale `/no_think` nell'istruzione utente iniziale |
+
+`pc.3` non espone il campo Ollama `think` nella configurazione pubblica. Il
+profilo Qwen3 usa quindi il soft switch documentato dal modello: ogni
+conversazione indipendente del Gate A e ogni istruzione iniziale dei Gate B/C
+terminano con una sola riga `/no_think`. La direttiva resta nello stesso punto
+del protocollo, non viene aggiunta ai risultati tool o a turni selezionati e
+non modifica system prompt, timeout, budget, fixture, temperatura del Gate A o
+criteri di accettazione. Riferimenti: [Ollama Thinking](https://docs.ollama.com/capabilities/thinking)
+e [Qwen3-8B model card](https://huggingface.co/Qwen/Qwen3-8B).
+
+Questo meccanismo è fissato prima dell'esecuzione. Se Qwen3 supera tutti i gate,
+il profilo dovrà diventare parte esplicita del successivo `pc.4`; in caso di
+fallimento non verranno provati casualmente altri modelli 8B nella matrice
+corrente e il contratto di release dovrà essere rivalutato.
+
+## Preflight e Gate A
+
+Il modello era già presente localmente. `maestro doctor` dal binario `pc.3`,
+con configurazione temporanea identica al profilo pubblico salvo il modello
+chat, ha superato tutti i 9 check. L'harness Gate A testato e sottoposto a vet
+aveva SHA-256
+`9223362b49384946d2a02ff75eaf1ad4f5505b53512b6899c4178c98644e4184`.
+
+La prima conversazione ufficiale ha applicato temperatura zero, tool choice e
+schema strict invariati e la riga finale `/no_think`. Il completamento read non
+ha emesso tool call:
+
+| Sequenza | Stage | Tool call | Token in/out | Durata | Esito |
+|---:|---|---:|---:|---:|---|
+| 1 | read | 0 | 227 / 256 | 100977 ms | Failed: `tool_call_count` |
+
+L'output ha raggiunto il limite di 256 token senza produrre la singola
+`workspace_read` richiesta. Il Gate A richiedeva tre sequenze valide
+consecutive.
+
+Gate A: **0 successi su 1 sequenza eseguita**. Le sequenze 2–3 non sono state
+eseguite per la regola fail-fast; i Gate B e C non sono stati avviati.
+
+## Integrità e contenimento finali
+
+- Gate A non ha invocato Tool Runtime né eseguito effetti;
+- nessuna approval è stata presentata;
+- `OrderController.php` conserva SHA-256
+  `4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`;
+- timeout, budget, fixture, prompt di protocollo e criteri non sono stati
+  modificati dopo l'esito;
+- Qwen3 è stato scaricato dalla RAM, `ollama ps` era vuoto e la memoria
+  disponibile era tornata a circa 11 GiB;
+- nessun packaging candidate è stato prodotto.
+
+# Matrice finale e decisione richiesta
+
+| Modello | Tool diretto | Agent read-only | Agent mutante | Fixture v0.1.0 |
+|---|---|---|---|---|
+| `rnj-1:8b-instruct-q4_K_M` | Compatibile, 3/3 | Non supportato sul profilo pubblico | Non valutato | Escluso |
+| `ibm/granite4.1:8b` | Compatibile, 3/3 | Compatibile, 2/2 | Non supportato sul profilo pubblico | Escluso |
+| `qwen3:8b` non-thinking | Non compatibile, 0 successi su 1 sequenza | Non valutato | Non valutato | Escluso |
+
+La ricerca dei modelli 8B della matrice corrente termina senza un vincitore.
+Le evidenze disponibili non giustificano `pc.4` né un aumento retroattivo dei
+limiti. Prima di proseguire deve essere scelta e formalizzata una delle seguenti
+direzioni di prodotto:
+
+1. v0.1.0 ufficialmente read-only, con mutazioni rinviate;
+2. mutazioni conservate con un requisito hardware superiore che includa la
+   capacità computazionale, non soltanto la RAM;
+3. release rinviata finché non viene identificata una fixture adeguata.
+
+Fase 5 resta aperta e la release candidate rimane in NO-GO fino a questa
+decisione. `pc.3` è una baseline storica non promuovibile e `pc.4` non viene
+prodotto.

@@ -2099,6 +2099,22 @@ digest del controller resta
 `4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`;
 nessun grant o effetto è stato prodotto. I tentativi 2–3 non vengono eseguiti
 in fail-fast. Granite è escluso, il modello viene scaricato dalla RAM e `pc.4`
-non viene prodotto. Il prossimo candidato è `qwen3:8b` non-thinking agli stessi
-Gate A, B e C; se fallisce, il contratto di release deve essere rivalutato prima
-di cambiare i limiti pubblici.
+non viene prodotto. Il candidato successivo previsto era `qwen3:8b`
+non-thinking agli stessi Gate A, B e C; un suo fallimento avrebbe richiesto di
+rivalutare il contratto di release prima di cambiare i limiti pubblici.
+
+`qwen3:8b` è l'ultimo candidato della matrice corrente. Poiché `pc.3` non espone
+il parametro Ollama `think`, il profilo non-thinking viene fissato prima dei
+gate con una sola riga finale `/no_think` nell'istruzione utente iniziale di
+ogni conversazione. `maestro doctor` supera 9 check. La prima sequenza del Gate
+A termina però dopo 100977 ms senza tool call (`tool_call_count`), con 227 token
+in ingresso e 256 in uscita. Le sequenze 2–3 e i Gate B/C non vengono eseguiti
+in fail-fast. Il controller conserva SHA-256
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`,
+Qwen3 viene scaricato dalla RAM e nessun artifact viene prodotto.
+
+La matrice 8B termina senza vincitori. `pc.4` resta vietato e Fase 5 è in NO-GO
+RC finché una decisione formale non sceglie tra v0.1.0 read-only con mutazioni
+rinviate, mutazioni con requisito hardware/computazionale superiore, oppure
+rinvio della release in attesa di una fixture adeguata. I limiti pubblici non
+vengono aumentati retroattivamente.

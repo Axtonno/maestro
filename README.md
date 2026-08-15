@@ -358,8 +358,12 @@ ma non è promuovibile: `llama3.1:8b` fallisce il gate mutativo,
 `rnj-1:8b-instruct-q4_K_M` si arresta al gate read-only e
 `ibm/granite4.1:8b`, pur superando tool protocol 3/3 e read-only 2/2, termina
 `deadline_exceeded` nel primo tentativo mutativo prima di approval e patch.
-Nessuna fixture è stata modificata e nessun `pc.4` è stato prodotto. Evidenze
-e matrice aggiornata sono in `docs/reports/milestone-8-phase-5-interim.md` e
+L'ultimo candidato `qwen3:8b`, provato con `/no_think` riproducibile, non emette
+la read richiesta già nella prima sequenza del Gate A. La matrice 8B corrente è
+conclusa senza vincitori: nessuna fixture è stata modificata e nessun `pc.4` è
+stato prodotto. Prima di proseguire serve una decisione esplicita tra v0.1.0
+read-only, requisito hardware mutativo superiore o rinvio della release.
+Evidenze e matrice sono in `docs/reports/milestone-8-phase-5-interim.md` e
 `docs/reports/milestone-8-model-selection.md`.
 
 Uso essenziale:

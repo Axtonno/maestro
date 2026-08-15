@@ -638,8 +638,17 @@ Gate B. Nel primo run del Gate C esegue la read e propone una seconda tool call,
 ma il run termina `deadline_exceeded` dopo 600077 ms, prima di approval o patch.
 Il controller resta byte-identico; i tentativi 2–3 non vengono eseguiti in
 fail-fast. Granite è escluso dalla fixture mutativa sul profilo CPU-only
-pubblico, `pc.4` resta vietato e la selezione prosegue con `qwen3:8b`
-non-thinking agli stessi criteri.
+pubblico, `pc.4` resta vietato e la selezione è quindi passata a `qwen3:8b`
+non-thinking con gli stessi criteri.
+
+`qwen3:8b` viene eseguito con la riga finale `/no_think` fissata prima dei gate.
+Il preflight passa 9 check, ma la prima sequenza del Gate A non emette alcuna
+tool call e termina con 227/256 token dopo 100977 ms. Fail-fast arresta le
+sequenze 2–3 e impedisce l'avvio dei Gate B/C. La fixture resta byte-identica e
+il modello viene scaricato dalla RAM. La matrice 8B corrente è quindi conclusa
+senza vincitori: nessun `pc.4` e NO-GO RC finché non viene scelta esplicitamente
+una v0.1.0 read-only, un profilo mutativo con requisito hardware superiore o il
+rinvio della release.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

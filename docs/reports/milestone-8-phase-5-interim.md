@@ -4,7 +4,7 @@ Data: 2026-08-13
 
 Aggiornato: 2026-08-15 — gate live `pc.3` e selezione fail-fast dei modelli
 
-Stato: In corso — selezione del modello mutativo; NO-GO RC
+Stato: In corso — matrice 8B conclusa, decisione di prodotto richiesta
 
 Verdetto: **NO-GO alla release candidate**
 
@@ -189,6 +189,19 @@ non sono stati eseguiti in fail-fast. Anche Granite è escluso dalla fixture
 v0.1.0 sul profilo CPU-only pubblico. Il modello è stato scaricato dalla RAM e
 non viene prodotto `pc.4`.
 
+L'ultimo candidato `qwen3:8b` è stato configurato in modalità non-thinking con
+una riga finale `/no_think` fissata prima dei gate e applicata uniformemente al
+messaggio utente iniziale. Il preflight dal binario `pc.3` ha superato tutti i
+9 check. La prima sequenza del Gate A non ha però emesso `workspace_read`: è
+terminata `tool_call_count` dopo 100977 ms, con 227/256 token e zero tool call.
+Le sequenze 2–3 e i Gate B/C non sono stati eseguiti in fail-fast. L'harness
+non ha eseguito Tool Runtime, la fixture conserva il digest originale e Qwen3 è
+stato scaricato dalla RAM.
+
+La matrice 8B corrente è conclusa senza un modello vincente. Nessun `pc.4`
+viene prodotto e la selezione non prosegue casualmente con altri modelli dello
+stesso profilo.
+
 # Ambiente live rilevato
 
 | Componente | Evidenza |
@@ -197,12 +210,14 @@ non viene prodotto `pc.4`.
 | Chat positiva | `llama3.1:8b`, GGUF Q4_K_M |
 | Embedding | `embeddinggemma:latest`, GGUF BF16 |
 | Caso negativo conservato | `qwen2.5-coder:7b`, GGUF Q4_K_M |
+| Candidati esclusi | `rnj-1:8b-instruct-q4_K_M`, `ibm/granite4.1:8b`, `qwen3:8b` |
 | llama.cpp | `llama-server` versione `1` (`51eae8cfc`) |
 | Host | Linux `amd64`, Intel Core i5-8365U, 8 logical CPU |
 | Memoria | 15 GiB RAM, 4 GiB swap |
 
-I blob locali dei tre modelli erano leggibili. Nessun modello è stato
-scaricato, copiato o modificato durante la validazione.
+I blob locali dei modelli usati erano leggibili. I candidati successivi erano
+già presenti prima del rispettivo gate; nessun modello è stato scaricato,
+copiato o modificato durante le esecuzioni di validazione.
 
 # Evidenze Ollama valide
 
@@ -348,23 +363,22 @@ structured output e tool calling vanno provati con il solo modello chat;
 embedding in un processo separato. Lifecycle/router va eseguito soltanto su un
 host con memoria sufficiente o classificato esplicitamente come non validato.
 
-Il percorso Ollama mutativo prosegue con `qwen3:8b` in modalità non-thinking,
-senza modificare i Gate A, B e C. Soltanto un modello che superi l'intera
-matrice può motivare `pc.4`; il gate mutativo dovrà partire da una copia pulita
-della fixture e dimostrare una patch reale, approval one-shot, reindex e
-risposta finale prima di procedere a deny, EOF, no-TTY, SIGINT, hard limit e
-installazione pulita. Se anche questo candidato fallisce, il contratto della
-release dovrà essere rivalutato prima di ampliare i timeout o cambiare il
-profilo pubblico.
+Il percorso Ollama mutativo è sospeso in attesa di una decisione di prodotto.
+Le opzioni da formalizzare sono: v0.1.0 ufficialmente read-only con mutazioni
+rinviate; mantenimento delle mutazioni con un requisito hardware superiore che
+includa capacità computazionale e non soltanto RAM; oppure rinvio della release
+finché non viene identificata una fixture adeguata. Timeout, budget e criteri
+non devono essere ampliati retroattivamente in risposta agli esiti osservati.
 
 # Verdetto
 
 **Fase 5 non conclusa. NO-GO alla release candidate e alla release.**
 
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
-con configurazione esatta di `pc.3`. Restano blocker la scelta di una
-combinazione supportabile per lo scenario mutativo Ollama, la matrice llama.cpp,
-l'installazione pulita completa e tutti i gate operativi finali. La Milestone 3
-resta formalmente aperta. `pc.1`, `pc.2` e `pc.3` restano baseline storiche e
-non possono essere promossi. Nessun candidate è attualmente ammesso alla
-prosecuzione del gate mutativo.
+con configurazione esatta di `pc.3`. La matrice mutativa 8B non produce un
+vincitore e richiede ora una decisione sul contratto v0.1.0; restano inoltre
+blocker la matrice llama.cpp, l'installazione pulita completa e i gate operativi
+finali. La Milestone 3 resta formalmente aperta. `pc.1`, `pc.2` e `pc.3`
+restano baseline storiche e non possono essere promossi. Nessun candidate è
+ammesso alla prosecuzione mutativa o alla release candidate prima della
+decisione.
