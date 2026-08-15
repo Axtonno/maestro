@@ -218,8 +218,10 @@ documentati senza trasformare una capability dichiarata in supporto implicito.
 - La prima parte della Milestone 8 è ridefinita come productization per v0.1.0.
 - La piattaforma ufficiale iniziale è Linux `amd64`; altri target restano
   sperimentali finché non superano una prova documentata.
-- Ollama con `llama3.1:8b` e `embeddinggemma:latest` è il percorso locale già
-  validato; `qwen2.5-coder:7b` resta il caso negativo canonico per tool calling.
+- Ollama con `llama3.1:8b` e `embeddinggemma:latest` è il percorso locale
+  validato per provider-level, embedding e reference agent read-only;
+  `llama3.1:8b` non è validato per il reference agent mutante dopo il gate
+  `pc.3`, mentre `qwen2.5-coder:7b` resta il caso negativo canonico.
 - llama.cpp è candidato al supporto ufficiale e lo diventa soltanto dopo la
   presenza e la verifica della matrice live verde.
 - Se la matrice llama.cpp non può essere completata, la release richiede una

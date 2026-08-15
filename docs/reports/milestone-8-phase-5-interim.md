@@ -125,6 +125,37 @@ fixture, guida renderizzata, `version`, help, `doctor` offline e installazione
 da directory vuota sono verdi. `pc.3` diventa l'unico input ammesso per la
 ripresa live; resta un packaging candidate e non una release candidate.
 
+## Gate live di `pc.3`
+
+Dal candidate estratto sono positivi `doctor` (9 check passed), `models`,
+`agents` e il quick start Laravel read-only con configurazione esatta:
+
+| Misura | Risultato |
+|---|---:|
+| Terminale | `completed` |
+| Model turns | 2 |
+| Tool calls | 1 |
+| Input/output tokens | 2831 / 61 |
+| Durata | 340820 ms |
+
+La risposta identifica correttamente `OrderService` e il run non richiede
+approval. Il primo tentativo della successiva serie mutativa, da una nuova
+estrazione, non ha però emesso tool call. `llama3.1:8b` ha descritto pseudo-call
+come contenuto assistant e il runtime ha accettato un terminale `completed` con
+1 model turn, 0 tool calls e durata 171978 ms. Nessuna approval è stata
+presentata e il target conserva SHA-256
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`,
+identico all'archive.
+
+La coreografia ADR-0028 governa una mutazione dopo che il provider propone una
+call mutante; non può inferire in sicurezza l'effetto richiesto da testo libero
+quando nessuna call viene emessa. La serie è quindi interrotta a `0/3` senza
+altro prompt tuning. `llama3.1:8b` resta positivo per tool calling diretto e
+reference agent read-only, ma non è dichiarato supportato per il reference
+agent mutante. La release rimane bloccata in attesa di un modello alternativo
+validato oppure di un contratto operativo esplicito più stretto. Dopo il test
+il modello è stato scaricato dalla RAM con `ollama stop`.
+
 # Ambiente live rilevato
 
 | Componente | Evidenza |
@@ -284,19 +315,20 @@ structured output e tool calling vanno provati con il solo modello chat;
 embedding in un processo separato. Lifecycle/router va eseguito soltanto su un
 host con memoria sufficiente o classificato esplicitamente come non validato.
 
-Il percorso Ollama deve essere ripreso da `pc.3` e da una copia pulita della
-fixture. Deve dimostrare una patch reale, approval one-shot, reindex e risposta
-finale prima di procedere a deny, EOF, no-TTY, SIGINT, hard limit e
-installazione pulita.
+Il percorso Ollama mutativo non deve essere ripreso finché non viene scelta una
+combinazione modello/contratto diversa. Il nuovo percorso dovrà partire da un
+candidate coerente e da una copia pulita della fixture, quindi dimostrare una
+patch reale, approval one-shot, reindex e risposta finale prima di procedere a
+deny, EOF, no-TTY, SIGINT, hard limit e installazione pulita.
 
 # Verdetto
 
 **Fase 5 non conclusa. NO-GO alla release candidate e alla release.**
 
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
-con configurazione esatta di `pc.2`. Restano blocker lo scenario mutativo
-Ollama, la matrice llama.cpp, l'installazione pulita completa e tutti i gate
-operativi finali. La
-Milestone 3 resta formalmente aperta. `pc.1` e `pc.2` restano baseline storiche
-e non possono essere promossi. La ripresa usa esclusivamente `pc.3`, costruito
-dal commit pulito che incorpora ADR-0028.
+con configurazione esatta di `pc.3`. Restano blocker la scelta di una
+combinazione supportabile per lo scenario mutativo Ollama, la matrice llama.cpp,
+l'installazione pulita completa e tutti i gate operativi finali. La Milestone 3
+resta formalmente aperta. `pc.1`, `pc.2` e `pc.3` restano baseline storiche e
+non possono essere promossi. Nessun candidate è attualmente ammesso alla
+prosecuzione del gate mutativo.

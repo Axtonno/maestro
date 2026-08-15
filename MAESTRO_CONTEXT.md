@@ -162,7 +162,8 @@ Release-Oriented v0.1.0 Product Boundary.
 
 Il gate post-Milestone 7 dà GO alla Milestone 8 come productization. La
 piattaforma iniziale supportata è Linux `amd64`; Ollama con `llama3.1:8b` e
-`embeddinggemma:latest` è la fixture positiva ufficiale. llama.cpp resta
+`embeddinggemma:latest` è positivo per provider-level e reference agent
+read-only, ma non per il reference agent mutante. llama.cpp resta
 condizionato alla presenza del report live. CLI, configurazione e package
 pubblici sono sperimentali; il modello resta trusted in-process e gli ambiti
 rinviati non entrano nella v0.1.0.
@@ -2066,5 +2067,15 @@ la coreografia deterministica. L'hardening è incorporato in
 `maestro-v0.1.0-pc.3-linux-amd64.tar.gz`, commit
 `d362b9910f68e5aecae3a489eb5852e339bc3939`, SHA-256
 `8fbdfbf9b207c8c984f295240bcb6345d32fcbfa42f5869dd27a39acc158fe26`.
-Il doppio build è byte-identico e il gate dell'archive è verde; soltanto `pc.3`
-può essere usato nella ripresa live.
+Il doppio build è byte-identico e il gate dell'archive è verde; `pc.3` è stato
+usato nella ripresa live.
+
+Dal candidate estratto, doctor, models, agents e quick start read-only sono
+positivi. Il primo tentativo mutativo ha invece terminato con zero tool call:
+`llama3.1:8b` ha descritto pseudo-call come testo. La fixture è rimasta
+byte-identica e la serie è stata fermata a `0/3`, senza altro prompt tuning.
+Il modello resta una fixture positiva provider-level e read-only, ma non è
+supportato per il reference agent mutante. La v0.1.0 è bloccata finché non viene
+validato un modello alternativo o definito un contratto operativo più stretto.
+`pc.3` resta una baseline non promuovibile e nessun candidate è ammesso alla
+prosecuzione mutativa prima di tale decisione.

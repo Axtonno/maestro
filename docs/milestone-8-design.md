@@ -66,7 +66,8 @@ principale della release.
 |---|---|---|
 | Piattaforma | Linux `amd64` | Artifact e installazione pulita obbligatori |
 | Ollama | Supportato | Endpoint locale esplicito e matrice live verde |
-| Chat/tool model | `llama3.1:8b` | Fixture positiva canonica Ollama |
+| Chat/tool model | `llama3.1:8b` | Positivo per provider-level e reference agent read-only |
+| Reference agent mutante | Nessun modello | Blocker: `llama3.1:8b` non emette tool call nel gate `pc.3` |
 | Embedding model | `embeddinggemma:latest` | Fixture positiva canonica Ollama |
 | `qwen2.5-coder:7b` | Caso negativo | Non supportato per il reference agent con tool calling |
 | llama.cpp | Candidato | Supportato solo dopo acquisizione o riesecuzione del report live |

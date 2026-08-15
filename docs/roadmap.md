@@ -612,8 +612,16 @@ nuovo packaging candidate prima di riprendere i gate live. L'hardening è ora
 incorporato in `v0.1.0-pc.3`, commit
 `d362b9910f68e5aecae3a489eb5852e339bc3939`, SHA-256
 `8fbdfbf9b207c8c984f295240bcb6345d32fcbfa42f5869dd27a39acc158fe26`.
-Il doppio gate di packaging è verde; `pc.3` è l'unico input della ripresa live
-e non è ancora una release candidate.
+Il doppio gate di packaging è verde; `pc.3` è stato l'input della ripresa live
+e non è una release candidate.
+
+Il quick start read-only di `pc.3` è verde. Nel primo gate mutativo
+`llama3.1:8b` ha però restituito pseudo-call come testo e nessuna tool call; la
+fixture è rimasta invariata e la serie è stata fermata a `0/3`. Il modello
+resta positivo per adapter/tool calling diretto e reference agent read-only,
+ma non è supportato per il reference agent mutante. Un modello sostitutivo o
+un contratto operativo più stretto deve essere scelto e validato prima della
+release candidate.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

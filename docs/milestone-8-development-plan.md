@@ -73,7 +73,8 @@ risultato della Milestone 7 in criteri di prodotto verificabili.
 
 - piattaforma ufficiale iniziale: Linux `amd64`;
 - provider ufficiale già validato: Ollama;
-- fixture positiva: `llama3.1:8b` per chat/tool calling e
+- fixture positiva: `llama3.1:8b` per chat/tool calling provider-level e
+  reference agent read-only, senza dichiarazione di supporto mutativo, e
   `embeddinggemma:latest` per embedding;
 - caso negativo canonico: `qwen2.5-coder:7b` per tool calling;
 - llama.cpp candidato e condizionato alla presenza della matrice live;
@@ -375,7 +376,9 @@ candidate come farebbe un nuovo utilizzatore.
 
 ## Matrice Ollama
 
-- usare `llama3.1:8b` come fixture positiva chat/tool calling;
+- usare `llama3.1:8b` come fixture positiva chat/tool calling provider-level e
+  read-only; richiedere un modello alternativo o un contratto esplicito più
+  stretto per riaprire il gate mutativo;
 - usare `embeddinggemma:latest` per embedding quando richiesto;
 - eseguire doctor, models, agents e run dall'artifact;
 - completare uno scenario Laravel read-only;
@@ -449,6 +452,12 @@ promuovibile. La ripresa dei gate live richiede un nuovo candidate prodotto
 dopo l'hardening descritto in ADR-0028. `v0.1.0-pc.3`, prodotto dal commit
 `d362b9910f68e5aecae3a489eb5852e339bc3939` e verificato con doppio build
 byte-identico, è l'unico input ammesso; non è ancora una release candidate.
+Il quick start read-only di `pc.3` è positivo, ma il primo tentativo mutativo ha
+prodotto un terminale testuale senza tool call. La serie è stata interrotta a
+`0/3`: `llama3.1:8b` non è una fixture supportata per il reference agent
+mutante e la selezione del percorso sostitutivo è un blocker di release. Dopo
+questo esito `pc.3` resta una baseline non promuovibile; nessun candidate è
+ammesso alla prosecuzione mutativa finché la decisione non è risolta.
 
 ---
 
