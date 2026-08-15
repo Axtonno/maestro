@@ -79,7 +79,7 @@ artifact="maestro-${version}-linux-amd64"
 archive="${artifact}.tar.gz"
 checksum="${archive}.sha256"
 release_version="${version#v}"
-release_notes="docs/releases/${release_version%%-*}.md"
+release_notes="docs/releases/v${release_version%%-*}.md"
 
 if [[ ! -f "$release_notes" ]]; then
     printf 'release notes are unavailable: %s\n' "$release_notes" >&2

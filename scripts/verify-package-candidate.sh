@@ -37,7 +37,7 @@ artifact="maestro-${version}-linux-amd64"
 archive="${artifact}.tar.gz"
 checksum="${archive}.sha256"
 release_version="${version#v}"
-release_notes="docs/releases/${release_version%%-*}.md"
+release_notes="docs/releases/v${release_version%%-*}.md"
 working="$(mktemp -d "${TMPDIR:-/tmp}/maestro-package-gate.XXXXXXXX")"
 cleanup() {
     rm -rf -- "$working"
