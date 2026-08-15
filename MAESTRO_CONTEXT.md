@@ -2177,3 +2177,13 @@ Da una nuova directory pulita supera checksum, version/help, profilo read-only,
 doctor 9/9, models, agents e un run di conferma `completed` in 64296 ms con una
 read reale. La fixture resta invariata. La Fase 5 è completata e la Fase 6 è il
 prossimo gate; tag e artifact finali v0.1.0 non sono ancora prodotti.
+
+L'integrazione conclusiva della Fase 5 esegue sullo stesso archive `rc.2` i
+controlli operativi esplicitamente richiesti dal piano. Un SIGINT durante la run
+produce terminale `canceled`, exit 130 e uscita del processo in 2 ms, entro il
+budget di shutdown di 30 secondi. Una configurazione temporanea con la sola
+variazione `model_turns: 1` produce `limit_exceeded`, exit 1, un turno e una
+read reale; la differenza fra wall time del processo e durata agentica è 6 ms,
+includendo startup e shutdown. In entrambi gli scenari stdout è vuoto, le
+scansioni di canary/path/contenuti/nomi tool sono negative e il digest del
+controller rimane invariato.

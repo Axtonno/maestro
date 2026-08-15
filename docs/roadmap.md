@@ -683,6 +683,16 @@ il distinto `v0.1.0-rc.2`, commit
 supera doppio packaging, installazione pulita, CLI completa e run live di
 conferma. La Fase 5 è completata; la Fase 6 è il prossimo gate.
 
+L'addendum operativo sul medesimo `rc.2` verifica anche SIGINT
+(`canceled`, exit 130, uscita in 2 ms), hard limit `model_turns: 1`
+(`limit_exceeded`, exit 1) e shutdown entro il budget di 30 secondi. In
+entrambi i casi stdout è vuoto, la scansione anti-leak è negativa e il
+workspace resta byte-identico.
+
+La Fase 6 produrrà l'artifact finale da un nuovo commit successivo alla
+documentazione pubblica. `rc.2` non verrà rinominato né ripacchettizzato
+retroattivamente come `v0.1.0`.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.

@@ -93,6 +93,59 @@ directory pulita, usando soltanto archive e checksum, sono verdi:
   2888/94 token e durata 64296 ms;
 - risposta corretta `OrderService::create` e digest della fixture invariato.
 
+# Cancellazione, hard limit e shutdown bounded
+
+I controlli mancanti sono stati eseguiti sul medesimo archive `rc.2`, estratto
+in una nuova directory dopo `sha256sum -c`. Entrambi gli scenari usano il
+profilo Ollama/`llama3.1:8b` read-only e un canary nell'istruzione per verificare
+che prompt e argomenti non vengano ristampati.
+
+## SIGINT durante una run attiva
+
+Scenario: avvio del quick start ufficiale in background, attesa di 3 secondi e
+invio di `SIGINT` al solo processo `maestro` avviato dal gate.
+
+| Evidenza | Risultato |
+|---|---:|
+| Terminale | `canceled` |
+| Exit code | 130 |
+| Turni/tool call | 1 / 0 |
+| Durata agentica | 2999 ms |
+| Latenza SIGINT → uscita processo | 2 ms |
+| Budget di shutdown CLI | 30 s |
+| stdout | 0 byte |
+
+Il processo termina quindi ampiamente entro il budget di shutdown bounded. Lo
+stderr contiene soltanto limiti, run ID, transizioni, contatori e codici
+redatti. La scansione con canary, path, nomi applicativi e nomi dei tool non
+trova corrispondenze. Il controller conserva SHA-256
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`.
+
+## Hard limit `model_turns: 1`
+
+Scenario: copia temporanea della configurazione inclusa con la sola variazione
+`limits.model_turns: 1`; provider, modello, workspace, agente, policy, tool set,
+task e gli altri limiti restano invariati. `doctor` supera preventivamente 9
+check sulla configurazione.
+
+| Evidenza | Risultato |
+|---|---:|
+| Limite dichiarato e osservato | `model_turns=1` |
+| Terminale | `limit_exceeded` |
+| Exit code | 1 |
+| Turni/tool call | 1 / 1 read-only |
+| Token in/out | 1417 / 34 |
+| Durata agentica | 169638 ms |
+| Durata processo | 169644 ms |
+| stdout | 0 byte |
+
+Il secondo turno viene impedito dal limite; non viene pubblicata una risposta
+parziale. La differenza complessiva fra wall time del processo e durata
+agentica è 6 ms, includendo startup e shutdown, ed è entro il relativo budget.
+La stessa scansione anti-leak è negativa e il digest del controller è
+invariato. Dopo i due scenari `llama3.1:8b` viene arrestato e `ollama ps` non
+mostra modelli residenti.
+
 # Gate deterministici finali
 
 Sul commit dell'RC sono verdi:
@@ -101,9 +154,6 @@ Sul commit dell'RC sono verdi:
 - `go test -race ./...`;
 - `go vet ./...`;
 - syntax check degli script e `git diff --check`.
-
-Il modello è stato arrestato dopo la prova e `ollama ps` non riportava modelli
-residenti.
 
 # Sicurezza e supporto
 
@@ -119,4 +169,5 @@ chiusa retroattivamente.
 
 `v0.1.0-rc.2` è l'unica release candidate promuovibile. La Fase 6 deve
 completare documentazione pubblica, compatibility matrix, security model,
-changelog e gate finale prima di produrre tag e artifact `v0.1.0`.
+changelog e gate finale prima di produrre tag e artifact `v0.1.0` da un nuovo
+commit. `rc.2` non deve essere rinominato o ripacchettizzato retroattivamente.

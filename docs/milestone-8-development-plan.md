@@ -1,6 +1,6 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.6.0
+Versione: 0.6.1
 
 Stato: In esecuzione — Fasi 1–5 completate, Fase 6 da avviare
 
@@ -527,6 +527,12 @@ quick start consecutivi. Dal medesimo commit viene prodotto il distinto
 doppio packaging, installazione pulita, CLI, doctor 9/9 e run di conferma sono
 verdi, con una read reale e fixture invariata. Il gate di Fase 5 è superato.
 
+Sul medesimo archive estratto vengono inoltre verificati i tre controlli
+operativi richiesti dal gate: SIGINT produce `canceled`/130 e uscita in 2 ms;
+`model_turns: 1` produce `limit_exceeded`/1 dopo una sola read; entrambi i
+processi chiudono entro il budget di shutdown di 30 secondi. stdout resta
+vuoto, le scansioni anti-leak sono negative e il workspace rimane invariato.
+
 ---
 
 # Fase 6 — Documentazione pubblica e v0.1.0
@@ -576,13 +582,15 @@ comportamento osservato coincidono.
 - i cambi futuri della config richiedono versione schema;
 - SDK stabile, plugin terzi e funzionalità rinviate non vengono promessi;
 - tutti i comandi copiabili corrispondono all'artifact pubblicato.
+- `rc.2` non viene rinominato o ripacchettizzato come release finale: dopo le
+  modifiche documentali si produce `v0.1.0` da un nuovo commit identificabile.
 
 ## Gate di pubblicazione
 
 - Fasi 1–5 completate;
 - suite, race detector, vet, benchmark deterministico e diff check verdi;
 - installazione pulita e quick start ripetuti sull'artifact finale;
-- checksum e `maestro version` verificati;
+- checksum e `maestro version` verificati sul nuovo commit di release;
 - licenza e security model presenti;
 - compatibility matrix coerente con i report live;
 - nessuna credenziale negli artifact;
