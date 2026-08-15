@@ -1,11 +1,11 @@
-# Maestro Packaging Candidate
+# Maestro Packaging and Release Artifacts
 
-Stato: Milestone 8, Fase 4
+Stato: Contratto di packaging v0.1.0
 
-Il packaging candidate è un artifact tecnico installabile usato per verificare
-build, contenuto, checksum e indipendenza dal checkout. Non è una release
-candidate e non è candidato alla pubblicazione: la promozione richiede i gate
-live della Fase 5.
+Lo stesso percorso riproducibile produce packaging candidate, release
+candidate e release finale. Lo stato è sempre esplicito nel manifest e nella
+guida d'installazione inclusa; un artifact non viene rinominato o sovrascritto
+per cambiarne lo stato.
 
 # Identità
 
@@ -27,12 +27,24 @@ live positivo della Fase 5 può essere invocato esplicitamente con
 `--status release-candidate`; il manifest deve riportare lo stesso stato. Un
 artifact `pc.N` fallito non viene rinominato o sovrascritto.
 
+La release finale usa `--status release` e una versione senza prerelease:
+
+```sh
+./scripts/verify-package-candidate.sh --version v0.1.0 --status release
+./scripts/package-candidate.sh --version v0.1.0 --status release --output dist
+```
+
+Deve essere prodotta da un worktree pulito successivo alla documentazione
+pubblica e superare nuovamente installazione e quick start. Una release
+candidate non viene rinominata come release.
+
 # Contenuto
 
 - binario `maestro` Linux `amd64`;
 - `LICENSE` Apache-2.0, `NOTICE` e licenze delle dipendenze distribuite;
-- README e documentazione preliminare per installazione, configurazione, CLI e
-  UX operativa;
+- README, changelog, security policy e documentazione pubblica per
+  installazione, quick start, configurazione, CLI, reference agent, sicurezza,
+  compatibilità, troubleshooting e release notes;
 - configurazione strict `version: 1` senza secret;
 - profilo ufficiale read-only senza tool mutanti e con
   `workspace_mutate: deny`;
@@ -41,7 +53,9 @@ artifact `pc.N` fallito non viene rinominato o sovrascritto.
 
 # Non garanzie
 
-Il candidate non certifica provider o modelli live e non implica supporto oltre
-Linux `amd64`. llama.cpp e il reference agent mutante sono sperimentali e non
-supportati nella v0.1.0. Il candidate non include sandbox, installer
-privilegiato, aggiornamento automatico o dependency download.
+Lo stato `packaging-candidate` non certifica provider o modelli live; lo stato
+`release-candidate` registra che il gate live è superato ma non rappresenta la
+pubblicazione finale. Anche lo stato `release` resta limitato dalla matrice in
+`compatibility.md`: llama.cpp e il reference agent mutante sono sperimentali e
+non supportati. Nessun artifact include sandbox, installer privilegiato,
+aggiornamento automatico o dependency download.

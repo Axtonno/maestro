@@ -1,8 +1,8 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.6.1
+Versione: 0.7.0
 
-Stato: In esecuzione — Fasi 1–5 completate, Fase 6 da avviare
+Stato: In esecuzione — Fasi 1–5 completate, Fase 6 in corso
 
 Data: 2026-08-15
 
@@ -37,7 +37,7 @@ sviluppo o conoscere le API Go interne.
 | 3 | Esperienza operativa | Completata | Fase 2 |
 | 4 | Packaging e installazione | Completata | Fasi 2–3 |
 | 5 | Validazione live e release candidate | Completata | Fasi 2–4 |
-| 6 | Documentazione pubblica e v0.1.0 | Da avviare | Fasi 1–5 |
+| 6 | Documentazione pubblica e v0.1.0 | In corso | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto al gate, ma documentazione e test vengono
 aggiornati in ogni incremento. Ogni fase produce un report sotto
@@ -537,7 +537,21 @@ vuoto, le scansioni anti-leak sono negative e il workspace rimane invariato.
 
 # Fase 6 — Documentazione pubblica e v0.1.0
 
-Stato: Da avviare.
+Stato: In corso — verità di prodotto e documentazione pubblica congelate;
+artifact finale non ancora prodotto.
+
+## Incremento documentale 2026-08-15
+
+La fonte autorevole è `compatibility.md`: Linux `amd64`, Ollama,
+`llama3.1:8b`, `embeddinggemma:latest` e reference agent Laravel read-only.
+README, installazione, quick start, configurazione, CLI, reference agent,
+security model/policy, troubleshooting, known issues, compatibility API,
+changelog e release notes sono allineati a questo confine. Gli script di
+packaging accettano ora lo stato finale `release` soltanto con una versione
+senza prerelease e richiedono tutti i documenti pubblici nell'archive.
+
+Questa baseline deve ancora essere committata, pacchettizzata e validata live;
+la presenza della documentazione non chiude la fase.
 
 ## Obiettivo
 
@@ -581,7 +595,7 @@ comportamento osservato coincidono.
 - `internal/` non è API;
 - i cambi futuri della config richiedono versione schema;
 - SDK stabile, plugin terzi e funzionalità rinviate non vengono promessi;
-- tutti i comandi copiabili corrispondono all'artifact pubblicato.
+- tutti i comandi copiabili corrispondono all'artifact pubblicato;
 - `rc.2` non viene rinominato o ripacchettizzato come release finale: dopo le
   modifiche documentali si produce `v0.1.0` da un nuovo commit identificabile.
 

@@ -1959,7 +1959,7 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 ## Gate post-Milestone 7 e percorso v0.1.0
 
 Stato: GO alla Milestone 8; Fasi 1–5 completate; `v0.1.0-rc.2` validata;
-Fase 6 da avviare e v0.1.0 non ancora pubblicata.
+Fase 6 in corso e v0.1.0 non ancora pubblicata.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
@@ -2187,3 +2187,14 @@ read reale; la differenza fra wall time del processo e durata agentica è 6 ms,
 includendo startup e shutdown. In entrambi gli scenari stdout è vuoto, le
 scansioni di canary/path/contenuti/nomi tool sono negative e il digest del
 controller rimane invariato.
+
+La Fase 6 congela la verità di prodotto in `docs/compatibility.md`: Linux
+`amd64`, Ollama, `llama3.1:8b`, `embeddinggemma:latest` e reference agent
+Laravel read-only; mutazioni e llama.cpp sono sperimentali/non supportati e il
+processo resta trusted in-process senza sandbox. README e documentazione
+artifact-first includono quick start, installazione, configurazione, CLI,
+reference agent, security model/policy, troubleshooting, known issues,
+compatibilità API, changelog e release notes. Il packaging supporta lo stato
+finale distinto `release` soltanto per versioni non prerelease e richiede
+l'intera superficie documentale nell'archive. La baseline deve ancora essere
+committata e validata come nuovo artifact `v0.1.0`; `rc.2` non viene rinominato.

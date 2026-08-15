@@ -2,426 +2,189 @@
 
 > The intelligence is in the orchestration.
 
-Maestro è un runtime locale, modulare e provider-agnostic progettato per orchestrare agenti AI dedicati allo sviluppo software.
+Maestro è un runtime locale per agenti di sviluppo controllati. La v0.1.0
+offre un primo percorso installabile per analizzare e interrogare un progetto
+Laravel con un modello locale, senza consentire modifiche al workspace nel
+profilo ufficiale.
 
-L'obiettivo del progetto non è costruire un nuovo modello AI, ma fornire l'infrastruttura che permette a modelli, provider, strumenti e framework di collaborare in modo coerente.
+## v0.1.0 in breve
 
----
+| Dimensione | Supporto ufficiale |
+|---|---|
+| Piattaforma | Linux `amd64` |
+| Provider | Ollama locale |
+| Modello chat | `llama3.1:8b` |
+| Modello embedding | `embeddinggemma:latest` |
+| Agent | `agent.reference` Laravel read-only |
+| Tool | list, read, search |
+| Mutazioni | Sperimentali/non supportate |
+| llama.cpp | Sperimentale/non supportato |
+| Isolamento | Trusted in-process, nessuna sandbox |
 
-## Perché Maestro?
+La [compatibility matrix](docs/compatibility.md) è la fonte autorevole. La
+presenza di altre capability nel codice non costituisce una promessa di
+supporto v0.1.0.
 
-Installare un modello locale è relativamente semplice.
+## Installazione dall’artifact
 
-Costruire un ambiente di sviluppo realmente intelligente è molto più complesso.
+Scaricare dalla stessa release:
 
-Maestro nasce per fornire le fondamenta di questo ecosistema.
+```text
+maestro-v0.1.0-linux-amd64.tar.gz
+maestro-v0.1.0-linux-amd64.tar.gz.sha256
+```
 
----
+Poi eseguire:
 
-## Caratteristiche
+```sh
+version=v0.1.0
+artifact="maestro-${version}-linux-amd64"
+sha256sum -c "${artifact}.tar.gz.sha256"
+tar -xzf "${artifact}.tar.gz"
+cd "$artifact"
+./maestro version
+```
 
-- Runtime modulare
-- Provider-agnostic
-- Plugin-first
-- Context Engine
-- Capability Registry (Gestor)
-- Tool System
-- Agent System
-- Framework-aware
+Non proseguire se il checksum, la versione o il commit non coincidono con
+`ARTIFACT-MANIFEST.txt`.
 
----
+## Quick start
 
-## Obiettivi
+Prerequisiti: Ollama attivo su `127.0.0.1:11434` e `llama3.1:8b` disponibile.
+Maestro non installa il provider e non scarica modelli implicitamente.
 
-- Supportare provider multipli (Ollama, llama.cpp, OpenAI, Anthropic, ...)
-- Essere indipendente dal framework
-- Adattarsi all'hardware disponibile
-- Rendere l'AI locale realmente utilizzabile nello sviluppo software
+```sh
+ollama pull llama3.1:8b
 
----
+./maestro doctor --config ./configs/maestro.example.yaml
+./maestro models --config ./configs/maestro.example.yaml
+./maestro agents --config ./configs/maestro.example.yaml
+
+./maestro run --config ./configs/maestro.example.yaml \
+  "Read app/Http/Controllers/OrderController.php and explain which service its store method calls. Do not modify any file."
+```
+
+La configurazione inclusa punta alla fixture Laravel dell’archive. `doctor`
+deve completare nove check; il run deve identificare `OrderService::create`.
+L’output esatto e la latenza possono variare perché il modello è generativo.
+
+Il percorso dettagliato, inclusa la configurazione di un progetto reale, è in
+[Quick Start](docs/quick-start.md).
+
+## CLI
+
+```text
+maestro doctor
+maestro models
+maestro agents
+maestro run
+maestro version
+```
+
+- `doctor` valida configurazione, provider, modello, agent, tool e workspace
+  senza invocare il modello;
+- `models` elenca i modelli del provider esplicitamente configurato;
+- `agents` elenca gli agenti registrati;
+- `run` esegue il reference agent con policy e hard limit espliciti;
+- `version` stampa versione e commit incorporati nella build.
+
+SIGINT/SIGTERM cancellano una run con exit code 130. stdout è riservato al
+risultato; progresso e failure sintetici vanno su stderr. La reference completa
+è in [CLI](docs/cli.md).
+
+## Configurazione
+
+Maestro usa un singolo documento YAML strict `version: 1`. Provider, modello,
+workspace, agent, policy, tool e limiti sono sempre espliciti. Un typo o campo
+sconosciuto è un errore, non un fallback.
+
+Il profilo distribuito registra soltanto:
+
+```yaml
+agent:
+  id: agent.reference
+  streaming: true
+  tools:
+    - workspace.list
+    - workspace.read
+    - workspace.search
+
+policy:
+  id: policy.local-review
+  model: allow
+  workspace_inspect: allow
+  workspace_mutate: deny
+```
+
+Non aggiungere `workspace.write` o `workspace.patch` al percorso v0.1.0. La
+guida campo per campo è in [Configurazione](docs/configuration.md).
+
+## Sicurezza
+
+Maestro v0.1.0 è trusted in-process e usa i privilegi dell’utente locale. Non
+offre sandbox, isolamento di rete, rollback generale o secret manager. Il
+provider configurato riceve l’istruzione e le sezioni di workspace selezionate
+dal Context Engine.
+
+Il profilo read-only, il containment dei path, il permission model, la
+redazione e i hard limit riducono l’autorità disponibile, ma non trasformano il
+processo in un confine di sicurezza. Leggere il [Security Model](docs/security-model.md)
+e la [Security Policy](SECURITY.md) prima di usare workspace sensibili.
+
+## Limiti noti
+
+- solo Linux `amd64` e Ollama/`llama3.1:8b` sono qualificati;
+- una run CPU-only può richiedere diversi minuti;
+- il modello può sbagliare o generare una tool call invalida;
+- llama.cpp e il reference agent mutante non sono supportati;
+- nessun multi-agent, persistence, recovery, shell, Git, Docker o remote
+  execution completi;
+- CLI, config e package Go sono sperimentali durante la serie 0.x.
+
+Vedere [Known Issues](docs/known-issues.md) e
+[Troubleshooting](docs/troubleshooting.md).
 
 ## Documentazione
 
-Prima di contribuire al progetto è consigliata la lettura dei documenti nell'ordine seguente:
+Per iniziare:
 
-1. `identity.md`
-2. `philosophy.md`
-3. `principles.md`
-4. `vision.md`
-5. `architecture.md`
-6. `roadmap.md`
-7. `gestor-design.md`
-8. `gestor-development-plan.md`
-9. `design-decisions.md`
-10. `adr/`
-11. `provider-runtime.md`
-12. `ollama-provider.md`
-13. `llamacpp-provider.md`
-14. `provider-model-lifecycle.md`
-15. `provider-model-acquisition.md`
-16. `provider-model-residency.md`
-17. `provider-capability-introspection.md`
-18. `provider-error-semantics.md`
-19. `provider-resilience.md`
-20. `provider-observability.md`
-21. `provider-advanced-generation.md`
-22. `provider-layer-plan.md`
-23. `provider-api-compatibility-audit.md`
-24. `provider-smoke-benchmark-manifest.yaml`
-25. `benchmark-evaluation-plan.md`
-26. `benchmark-runtime.md`
-27. `smoke-benchmark.md`
-28. `plugin-runtime.md`
-29. `laravel-plugin.md`
-30. `plugin-system-design.md`
-31. `plugin-system-development-plan.md`
-32. `plugin-api-compatibility-audit.md`
-33. `context-engine-design.md`
-34. `context-engine-development-plan.md`
-35. `context-engine-api-compatibility-audit.md`
-36. `context-engine-indexing.md`
-37. `context-engine-analysis.md`
-38. `context-engine-retrieval.md`
-39. `context-engine-cache.md`
-40. `context-engine-runtime.md`
-41. `agent-system-design.md`
-42. `agent-system-development-plan.md`
-43. `agent-system-api-compatibility-audit.md`
-44. `tool-runtime.md`
-45. `agent-permissions.md`
-46. `agent-sessions.md`
-47. `agent-runtime.md`
-48. `agent-workspace.md`
-49. `release-readiness-audit.md`
-50. `milestone-8-design.md`
-51. `milestone-8-development-plan.md`
-52. `configuration.md`
-53. `cli.md`
-54. `operational-experience.md`
-55. `installation.md`
-56. `packaging-candidate.md`
+- [Installazione](docs/installation.md)
+- [Quick Start](docs/quick-start.md)
+- [Configurazione](docs/configuration.md)
+- [CLI](docs/cli.md)
+- [Reference Agent Laravel](docs/reference-agent-laravel.md)
+- [Security Model](docs/security-model.md)
+- [Compatibility Matrix](docs/compatibility.md)
+- [API Compatibility](docs/v0.1.0-api-compatibility.md)
+- [Release Notes v0.1.0](docs/releases/v0.1.0.md)
+- [Changelog](CHANGELOG.md)
 
----
+Per contribuire o studiare l’architettura:
 
-## Stato del progetto
+- [Architecture](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/architecture.md)
+- [Runtime Internals](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/runtime-internals.md)
+- [Provider Runtime](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/provider-runtime.md)
+- [Plugin Runtime](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/plugin-runtime.md)
+- [Context Engine](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/context-engine-runtime.md)
+- [Agent Runtime](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/agent-runtime.md)
+- [Roadmap](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/roadmap.md)
 
-✅ Provider Layer
+## Sviluppo
 
-Il Runtime Core, il lifecycle e l'Event System sono implementati. Il primo
-incremento del Provider Runtime introduce registry, routing capability-based,
-streaming ed embedding provider-agnostic.
+Requisiti: Go `1.24.5` e GNU userland per il packaging riproducibile.
 
-Il primo adapter concreto per Ollama implementa completion, streaming,
-embedding e model listing. La Fase 5 del Runtime Core è conclusa; lo smoke test
-contro un'istanza Ollama reale confluisce nello Smoke Benchmark della Milestone
-3.
-Evoluzioni provider ulteriori potranno proseguire senza bloccare il Plugin
-Runtime.
-
-La Fase 1 della Provider Layer aggiunge l'adapter llama.cpp sulle API
-OpenAI-compatible di `llama-server`, con completion, streaming SSE, embedding,
-model listing e autenticazione Bearer opzionale. Implementazione e test isolati
-sono completati; lo smoke test live confluisce nello Smoke Benchmark della
-Milestone 3.
-
-La Fase 2 aggiunge discovery avanzata e lifecycle dei modelli attraverso
-capability opzionali. Ollama e llama.cpp espongono ora snapshot di stato, load e
-unload attraverso lo stesso Provider Runtime, mantenendo i dettagli di
-protocollo nei rispettivi adapter.
-
-La Milestone 2 è stata completata nelle Fasi 3–10: acquisizione dei modelli,
-policy di residenza, capability introspection, semantica degli errori,
-resilienza, osservabilità, contratti avanzati di generazione e hardening finale.
-La Fase 10 ha chiuso le verifiche deterministiche e l'handoff degli scenari live.
-Il piano e i gate di ogni incremento sono descritti in
-`provider-layer-plan.md`.
-
-La Fase 3 è completata: `ModelPuller` e `ModelRemover` aggiungono pull con
-progresso, cancellazione e rimozione attraverso il Provider Runtime. Ollama usa
-le API native `/api/pull` e `/api/delete`; il router llama.cpp usa gli endpoint
-`/models` e lo stream globale `/models/sse`. Nessun adapter accede direttamente
-ai file della cache.
-
-La Fase 4 è completata: `ModelResidencyPolicy` abilita autoload opt-in e rilascio
-immediato, a TTL o allo shutdown. Il Provider Runtime coordina lease concorrenti
-senza duplicare lo stato remoto e scarica soltanto i modelli caricati dalla
-policy. Il comportamento senza policy rimane invariato.
-
-La Fase 5 è completata: `CapabilityInspector` produce snapshot ordinati per
-adapter, istanza o modello, separando supporto strutturale e disponibilità
-operativa. Ollama e llama.cpp interrogano soltanto metadata ufficiali e non
-mantengono cache; `unknown` rappresenta configurazioni non osservabili senza
-indurre routing o selezione automatica.
-
-La Fase 6 è completata: `ProviderError` uniforma kind, operazione, identità,
-status e ritentabilità conservativa mantenendo `errors.Is`/`errors.As`, cause,
-context ed EOF idiomatici. Gli adapter classificano anche errori di trasporto e
-mid-stream; retry e circuit breaker sono applicati separatamente dalla Fase 7.
-
-La Fase 7 è completata: `ResiliencePolicy` abilita retry, backoff, jitter,
-budget temporale e circuit breaker closed/open/half-open per provider,
-operazione e modello. Le policy sono opt-in, usano gli errori tipizzati e non
-riaprono stream dopo il primo chunk; pull e remove non vengono ritentati.
-
-La Fase 8 è completata: `ProviderObserver` espone eventi redatti e correlati per
-inizio, tentativi, retry, transizioni del circuito e completamento. Gli stream
-emettono un solo terminale anche in caso di cancellazione o chiusura anticipata;
-il core resta indipendente dagli SDK di logging, metriche e tracing.
-
-La Fase 9 è completata: sampling comune, output JSON/JSON Schema, tool calling e
-delta tool streaming fanno parte del contratto neutrale. Ollama e llama.cpp
-traducono la baseline sui rispettivi protocolli, con validazione locale e
-capability introspection per le differenze operative.
-
-La Fase 10 chiude la Milestone 2: suite deterministica, race detector, vet,
-audit di compatibilità e documentazione sono allineati. Il manifest degli
-scenari live è consegnato allo Smoke Benchmark della Milestone 3, insieme ai
-requisiti di cleanup, redazione e configurazione.
-
-La nuova Milestone 3 introduce il Benchmark & Evaluation Layer. Gli smoke test
-live diventano il primo di tre livelli, seguito da benchmark del runtime e da
-task reali di sviluppo. I risultati descrivono la combinazione completa di
-hardware, provider, modello e plugin attraverso report JSON e Markdown, senza
-produrre classifiche assolute tra modelli.
-
-La Fase 1 della Milestone 3 è completata: contratti e report versionati, runner
-deterministico, parsing strict del manifest, redazione JSON e base del comando
-`maestro bench` sono implementati. Gli scenari live iniziano con la Fase 2.
-
-La Fase 2 è completata: `maestro bench smoke` esegue la matrice live di
-quattordici scenari per Ollama o llama.cpp con capability preflight, modelli per
-ruolo, mutation guard, cleanup e report JSON atomico. In assenza di provider
-configurato produce risultati `skipped` senza I/O implicito.
-
-La Fase 3 è completata: `maestro bench provider` misura introspection, catalogo,
-retry e circuit breaker; `maestro bench model` misura completion, TTFT,
-throughput, cancellazione, embedding, lifecycle e cold/warm. Su Linux CPU e RAM
-sono raccolte con scope di processo esplicito; metriche non osservabili, inclusa
-la VRAM, restano assenti.
-
-La Fase 4 è completata: `maestro bench laravel` esegue cinque task generativi e
-un retrieval embedding sul dataset embedded `maestro-laravel-mini@1.0.0`,
-avviando realmente il plugin Laravel. Il report `1.2.0` separa successo tecnico
-e rubrica trasparente 0–3, senza conservare prompt o risposte.
-
-La Fase 5 è completata: tutti i benchmark possono produrre Markdown derivato
-dal JSON canonico, `maestro bench render` rigenera la vista offline e il profilo
-hardware comune registra CPU/RAM Linux e metadata GPU opt-in. La Milestone 3
-resta comunque in corso e non è considerata chiusa.
-
-La prima validazione live Ollama ha superato gli integration test ma non il
-gate Smoke completo: due scenari tool calling sono falliti con
-`qwen2.5-coder:7b`. La ripetizione diretta su `/api/chat` a temperatura 0 ha
-confermato che Ollama non restituisce `message.tool_calls`, ma JSON testuale,
-sia non-stream sia stream; l'adapter Maestro non perde quindi il campo per
-questa fixture. La milestone resta aperta; il dettaglio è nel report
-`docs/reports/milestone-3-live-ollama-validation.md`.
-
-La fixture alternativa `llama3.1:8b` produce `message.tool_calls` native
-direttamente su `/api/chat`. L'adapter normalizza in modo conservativo il
-terminale streaming Ollama `stop` in `tool_calls` quando lo stesso stream ha già
-emesso una tool call e applica la regola coerente alle completion non-stream. Il
-nuovo Smoke con `embeddinggemma:latest` raggiunge 13 passed, 1 skipped e 0
-failed: il gate live Ollama è verde, mentre la Milestone 3 resta aperta fino a
-una decisione esplicita. `qwen2.5-coder:7b` resta documentato come caso negativo
-e `llama3.1:8b` come fixture positiva.
-
-La Fase 6 del Plugin Runtime è completata: contratti pubblici, manifest di
-compatibilità, registry e catalogo loader thread-safe, discovery, caricamento
-cancellabile, eventi e lifecycle integrato nel Runtime Core. Il primo plugin
-Laravel implementa detection del workspace e health. Packaging esterno,
-sandbox e unload appartengono all'evoluzione successiva dell'ecosistema.
-
-La Milestone 4 — Gestor è completata. Il Runtime pubblico compone un Registry
-di capability, le sorgenti Runtime e Provider e un Resolver che usa il
-dependency graph autorevole soltanto in lettura. Snapshot e availability sono
-espliciti; più candidati senza preferenza producono ambiguity e nessun ordine
-lessicografico diventa ranking. Refresh e resolution pubblicano eventi redatti
-sull'Event Bus condiviso.
-
-La Milestone 5 — Plugin System è completata. Catalogo e caricamento sono
-coperti sotto concorrenza; graph, stato e lifecycle restano globali; la
-baseline Laravel `0.2.0` dichiara `plugin.workspace-detection`; gli eventi sono sincroni,
-best-effort e isolati da errori o panic degli observer. Audit API, suite
-completa, race detector, vet e gate finale sono verdi. Packaging esterno,
-sandbox e plugin di terze parti restano fuori scope.
-
-La Milestone 6 — Context Engine è completata nelle sei fasi previste. Il
-servizio è provider-agnostic, usa embedding soltanto in modo opt-in e non
-anticipa memoria agente, tool execution o permission model.
-
-La Fase 1 è completata: `pkg/contextengine` definisce workspace, documenti,
-analisi, snapshot, retrieval e bundle immutabili. ADR-0024 assegna ownership e
-stabilisce provenance, budget e riservatezza.
-
-La Fase 2 è completata: la source `context.filesystem` applica containment,
-policy, limiti, normalizzazione testuale e symlink-safe scanning; l'indice
-pubblica snapshot ordinati e generazionali mantenendo l'ultimo valore valido su
-failure o cancellazione. Source esterne vengono invocate senza lock globali.
-
-La Fase 3 è completata: analyzer versionati arricchiscono gli snapshot senza
-lock durante codice esterno; ambiguità richiedono selezione esplicita.
-`context.go-ast@1` usa la libreria standard e produce simboli, relazioni, chunk
-e diagnostiche anche da AST parziali.
-
-La Fase 4 è completata: retrieval lessicale, strutturale e semantico produce
-ranking con provenance e fusione esplicita; il Context Builder deduplica e
-tronca su confini UTF-8 entro il budget dichiarato. Il Developer Benchmark usa
-ora semantic retrieval del Context Engine.
-
-La Fase 5 è completata: una cache LRU bounded riusa analysis, embedding e stime
-con chiavi versionate. Rename, versioni e dimensioni invalidano gli artefatti;
-percorsi cold e warm restano equivalenti e richieste concorrenti non vengono
-accorpate implicitamente.
-
-La Fase 6 è completata: `Runtime.ContextEngine` espone una singola istanza che
-condivide Provider Runtime ed Event Bus. Laravel `0.3.0` implementa il contratto
-generico `WorkspaceProvider`; Gestor ne risolve la capability senza eseguire la
-pipeline. Eventi di index, build e cache usano payload redatti e observer
-best-effort. Suite completa, race detector, vet e audit API chiudono il gate.
-
-La Milestone 7 — Agent System è completata nelle sette fasi previste e ha
-superato il gate finale. La Fase 1 ha definito in `pkg/tool` e `pkg/agent`
-descriptor, invocation, permission request, sessioni, piani, limiti e
-terminali. ADR-0025 stabilisce che
-una `Decision` pubblica non è un permit, le action sono autorizzate atomicamente
-e gli eventi usano allowlist esatte. Catalogo ed executor appartengono alla
-Fase 2, ora completata con permit privati one-shot, validation boundary,
-default-deny e limiti di output. Policy e approval flow appartengono alla Fase
-3, ora completata con regole exact-match, decisione atomica, Approver e grant
-run-scoped vincolati a policy/run/fingerprint.
-
-La Fase 4 è completata: `internal/agent` implementa catalogo agenti, sessioni
-bounded, snapshot immutabili, piani dependency-aware, revisioni, budget e
-terminale unico. Il planner provider-backed usa structured output e viene
-invocato soltanto dopo l'autorizzazione di model invocation e context
-disclosure; il loop operativo appartiene alla Fase 5.
-
-La Fase 5 è completata: il loop agentico usa Provider Runtime e Tool Runtime
-con target e tool set espliciti, ruoli separati, call correlate, risultati JSON
-tipizzati e hard ceiling. Completion e streaming, inclusi delta tool
-frammentati, convergono sulla stessa validazione; non esistono retry impliciti
-degli effetti.
-
-La Fase 6 è completata: un binding per-run mantiene la root fuori dal modello;
-listing, read, search, write e patch operano su path logici con `os.Root`,
-rifiuto dei symlink e precondizioni SHA-256. Le mutazioni marcano il contesto
-stale all'inizio di Execute e il loop reindicizza prima di usare una nuova
-generazione. Il percorso resta framework-neutral ed è verificato anche con il
-WorkspaceProvider Laravel.
-
-La Fase 7 chiude la Milestone 7: `maestro.Runtime` espone le istanze condivise
-`Tools()` e `Agents()`, registra reference agent/tool e aggiunge le sorgenti
-Gestor agent/tool. Eventi redatti coprono sessioni, piani, turni, permission e
-invocation; uno scenario deterministico completa read, patch, refresh e
-risposta finale senza rete.
-
-Il gate post-Milestone 7 accetta questa baseline ingegneristica e registra il
-percorso mancante verso un prodotto pubblico. Il verdetto dà GO alla Milestone
-8, ora progettata
-attorno alla productization per v0.1.0: configurazione YAML strict, CLI minima
-`doctor`, `models`, `agents`, `run` e `version`, approval terminale, quick start
-Laravel, packaging, security model e validazione live. La matrice llama.cpp
-resta il prerequisito operativo pendente della Milestone 3 perché il relativo
-report non è presente nella baseline Git disponibile. La Fase 1 — release
-contract e audit — è completata da ADR-0026. Design e sequenza sono descritti in
-`docs/release-readiness-audit.md`, `docs/adr/ADR-0026.md`,
-`docs/milestone-8-design.md` e `docs/milestone-8-development-plan.md`.
-
-La Fase 2 è completata: `configs/maestro.example.yaml` definisce il primo
-contratto YAML strict e la CLI espone `doctor`, `models`, `agents`, `run` e
-`version` con target espliciti ed exit code stabili. `doctor` usa soltanto probe
-read-only e non invoca il modello; `run` attraversa Agent e Tool Runtime.
-
-La Fase 3 è completata con un Approver terminale fail-closed, progress redatto
-per piano/step/contatori, cancellazione e un terminale finale separato dal
-contenuto. Le scelte sono deny, one-shot e grant exact-action per il run; non
-esiste `--yes`. I contratti sono descritti in `docs/configuration.md`,
-`docs/cli.md` e `docs/operational-experience.md`; i gate sono registrati nei
-report delle Fasi 2–3.
-
-Maestro è distribuito sotto Apache License 2.0. Il testo e le attribution delle
-dipendenze sono in `LICENSE`, `NOTICE` e `THIRD_PARTY_LICENSES.txt`; la decisione
-è registrata in `docs/adr/ADR-0027.md`.
-
-La Fase 4 è completata: gli script sotto `scripts/` producono e verificano
-packaging candidate Linux `amd64` versionati, con build riproducibile,
-manifest, checksum, licenza, configurazione e fixture Laravel. `v0.1.0-pc.1`
-resta la prima iterazione storica; ogni nuova iterazione deve ripetere il gate
-prima dei test live. Un packaging candidate non è ancora una release
-candidate. Dettagli in `docs/packaging-candidate.md` e
-`docs/reports/milestone-8-phase-4.md`.
-
-La Fase 5 è completata e `v0.1.0-rc.2` è la release candidate validata. La
-matrice mutativa non ha prodotto una fixture: `llama3.1:8b` fallisce il gate
-mutativo,
-`rnj-1:8b-instruct-q4_K_M` si arresta al gate read-only e
-`ibm/granite4.1:8b`, pur superando tool protocol 3/3 e read-only 2/2, termina
-`deadline_exceeded` nel primo tentativo mutativo prima di approval e patch.
-L'ultimo candidato `qwen3:8b`, provato con `/no_think` riproducibile, non emette
-la read richiesta già nella prima sequenza del Gate A. La matrice 8B corrente è
-conclusa senza vincitori e nessuna fixture è stata modificata. ADR-0029 sceglie
-quindi una v0.1.0 ufficialmente read-only:
-`llama3.1:8b` resta la fixture supportata, la configurazione inclusa espone solo
-list/read/search e nega le mutazioni; reference agent mutante, approval
-mutativa e llama.cpp sono sperimentali/non supportati. Il primo candidate del
-nuovo confine, `pc.4`, ha fallito il primo quick start con `tool_failure`: il
-prompt descriveva ancora capacità mutative non dichiarate. L'hardening
-successivo rende il protocollo capability-aware; `pc.5` supera due quick start
-consecutivi, ma il distinto `rc.1` fallisce il run di conferma e non viene
-promosso. Un ulteriore hardening dei nomi, campi e path read-only produce
-`pc.6`, verde su due run consecutivi, e infine `rc.2`: commit
-`ab109a5f878b8e1f10d69327736f014ad916a970`, SHA-256
-`442090c6e2dac6095aa4532d658def42cd39e04a34baff401b3a92aec1fd9105`.
-Checksum, installazione pulita, CLI completa, run live e fixture invariata sono
-verdi. La Fase 6 deve ancora completare il gate della release finale. Evidenze
-e matrice sono in `docs/reports/milestone-8-phase-5.md` e
-`docs/reports/milestone-8-model-selection.md`.
-
-Uso essenziale:
-
-```go
-runtime := maestro.New()
-
-// Registrare componenti, plugin e provider, quindi costruire il grafo.
-if err := runtime.Start(ctx); err != nil {
-    return err
-}
-defer runtime.Stop(context.Background())
-
-if err := runtime.Gestor().Refresh(ctx); err != nil {
-    return err
-}
-
-query, err := gestor.NewQuery("plugin.workspace_detection", gestor.QueryOptions{})
-if err != nil {
-    return err
-}
-resolution, err := runtime.Gestor().Resolve(query)
-if err != nil {
-    return err
-}
-
-// La risoluzione descrive target e dipendenze; non esegue la capability.
-_ = resolution.Descriptor()
-_ = resolution.Dependencies()
+```sh
+go test ./...
+go test -race ./...
+go vet ./...
 ```
 
----
-
-## Contribuire
-
-Ogni modifica significativa dovrebbe seguire questo processo:
-
-1. Analisi del problema.
-2. Aggiornamento della documentazione.
-3. Discussione della soluzione.
-4. Implementazione.
-5. Test.
-6. Commit.
-
----
+I test live sono opt-in e non vengono sostituiti da PASS sintetici quando il
+provider è assente. Le modifiche ai contratti pubblici devono aggiornare
+documentazione, test e changelog.
 
 ## Licenza
 
-Da definire.
+Maestro è distribuito sotto [Apache License 2.0](LICENSE). Le attribution delle
+dipendenze sono in [NOTICE](NOTICE) e
+[THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).

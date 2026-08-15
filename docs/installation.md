@@ -1,4 +1,4 @@
-# Installazione preliminare di Maestro v0.1
+# Installazione di Maestro @MAESTRO_VERSION@
 
 Stato: @MAESTRO_STATUS@
 
@@ -19,9 +19,8 @@ cd "$artifact"
 ./maestro --help
 ```
 
-`@MAESTRO_VERSION@` e `@MAESTRO_STATUS@` sono token della documentazione
-sorgente: lo script di packaging li sostituisce con versione e stato esatti
-dell'archive.
+La versione e lo stato riportati in questa copia sono incorporati durante la
+build e devono coincidere con `ARTIFACT-MANIFEST.txt` e `maestro version`.
 
 Per un'installazione utente senza privilegi:
 
@@ -65,7 +64,8 @@ Un path workspace relativo viene risolto rispetto al file di configurazione.
 La configurazione non contiene credenziali; `api_key_env` accetta soltanto il
 nome di una variabile d'ambiente.
 
-Il quick start non deve essere esteso aggiungendo `workspace.write` o
+Il percorso completo e gli output attesi sono in `docs/quick-start.md`. Il
+quick start non deve essere esteso aggiungendo `workspace.write` o
 `workspace.patch`. Le capacità mutative e l'approval terminale restano
 sperimentali e non supportate nella v0.1.0. llama.cpp è anch'esso sperimentale;
 il percorso ufficiale richiede Ollama e `llama3.1:8b`.

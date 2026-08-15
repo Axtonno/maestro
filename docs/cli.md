@@ -1,8 +1,8 @@
 # Maestro v0.1 CLI
 
-Stato: Implementato — Milestone 8, Fasi 2–3
+Stato: Contratto pubblico sperimentale v0.1.0
 
-Data: 2026-08-13
+Data: 2026-08-15
 
 ---
 
@@ -114,8 +114,8 @@ maestro version
 ```
 
 Stampa versione e commit e aggiunge `dirty true` quando il build info Go lo
-dichiara. Un build locale senza metadata restituisce `devel` e `unknown`; gli
-artifact di release dovranno incorporare `v0.1.0` e il commit durante la Fase 4.
+dichiara. Un build locale senza metadata restituisce `devel` e `unknown`;
+l'artifact v0.1.0 incorpora versione e commit esatti durante il packaging.
 
 # Exit code
 

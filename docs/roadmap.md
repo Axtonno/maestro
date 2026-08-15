@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: In corso — Fasi 1–5 completate
+Stato: In corso — Fasi 1–5 completate, Fase 6 in corso
 
 Obiettivo:
 
@@ -557,7 +557,7 @@ Fasi previste:
 | 3 | Esperienza operativa | Completata |
 | 4 | Packaging e installazione | Completata |
 | 5 | Validazione live e release candidate | Completata — `v0.1.0-rc.2` |
-| 6 | Documentazione pubblica e v0.1.0 | Da avviare |
+| 6 | Documentazione pubblica e v0.1.0 | In corso |
 
 La CLI minima comprende `doctor`, `models`, `agents`, `run` e `version`. La
 configurazione versionata rende espliciti provider, modello, workspace, agente,
@@ -692,6 +692,13 @@ workspace resta byte-identico.
 La Fase 6 produrrà l'artifact finale da un nuovo commit successivo alla
 documentazione pubblica. `rc.2` non verrà rinominato né ripacchettizzato
 retroattivamente come `v0.1.0`.
+
+La redazione pubblica congela la matrice autorevole in `compatibility.md` e
+aggiunge README artifact-first, quick start, reference agent Laravel, security
+model/policy, troubleshooting, known issues, compatibility API, changelog e
+release notes. Il packaging finale usa lo stato distinto `release` e verifica
+la presenza di questi documenti. Artifact, installazione pulita, run live, tag
+e report finale restano i gate successivi della Fase 6.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

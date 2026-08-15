@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate] [--output directory]\n' "$0"
+    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate|release] [--output directory]\n' "$0"
 }
 
 version=""
@@ -42,8 +42,12 @@ if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
     printf 'version must match vX.Y.Z or vX.Y.Z-prerelease\n' >&2
     exit 2
 fi
-if [[ "$status" != "packaging-candidate" && "$status" != "release-candidate" ]]; then
-    printf 'status must be packaging-candidate or release-candidate\n' >&2
+if [[ "$status" != "packaging-candidate" && "$status" != "release-candidate" && "$status" != "release" ]]; then
+    printf 'status must be packaging-candidate, release-candidate or release\n' >&2
+    exit 2
+fi
+if [[ "$status" == "release" && "$version" == *-* ]]; then
+    printf 'release status requires a final vX.Y.Z version\n' >&2
     exit 2
 fi
 
@@ -99,9 +103,14 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=local GOENV=off GOFLAGS='' \
     go build -mod=readonly -trimpath -buildvcs=false -ldflags "$ldflags" \
     -o "$root/maestro" ./cmd/maestro
 
-cp LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md "$root/"
+cp LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGELOG.md SECURITY.md "$root/"
 cp docs/installation.md docs/configuration.md docs/cli.md \
-    docs/operational-experience.md docs/packaging-candidate.md "$root/docs/"
+    docs/operational-experience.md docs/packaging-candidate.md \
+    docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
+    docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
+    docs/v0.1.0-api-compatibility.md docs/laravel-plugin.md "$root/docs/"
+mkdir -p "$root/docs/releases"
+cp docs/releases/v0.1.0.md "$root/docs/releases/"
 cp configs/maestro.example.yaml "$root/configs/"
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
 sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"

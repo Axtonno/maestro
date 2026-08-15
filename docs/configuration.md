@@ -2,9 +2,9 @@
 
 Versione schema: 1
 
-Stato: Implementato — Milestone 8, Fasi 2–3
+Stato: Contratto pubblico sperimentale v0.1.0
 
-Data: 2026-08-13
+Data: 2026-08-15
 
 ---
 
@@ -15,7 +15,7 @@ eseguire il reference agent. Non sostituisce `pkg/runtime.Config`, che resta il
 contratto generico dei componenti Go.
 
 La configurazione completa di esempio è in
-`configs/maestro.example.yaml`. Nel packaging candidate il relativo
+`configs/maestro.example.yaml`. Nell'artifact distribuito il relativo
 `workspace.root` seleziona `../fixtures/laravel-v1`; quando il file viene
 copiato altrove deve essere sostituito con il progetto reale.
 

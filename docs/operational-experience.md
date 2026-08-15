@@ -1,8 +1,8 @@
 # Maestro v0.1 Operational Experience
 
-Stato: Implementato — Milestone 8, Fase 3
+Stato: Contratto operativo pubblico sperimentale v0.1.0
 
-Data: 2026-08-13
+Data: 2026-08-15
 
 ---
 

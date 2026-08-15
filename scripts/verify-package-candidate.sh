@@ -17,13 +17,17 @@ while (($# > 0)); do
             shift 2
             ;;
         *)
-            printf 'usage: %s [--version vX.Y.Z-prerelease] [--status packaging-candidate|release-candidate]\n' "$0" >&2
+            printf 'usage: %s [--version vX.Y.Z[-prerelease]] [--status packaging-candidate|release-candidate|release]\n' "$0" >&2
             exit 2
             ;;
     esac
 done
-if [[ "$status" != "packaging-candidate" && "$status" != "release-candidate" ]]; then
-    printf 'status must be packaging-candidate or release-candidate\n' >&2
+if [[ "$status" != "packaging-candidate" && "$status" != "release-candidate" && "$status" != "release" ]]; then
+    printf 'status must be packaging-candidate, release-candidate or release\n' >&2
+    exit 2
+fi
+if [[ "$status" == "release" && "$version" == *-* ]]; then
+    printf 'release status requires a final vX.Y.Z version\n' >&2
     exit 2
 fi
 
@@ -58,9 +62,13 @@ fi
 tar -xzf "$working/first/$archive" -C "$working/extracted"
 root="$working/extracted/$artifact"
 
-for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md ARTIFACT-MANIFEST.txt \
+for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGELOG.md SECURITY.md ARTIFACT-MANIFEST.txt \
     docs/installation.md docs/configuration.md docs/cli.md \
     docs/operational-experience.md docs/packaging-candidate.md \
+    docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
+    docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
+    docs/v0.1.0-api-compatibility.md docs/laravel-plugin.md \
+    docs/releases/v0.1.0.md \
     configs/maestro.example.yaml fixtures/laravel-v1/dataset.json \
     fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
     [[ -e "$root/$required" ]] || {
@@ -72,6 +80,8 @@ done
 cmp "$repository/LICENSE" "$root/LICENSE"
 cmp "$repository/NOTICE" "$root/NOTICE"
 cmp "$repository/THIRD_PARTY_LICENSES.txt" "$root/THIRD_PARTY_LICENSES.txt"
+cmp "$repository/CHANGELOG.md" "$root/CHANGELOG.md"
+cmp "$repository/SECURITY.md" "$root/SECURITY.md"
 grep -Fxq "artifact=${artifact}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "commit=${commit}" "$root/ARTIFACT-MANIFEST.txt"
@@ -88,7 +98,7 @@ grep -Fq '"version": "1.0.0"' "$root/fixtures/laravel-v1/dataset.json"
 for read_only_tool in workspace.list workspace.read workspace.search; do
     grep -Fq -- "- $read_only_tool" "$root/configs/maestro.example.yaml"
 done
-if grep -Fq 'workspace.patch' "$root/configs/maestro.example.yaml"; then
+if grep -Eq 'workspace\.(write|patch)' "$root/configs/maestro.example.yaml"; then
     printf 'published configuration exposes an unsupported mutating tool\n' >&2
     exit 1
 fi
