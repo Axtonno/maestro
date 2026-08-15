@@ -1,11 +1,11 @@
-# Maestro v0.1.0 Troubleshooting
+# Maestro v0.1.x Troubleshooting
 
 ## Il checksum fallisce
 
 Non estrarre né eseguire l'archive. Scaricare nuovamente sia `.tar.gz` sia
 `.sha256` dalla stessa release e ripetere `sha256sum -c`.
 
-## `maestro version` non mostra `v0.1.0`
+## `maestro version` non mostra la versione v0.1.x attesa
 
 Si sta usando un altro binario o un build locale. Eseguire `./maestro version`
 dalla directory estratta e confrontare il commit con
@@ -48,7 +48,14 @@ multipli e versioni diverse da `1` sono rifiutati. Confrontare il file con
 
 Provider, modello o capability richiesta non è disponibile. Eseguire `doctor`
 e `models`; non cambiare modello casualmente se si vuole restare nel percorso
-qualificato v0.1.0.
+qualificato v0.1.x.
+
+## Un progetto reale termina prima della prima tool call
+
+Dalla v0.1.1 il plugin Laravel esclude asset generati e dati runtime dalla scan
+policy. Se la v0.1.0 termina `execution_failed` su un progetto che supera i
+limiti generici, aggiornare alla v0.1.1 e ripetere `doctor` e la stessa run
+read-only. Non aumentare i limiti rimuovendo i bound del Context Engine.
 
 ## `tool_failure` o `execution_failed`
 

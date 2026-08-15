@@ -1,4 +1,4 @@
-# Reference Agent Laravel v0.1.0
+# Reference Agent Laravel v0.1.x
 
 ## Promessa di prodotto
 
@@ -32,6 +32,12 @@ i marker strutturali e rende disponibile il workspace generico.
 
 La root fisica non viene inserita nel prompt. I tool usano path logici relativi
 e rifiutano traversal e symlink.
+
+La scan policy Laravel è distinta dalla policy filesystem generica. Include
+`app`, `bootstrap`, `config`, `database`, `lang`, le aree sorgente di
+`resources`, `routes`, `tests` e i manifest principali; esclude asset generati
+in `public`, dati runtime in `storage`, dipendenze e directory nascoste. Ogni
+file sorgente è bounded a 2 MiB e lo snapshot resta bounded a 64 MiB.
 
 ## Configurazione ufficiale
 

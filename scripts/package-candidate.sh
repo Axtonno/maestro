@@ -78,6 +78,12 @@ go_version="$(go env GOVERSION)"
 artifact="maestro-${version}-linux-amd64"
 archive="${artifact}.tar.gz"
 checksum="${archive}.sha256"
+release_notes="docs/releases/${version#v}.md"
+
+if [[ ! -f "$release_notes" ]]; then
+    printf 'release notes are unavailable: %s\n' "$release_notes" >&2
+    exit 1
+fi
 
 if [[ "$output" != /* ]]; then
     output="$repository/$output"
@@ -110,11 +116,12 @@ cp docs/installation.md docs/configuration.md docs/cli.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
     docs/v0.1.0-api-compatibility.md docs/laravel-plugin.md "$root/docs/"
 mkdir -p "$root/docs/releases"
-cp docs/releases/v0.1.0.md "$root/docs/releases/"
+cp "$release_notes" "$root/docs/releases/"
 cp configs/maestro.example.yaml "$root/configs/"
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
 sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"
 sed -i "s/@MAESTRO_STATUS@/${status}/g" "$root/docs/installation.md"
+sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/quick-start.md"
 
 if find "$root/fixtures" -type l -o -name vendor -o -name node_modules -o \
     -name .git -o -name .env | grep -q .; then

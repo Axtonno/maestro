@@ -2,12 +2,12 @@
 
 > The intelligence is in the orchestration.
 
-Maestro è un runtime locale per agenti di sviluppo controllati. La v0.1.0
+Maestro è un runtime locale per agenti di sviluppo controllati. La v0.1.1
 offre un primo percorso installabile per analizzare e interrogare un progetto
 Laravel con un modello locale, senza consentire modifiche al workspace nel
 profilo ufficiale.
 
-## v0.1.0 in breve
+## v0.1.1 in breve
 
 | Dimensione | Supporto ufficiale |
 |---|---|
@@ -23,21 +23,21 @@ profilo ufficiale.
 
 La [compatibility matrix](docs/compatibility.md) è la fonte autorevole. La
 presenza di altre capability nel codice non costituisce una promessa di
-supporto v0.1.0.
+supporto v0.1.x.
 
 ## Installazione dall’artifact
 
 Scaricare dalla stessa release:
 
 ```text
-maestro-v0.1.0-linux-amd64.tar.gz
-maestro-v0.1.0-linux-amd64.tar.gz.sha256
+maestro-v0.1.1-linux-amd64.tar.gz
+maestro-v0.1.1-linux-amd64.tar.gz.sha256
 ```
 
 Poi eseguire:
 
 ```sh
-version=v0.1.0
+version=v0.1.1
 artifact="maestro-${version}-linux-amd64"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
@@ -116,12 +116,12 @@ policy:
   workspace_mutate: deny
 ```
 
-Non aggiungere `workspace.write` o `workspace.patch` al percorso v0.1.0. La
+Non aggiungere `workspace.write` o `workspace.patch` al percorso v0.1.x. La
 guida campo per campo è in [Configurazione](docs/configuration.md).
 
 ## Sicurezza
 
-Maestro v0.1.0 è trusted in-process e usa i privilegi dell’utente locale. Non
+Maestro v0.1.x è trusted in-process e usa i privilegi dell’utente locale. Non
 offre sandbox, isolamento di rete, rollback generale o secret manager. Il
 provider configurato riceve l’istruzione e le sezioni di workspace selezionate
 dal Context Engine.
@@ -156,18 +156,19 @@ Per iniziare:
 - [Security Model](docs/security-model.md)
 - [Compatibility Matrix](docs/compatibility.md)
 - [API Compatibility](docs/v0.1.0-api-compatibility.md)
+- [Release Notes v0.1.1](docs/releases/v0.1.1.md)
 - [Release Notes v0.1.0](docs/releases/v0.1.0.md)
 - [Changelog](CHANGELOG.md)
 
 Per contribuire o studiare l’architettura:
 
-- [Architecture](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/architecture.md)
-- [Runtime Internals](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/runtime-internals.md)
-- [Provider Runtime](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/provider-runtime.md)
-- [Plugin Runtime](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/plugin-runtime.md)
-- [Context Engine](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/context-engine-runtime.md)
-- [Agent Runtime](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/agent-runtime.md)
-- [Roadmap](https://github.com/Axtonno/maestro/blob/v0.1.0/docs/roadmap.md)
+- [Architecture](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/architecture.md)
+- [Runtime Internals](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/runtime-internals.md)
+- [Provider Runtime](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/provider-runtime.md)
+- [Plugin Runtime](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/plugin-runtime.md)
+- [Context Engine](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/context-engine-runtime.md)
+- [Agent Runtime](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/agent-runtime.md)
+- [Roadmap](https://github.com/Axtonno/maestro/blob/v0.1.1/docs/roadmap.md)
 
 ## Sviluppo
 

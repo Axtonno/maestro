@@ -1,6 +1,6 @@
 # Maestro Laravel Plugin
 
-Versione: 0.3.0
+Versione: 0.3.1
 
 Stato: Implementato
 
@@ -93,3 +93,9 @@ container, Eloquent e Blade restano future capability del plugin, non del core.
 Il contratto generico contiene root, source filesystem, policy e metadata
 limitati. `Root` e `FrameworkVersion` restano disponibili sulla facade Laravel;
 la versione inizializzata viene duplicata soltanto come metadata descrittivo.
+
+La versione 0.3.1 fornisce una scan policy sorgente Laravel bounded: indicizza
+codice applicativo, configurazione, database, route, test, view e sorgenti
+frontend, oltre ai manifest principali. `public`, `storage`, dipendenze e
+directory nascoste restano fuori dallo snapshot. Il limite per file è 2 MiB e
+il limite complessivo resta 64 MiB.

@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Pianificata — baseline disponibile, esecuzione delle fasi non avviata
+Stato: In corso — Fasi 1–3 completate
 
 Data: 2026-08-15
 
@@ -36,10 +36,10 @@ tool mutativi sperimentali non amplia la compatibility promise della v0.1.x.
 
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | Contratto di osservazione e baseline | Pianificata | Milestone 8 |
-| 2 | Artifact e preflight fuori dal checkout | Pianificata | Fase 1 |
-| 3 | Workspace reali e resilienza operativa | Pianificata | Fase 2 |
-| 4 | Triage e stabilizzazione v0.1.x | Pianificata | Fase 3 |
+| 1 | Contratto di osservazione e baseline | Completata | Milestone 8 |
+| 2 | Artifact e preflight fuori dal checkout | Completata | Fase 1 |
+| 3 | Workspace reali e resilienza operativa | Completata | Fase 2 |
+| 4 | Triage e stabilizzazione v0.1.x | In corso | Fase 3 |
 | 5 | Chiusura benchmark e decisione llama.cpp | Pianificata | Fase 4 |
 | 6 | Audit finale e gate Controlled Mutation | Pianificata | Fasi 1–5 |
 

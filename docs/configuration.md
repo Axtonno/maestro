@@ -2,7 +2,7 @@
 
 Versione schema: 1
 
-Stato: Contratto pubblico sperimentale v0.1.0
+Stato: Contratto pubblico sperimentale v0.1.x
 
 Data: 2026-08-15
 
@@ -67,7 +67,7 @@ per la matrice live.
 
 ## `workspace`
 
-La v0.1.0 supporta il percorso reference Laravel:
+La serie v0.1.x supporta il percorso reference Laravel:
 
 ```yaml
 workspace:
@@ -92,7 +92,7 @@ dei workspace tool built-in, senza duplicati:
 
 L'ordine nel file non cambia l'ordine canonico della `RunRequest`.
 
-Il profilo ufficiale v0.1.0 è più stretto dello schema generico e contiene
+Il profilo ufficiale v0.1.x è più stretto dello schema generico e contiene
 soltanto `workspace.list`, `workspace.read` e `workspace.search`.
 `workspace.write` e `workspace.patch` restano capacità sperimentali non
 supportate e non devono essere aggiunte al quick start.
@@ -124,7 +124,7 @@ globale `--yes`.
 
 La configurazione inclusa nega sempre `workspace_mutate`. I valori `allow` e
 `prompt` restano accettati dallo schema 0.x per test e integrazioni
-sperimentali, ma non appartengono alla compatibility promise v0.1.0.
+sperimentali, ma non appartengono alla compatibility promise v0.1.x.
 
 ## `limits`
 

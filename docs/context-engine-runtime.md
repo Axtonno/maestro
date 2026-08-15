@@ -20,7 +20,7 @@ appartiene alla facade `maestro.Runtime` insieme a `Gestor` e `Plugins`.
 
 # Workspace provider Laravel
 
-Laravel `0.3.0` implementa `contextengine.WorkspaceProvider` e dichiara la
+Laravel `0.3.1` implementa `contextengine.WorkspaceProvider` e dichiara la
 capability `context.workspace-provider`. Il workspace generico contiene ID,
 root normalizzata, source filesystem, policy di scansione e metadata limitati.
 

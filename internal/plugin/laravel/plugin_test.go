@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"testing"
 
@@ -108,6 +109,18 @@ func TestPluginProvidesFrameworkNeutralWorkspace(t *testing.T) {
 	}
 	if _, exists := before.Metadata()["framework_version"]; exists {
 		t.Fatal("workspace exposed a version before initialization")
+	}
+	policy := before.Policy()
+	if policy.MaxFileBytes != maxLaravelSourceBytes {
+		t.Fatalf("unexpected Laravel source file limit: %d", policy.MaxFileBytes)
+	}
+	for _, required := range []string{"app/**", "resources/views/**", "routes/**", "composer.json"} {
+		if !slices.Contains(policy.Include, required) {
+			t.Fatalf("Laravel source policy does not include %q: %#v", required, policy.Include)
+		}
+	}
+	if slices.Contains(policy.Include, "public/**") || slices.Contains(policy.Include, "storage/**") {
+		t.Fatalf("Laravel source policy includes generated/runtime paths: %#v", policy.Include)
 	}
 	if err := plugin.(pkgRuntime.Initializer).Initialize(nil); err != nil {
 		t.Fatalf("initialize plugin: %v", err)

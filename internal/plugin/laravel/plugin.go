@@ -18,9 +18,10 @@ import (
 
 const (
 	ID      pkgPlugin.ID = "laravel"
-	Version              = "0.3.0"
+	Version              = "0.3.1"
 
 	maxComposerManifestBytes = 1 << 20
+	maxLaravelSourceBytes    = 2 << 20
 )
 
 type Plugin interface {
@@ -130,10 +131,38 @@ func (p *plugin) Workspace(ctx context.Context) (pkgContext.Workspace, error) {
 		p.root,
 		pkgContext.WorkspaceOptions{
 			Source:   pkgContext.SourceFilesystem,
-			Policy:   pkgContext.DefaultScanPolicy(),
+			Policy:   laravelScanPolicy(),
 			Metadata: metadata,
 		},
 	)
+}
+
+func laravelScanPolicy() pkgContext.ScanPolicy {
+	policy := pkgContext.DefaultScanPolicy()
+	policy.MaxFileBytes = maxLaravelSourceBytes
+	policy.Include = []string{
+		"app/**",
+		"bootstrap/**",
+		"config/**",
+		"database/**",
+		"lang/**",
+		"resources/css/**",
+		"resources/js/**",
+		"resources/lang/**",
+		"resources/views/**",
+		"routes/**",
+		"tests/**",
+		"artisan",
+		"composer.json",
+		"composer.lock",
+		"package.json",
+		"phpunit.xml",
+		"phpunit.xml.dist",
+		"vite.config.js",
+		"vite.config.ts",
+		"webpack.mix.js",
+	}
+	return policy
 }
 
 func detect(root string) (string, error) {

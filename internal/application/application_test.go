@@ -55,6 +55,60 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 	}
 }
 
+func TestApplicationIndexesLaravelSourcesWithoutPublicAssets(t *testing.T) {
+	root := newLaravelWorkspace(t)
+	if err := os.MkdirAll(filepath.Join(root, "public"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(root, "public", "bundle.js"),
+		bytes.Repeat([]byte("x"), maxTestAssetBytes),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "resources", "views"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(root, "resources", "views", "large.blade.php"),
+		bytes.Repeat([]byte("v"), (1<<20)+1),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	provider := &fixtureProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
+		Message:      pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Read-only analysis complete."},
+		FinishReason: pkgProvider.FinishReasonStop,
+	}}}
+	config := testConfig(root)
+	config.Agent.Tools = []string{"workspace.read"}
+	config.Policy.WorkspaceMutation = "deny"
+	configured, err := Build(config, testDependencies(provider))
+	if err != nil {
+		t.Fatalf("build application: %v", err)
+	}
+	defer configured.Close(context.Background())
+	result, err := configured.Execute(t.Context(), "Explain Order")
+	if err != nil || result.Session().Terminal() != pkgAgent.TerminalCompleted {
+		t.Fatalf("execute real-workspace-shaped fixture: result=%#v err=%v", result, err)
+	}
+	snapshot, found := configured.Runtime().ContextEngine().Snapshot("laravel")
+	if !found {
+		t.Fatal("Laravel context snapshot is missing")
+	}
+	if _, found := snapshot.Document("app/Order.php"); !found {
+		t.Fatal("application source was not indexed")
+	}
+	if _, found := snapshot.Document("resources/views/large.blade.php"); !found {
+		t.Fatal("bounded Laravel view was not indexed")
+	}
+	if _, found := snapshot.Document("public/bundle.js"); found {
+		t.Fatal("generated public asset was indexed")
+	}
+}
+
 func TestApplicationExecutesPromptedMutationWithTerminalApprover(t *testing.T) {
 	root := newLaravelWorkspace(t)
 	filename := filepath.Join(root, "app", "Order.php")
@@ -176,6 +230,8 @@ type fixtureProvider struct {
 	completionCalls int
 	inspectError    error
 }
+
+const maxTestAssetBytes = 3 << 20
 
 func (provider *fixtureProvider) ID() pkgProvider.ID { return provider.id }
 

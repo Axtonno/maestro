@@ -1,4 +1,4 @@
-# Maestro v0.1.0 Quick Start
+# Maestro v0.1.x Quick Start
 
 Questo percorso parte esclusivamente dall'archive Linux `amd64` e dal checksum
 pubblicati. Non richiede il checkout del repository.
@@ -18,7 +18,7 @@ lo richiedono, la fixture qualificata è `embeddinggemma:latest`.
 Eseguire nella directory che contiene i due file scaricati:
 
 ```sh
-version=v0.1.0
+version=@MAESTRO_VERSION@
 artifact="maestro-${version}-linux-amd64"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
@@ -95,6 +95,11 @@ Modificare il file, quindi verificare prima di eseguire:
 
 Un path relativo è risolto rispetto alla directory del file YAML. Per ridurre
 ambiguità è consigliato un path assoluto per un progetto reale.
+
+Il plugin indicizza le aree sorgente Laravel bounded (`app`, `bootstrap`,
+`config`, `database`, `lang`, sorgenti `resources`, `routes` e `tests`) e i
+manifest principali. Asset generati in `public`, dati runtime in `storage`,
+dipendenze e directory nascoste non entrano nello snapshot.
 
 ## Arresto e problemi
 

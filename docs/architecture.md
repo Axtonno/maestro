@@ -326,7 +326,7 @@ linguaggio e framework rimangono sostituibili e non entrano nel Runtime Core.
 
 Gli embedding sono un'estensione opt-in del retrieval e passano attraverso il
 Provider Runtime esistente con provider e modello espliciti. Gestor descrive le
-capability ma non esegue indexing o analyzer. Il plugin Laravel `0.3.0`
+capability ma non esegue indexing o analyzer. Il plugin Laravel `0.3.1`
 fornisce workspace tramite il contratto framework-neutral `WorkspaceProvider`
 senza trasferire conoscenza Laravel al Context Engine.
 

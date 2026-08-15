@@ -36,6 +36,7 @@ commit="$(git -C "$repository" rev-parse --verify HEAD)"
 artifact="maestro-${version}-linux-amd64"
 archive="${artifact}.tar.gz"
 checksum="${archive}.sha256"
+release_notes="docs/releases/${version#v}.md"
 working="$(mktemp -d "${TMPDIR:-/tmp}/maestro-package-gate.XXXXXXXX")"
 cleanup() {
     rm -rf -- "$working"
@@ -68,7 +69,7 @@ for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGE
     docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
     docs/v0.1.0-api-compatibility.md docs/laravel-plugin.md \
-    docs/releases/v0.1.0.md \
+    "$release_notes" \
     configs/maestro.example.yaml fixtures/laravel-v1/dataset.json \
     fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
     [[ -e "$root/$required" ]] || {

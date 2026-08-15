@@ -1,14 +1,14 @@
-# Maestro v0.1.0 Compatibility Matrix
+# Maestro v0.1.x Compatibility Matrix
 
 Data: 2026-08-15
 
-Questa pagina è la fonte autorevole per ciò che la v0.1.0 dichiara supportato.
+Questa pagina è la fonte autorevole per ciò che la serie v0.1.x dichiara supportato.
 La presenza di codice, adapter o test deterministici non equivale a supporto
 operativo.
 
 ## Percorso supportato
 
-| Dimensione | Stato v0.1.0 | Confine verificato |
+| Dimensione | Stato v0.1.x | Confine verificato |
 |---|---|---|
 | Sistema operativo | Supportato | Linux `amd64` |
 | Provider | Supportato | Ollama su endpoint esplicito; baseline `http://127.0.0.1:11434` |
@@ -26,9 +26,14 @@ Intel Core i5-8365U, 15 GiB RAM e 4 GiB swap. Questo profilo descrive la prova,
 non un requisito minimo universale. Su CPU simili una singola run può richiedere
 diversi minuti.
 
+Dalla v0.1.1 i workspace Laravel reali sono indicizzati tramite la scan policy
+sorgente del plugin. Asset generati, storage runtime e dipendenze non entrano
+nello snapshot; il cambiamento corregge un failure di indicizzazione della
+v0.1.0 senza modificare tool o autorità.
+
 ## Compatibilità non dichiarata
 
-Non sono qualificati per la v0.1.0:
+Non sono qualificati per la serie v0.1.x:
 
 - Linux `arm64`, macOS e Windows;
 - endpoint Ollama remoti o esposti a reti non attendibili;

@@ -36,7 +36,7 @@ percorso scelto dall'amministratore; Maestro non richiede né invoca `sudo`.
 # Configurazione
 
 La configurazione inclusa punta alla fixture Laravel inclusa nell'archive ed è
-utilizzabile in place. Il profilo ufficiale v0.1.0 è read-only: registra
+utilizzabile in place. Il profilo ufficiale v0.1.x è read-only: registra
 soltanto `workspace.list`, `workspace.read` e `workspace.search` e nega la
 classe `workspace_mutate`.
 
@@ -67,7 +67,7 @@ nome di una variabile d'ambiente.
 Il percorso completo e gli output attesi sono in `docs/quick-start.md`. Il
 quick start non deve essere esteso aggiungendo `workspace.write` o
 `workspace.patch`. Le capacità mutative e l'approval terminale restano
-sperimentali e non supportate nella v0.1.0. llama.cpp è anch'esso sperimentale;
+sperimentali e non supportate nella v0.1.x. llama.cpp è anch'esso sperimentale;
 il percorso ufficiale richiede Ollama e `llama3.1:8b`.
 
 # Upgrade

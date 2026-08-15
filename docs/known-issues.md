@@ -1,4 +1,4 @@
-# Maestro v0.1.0 Known Issues and Limitations
+# Maestro v0.1.x Known Issues and Limitations
 
 ## Modello e prestazioni
 
@@ -12,6 +12,10 @@
   implicito generalizzato.
 - Il reason sintetico finale di alcuni hard limit è `execution_failed`, mentre
   l'evento terminale precedente resta `limit_exceeded` e autorevole.
+- Sui workspace reali `llama3.1:8b` può alternare una run valida a
+  `tool_failure` per arguments malformati o a `provider_failure` quando una
+  singola inferenza supera il timeout; il runtime resta fail-closed e non
+  applica retry impliciti.
 
 ## Supporto ristretto
 

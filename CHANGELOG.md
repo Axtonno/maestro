@@ -4,6 +4,20 @@ Le modifiche rilevanti di Maestro sono registrate in questo file. Durante la
 serie `0.x` i contratti pubblici restano sperimentali e ogni breaking change
 deve essere dichiarato nelle note di release.
 
+## [0.1.1] - 2026-08-15
+
+### Fixed
+
+- il workspace Laravel usa ora una scan policy sorgente bounded invece della
+  policy filesystem generica, evitando che asset generati in `public/` o dati
+  runtime in `storage/` impediscano l'analisi di progetti reali;
+- file sorgente Laravel fino a 2 MiB restano indicizzabili, mantenendo il
+  limite complessivo di 64 MiB e gli stessi controlli su path e symlink;
+- il packaging seleziona le note di release corrispondenti alla patch release
+  e rende la versione del quick start coerente con artifact e manifest.
+
+Nessun tool, permesso o support claim mutativo viene aggiunto.
+
 ## [0.1.0] - 2026-08-15
 
 ### Added
@@ -41,3 +55,4 @@ deve essere dichiarato nelle note di release.
 - CLI, configurazione e package Go restano sperimentali nella serie 0.x.
 
 [0.1.0]: https://github.com/Axtonno/maestro/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Axtonno/maestro/releases/tag/v0.1.1

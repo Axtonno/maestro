@@ -1,10 +1,10 @@
-# Maestro v0.1.0 Security Model
+# Maestro v0.1.x Security Model
 
 Data: 2026-08-15
 
 ## Sintesi
 
-Maestro v0.1.0 è un'applicazione locale trusted in-process, non una sandbox. Il
+Maestro v0.1.x è un'applicazione locale trusted in-process, non una sandbox. Il
 percorso supportato è read-only e usa soltanto Ollama locale,
 `llama3.1:8b` e i tool list/read/search su un workspace Laravel scelto
 esplicitamente dall'utente.
@@ -18,10 +18,10 @@ esplicitamente dall'utente.
 | Modello | Non autorevole; propone output e tool call, mai permessi |
 | Provider configurato | Riceve istruzione e contesto esplicitamente disclosed |
 | Tool/plugin built-in | Codice trusted eseguito nello stesso processo e con i privilegi dell'utente |
-| Estensioni terze | Fuori dal supporto v0.1.0 |
+| Estensioni terze | Fuori dal supporto v0.1.x |
 
 Cambiare `provider.base_url` può inviare istruzioni e sezioni selezionate del
-workspace a quel servizio. La promessa v0.1.0 copre soltanto Ollama locale su
+workspace a quel servizio. La promessa v0.1.x copre soltanto Ollama locale su
 loopback; l'utente deve considerare attendibile ogni endpoint alternativo.
 
 ## Garanzie implementate
@@ -42,7 +42,7 @@ loopback; l'utente deve considerare attendibile ogni endpoint alternativo.
 
 ## Non garanzie
 
-La v0.1.0 non fornisce:
+La v0.1.x non fornisce:
 
 - sandbox, container, seccomp, namespace o separazione di processo;
 - riduzione automatica dei privilegi del sistema operativo;
@@ -78,7 +78,7 @@ dall'utente.
 - mantenere Ollama su loopback e non esporlo senza autenticazione/rete fidata;
 - verificare archive e checksum prima dell'estrazione;
 - esaminare la configurazione e la root prima di ogni run;
-- non aggiungere `workspace.write` o `workspace.patch` al profilo v0.1.0;
+- non aggiungere `workspace.write` o `workspace.patch` al profilo v0.1.x;
 - interrompere run inattese con SIGINT e controllare il terminale redatto;
 - non inserire credenziali nel file YAML o nel workspace della fixture.
 
