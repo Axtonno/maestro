@@ -55,6 +55,67 @@ func TestAgentLoopExecutesCorrelatedToolCallAndCompletesPlan(t *testing.T) {
 	}
 }
 
+func TestAgentLoopRecoversTextualPseudoToolCallThroughDeclaredInterface(t *testing.T) {
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{
+			Message:      provider.Message{Role: provider.RoleAssistant, Content: `{"name":"fixture_read","parameters":{"path":"main.go"}}`},
+			FinishReason: provider.FinishReasonStop,
+			Usage:        provider.Usage{InputTokens: 3, OutputTokens: 2},
+		},
+		{
+			Message:      provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-1", Name: "fixture_read", Arguments: json.RawMessage(`{"path":"main.go"}`)}}},
+			FinishReason: provider.FinishReasonToolCalls,
+			Usage:        provider.Usage{InputTokens: 4, OutputTokens: 3},
+		},
+		{
+			Message:      provider.Message{Role: provider.RoleAssistant, Content: "The file was inspected."},
+			FinishReason: provider.FinishReasonStop,
+			Usage:        provider.Usage{InputTokens: 5, OutputTokens: 4},
+		},
+	}}
+	fixture := &loopTool{descriptor: loopToolDescriptor(t, "fixture.read", "fixture_read")}
+	tools := allowedToolRuntime(t, fixture)
+	runtime := loopRuntime(t, providers, tools, pendingPlan(t, "inspect"))
+	request := requestWithTools(t, runRequest(t, "run-pseudo-call", "agent.general", "workspace", 5), []pkgTool.ID{"fixture.read"}, false)
+
+	result, err := runtime.Run(context.Background(), request)
+	if err != nil {
+		t.Fatalf("recover pseudo-call: %v", err)
+	}
+	if result.Content() != "The file was inspected." || fixture.executions != 1 {
+		t.Fatalf("pseudo-call was accepted or tool was not executed: result=%#v executions=%d", result, fixture.executions)
+	}
+	if counters := result.Session().Counters(); counters.ModelTurns != 3 || counters.ToolCalls != 1 || counters.InputTokens != 12 || counters.OutputTokens != 9 {
+		t.Fatalf("unexpected counters: %#v", counters)
+	}
+	requests := providers.Requests()
+	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
+		!strings.Contains(requests[1].Messages[3].Content, "described a declared tool call as text") {
+		t.Fatalf("protocol correction was not sent: %#v", requests)
+	}
+}
+
+func TestAgentLoopAcceptsFinalAnswerThatNamesDeclaredTool(t *testing.T) {
+	providers := &generationStub{responses: []provider.CompletionResponse{{
+		Message:      provider.Message{Role: provider.RoleAssistant, Content: "The workspace_read result shows that the service validates orders."},
+		FinishReason: provider.FinishReasonStop,
+	}}}
+	fixture := &loopTool{descriptor: loopToolDescriptor(t, "fixture.read", "workspace_read")}
+	runtime := loopRuntime(t, providers, allowedToolRuntime(t, fixture), pendingPlan(t, "explain"))
+	request := requestWithTools(t, runRequest(t, "run-tool-name", "agent.general", "workspace", 2), []pkgTool.ID{"fixture.read"}, false)
+
+	result, err := runtime.Run(context.Background(), request)
+	if err != nil {
+		t.Fatalf("accept final answer: %v", err)
+	}
+	if result.Content() != "The workspace_read result shows that the service validates orders." || fixture.executions != 0 {
+		t.Fatalf("final answer was not accepted: result=%#v executions=%d", result, fixture.executions)
+	}
+	if got := len(providers.Requests()); got != 1 {
+		t.Fatalf("unexpected correction turn: got %d requests", got)
+	}
+}
+
 func TestEncodeToolResultPreservesStructuredJSON(t *testing.T) {
 	result, err := pkgTool.NewResult(
 		pkgTool.ResultSuccess,

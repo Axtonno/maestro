@@ -550,8 +550,15 @@ changelog e release notes sono allineati a questo confine. Gli script di
 packaging accettano ora lo stato finale `release` soltanto con una versione
 senza prerelease e richiedono tutti i documenti pubblici nell'archive.
 
-Questa baseline deve ancora essere committata, pacchettizzata e validata live;
-la presenza della documentazione non chiude la fase.
+La baseline documentale è stata committata in
+`6e867c13297c438874e0ecc2e1f334ba19fc7ab6` e pacchettizzata in modo
+riproducibile. La prima prova finale è stata rifiutata: il secondo quick start
+ha stampato una pseudo-tool-call JSON senza invocare il tool, quindi non ha
+prodotto l'analisi richiesta. L'archive rifiutato, SHA-256
+`5ad3e297e28033868488c42a3ff58e47a44d393f6c830cc33085a461cc564124`,
+non è promuovibile né pubblicabile. Il loop viene irrobustito e il gate sarà
+ripetuto da un commit successivo; la presenza della documentazione o una sola
+run positiva non chiudono la fase.
 
 ## Obiettivo
 

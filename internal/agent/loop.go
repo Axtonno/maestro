@@ -115,6 +115,13 @@ func (loop *agentLoop) Run(
 					_ = current.transitionStep(step.ID(), pkgAgent.StepFailed, "provider_failed")
 					return "", pkgAgent.TerminalProviderFailure, pkgAgent.ErrProviderFailed
 				}
+				if describesDeclaredToolCall(assistant.Content, providerTools) {
+					messages = append(messages, provider.Message{
+						Role:    provider.RoleSystem,
+						Content: "The previous assistant response described a declared tool call as text. The step is not complete. Invoke the exact declared tool interface now; do not print its name or arguments as assistant content.",
+					})
+					continue
+				}
 				if choreography.requiresMutation() {
 					messages = append(messages, provider.Message{
 						Role:    provider.RoleSystem,
@@ -237,6 +244,59 @@ func (loop *agentLoop) Run(
 			}
 		}
 	}
+}
+
+func describesDeclaredToolCall(content string, tools []provider.Tool) bool {
+	trimmed := strings.TrimSpace(content)
+	if strings.HasPrefix(trimmed, "```") {
+		if newline := strings.IndexByte(trimmed, '\n'); newline >= 0 {
+			trimmed = strings.TrimSpace(trimmed[newline+1:])
+		}
+		trimmed = strings.TrimSuffix(trimmed, "```")
+		trimmed = strings.TrimSpace(trimmed)
+	}
+	if !strings.HasPrefix(trimmed, "{") && !strings.HasPrefix(trimmed, "[") {
+		return false
+	}
+	var value any
+	if json.Unmarshal([]byte(trimmed), &value) != nil {
+		return false
+	}
+	declared := make(map[string]struct{}, len(tools))
+	for _, candidate := range tools {
+		if candidate.Name != "" {
+			declared[candidate.Name] = struct{}{}
+		}
+	}
+	return containsDeclaredToolCall(value, declared)
+}
+
+func containsDeclaredToolCall(value any, declared map[string]struct{}) bool {
+	switch typed := value.(type) {
+	case []any:
+		for _, item := range typed {
+			if containsDeclaredToolCall(item, declared) {
+				return true
+			}
+		}
+	case map[string]any:
+		name, hasName := typed["name"].(string)
+		_, isDeclared := declared[name]
+		_, hasArguments := typed["arguments"]
+		_, hasParameters := typed["parameters"]
+		_, hasInput := typed["input"]
+		if hasName && isDeclared && (hasArguments || hasParameters || hasInput) {
+			return true
+		}
+		for key, item := range typed {
+			if key == "function" || key == "tool_call" || key == "tool_calls" {
+				if containsDeclaredToolCall(item, declared) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (loop *agentLoop) publishStep(current *session, step pkgAgent.StepID, state pkgAgent.StepStatus) {

@@ -700,6 +700,16 @@ release notes. Il packaging finale usa lo stato distinto `release` e verifica
 la presenza di questi documenti. Artifact, installazione pulita, run live, tag
 e report finale restano i gate successivi della Fase 6.
 
+La prima build finale dal commit
+`6e867c13297c438874e0ecc2e1f334ba19fc7ab6` è riproducibile e supera i
+controlli statici, ma è rifiutata dal gate live: nella seconda run il modello
+ha stampato una pseudo-tool-call JSON senza invocare il tool e senza rispondere
+alla richiesta. L'archive con SHA-256
+`5ad3e297e28033868488c42a3ff58e47a44d393f6c830cc33085a461cc564124`
+non è una release. Il nuovo source candidate deve rifiutare tale testo come
+risultato finale, richiedere il canale tool entro gli hard limit e ripetere
+l'intero gate da un nuovo commit.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.

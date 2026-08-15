@@ -15,6 +15,8 @@ deve essere dichiarato nelle note di release.
 - adapter Ollama e fixture `llama3.1:8b`;
 - fixture embedding `embeddinggemma:latest`;
 - progress redatto, cancellazione SIGINT/SIGTERM e shutdown bounded;
+- correzione protocollare bounded quando un modello stampa una tool call JSON
+  dichiarata invece di invocare l'interfaccia tool;
 - configurazione e fixture Laravel utilizzabili direttamente dall'archive;
 - documentazione di installazione, quick start, sicurezza, compatibilità,
   troubleshooting e API sperimentali;

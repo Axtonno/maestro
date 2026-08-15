@@ -2198,3 +2198,15 @@ compatibilità API, changelog e release notes. Il packaging supporta lo stato
 finale distinto `release` soltanto per versioni non prerelease e richiede
 l'intera superficie documentale nell'archive. La baseline deve ancora essere
 committata e validata come nuovo artifact `v0.1.0`; `rc.2` non viene rinominato.
+
+La baseline documentale viene committata in
+`6e867c13297c438874e0ecc2e1f334ba19fc7ab6`. La relativa prima build finale è
+byte-riproducibile, ma non è promuovibile: dopo una run positiva, il secondo
+quick start termina senza tool call e restituisce come testo una pseudo-call
+JSON a `workspace_read`. L'archive, SHA-256
+`5ad3e297e28033868488c42a3ff58e47a44d393f6c830cc33085a461cc564124`,
+resta evidenza rifiutata e non viene pubblicato. Il loop deve trattare una
+pseudo-call strutturata verso un tool dichiarato come protocollo incompleto,
+richiedere una vera invocazione entro gli stessi hard limit e accettare invece
+le normali risposte finali che citano un tool. Un nuovo commit, un nuovo
+artifact e quick start consecutivi sono necessari prima della release.
