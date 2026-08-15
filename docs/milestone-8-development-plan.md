@@ -1,8 +1,8 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.7.0
+Versione: 0.8.0
 
-Stato: In esecuzione — Fasi 1–5 completate, Fase 6 in corso
+Stato: Completato — Fasi 1–6 e v0.1.0 concluse
 
 Data: 2026-08-15
 
@@ -37,11 +37,12 @@ sviluppo o conoscere le API Go interne.
 | 3 | Esperienza operativa | Completata | Fase 2 |
 | 4 | Packaging e installazione | Completata | Fasi 2–3 |
 | 5 | Validazione live e release candidate | Completata | Fasi 2–4 |
-| 6 | Documentazione pubblica e v0.1.0 | In corso | Fasi 1–5 |
+| 6 | Documentazione pubblica e v0.1.0 | Completata | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto al gate, ma documentazione e test vengono
 aggiornati in ogni incremento. Ogni fase produce un report sotto
-`docs/reports/`; la Fase 6 produce anche `reports/milestone-8-final.md`.
+`docs/reports/`; la Fase 6 produce anche
+`docs/reports/milestone-8-final.md`.
 
 ---
 
@@ -537,8 +538,7 @@ vuoto, le scansioni anti-leak sono negative e il workspace rimane invariato.
 
 # Fase 6 — Documentazione pubblica e v0.1.0
 
-Stato: In corso — verità di prodotto e documentazione pubblica congelate;
-artifact finale non ancora prodotto.
+Stato: Completata — artifact finale validato e tag `v0.1.0` creato.
 
 ## Incremento documentale 2026-08-15
 
@@ -559,6 +559,13 @@ prodotto l'analisi richiesta. L'archive rifiutato, SHA-256
 non è promuovibile né pubblicabile. Il loop viene irrobustito e il gate sarà
 ripetuto da un commit successivo; la presenza della documentazione o una sola
 run positiva non chiudono la fase.
+
+Il nuovo commit `f882919798fa6073bc11c6af18a431bf249a7755` incorpora la
+correzione e produce l'archive finale riproducibile SHA-256
+`c785676a177165a2c11ff0fc744931ac8b5d923466155ec32365e7a0c03d271f`.
+Due quick start consecutivi compiono una read reale e rispondono correttamente;
+hard limit, SIGINT exit 130, shutdown bounded, immutabilità e anti-leak sono
+verdi. Il tag annotato `v0.1.0` punta al commit incorporato nel binario.
 
 ## Obiettivo
 
@@ -593,7 +600,7 @@ comportamento osservato coincidono.
 - changelog e release notes;
 - licenza;
 - `docs/v0.1.0-api-compatibility.md`;
-- `reports/milestone-8-final.md`.
+- `docs/reports/milestone-8-final.md`.
 
 ## Invarianti
 

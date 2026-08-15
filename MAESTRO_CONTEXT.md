@@ -1958,8 +1958,7 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 
 ## Gate post-Milestone 7 e percorso v0.1.0
 
-Stato: GO alla Milestone 8; Fasi 1–5 completate; `v0.1.0-rc.2` validata;
-Fase 6 in corso e v0.1.0 non ancora pubblicata.
+Stato: Milestone 8 e Fasi 1–6 completate; artifact e tag `v0.1.0` validati.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
@@ -2196,8 +2195,7 @@ artifact-first includono quick start, installazione, configurazione, CLI,
 reference agent, security model/policy, troubleshooting, known issues,
 compatibilità API, changelog e release notes. Il packaging supporta lo stato
 finale distinto `release` soltanto per versioni non prerelease e richiede
-l'intera superficie documentale nell'archive. La baseline deve ancora essere
-committata e validata come nuovo artifact `v0.1.0`; `rc.2` non viene rinominato.
+l'intera superficie documentale nell'archive. `rc.2` non viene rinominato.
 
 La baseline documentale viene committata in
 `6e867c13297c438874e0ecc2e1f334ba19fc7ab6`. La relativa prima build finale è
@@ -2210,3 +2208,16 @@ pseudo-call strutturata verso un tool dichiarato come protocollo incompleto,
 richiedere una vera invocazione entro gli stessi hard limit e accettare invece
 le normali risposte finali che citano un tool. Un nuovo commit, un nuovo
 artifact e quick start consecutivi sono necessari prima della release.
+
+Il nuovo commit `f882919798fa6073bc11c6af18a431bf249a7755` implementa la
+correzione bounded senza eseguire effetti impliciti. L'archive finale
+`maestro-v0.1.0-linux-amd64.tar.gz`, 3.604.828 byte, è byte-riproducibile e ha
+SHA-256
+`c785676a177165a2c11ff0fc744931ac8b5d923466155ec32365e7a0c03d271f`.
+Da directory pulita supera checksum, version/help, doctor 9/9, models, agents e
+due quick start consecutivi: entrambe le run esercitano la correzione, eseguono
+una read reale e rispondono correttamente su `OrderService::create`. Il digest
+della fixture resta invariato. Il medesimo binario osserva il limite
+`model_turns: 1` con exit 1 e SIGINT con exit 130/shutdown in 1.997 ms; anti-leak
+e gate repository-wide sono verdi. Il tag annotato `v0.1.0` punta al commit
+incorporato nel binario. Fase 6, Milestone 8 e v0.1.0 sono concluse.

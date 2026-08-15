@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: In corso — Fasi 1–5 completate, Fase 6 in corso
+Stato: Completata — Fasi 1–6 e v0.1.0 concluse
 
 Obiettivo:
 
@@ -557,7 +557,7 @@ Fasi previste:
 | 3 | Esperienza operativa | Completata |
 | 4 | Packaging e installazione | Completata |
 | 5 | Validazione live e release candidate | Completata — `v0.1.0-rc.2` |
-| 6 | Documentazione pubblica e v0.1.0 | In corso |
+| 6 | Documentazione pubblica e v0.1.0 | Completata — `v0.1.0` |
 
 La CLI minima comprende `doctor`, `models`, `agents`, `run` e `version`. La
 configurazione versionata rende espliciti provider, modello, workspace, agente,
@@ -689,8 +689,8 @@ L'addendum operativo sul medesimo `rc.2` verifica anche SIGINT
 entrambi i casi stdout è vuoto, la scansione anti-leak è negativa e il
 workspace resta byte-identico.
 
-La Fase 6 produrrà l'artifact finale da un nuovo commit successivo alla
-documentazione pubblica. `rc.2` non verrà rinominato né ripacchettizzato
+La Fase 6 produce l'artifact finale da un nuovo commit successivo alla
+documentazione pubblica. `rc.2` non viene rinominato né ripacchettizzato
 retroattivamente come `v0.1.0`.
 
 La redazione pubblica congela la matrice autorevole in `compatibility.md` e
@@ -698,7 +698,7 @@ aggiunge README artifact-first, quick start, reference agent Laravel, security
 model/policy, troubleshooting, known issues, compatibility API, changelog e
 release notes. Il packaging finale usa lo stato distinto `release` e verifica
 la presenza di questi documenti. Artifact, installazione pulita, run live, tag
-e report finale restano i gate successivi della Fase 6.
+e report finale sono verificati nel gate conclusivo della Fase 6.
 
 La prima build finale dal commit
 `6e867c13297c438874e0ecc2e1f334ba19fc7ab6` è riproducibile e supera i
@@ -709,6 +709,15 @@ alla richiesta. L'archive con SHA-256
 non è una release. Il nuovo source candidate deve rifiutare tale testo come
 risultato finale, richiedere il canale tool entro gli hard limit e ripetere
 l'intero gate da un nuovo commit.
+
+Il commit successivo `f882919798fa6073bc11c6af18a431bf249a7755` applica
+questa correzione senza ampliare l'autorità. Il nuovo archive finale è
+byte-riproducibile, ha SHA-256
+`c785676a177165a2c11ff0fc744931ac8b5d923466155ec32365e7a0c03d271f`
+e supera installazione pulita, CLI/preflight, due quick start consecutivi con
+read reale, hard limit, SIGINT exit 130, shutdown bounded, immutabilità e
+anti-leak. Il tag annotato `v0.1.0` punta al commit incorporato nel binario:
+Milestone 8 e Fase 6 sono completate.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
