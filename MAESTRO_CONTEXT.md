@@ -2052,3 +2052,12 @@ impedito ogni patch non valida. Due tentativi llama.cpp in router mode hanno
 esaurito i 15 GiB dell'host e causato la terminazione OOM di `llama-server`,
 destabilizzando VS Code; le prove sono invalidate e nessun RC è stato prodotto.
 Il dettaglio è in `docs/reports/milestone-8-phase-5-interim.md`.
+
+Gli hardening agentici, l'envelope JSON strutturato e il profilo CPU ridotto
+sono incorporati in `maestro-v0.1.0-pc.2-linux-amd64.tar.gz`, prodotto dal
+commit `b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710`. Il doppio build normalizzato
+produce SHA-256
+`91ef1bb196e9904ef3f3f0fefccf3a80acba22f14da43cdccbf9a83680fa41bc`;
+versione, manifest, guida renderizzata, configurazione, fixture e installazione
+fuori dal checkout sono verdi. La ripresa della Fase 5 deve usare soltanto
+`pc.2`, che resta un packaging candidate e non una release candidate.

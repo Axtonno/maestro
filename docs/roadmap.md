@@ -601,6 +601,11 @@ mutativo resta aperto. La matrice llama.cpp in router mode ha causato due OOM
 su un host da 15 GiB ed è invalidata; nessuna release candidate è stata
 prodotta. Il report è `reports/milestone-8-phase-5-interim.md`.
 
+Gli hardening risultanti sono incorporati in `v0.1.0-pc.2`, packaging candidate
+riproducibile dal commit `b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710` con
+SHA-256 `91ef1bb196e9904ef3f3f0fefccf3a80acba22f14da43cdccbf9a83680fa41bc`.
+È l'unico input dei prossimi gate live, ma non è una release candidate.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.

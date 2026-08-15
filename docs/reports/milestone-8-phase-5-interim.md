@@ -2,6 +2,8 @@
 
 Data: 2026-08-13
 
+Aggiornato: 2026-08-15 — packaging candidate `v0.1.0-pc.2`
+
 Stato: In corso, validazione live sospesa
 
 Verdetto: **NO-GO alla release candidate**
@@ -33,6 +35,37 @@ commit, help, configurazione e fixture. Il probe `doctor` con endpoint
 deliberatamente non disponibile ha mantenuto verdi configurazione, workspace,
 composition, agent, tool, policy e riconoscimento Laravel, fallendo soltanto i
 check provider e modello come previsto.
+
+# Nuova iterazione `v0.1.0-pc.2`
+
+Gli hardening emersi dal gate live non appartengono a `pc.1`. Dopo regression
+test e benchmark a sistema stabile è stata quindi prodotta una nuova
+iterazione, che diventa l'unico input ammesso per la ripresa della Fase 5:
+
+| Campo | Valore |
+|---|---|
+| Artifact | `maestro-v0.1.0-pc.2-linux-amd64.tar.gz` |
+| Versione | `v0.1.0-pc.2` |
+| Commit incorporato | `b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710` |
+| SHA-256 | `91ef1bb196e9904ef3f3f0fefccf3a80acba22f14da43cdccbf9a83680fa41bc` |
+| Dimensione | `3586821` byte |
+| Piattaforma | Linux `amd64` |
+| Licenza | Apache-2.0 |
+
+`pc.2` include envelope JSON strutturato, protocollo del reference agent
+aggiornato, timeout e retrieval rivisti per il percorso CPU-only e una guida
+d'installazione renderizzata con la versione esatta del candidate.
+
+Il gate di packaging è stato ripetuto integralmente senza riaprire la Fase 4.
+Due build indipendenti dallo stesso commit sono byte-identiche; checksum,
+manifest, archive paths, licenze, assenza di credential-shaped data,
+configurazione, fixture, `version`, help, `doctor` offline e installazione da
+directory vuota sono verdi. Un controllo aggiunto rifiuta archive che
+contengano il token di versione non risolto.
+
+Un primo build `pc.2` preliminare dal commit precedente è stato scartato prima
+di qualsiasi test live perché la guida inclusa citava ancora `pc.1`. I relativi
+file sono stati spostati fuori da `dist/` e non costituiscono artifact validi.
 
 # Ambiente live rilevato
 
@@ -165,10 +198,12 @@ go test -run '^$' -bench BenchmarkAgentLoopDeterministic -benchmem ./internal/ag
 git diff --check
 ```
 
-Tutti i gate sono verdi. Il benchmark locale post-modifica osserva circa
-`105363 ns/op`, `15517 B/op` e `219 allocs/op`; è un indicatore dell'host, non
-un budget di release. Non è stato rigenerato alcun packaging candidate mentre
-il worktree conteneva le modifiche della Fase 5.
+Tutti i gate sono verdi. Il benchmark locale post-modifica osservava circa
+`105363 ns/op`, `15517 B/op` e `219 allocs/op` immediatamente dopo l'incidente.
+Ripetuto cinque volte a sistema stabile, osserva `36394–41950 ns/op`,
+`15517–15518 B/op` e `219 allocs/op`, rientrando nell'intervallo storico. È un
+indicatore dell'host, non un budget di release. Nessun packaging candidate è
+stato generato da un worktree contenente modifiche o file non tracciati.
 
 # Strategia sicura di ripresa
 
@@ -197,4 +232,5 @@ di procedere a deny, EOF, no-TTY, SIGINT, hard limit e installazione pulita.
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
 con profilo ridotto. Restano blocker lo scenario mutativo Ollama, la matrice
 llama.cpp, l'installazione pulita completa e tutti i gate operativi finali. La
-Milestone 3 resta formalmente aperta.
+Milestone 3 resta formalmente aperta. La ripresa deve usare esclusivamente
+`v0.1.0-pc.2`; `pc.1` resta una baseline storica e non può essere promosso.

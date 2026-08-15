@@ -440,6 +440,11 @@ destabilizzato VS Code; le relative prove sono invalidate. Nessun RC è stato
 prodotto. Evidenze, contenimento e strategia di ripresa sono in
 `reports/milestone-8-phase-5-interim.md`.
 
+Gli hardening successivi a `pc.1` sono inclusi nel packaging candidate
+`v0.1.0-pc.2`, prodotto e verificato integralmente dal commit
+`b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710`. `pc.2` è l'unico candidate
+ammesso per i gate live successivi; non è ancora una release candidate.
+
 ---
 
 # Fase 6 — Documentazione pubblica e v0.1.0
