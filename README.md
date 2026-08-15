@@ -352,6 +352,16 @@ prima dei test live. Un packaging candidate non è ancora una release
 candidate. Dettagli in `docs/packaging-candidate.md` e
 `docs/reports/milestone-8-phase-4.md`.
 
+La Fase 5 è in corso e non esiste ancora una release candidate. La baseline
+installabile `v0.1.0-pc.3` è verde per packaging e reference agent read-only,
+ma non è promuovibile: `llama3.1:8b` fallisce il gate mutativo,
+`rnj-1:8b-instruct-q4_K_M` si arresta al gate read-only e
+`ibm/granite4.1:8b`, pur superando tool protocol 3/3 e read-only 2/2, termina
+`deadline_exceeded` nel primo tentativo mutativo prima di approval e patch.
+Nessuna fixture è stata modificata e nessun `pc.4` è stato prodotto. Evidenze
+e matrice aggiornata sono in `docs/reports/milestone-8-phase-5-interim.md` e
+`docs/reports/milestone-8-model-selection.md`.
+
 Uso essenziale:
 
 ```go

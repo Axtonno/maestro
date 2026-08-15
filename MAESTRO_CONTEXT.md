@@ -2089,3 +2089,16 @@ ma termina `provider_failure` nel secondo turno dopo 535537 ms. Il gate registra
 0 successi su 1 tentativo; il secondo tentativo e il Gate C non sono eseguiti.
 Il modello è escluso, non esiste ancora un vincitore e `pc.4` non viene prodotto.
 Il report è `docs/reports/milestone-8-model-selection.md`.
+
+La selezione successiva usa `ibm/granite4.1:8b` senza cambiare il profilo o i
+criteri. Gate A è verde 3/3 e Gate B è verde 2/2: entrambi i run read-only
+terminano `completed` con una read reale e risposta corretta. Il primo run del
+Gate C, da estrazione fresca, esegue la read e raggiunge 3 turni e 2 tool call,
+ma termina `deadline_exceeded` dopo 600077 ms prima di approval o patch. Il
+digest del controller resta
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`;
+nessun grant o effetto è stato prodotto. I tentativi 2–3 non vengono eseguiti
+in fail-fast. Granite è escluso, il modello viene scaricato dalla RAM e `pc.4`
+non viene prodotto. Il prossimo candidato è `qwen3:8b` non-thinking agli stessi
+Gate A, B e C; se fallisce, il contratto di release deve essere rivalutato prima
+di cambiare i limiti pubblici.

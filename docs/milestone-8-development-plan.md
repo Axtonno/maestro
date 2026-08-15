@@ -367,7 +367,7 @@ Gate: **superato**. Report: `reports/milestone-8-phase-4.md`.
 
 # Fase 5 — Validazione live e release candidate
 
-Stato: In corso — validazione live sospesa dopo incidente OOM; NO-GO RC.
+Stato: In corso — validazione live e selezione del modello mutativo; NO-GO RC.
 
 ## Obiettivo
 
@@ -467,6 +467,17 @@ tentativo read-only (`provider_failure`, una read reale, 535537 ms). Il secondo
 tentativo e il Gate C non sono stati eseguiti. Il modello è escluso, non esiste
 ancora un vincitore e `pc.4` non viene prodotto. Evidenza in
 `reports/milestone-8-model-selection.md`.
+
+La selezione è proseguita senza cambiare i criteri con
+`ibm/granite4.1:8b`: Gate A superato 3/3 e Gate B superato 2/2, quindi tool
+calling diretto e reference agent read-only sono compatibili. Il primo run del
+Gate C ha però raggiunto il limite complessivo pubblico dopo una read e una
+seconda tool call, terminando `deadline_exceeded` in 600077 ms prima di approval
+o patch. La fixture è rimasta invariata; i tentativi 2–3 non sono stati eseguiti
+in fail-fast. Anche Granite è escluso, non esiste un vincitore e `pc.4` non
+viene prodotto. Il prossimo candidato è `qwen3:8b` non-thinking, sottoposto
+agli stessi gate; un suo eventuale fallimento richiederà di rivalutare il
+contratto di release prima di modificare il profilo pubblico.
 
 ---
 

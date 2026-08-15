@@ -2,9 +2,9 @@
 
 Data: 2026-08-13
 
-Aggiornato: 2026-08-15 — gate live `pc.3` e selezione modello mutativo
+Aggiornato: 2026-08-15 — gate live `pc.3` e selezione fail-fast dei modelli
 
-Stato: In corso, validazione live sospesa
+Stato: In corso — selezione del modello mutativo; NO-GO RC
 
 Verdetto: **NO-GO alla release candidate**
 
@@ -172,6 +172,23 @@ il Gate C non sono stati eseguiti.
 Il report completo è `reports/milestone-8-model-selection.md`. Non esiste ancora
 un modello vincente e non viene prodotto `pc.4`.
 
+Il candidato successivo `ibm/granite4.1:8b` ha superato `maestro doctor`, il
+Gate A provider-level 3/3 e il Gate B read-only 2/2 dal binario `pc.3`. Le due
+esecuzioni read-only hanno invocato una read reale, identificato correttamente
+`OrderService::create` e terminato `completed` rispettivamente dopo 431979 ms
+e 47606 ms.
+
+Il Gate C è stato avviato da una nuova estrazione dell'archive. Il primo run ha
+eseguito la read e raggiunto 3 turni e 2 tool call, ma è terminato
+`deadline_exceeded` al limite pubblico complessivo, dopo 600077 ms e con exit
+code 130. Nessun prompt di approval è stato mostrato, nessun grant è stato
+emesso e il controller conserva il digest originale
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`.
+Il Gate C registra quindi 0 successi su 1 tentativo eseguito; i tentativi 2–3
+non sono stati eseguiti in fail-fast. Anche Granite è escluso dalla fixture
+v0.1.0 sul profilo CPU-only pubblico. Il modello è stato scaricato dalla RAM e
+non viene prodotto `pc.4`.
+
 # Ambiente live rilevato
 
 | Componente | Evidenza |
@@ -331,11 +348,14 @@ structured output e tool calling vanno provati con il solo modello chat;
 embedding in un processo separato. Lifecycle/router va eseguito soltanto su un
 host con memoria sufficiente o classificato esplicitamente come non validato.
 
-Il percorso Ollama mutativo non deve essere ripreso finché non viene scelta una
-combinazione modello/contratto diversa. Il nuovo percorso dovrà partire da un
-candidate coerente e da una copia pulita della fixture, quindi dimostrare una
-patch reale, approval one-shot, reindex e risposta finale prima di procedere a
-deny, EOF, no-TTY, SIGINT, hard limit e installazione pulita.
+Il percorso Ollama mutativo prosegue con `qwen3:8b` in modalità non-thinking,
+senza modificare i Gate A, B e C. Soltanto un modello che superi l'intera
+matrice può motivare `pc.4`; il gate mutativo dovrà partire da una copia pulita
+della fixture e dimostrare una patch reale, approval one-shot, reindex e
+risposta finale prima di procedere a deny, EOF, no-TTY, SIGINT, hard limit e
+installazione pulita. Se anche questo candidato fallisce, il contratto della
+release dovrà essere rivalutato prima di ampliare i timeout o cambiare il
+profilo pubblico.
 
 # Verdetto
 

@@ -633,6 +633,14 @@ invoca una read ma termina `provider_failure` dopo 535537 ms. Il Gate B registra
 e il modello è escluso. Non viene prodotto `pc.4`; il report è
 `reports/milestone-8-model-selection.md`.
 
+`ibm/granite4.1:8b` supera poi Gate A 3/3 e due run read-only consecutivi del
+Gate B. Nel primo run del Gate C esegue la read e propone una seconda tool call,
+ma il run termina `deadline_exceeded` dopo 600077 ms, prima di approval o patch.
+Il controller resta byte-identico; i tentativi 2–3 non vengono eseguiti in
+fail-fast. Granite è escluso dalla fixture mutativa sul profilo CPU-only
+pubblico, `pc.4` resta vietato e la selezione prosegue con `qwen3:8b`
+non-thinking agli stessi criteri.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.
