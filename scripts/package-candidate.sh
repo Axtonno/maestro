@@ -78,7 +78,8 @@ go_version="$(go env GOVERSION)"
 artifact="maestro-${version}-linux-amd64"
 archive="${artifact}.tar.gz"
 checksum="${archive}.sha256"
-release_notes="docs/releases/${version#v}.md"
+release_version="${version#v}"
+release_notes="docs/releases/${release_version%%-*}.md"
 
 if [[ ! -f "$release_notes" ]]; then
     printf 'release notes are unavailable: %s\n' "$release_notes" >&2
