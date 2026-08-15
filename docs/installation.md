@@ -10,12 +10,17 @@ Scaricare nello stesso percorso archive e checksum, quindi verificare prima di
 estrarre:
 
 ```sh
-sha256sum -c maestro-v0.1.0-pc.1-linux-amd64.tar.gz.sha256
-tar -xzf maestro-v0.1.0-pc.1-linux-amd64.tar.gz
-cd maestro-v0.1.0-pc.1-linux-amd64
+version=@MAESTRO_VERSION@
+artifact="maestro-${version}-linux-amd64"
+sha256sum -c "${artifact}.tar.gz.sha256"
+tar -xzf "${artifact}.tar.gz"
+cd "$artifact"
 ./maestro version
 ./maestro --help
 ```
+
+`@MAESTRO_VERSION@` è un token della documentazione sorgente: lo script di
+packaging lo sostituisce con la versione esatta dell'archive.
 
 Per un'installazione utente senza privilegi:
 

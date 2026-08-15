@@ -15,9 +15,12 @@ Il nome è:
 maestro-<version>-linux-amd64.tar.gz
 ```
 
-La versione di Fase 4 è `v0.1.0-pc.1`. `ARTIFACT-MANIFEST.txt` registra
-versione, commit, piattaforma, versione Go e fixture. `maestro version` deve
-restituire la stessa versione e lo stesso commit.
+La Fase 4 ha prodotto la prima iterazione `v0.1.0-pc.1`; le iterazioni
+successive conservano lo stesso formato e incorporano gli hardening emersi nei
+gate live. `ARTIFACT-MANIFEST.txt` registra versione, commit, piattaforma,
+versione Go e fixture. La guida d'installazione inclusa viene renderizzata con
+la versione esatta dell'archive e `maestro version` deve restituire la stessa
+versione e lo stesso commit.
 
 # Contenuto
 

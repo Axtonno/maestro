@@ -58,6 +58,12 @@ cmp "$repository/THIRD_PARTY_LICENSES.txt" "$root/THIRD_PARTY_LICENSES.txt"
 grep -Fxq "artifact=${artifact}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "commit=${commit}" "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "version=${version}" "$root/docs/installation.md"
+grep -Fq 'artifact="maestro-${version}-linux-amd64"' "$root/docs/installation.md"
+if grep -R -Fq '@MAESTRO_VERSION@' "$root"; then
+    printf 'archive contains an unresolved version token\n' >&2
+    exit 1
+fi
 grep -Fq '"id": "maestro-laravel-mini"' "$root/fixtures/laravel-v1/dataset.json"
 grep -Fq '"version": "1.0.0"' "$root/fixtures/laravel-v1/dataset.json"
 

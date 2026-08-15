@@ -94,6 +94,7 @@ cp docs/installation.md docs/configuration.md docs/cli.md \
     docs/operational-experience.md docs/packaging-candidate.md "$root/docs/"
 cp configs/maestro.example.yaml "$root/configs/"
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
+sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"
 
 if find "$root/fixtures" -type l -o -name vendor -o -name node_modules -o \
     -name .git -o -name .env | grep -q .; then
