@@ -753,6 +753,11 @@ Output atteso:
 
 Nessuna capacità mutativa diventa supportata durante questa milestone.
 
+Il piano operativo suddivide la milestone in sei fasi sequenziali: contratto
+di osservazione, artifact e preflight, workspace reali e resilienza, triage
+v0.1.x, chiusura benchmark/llama.cpp e audit finale. Il dettaglio è in
+`milestone-9-development-plan.md`.
+
 ---
 
 # Milestone 10 — Controlled Mutation
@@ -859,6 +864,7 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - release-readiness-audit.md
 - milestone-8-design.md
 - milestone-8-development-plan.md
+- milestone-9-development-plan.md
 - v0.2.0-development-plan.md
 - reports/v0.1.0-post-release-observation.md
 - configuration.md

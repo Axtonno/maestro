@@ -2241,6 +2241,12 @@ pendenti perché nella sessione di apertura Ollama non era in esecuzione. La
 suite completa è verde con una cache Go isolata e non sono stati identificati
 bug v0.1.x dalla sola analisi statica.
 
+La Milestone 9 viene eseguita in sei fasi: contratto di osservazione, artifact
+e preflight fuori dal checkout, workspace reali e resilienza operativa, triage
+e stabilizzazione v0.1.x, chiusura benchmark con decisione llama.cpp, audit
+finale GO/NO-GO. Il piano autorevole è
+`docs/milestone-9-development-plan.md`; nessuna fase abilita capacità mutative.
+
 Le milestone successive sono:
 
 1. Milestone 10 — Controlled Mutation;
