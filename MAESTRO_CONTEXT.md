@@ -2073,9 +2073,19 @@ usato nella ripresa live.
 Dal candidate estratto, doctor, models, agents e quick start read-only sono
 positivi. Il primo tentativo mutativo ha invece terminato con zero tool call:
 `llama3.1:8b` ha descritto pseudo-call come testo. La fixture è rimasta
-byte-identica e la serie è stata fermata a `0/3`, senza altro prompt tuning.
+byte-identica. La serie registra 0 successi su 1 tentativo eseguito; il gate
+richiedeva 3 successi consecutivi e i tentativi 2–3 non sono stati eseguiti.
+Non è stato eseguito altro prompt tuning.
 Il modello resta una fixture positiva provider-level e read-only, ma non è
 supportato per il reference agent mutante. La v0.1.0 è bloccata finché non viene
 validato un modello alternativo o definito un contratto operativo più stretto.
 `pc.3` resta una baseline non promuovibile e nessun candidate è ammesso alla
 prosecuzione mutativa prima di tale decisione.
+
+La prima selezione economica ha valutato `rnj-1:8b-instruct-q4_K_M`. Il modello
+supera il Gate A provider-level con 3 sequenze read-result-patch valide su 3,
+senza eseguire effetti. Nel Gate B il primo run read-only invoca una read reale
+ma termina `provider_failure` nel secondo turno dopo 535537 ms. Il gate registra
+0 successi su 1 tentativo; il secondo tentativo e il Gate C non sono eseguiti.
+Il modello è escluso, non esiste ancora un vincitore e `pc.4` non viene prodotto.
+Il report è `docs/reports/milestone-8-model-selection.md`.

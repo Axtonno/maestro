@@ -68,6 +68,7 @@ principale della release.
 | Ollama | Supportato | Endpoint locale esplicito e matrice live verde |
 | Chat/tool model | `llama3.1:8b` | Positivo per provider-level e reference agent read-only |
 | Reference agent mutante | Nessun modello | Blocker: `llama3.1:8b` non emette tool call nel gate `pc.3` |
+| `rnj-1:8b-instruct-q4_K_M` | Escluso | Gate A 3/3; Gate B read-only termina `provider_failure` |
 | Embedding model | `embeddinggemma:latest` | Fixture positiva canonica Ollama |
 | `qwen2.5-coder:7b` | Caso negativo | Non supportato per il reference agent con tool calling |
 | llama.cpp | Candidato | Supportato solo dopo acquisizione o riesecuzione del report live |

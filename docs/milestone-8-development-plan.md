@@ -453,11 +453,20 @@ dopo l'hardening descritto in ADR-0028. `v0.1.0-pc.3`, prodotto dal commit
 `d362b9910f68e5aecae3a489eb5852e339bc3939` e verificato con doppio build
 byte-identico, è l'unico input ammesso; non è ancora una release candidate.
 Il quick start read-only di `pc.3` è positivo, ma il primo tentativo mutativo ha
-prodotto un terminale testuale senza tool call. La serie è stata interrotta a
-`0/3`: `llama3.1:8b` non è una fixture supportata per il reference agent
-mutante e la selezione del percorso sostitutivo è un blocker di release. Dopo
+prodotto un terminale testuale senza tool call. La serie registra 0 successi su
+1 tentativo eseguito; il gate previsto richiedeva 3 successi consecutivi e i
+tentativi 2–3 non sono stati eseguiti. `llama3.1:8b` non è una fixture
+supportata per il reference agent mutante e la selezione del percorso
+sostitutivo è un blocker di release. Dopo
 questo esito `pc.3` resta una baseline non promuovibile; nessun candidate è
 ammesso alla prosecuzione mutativa finché la decisione non è risolta.
+
+La prima selezione economica ha valutato `rnj-1:8b-instruct-q4_K_M`: Gate A
+provider-level superato 3/3, Gate B fermato in fail-fast dopo 0 successi su 1
+tentativo read-only (`provider_failure`, una read reale, 535537 ms). Il secondo
+tentativo e il Gate C non sono stati eseguiti. Il modello è escluso, non esiste
+ancora un vincitore e `pc.4` non viene prodotto. Evidenza in
+`reports/milestone-8-model-selection.md`.
 
 ---
 

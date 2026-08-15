@@ -2,7 +2,7 @@
 
 Data: 2026-08-13
 
-Aggiornato: 2026-08-15 — gate live `v0.1.0-pc.2` e hardening ADR-0028
+Aggiornato: 2026-08-15 — gate live `pc.3` e selezione modello mutativo
 
 Stato: In corso, validazione live sospesa
 
@@ -92,8 +92,9 @@ stesso turno: lettura e patch dipendente. Il runtime di `pc.2` ha terminato con
 `tool_failure` prima di mostrare un prompt di approval. Il confronto con il
 file estratto direttamente dall'archive conferma in entrambi i casi SHA-256
 `4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`:
-nessuna modifica è avvenuta. La serie richiesta di tre mutazioni consecutive è
-stata fermata correttamente a `0/3`; non è stato eseguito ulteriore prompt
+nessuna modifica è avvenuta. La serie mutativa registra 0 successi su 1
+tentativo eseguito; il gate previsto richiedeva 3 successi consecutivi e i
+tentativi 2–3 non sono stati eseguiti. Non è stato eseguito ulteriore prompt
 tuning e `pc.2` è classificato non promuovibile.
 
 ADR-0028 registra l'hardening conseguente: una sola esecuzione tool per turno,
@@ -149,12 +150,27 @@ identico all'archive.
 
 La coreografia ADR-0028 governa una mutazione dopo che il provider propone una
 call mutante; non può inferire in sicurezza l'effetto richiesto da testo libero
-quando nessuna call viene emessa. La serie è quindi interrotta a `0/3` senza
-altro prompt tuning. `llama3.1:8b` resta positivo per tool calling diretto e
+quando nessuna call viene emessa. La serie registra quindi 0 successi su 1
+tentativo eseguito; il gate previsto richiedeva 3 successi consecutivi e i
+tentativi 2–3 non sono stati eseguiti. Non è stato eseguito altro prompt
+tuning. `llama3.1:8b` resta positivo per tool calling diretto e
 reference agent read-only, ma non è dichiarato supportato per il reference
 agent mutante. La release rimane bloccata in attesa di un modello alternativo
 validato oppure di un contratto operativo esplicito più stretto. Dopo il test
 il modello è stato scaricato dalla RAM con `ollama stop`.
+
+## Selezione economica successiva
+
+Il candidato locale `rnj-1:8b-instruct-q4_K_M` ha superato il Gate A
+provider-level con 3 sequenze read-result-patch valide su 3. Il Gate non ha
+eseguito tool o modificato file. Al Gate B, il primo run read-only dal binario
+`pc.3` ha invocato una read reale ma ha terminato `provider_failure` nel secondo
+turno dopo 535537 ms, con exit code 4. Il requisito era `completed` per almeno
+due run consecutivi: il modello è stato escluso in fail-fast, il tentativo 2 e
+il Gate C non sono stati eseguiti.
+
+Il report completo è `reports/milestone-8-model-selection.md`. Non esiste ancora
+un modello vincente e non viene prodotto `pc.4`.
 
 # Ambiente live rilevato
 

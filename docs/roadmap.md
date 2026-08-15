@@ -617,11 +617,21 @@ e non è una release candidate.
 
 Il quick start read-only di `pc.3` è verde. Nel primo gate mutativo
 `llama3.1:8b` ha però restituito pseudo-call come testo e nessuna tool call; la
-fixture è rimasta invariata e la serie è stata fermata a `0/3`. Il modello
+fixture è rimasta invariata. La serie registra 0 successi su 1 tentativo
+eseguito; il gate richiedeva 3 successi consecutivi e i tentativi 2–3 non sono
+stati eseguiti. Il modello
 resta positivo per adapter/tool calling diretto e reference agent read-only,
 ma non è supportato per il reference agent mutante. Un modello sostitutivo o
 un contratto operativo più stretto deve essere scelto e validato prima della
 release candidate.
+
+La prima selezione fail-fast successiva ha esaminato
+`rnj-1:8b-instruct-q4_K_M`. Il protocollo diretto read-result-patch supera 3
+sequenze su 3 senza eseguire effetti; il primo run read-only del reference agent
+invoca una read ma termina `provider_failure` dopo 535537 ms. Il Gate B registra
+0 successi su 1 tentativo, il secondo tentativo e il Gate C non vengono eseguiti
+e il modello è escluso. Non viene prodotto `pc.4`; il report è
+`reports/milestone-8-model-selection.md`.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
