@@ -608,7 +608,12 @@ Il quick start read-only esatto dall'archive è positivo. Il primo run mutativo
 ha però emesso read e patch dipendente nello stesso turno ed è terminato in
 modo sicuro senza modificare la fixture. `pc.2` non è promuovibile: ADR-0028
 introduce una coreografia deterministica, che dovrà essere incorporata in un
-nuovo packaging candidate prima di riprendere i gate live.
+nuovo packaging candidate prima di riprendere i gate live. L'hardening è ora
+incorporato in `v0.1.0-pc.3`, commit
+`d362b9910f68e5aecae3a489eb5852e339bc3939`, SHA-256
+`8fbdfbf9b207c8c984f295240bcb6345d32fcbfa42f5869dd27a39acc158fe26`.
+Il doppio gate di packaging è verde; `pc.3` è l'unico input della ripresa live
+e non è ancora una release candidate.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

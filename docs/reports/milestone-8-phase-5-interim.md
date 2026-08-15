@@ -104,6 +104,27 @@ proposta resta incompleta. I test al confine applicativo dimostrano che una
 patch prematura non raggiunge né approval né esecuzione. L'hardening non è
 presente in `pc.2` e richiede un nuovo packaging candidate.
 
+# Nuova iterazione `v0.1.0-pc.3`
+
+L'hardening ADR-0028 è incorporato in un nuovo packaging candidate, prodotto
+soltanto dopo il completamento dei gate deterministici:
+
+| Campo | Valore |
+|---|---|
+| Artifact | `maestro-v0.1.0-pc.3-linux-amd64.tar.gz` |
+| Versione | `v0.1.0-pc.3` |
+| Commit incorporato | `d362b9910f68e5aecae3a489eb5852e339bc3939` |
+| SHA-256 | `8fbdfbf9b207c8c984f295240bcb6345d32fcbfa42f5869dd27a39acc158fe26` |
+| Dimensione | `3595670` byte |
+| Piattaforma | Linux `amd64` |
+| Licenza | Apache-2.0 |
+
+Due build indipendenti sono byte-identiche. Checksum, manifest, archive paths,
+licenze, assenza di dati credential-shaped e path del checkout, configurazione,
+fixture, guida renderizzata, `version`, help, `doctor` offline e installazione
+da directory vuota sono verdi. `pc.3` diventa l'unico input ammesso per la
+ripresa live; resta un packaging candidate e non una release candidate.
+
 # Ambiente live rilevato
 
 | Componente | Evidenza |
@@ -263,18 +284,19 @@ structured output e tool calling vanno provati con il solo modello chat;
 embedding in un processo separato. Lifecycle/router va eseguito soltanto su un
 host con memoria sufficiente o classificato esplicitamente come non validato.
 
-Il percorso Ollama deve essere ripreso da un nuovo candidate e da una copia
-pulita della fixture e deve
-dimostrare una patch reale, approval one-shot, reindex e risposta finale prima
-di procedere a deny, EOF, no-TTY, SIGINT, hard limit e installazione pulita.
+Il percorso Ollama deve essere ripreso da `pc.3` e da una copia pulita della
+fixture. Deve dimostrare una patch reale, approval one-shot, reindex e risposta
+finale prima di procedere a deny, EOF, no-TTY, SIGINT, hard limit e
+installazione pulita.
 
 # Verdetto
 
 **Fase 5 non conclusa. NO-GO alla release candidate e alla release.**
 
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
-con profilo ridotto. Restano blocker lo scenario mutativo Ollama, la matrice
-llama.cpp, l'installazione pulita completa e tutti i gate operativi finali. La
+con configurazione esatta di `pc.2`. Restano blocker lo scenario mutativo
+Ollama, la matrice llama.cpp, l'installazione pulita completa e tutti i gate
+operativi finali. La
 Milestone 3 resta formalmente aperta. `pc.1` e `pc.2` restano baseline storiche
-e non possono essere promossi. La ripresa richiede un nuovo packaging candidate
-costruito dal commit pulito che incorpora ADR-0028.
+e non possono essere promossi. La ripresa usa esclusivamente `pc.3`, costruito
+dal commit pulito che incorpora ADR-0028.

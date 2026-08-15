@@ -446,7 +446,9 @@ Gli hardening successivi a `pc.1` sono inclusi nel packaging candidate
 dall'archive è positivo, ma il primo run mutativo ha confermato la necessità di
 una coreografia deterministica tra lettura e patch. `pc.2` non è quindi
 promuovibile. La ripresa dei gate live richiede un nuovo candidate prodotto
-dopo l'hardening descritto in ADR-0028; non è ancora una release candidate.
+dopo l'hardening descritto in ADR-0028. `v0.1.0-pc.3`, prodotto dal commit
+`d362b9910f68e5aecae3a489eb5852e339bc3939` e verificato con doppio build
+byte-identico, è l'unico input ammesso; non è ancora una release candidate.
 
 ---
 

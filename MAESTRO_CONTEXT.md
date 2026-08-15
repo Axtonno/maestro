@@ -2062,5 +2062,9 @@ versione, manifest, guida renderizzata, configurazione, fixture e installazione
 fuori dal checkout sono verdi. Il quick start read-only esatto dall'archive è
 positivo, ma il primo run mutativo ha confermato una dipendenza non governata
 tra read e patch nello stesso turno. `pc.2` non è promuovibile. ADR-0028 rende
-la coreografia deterministica; un nuovo packaging candidate dovrà superare i
-gate prima della ripresa live.
+la coreografia deterministica. L'hardening è incorporato in
+`maestro-v0.1.0-pc.3-linux-amd64.tar.gz`, commit
+`d362b9910f68e5aecae3a489eb5852e339bc3939`, SHA-256
+`8fbdfbf9b207c8c984f295240bcb6345d32fcbfa42f5869dd27a39acc158fe26`.
+Il doppio build è byte-identico e il gate dell'archive è verde; soltanto `pc.3`
+può essere usato nella ripresa live.
