@@ -4,7 +4,7 @@ Data: 2026-08-13
 
 Aggiornato: 2026-08-15 — gate live `pc.3` e selezione fail-fast dei modelli
 
-Stato: In corso — matrice 8B conclusa, decisione di prodotto richiesta
+Stato: In corso — ADR-0029 approvato, preparazione candidate read-only
 
 Verdetto: **NO-GO alla release candidate**
 
@@ -363,12 +363,11 @@ structured output e tool calling vanno provati con il solo modello chat;
 embedding in un processo separato. Lifecycle/router va eseguito soltanto su un
 host con memoria sufficiente o classificato esplicitamente come non validato.
 
-Il percorso Ollama mutativo è sospeso in attesa di una decisione di prodotto.
-Le opzioni da formalizzare sono: v0.1.0 ufficialmente read-only con mutazioni
-rinviate; mantenimento delle mutazioni con un requisito hardware superiore che
-includa capacità computazionale e non soltanto RAM; oppure rinvio della release
-finché non viene identificata una fixture adeguata. Timeout, budget e criteri
-non devono essere ampliati retroattivamente in risposta agli esiti osservati.
+ADR-0029 sceglie la v0.1.0 ufficialmente read-only. Il percorso Ollama
+supportato usa `llama3.1:8b`, list/read/search e policy mutativa deny; llama.cpp,
+tool mutanti e reference agent mutante sono sperimentali/non supportati. La
+validazione mutativa viene rinviata almeno alla v0.2.0. Timeout, budget e
+criteri delle matrici concluse non vengono ampliati retroattivamente.
 
 # Verdetto
 
@@ -376,9 +375,8 @@ non devono essere ampliati retroattivamente in risposta agli esiti osservati.
 
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
 con configurazione esatta di `pc.3`. La matrice mutativa 8B non produce un
-vincitore e richiede ora una decisione sul contratto v0.1.0; restano inoltre
-blocker la matrice llama.cpp, l'installazione pulita completa e i gate operativi
-finali. La Milestone 3 resta formalmente aperta. `pc.1`, `pc.2` e `pc.3`
-restano baseline storiche e non possono essere promossi. Nessun candidate è
-ammesso alla prosecuzione mutativa o alla release candidate prima della
-decisione.
+vincitore e ADR-0029 restringe il contratto v0.1.0 al read-only. Restano da
+produrre e validare `pc.4`, completare l'installazione pulita e ripetere due
+quick start consecutivi. La Milestone 3 resta formalmente aperta, ma llama.cpp
+è sperimentale e il relativo debito non blocca la release read-only. `pc.1`,
+`pc.2` e `pc.3` restano baseline storiche non promuovibili.

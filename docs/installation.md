@@ -36,10 +36,16 @@ percorso scelto dall'amministratore; Maestro non richiede né invoca `sudo`.
 # Configurazione
 
 La configurazione inclusa punta alla fixture Laravel inclusa nell'archive ed è
-utilizzabile in place:
+utilizzabile in place. Il profilo ufficiale v0.1.0 è read-only: registra
+soltanto `workspace.list`, `workspace.read` e `workspace.search` e nega la
+classe `workspace_mutate`.
 
 ```sh
 ./maestro doctor --config ./configs/maestro.example.yaml
+./maestro models --config ./configs/maestro.example.yaml
+./maestro agents --config ./configs/maestro.example.yaml
+./maestro run --config ./configs/maestro.example.yaml \
+  "Read app/Http/Controllers/OrderController.php and explain which service its store method calls. Do not modify any file."
 ```
 
 Il probe provider richiede Ollama configurato su `127.0.0.1:11434`; senza il
@@ -57,6 +63,11 @@ install -m 0600 ./configs/maestro.example.yaml "$HOME/.config/maestro/config.yam
 Un path workspace relativo viene risolto rispetto al file di configurazione.
 La configurazione non contiene credenziali; `api_key_env` accetta soltanto il
 nome di una variabile d'ambiente.
+
+Il quick start non deve essere esteso aggiungendo `workspace.write` o
+`workspace.patch`. Le capacità mutative e l'approval terminale restano
+sperimentali e non supportate nella v0.1.0. llama.cpp è anch'esso sperimentale;
+il percorso ufficiale richiede Ollama e `llama3.1:8b`.
 
 # Upgrade
 

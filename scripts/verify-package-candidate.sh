@@ -66,6 +66,15 @@ if grep -R -Fq '@MAESTRO_VERSION@' "$root"; then
 fi
 grep -Fq '"id": "maestro-laravel-mini"' "$root/fixtures/laravel-v1/dataset.json"
 grep -Fq '"version": "1.0.0"' "$root/fixtures/laravel-v1/dataset.json"
+for read_only_tool in workspace.list workspace.read workspace.search; do
+    grep -Fq -- "- $read_only_tool" "$root/configs/maestro.example.yaml"
+done
+if grep -Fq 'workspace.patch' "$root/configs/maestro.example.yaml"; then
+    printf 'published configuration exposes an unsupported mutating tool\n' >&2
+    exit 1
+fi
+grep -Eq '^[[:space:]]*workspace_mutate:[[:space:]]*deny[[:space:]]*$' \
+    "$root/configs/maestro.example.yaml"
 
 version_output="$($root/maestro version)"
 grep -Fxq "maestro ${version}" <<<"$version_output"

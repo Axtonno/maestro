@@ -79,6 +79,11 @@ Il comando carica e avvia il plugin Laravel, ottiene il Workspace autorevole,
 indicizza il contesto, costruisce una query lessicale, crea una `RunRequest` con
 target e hard limit configurati e invoca `Agent Runtime.Run`.
 
+Nel percorso supportato v0.1.0 il `RunRequest` espone soltanto i tool read-only
+`workspace.list`, `workspace.read` e `workspace.search`; la configurazione
+inclusa nega ogni effetto `workspace.mutate`. Tool e approval mutativi restano
+sperimentali e fuori dal quick start.
+
 Prima del run, stderr mostra i limiti configurati. Durante l'esecuzione mostra
 eventi sintetici di sessione, piano, step, permission, contatori e terminale.
 Questi eventi derivano esclusivamente dalle allowlist pubbliche e non includono

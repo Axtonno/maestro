@@ -22,7 +22,6 @@ agent:
   streaming: true
   tools:
     - workspace.list
-    - workspace.patch
     - workspace.read
     - workspace.search
 
@@ -30,7 +29,7 @@ policy:
   id: policy.local-review
   model: allow
   workspace_inspect: allow
-  workspace_mutate: prompt
+  workspace_mutate: deny
 
 limits:
   duration: 10m

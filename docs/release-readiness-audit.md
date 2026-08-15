@@ -6,6 +6,8 @@ Stato: GO alla Milestone 8 — release non ancora pronta
 
 Data: 2026-08-13
 
+Aggiornato: 2026-08-15 — confine read-only ADR-0029
+
 ---
 
 # Scopo
@@ -235,15 +237,22 @@ documentati senza trasformare una capability dichiarata in supporto implicito.
 
 # Gate di ingresso alla release candidate
 
+ADR-0029 restringe la promessa pubblica alla comprensione read-only di un
+progetto Laravel. Il codice mutativo e l'approval restano sperimentali, mentre
+llama.cpp è esplicitamente non supportato nella v0.1.0. Di conseguenza il gate
+non richiede più una fixture mutativa live o la matrice llama.cpp; richiede che
+la configurazione inclusa non renda disponibili mutazioni.
+
 La release candidate può essere creata soltanto quando:
 
 - i cinque comandi minimi sono implementati e coperti da test;
 - il file di configurazione `version: 1` è documentato, parsed strict e validato;
 - provider, modello, workspace, agente, policy e limiti sono espliciti;
-- reference agent e approval funzionano dalla CLI;
-- quick start Laravel e scenario live end-to-end sono riproducibili;
-- matrice llama.cpp e debito formale della Milestone 3 sono chiusi, oppure il
-  supporto llama.cpp è delimitato da una decisione documentata;
+- il reference agent read-only funziona dalla CLI;
+- due quick start Laravel read-only consecutivi sono riproducibili;
+- il profilo ufficiale espone soltanto list/read/search e nega le mutazioni;
+- llama.cpp e reference agent mutante sono delimitati come sperimentali e non
+  supportati;
 - security model, limitazioni, licenza, installazione e contratti sperimentali
   sono pubblicati;
 - artifact con versione e commit è prodotto per la piattaforma supportata;

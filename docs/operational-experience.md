@@ -26,6 +26,11 @@ L'automazione deve usare policy `allow` esplicite e bounded.
 
 # Approval
 
+L'approval resta un contratto sperimentale disponibile per integrazioni 0.x,
+ma non fa parte del percorso ufficiale read-only della v0.1.0. La
+configurazione distribuita non registra tool mutanti e imposta
+`workspace_mutate: deny`; il quick start non presenta quindi prompt mutativi.
+
 Prima di chiedere una decisione, Maestro mostra su stderr:
 
 - subject `model` o `tool`;
@@ -92,3 +97,7 @@ L'approval non è una sandbox e non limita i privilegi del processo. La v0.1.0
 esegue codice trusted in-process e i workspace tool operano con i privilegi
 dell'utente locale. Non esiste auto-approval, `--yes`, memoria di grant tra run
 o rollback generale.
+
+La v0.1.0 non dichiara supportati `workspace.write`, `workspace.patch`, un
+reference agent mutante o llama.cpp. La presenza del relativo codice e dei test
+deterministici non costituisce una promessa operativa live.

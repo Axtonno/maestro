@@ -1,8 +1,8 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.4.0
+Versione: 0.5.0
 
-Stato: In esecuzione — Fasi 1–4 completate, Fasi 5–6 da avviare
+Stato: In esecuzione — Fasi 1–4 completate, Fase 5 in corso
 
 Data: 2026-08-13
 
@@ -11,6 +11,7 @@ Documenti di riferimento:
 - `release-readiness-audit.md`;
 - `milestone-8-design.md`;
 - `adr/ADR-0026.md`;
+- `adr/ADR-0029.md`;
 - `reports/milestone-7-final.md`.
 
 ---
@@ -35,7 +36,7 @@ sviluppo o conoscere le API Go interne.
 | 2 | Configurazione e CLI minima | Completata | Fase 1 |
 | 3 | Esperienza operativa | Completata | Fase 2 |
 | 4 | Packaging e installazione | Completata | Fasi 2–3 |
-| 5 | Validazione live e release candidate | Da avviare | Fasi 2–4 |
+| 5 | Validazione live e release candidate | In corso | Fasi 2–4 |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto al gate, ma documentazione e test vengono
@@ -367,38 +368,35 @@ Gate: **superato**. Report: `reports/milestone-8-phase-4.md`.
 
 # Fase 5 — Validazione live e release candidate
 
-Stato: In corso — matrice 8B conclusa, decisione di prodotto richiesta; NO-GO RC.
+Stato: In corso — confine read-only approvato, preparazione `pc.4`; NO-GO RC.
 
 ## Obiettivo
 
 Provare l'intero percorso CLI con modelli reali e verificare la release
 candidate come farebbe un nuovo utilizzatore.
 
-## Matrice Ollama
+## Percorso Ollama supportato
 
 - usare `llama3.1:8b` come fixture positiva chat/tool calling provider-level e
-  read-only; richiedere un modello alternativo o un contratto esplicito più
-  stretto per riaprire il gate mutativo;
+  reference agent read-only;
 - usare `embeddinggemma:latest` per embedding quando richiesto;
 - eseguire doctor, models, agents e run dall'artifact;
-- completare uno scenario Laravel read-only;
-- completare `read -> patch -> reindex -> final` con approval one-shot;
-- verificare cancellazione, deny, hard limits e shutdown;
+- completare due scenari Laravel read-only consecutivi;
+- verificare che il tool set incluso sia esattamente list/read/search;
+- verificare `workspace_mutate: deny` e workspace invariato;
+- verificare cancellazione, hard limits e shutdown sul percorso supportato;
 - conservare il caso `qwen2.5-coder:7b` come failure negativa canonica senza
   promuoverlo a fixture del reference agent.
 
-## Matrice llama.cpp
+## Provider e mutazioni sperimentali
 
-- cercare/acquisire il report live indicato dalle decisioni successive;
-- verificarne commit, versioni, configurazione, artifact e risultati;
-- se il report non è recuperabile, rieseguire integration e Smoke matrix;
-- coprire listing, discovery disponibile, completion, streaming,
-  cancellazione, embedding, structured output e tool calling;
-- usare idealmente lo stesso modello base Llama 3.1 per isolare il runtime;
-- classificare skip e capability version-sensitive;
-- produrre `reports/milestone-3-live-llamacpp-validation.md`;
-- chiudere formalmente la Milestone 3 oppure adottare prima della RC una
-  decisione che renda llama.cpp sperimentale.
+- ADR-0029 classifica llama.cpp sperimentale e non supportato nella v0.1.0;
+- il report live mancante resta debito della Milestone 3 ma non blocca il
+  percorso read-only Ollama;
+- `workspace.write`, `workspace.patch`, approval mutativa e reference agent
+  mutante restano capacità sperimentali, rinviate almeno alla v0.2.0;
+- nessun risultato deterministico viene rimosso o reinterpretato come supporto
+  live.
 
 ## Installazione pulita
 
@@ -406,16 +404,17 @@ candidate come farebbe un nuovo utilizzatore.
 - installare e verificare checksum/versione;
 - creare la configurazione dalla guida pubblica;
 - eseguire l'intero quick start Laravel;
-- verificare file modificato, digest, nuova generazione e terminale completed;
-- ripetere approval deny, no TTY e SIGINT;
+- eseguire due run read-only consecutivi con terminale completed;
+- verificare digest invariato e assenza di tool mutanti nella config inclusa;
 - registrare hardware, versioni e risultati in forma redatta.
 
 ## Gate release candidate
 
 - zero failure nello scenario Ollama supportato;
 - capability necessarie del reference agent validate live;
-- llama.cpp allineato con report verificato oppure esplicitamente sperimentale;
-- nessuna mutazione senza permission allow valida;
+- llama.cpp e reference agent mutante esplicitamente sperimentali/non supportati;
+- nessun tool mutante disponibile nel profilo ufficiale;
+- nessuna mutazione possibile attraverso la configurazione inclusa;
 - cancellazione e limiti osservati;
 - nessun secret, prompt o contenuto workspace negli eventi/report;
 - CLI completa eseguita dall'artifact installato;
@@ -424,7 +423,7 @@ candidate come farebbe un nuovo utilizzatore.
 ## Deliverable
 
 - report live Ollama agentico;
-- report live llama.cpp verificato o nuovo;
+- classificazione pubblica di llama.cpp e mutazioni;
 - report d'installazione pulita;
 - release candidate e checksum aggiornati;
 - report `reports/milestone-8-phase-5.md`.
@@ -487,11 +486,13 @@ failure `tool_call_count`. Le sequenze 2–3 e i Gate B/C non sono eseguiti in
 fail-fast; fixture e artifact restano invariati. La ricerca corrente di modelli
 8B termina senza vincitori e `pc.4` non viene prodotto.
 
-Prima di riprendere l'implementazione occorre decidere formalmente se rendere
-v0.1.0 read-only rinviando le mutazioni, mantenere le mutazioni alzando il
-requisito hardware anche in termini di capacità computazionale, oppure rinviare
-la release finché non esiste una fixture adeguata. Timeout e limiti pubblici
-non vengono modificati retroattivamente.
+ADR-0029 risolve il bivio scegliendo v0.1.0 read-only e rinviando la validazione
+mutativa almeno alla v0.2.0. Il profilo ufficiale registra solo
+`workspace.list`, `workspace.read` e `workspace.search`, nega
+`workspace_mutate` e classifica llama.cpp sperimentale. Timeout e limiti delle
+matrici concluse non vengono modificati retroattivamente. Questa nuova promessa
+autorizza la produzione di `pc.4` come candidate del contratto read-only, non
+come promozione di un modello mutativo.
 
 ---
 

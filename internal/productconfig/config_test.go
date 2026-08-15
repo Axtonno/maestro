@@ -43,6 +43,13 @@ func TestPublishedExampleMatchesCurrentSchema(t *testing.T) {
 	if config.Provider.ID != "ollama" || config.Models.Chat != "llama3.1:8b" || config.Workspace.ID != "laravel" {
 		t.Fatalf("unexpected published example: %#v", config)
 	}
+	ids := config.ToolIDs()
+	if len(ids) != 3 || string(ids[0]) != "workspace.list" || string(ids[1]) != "workspace.read" || string(ids[2]) != "workspace.search" {
+		t.Fatalf("published example must expose only the supported read-only tools: %v", ids)
+	}
+	if config.Policy.WorkspaceMutation != "deny" {
+		t.Fatalf("published example must deny workspace mutation: %q", config.Policy.WorkspaceMutation)
+	}
 }
 
 func TestLoadRejectsUnknownDuplicateMultipleAndAliasYAML(t *testing.T) {

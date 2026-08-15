@@ -23,3 +23,6 @@
 - [ADR-0024 – Immutable Context Pipeline with Explicit Provenance and Budgets](ADR-0024.md)
 - [ADR-0025 – Bounded Agent Sessions with Atomic Permission-Gated Effects](ADR-0025.md)
 - [ADR-0026 – Release-Oriented v0.1.0 Product Boundary](ADR-0026.md)
+- [ADR-0027 – Apache-2.0 License for Maestro](ADR-0027.md)
+- [ADR-0028 – Deterministic Dependency Choreography for Workspace Mutations](ADR-0028.md)
+- [ADR-0029 – Read-Only v0.1.0 Product Boundary](ADR-0029.md)

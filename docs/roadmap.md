@@ -650,6 +650,15 @@ senza vincitori: nessun `pc.4` e NO-GO RC finché non viene scelta esplicitament
 una v0.1.0 read-only, un profilo mutativo con requisito hardware superiore o il
 rinvio della release.
 
+ADR-0029 approva la prima opzione: la v0.1.0 supporta ufficialmente il solo
+reference agent read-only con Ollama e `llama3.1:8b`; il profilo distribuito
+espone list/read/search e imposta `workspace_mutate: deny`. Tool e reference
+agent mutanti vengono rinviati almeno alla v0.2.0. llama.cpp è sperimentale e
+non supportato nella v0.1.0, quindi la matrice live mancante non blocca più
+questa release e resta debito separato della Milestone 3. Il nuovo contratto
+autorizza `pc.4`, che deve superare packaging riproducibile, installazione
+pulita e due quick start read-only consecutivi prima della promozione a RC.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.

@@ -81,8 +81,8 @@ autorevole dell'identità. La CLI non rinomina o duplica il workspace.
 
 ## `agent`
 
-L'agent iniziale è `agent.reference`. `tools` deve contenere almeno uno dei
-workspace tool built-in, senza duplicati:
+L'agent iniziale è `agent.reference`. Lo schema sperimentale accetta almeno uno
+dei workspace tool built-in, senza duplicati:
 
 - `workspace.list`;
 - `workspace.read`;
@@ -91,6 +91,11 @@ workspace tool built-in, senza duplicati:
 - `workspace.patch`.
 
 L'ordine nel file non cambia l'ordine canonico della `RunRequest`.
+
+Il profilo ufficiale v0.1.0 è più stretto dello schema generico e contiene
+soltanto `workspace.list`, `workspace.read` e `workspace.search`.
+`workspace.write` e `workspace.patch` restano capacità sperimentali non
+supportate e non devono essere aggiunte al quick start.
 
 `streaming` seleziona il percorso Provider Runtime corrispondente e viene
 verificato da `doctor` nelle capability del modello.
@@ -104,7 +109,7 @@ policy:
   id: policy.local-review
   model: allow
   workspace_inspect: allow
-  workspace_mutate: prompt
+  workspace_mutate: deny
 ```
 
 `model` governa sia `model.invoke` sia l'eventuale `model.disclose` sul bundle
@@ -116,6 +121,10 @@ allow one-shot o allow per la stessa action durante il run. EOF, input invalido
 e modalità non interattiva negano in sicurezza; cancellazione e deadline non
 concedono authority e interrompono il run. Non esiste auto-approval né un flag
 globale `--yes`.
+
+La configurazione inclusa nega sempre `workspace_mutate`. I valori `allow` e
+`prompt` restano accettati dallo schema 0.x per test e integrazioni
+sperimentali, ma non appartengono alla compatibility promise v0.1.0.
 
 ## `limits`
 

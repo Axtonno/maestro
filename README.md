@@ -360,9 +360,12 @@ ma non è promuovibile: `llama3.1:8b` fallisce il gate mutativo,
 `deadline_exceeded` nel primo tentativo mutativo prima di approval e patch.
 L'ultimo candidato `qwen3:8b`, provato con `/no_think` riproducibile, non emette
 la read richiesta già nella prima sequenza del Gate A. La matrice 8B corrente è
-conclusa senza vincitori: nessuna fixture è stata modificata e nessun `pc.4` è
-stato prodotto. Prima di proseguire serve una decisione esplicita tra v0.1.0
-read-only, requisito hardware mutativo superiore o rinvio della release.
+conclusa senza vincitori e nessuna fixture è stata modificata. ADR-0029 sceglie
+quindi una v0.1.0 ufficialmente read-only:
+`llama3.1:8b` resta la fixture supportata, la configurazione inclusa espone solo
+list/read/search e nega le mutazioni; reference agent mutante, approval
+mutativa e llama.cpp sono sperimentali/non supportati. `pc.4` è il candidate
+read-only di questo nuovo confine, non la promozione di un modello.
 Evidenze e matrice sono in `docs/reports/milestone-8-phase-5-interim.md` e
 `docs/reports/milestone-8-model-selection.md`.
 

@@ -2,7 +2,7 @@
 
 Data: 2026-08-15
 
-Stato: Matrice corrente conclusa — nessun modello vincente
+Stato: Matrice conclusa — ADR-0029 adotta il confine read-only
 
 Verdetto: **rnj escluso al Gate B, Granite al Gate C e Qwen3 al Gate A;
 decisione sul contratto v0.1.0 richiesta, nessun `pc.4`**
@@ -272,6 +272,8 @@ direzioni di prodotto:
    capacità computazionale, non soltanto la RAM;
 3. release rinviata finché non viene identificata una fixture adeguata.
 
-Fase 5 resta aperta e la release candidate rimane in NO-GO fino a questa
-decisione. `pc.3` è una baseline storica non promuovibile e `pc.4` non viene
-prodotto.
+ADR-0029 sceglie successivamente la prima direzione: v0.1.0 ufficialmente
+read-only, con mutazioni rinviate almeno alla v0.2.0. `pc.3` resta una baseline
+storica non promuovibile; `pc.4` diventa ammissibile esclusivamente come nuovo
+candidate del contratto read-only e deve superare il relativo gate prima di
+qualsiasi promozione a RC.

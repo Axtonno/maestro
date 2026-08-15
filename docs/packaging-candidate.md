@@ -29,11 +29,14 @@ versione e lo stesso commit.
 - README e documentazione preliminare per installazione, configurazione, CLI e
   UX operativa;
 - configurazione strict `version: 1` senza secret;
+- profilo ufficiale read-only senza tool mutanti e con
+  `workspace_mutate: deny`;
 - fixture `maestro-laravel-mini@1.0.0`, priva di dipendenze installate;
 - manifest dell'artifact.
 
 # Non garanzie
 
-Il candidate non certifica provider o modelli live, non chiude il debito
-llama.cpp e non implica supporto oltre Linux `amd64`. Non include sandbox,
-installer privilegiato, aggiornamento automatico o dependency download.
+Il candidate non certifica provider o modelli live e non implica supporto oltre
+Linux `amd64`. llama.cpp e il reference agent mutante sono sperimentali e non
+supportati nella v0.1.0. Il candidate non include sandbox, installer
+privilegiato, aggiornamento automatico o dependency download.

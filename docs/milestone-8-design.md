@@ -2,11 +2,12 @@
 
 Versione: 0.1.0
 
-Stato: Approvato — ADR-0026 Accepted
+Stato: Approvato — ADR-0026 e ADR-0029 Accepted
 
 Data: 2026-08-13
 
-Documenti di ingresso: `release-readiness-audit.md` e `adr/ADR-0026.md`.
+Documenti di ingresso: `release-readiness-audit.md`, `adr/ADR-0026.md` e
+`adr/ADR-0029.md`.
 
 ---
 
@@ -15,8 +16,9 @@ Documenti di ingresso: `release-readiness-audit.md` e `adr/ADR-0026.md`.
 Trasformare la baseline ingegneristica completata con la Milestone 7 in un
 prodotto locale installabile e utilizzabile:
 
-> Maestro può essere installato, configurato e usato da uno sviluppatore per
-> eseguire un agente locale controllato su un progetto reale.
+> Maestro può essere installato e utilizzato localmente per analizzare,
+> interrogare e comprendere un progetto Laravel attraverso un reference agent
+> controllato e read-only.
 
 La milestone non costruisce un ecosistema generalizzato. Consegna il percorso
 ufficiale minimo verso v0.1.0 e rende verificabili le scelte che il Runtime già
@@ -31,15 +33,13 @@ richiede esplicitamente.
 - CLI minima: `doctor`, `models`, `agents`, `run`, `version`;
 - file di configurazione YAML versionato e strict;
 - selezione esplicita di provider, modello, workspace, agente e policy;
-- composizione ufficiale di Ollama e plugin Laravel, più il percorso candidato
-  llama.cpp soggetto al gate live;
-- policy di prodotto e approval terminale;
+- composizione ufficiale di Ollama e plugin Laravel;
+- policy di prodotto read-only e hard limits;
 - esecuzione del reference agent con hard limits;
 - packaging del binario, checksum e istruzioni di installazione;
 - quick start Laravel riproducibile;
 - security model, limitazioni, licenza e compatibility statement;
-- matrice live llama.cpp e chiusura del debito della Milestone 3;
-- almeno uno scenario live end-to-end e una prova da ambiente pulito.
+- almeno uno scenario live read-only end-to-end e una prova da ambiente pulito.
 
 ## Esplicitamente escluso
 
@@ -54,6 +54,8 @@ richiede esplicitamente.
 | Selezione automatica di provider o modello | Evoluzione successiva |
 | Remote execution e durable runs | Evoluzione successiva |
 | Secret manager | Evoluzione successiva |
+| Reference agent mutante e approval supportata | Almeno v0.2.0 |
+| Supporto ufficiale llama.cpp | Dopo una matrice live valida |
 
 I comandi `maestro bench` già esistenti restano supportati, ma non sono la UX
 principale della release.
@@ -67,13 +69,13 @@ principale della release.
 | Piattaforma | Linux `amd64` | Artifact e installazione pulita obbligatori |
 | Ollama | Supportato | Endpoint locale esplicito e matrice live verde |
 | Chat/tool model | `llama3.1:8b` | Positivo per provider-level e reference agent read-only |
-| Reference agent mutante | Nessun modello | Blocker: `llama3.1:8b` non emette tool call nel gate `pc.3` |
+| Reference agent mutante | Non supportato | Rinviato almeno alla v0.2.0 |
 | `rnj-1:8b-instruct-q4_K_M` | Escluso | Gate A 3/3; Gate B read-only termina `provider_failure` |
 | `ibm/granite4.1:8b` | Escluso | Gate A 3/3 e Gate B 2/2; Gate C termina `deadline_exceeded` prima della patch |
 | `qwen3:8b` non-thinking | Escluso | Gate A fermato in fail-fast: nessuna read call nella prima sequenza |
 | Embedding model | `embeddinggemma:latest` | Fixture positiva canonica Ollama |
 | `qwen2.5-coder:7b` | Caso negativo | Non supportato per il reference agent con tool calling |
-| llama.cpp | Candidato | Supportato solo dopo acquisizione o riesecuzione del report live |
+| llama.cpp | Sperimentale | Adapter presente, nessuna promessa v0.1.0 senza matrice live valida |
 | Laravel | Percorso reference | Progetto/fixture locale, plugin built-in |
 | Altre piattaforme/provider/modelli | Sperimentali | Nessuna promessa finché non validati |
 
@@ -201,13 +203,12 @@ agent:
     - workspace.list
     - workspace.read
     - workspace.search
-    - workspace.patch
 
 policy:
   id: policy.local-review
   model: allow
   workspace_inspect: allow
-  workspace_mutate: prompt
+  workspace_mutate: deny
 
 limits:
   duration: 5m
@@ -260,6 +261,10 @@ La configurazione di prodotto esprime intenti bounded (`allow`, `deny` o
 - disclosure del bundle del workspace selezionato;
 - ispezione tramite workspace tool ufficiali;
 - mutazione tramite workspace tool ufficiali.
+
+Il profilo distribuito v0.1.0 registra soltanto tool di ispezione e imposta la
+classe mutativa a `deny`. I valori mutativi e l'approval restano contratti
+sperimentali 0.x, non parte del percorso supportato.
 
 Il compiler della policy valuta sempre la `PermissionRequest` concreta e
 verifica provider, modello, workspace, tool set ed effect. La sintassi compatta
@@ -344,17 +349,17 @@ Il quick start usa un progetto Laravel già esistente o la fixture versionata
 inclusa nel repository di release. Il percorso è:
 
 1. installare il binario e verificare `maestro version`;
-2. avviare e configurare Ollama o llama.cpp con un modello validato;
+2. avviare Ollama con `llama3.1:8b`;
 3. creare il file `config.yaml` con target e policy espliciti;
 4. eseguire `maestro doctor`;
 5. controllare `maestro models` e `maestro agents`;
-6. eseguire prima un task read-only;
-7. eseguire un task di patch con approval one-shot;
-8. verificare file modificato, reindex e terminale completed.
+6. eseguire un task read-only che richieda una lettura reale;
+7. verificare terminale completed, risposta corretta e workspace invariato;
+8. ripetere il quick start da una nuova installazione pulita.
 
-La prova di release deve usare una copia temporanea del progetto. Maestro non
-promette rollback generale e il quick start deve suggerire un workspace sotto
-version control senza eseguire comandi Git.
+La prova di release usa la fixture inclusa e una directory priva del checkout.
+Il profilo ufficiale non espone tool mutanti; aggiungere tool sperimentali alla
+configurazione esce dal supporto v0.1.0.
 
 ---
 
@@ -412,7 +417,7 @@ dalla documentazione pubblicata, può:
 - identificare versione e piattaforma supportata;
 - produrre una configurazione valida senza leggere il codice Go;
 - diagnosticare provider, modello, workspace e agent;
-- comprendere e controllare ogni mutazione proposta;
-- completare lo scenario Laravel live entro i limiti dichiarati;
+- verificare che il profilo ufficiale non esponga mutazioni;
+- completare due scenari Laravel read-only consecutivi entro i limiti dichiarati;
 - comprendere cosa Maestro protegge e cosa non protegge;
 - ripetere la procedura da un ambiente pulito.

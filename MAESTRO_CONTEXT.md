@@ -2118,3 +2118,18 @@ RC finché una decisione formale non sceglie tra v0.1.0 read-only con mutazioni
 rinviate, mutazioni con requisito hardware/computazionale superiore, oppure
 rinvio della release in attesa di una fixture adeguata. I limiti pubblici non
 vengono aumentati retroattivamente.
+
+ADR-0029 accetta il confine read-only della v0.1.0. La promessa supportata è
+analizzare, interrogare e comprendere un progetto Laravel con il reference
+agent locale controllato. Il percorso ufficiale usa Linux `amd64`, Ollama,
+`llama3.1:8b` ed `embeddinggemma:latest`; la configurazione inclusa registra
+solo `workspace.list`, `workspace.read` e `workspace.search` e imposta
+`workspace_mutate: deny`. Tool mutanti, approval mutativa e reference agent
+mutante restano implementati e testati deterministicamente ma sono
+sperimentali/non supportati almeno fino alla v0.2.0.
+
+llama.cpp è classificato sperimentale e non supportato nella v0.1.0. Il report
+live mancante resta debito della Milestone 3 ma non blocca la release read-only.
+Il nuovo contratto autorizza `v0.1.0-pc.4` come candidate del profilo
+read-only; deve ancora superare doppio packaging riproducibile, installazione
+pulita, CLI dall'artifact e due quick start live consecutivi prima della RC.
