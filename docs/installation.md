@@ -1,6 +1,6 @@
 # Installazione preliminare di Maestro v0.1
 
-Stato: Packaging candidate — non release candidate
+Stato: @MAESTRO_STATUS@
 
 Piattaforma verificata: Linux `amd64`
 
@@ -19,8 +19,9 @@ cd "$artifact"
 ./maestro --help
 ```
 
-`@MAESTRO_VERSION@` è un token della documentazione sorgente: lo script di
-packaging lo sostituisce con la versione esatta dell'archive.
+`@MAESTRO_VERSION@` e `@MAESTRO_STATUS@` sono token della documentazione
+sorgente: lo script di packaging li sostituisce con versione e stato esatti
+dell'archive.
 
 Per un'installazione utente senza privilegi:
 

@@ -22,6 +22,11 @@ versione Go e fixture. La guida d'installazione inclusa viene renderizzata con
 la versione esatta dell'archive e `maestro version` deve restituire la stessa
 versione e lo stesso commit.
 
+Lo script usa `status=packaging-candidate` per default. Soltanto dopo un gate
+live positivo della Fase 5 può essere invocato esplicitamente con
+`--status release-candidate`; il manifest deve riportare lo stesso stato. Un
+artifact `pc.N` fallito non viene rinominato o sovrascritto.
+
 # Contenuto
 
 - binario `maestro` Linux `amd64`;

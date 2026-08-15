@@ -3,16 +3,22 @@
 set -euo pipefail
 
 usage() {
-    printf 'usage: %s --version vX.Y.Z[-prerelease] [--output directory]\n' "$0"
+    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate] [--output directory]\n' "$0"
 }
 
 version=""
+status="packaging-candidate"
 output="dist"
 while (($# > 0)); do
     case "$1" in
         --version)
             (($# >= 2)) || { usage >&2; exit 2; }
             version="$2"
+            shift 2
+            ;;
+        --status)
+            (($# >= 2)) || { usage >&2; exit 2; }
+            status="$2"
             shift 2
             ;;
         --output)
@@ -34,6 +40,10 @@ done
 
 if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
     printf 'version must match vX.Y.Z or vX.Y.Z-prerelease\n' >&2
+    exit 2
+fi
+if [[ "$status" != "packaging-candidate" && "$status" != "release-candidate" ]]; then
+    printf 'status must be packaging-candidate or release-candidate\n' >&2
     exit 2
 fi
 
@@ -95,6 +105,7 @@ cp docs/installation.md docs/configuration.md docs/cli.md \
 cp configs/maestro.example.yaml "$root/configs/"
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
 sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"
+sed -i "s/@MAESTRO_STATUS@/${status}/g" "$root/docs/installation.md"
 
 if find "$root/fixtures" -type l -o -name vendor -o -name node_modules -o \
     -name .git -o -name .env | grep -q .; then
@@ -110,7 +121,7 @@ platform=linux/amd64
 go=${go_version}
 license=Apache-2.0
 fixture=maestro-laravel-mini@1.0.0
-status=packaging-candidate
+status=${status}
 EOF
 
 find "$root" -type d -exec chmod 0755 {} +

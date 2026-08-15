@@ -511,6 +511,11 @@ write/patch conservano il protocollo guarded. Test deterministici coprono
 entrambi i rami. `pc.4` resta storico e il prossimo candidate è `pc.5`, con gli
 stessi gate live e senza modifiche a modello, timeout, task o criteri.
 
+`pc.5`, commit `2732f26af4550833ad1b2d9cd4ca1caf5d72cd30`, supera doppio
+packaging, installazione pulita, CLI completa e due quick start consecutivi con
+una read reale, risposta corretta e digest invariato. Diventa la baseline
+validata per produrre il distinto `v0.1.0-rc.1`; non viene rinominato.
+
 ---
 
 # Fase 6 — Documentazione pubblica e v0.1.0

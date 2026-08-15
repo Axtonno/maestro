@@ -2151,3 +2151,11 @@ richiedere o simulare mutazioni, mentre il protocollo guarded resta disponibile
 solo per tool set sperimentali mutativi. I due rami sono coperti da test. `pc.5`
 è il prossimo candidate e deve ripetere l'intero gate senza cambiare modello,
 timeout, task o criteri.
+
+`pc.5`, commit `2732f26af4550833ad1b2d9cd4ca1caf5d72cd30`, supera doppio
+packaging con SHA-256
+`4eb9abdfab6efbd00dc624b509581ec57666da1c4645d60abadc9316104ffe11`,
+installazione pulita, doctor 9/9, models, agents e due quick start consecutivi.
+I run completano in 330122 ms e 52386 ms, ciascuno con una read reale e
+risposta corretta; il digest della fixture resta invariato. `pc.5` è la baseline
+validata per produrre il distinto `v0.1.0-rc.1` e non viene rinominato.

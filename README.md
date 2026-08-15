@@ -367,8 +367,9 @@ list/read/search e nega le mutazioni; reference agent mutante, approval
 mutativa e llama.cpp sono sperimentali/non supportati. Il primo candidate del
 nuovo confine, `pc.4`, ha fallito il primo quick start con `tool_failure`: il
 prompt descriveva ancora capacità mutative non dichiarate. L'hardening
-successivo rende il protocollo capability-aware; `pc.5` è il nuovo candidate
-read-only, non la promozione di un modello.
+successivo rende il protocollo capability-aware; `pc.5` supera due quick start
+consecutivi da installazione pulita ed è la baseline validata dalla quale viene
+prodotto il nuovo artifact distinto `v0.1.0-rc.1`.
 Evidenze e matrice sono in `docs/reports/milestone-8-phase-5-interim.md` e
 `docs/reports/milestone-8-model-selection.md`.
 

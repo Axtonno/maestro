@@ -3,10 +3,27 @@
 set -euo pipefail
 
 version="v0.1.0-pc.1"
-if (($# == 2)) && [[ "$1" == "--version" ]]; then
-    version="$2"
-elif (($# != 0)); then
-    printf 'usage: %s [--version vX.Y.Z-prerelease]\n' "$0" >&2
+status="packaging-candidate"
+while (($# > 0)); do
+    case "$1" in
+        --version)
+            (($# >= 2)) || { printf 'missing --version value\n' >&2; exit 2; }
+            version="$2"
+            shift 2
+            ;;
+        --status)
+            (($# >= 2)) || { printf 'missing --status value\n' >&2; exit 2; }
+            status="$2"
+            shift 2
+            ;;
+        *)
+            printf 'usage: %s [--version vX.Y.Z-prerelease] [--status packaging-candidate|release-candidate]\n' "$0" >&2
+            exit 2
+            ;;
+    esac
+done
+if [[ "$status" != "packaging-candidate" && "$status" != "release-candidate" ]]; then
+    printf 'status must be packaging-candidate or release-candidate\n' >&2
     exit 2
 fi
 
@@ -23,8 +40,8 @@ trap cleanup EXIT
 
 mkdir -p "$working/first" "$working/second" "$working/extracted" \
     "$working/install/bin" "$working/empty"
-"$repository/scripts/package-candidate.sh" --version "$version" --output "$working/first" >/dev/null
-"$repository/scripts/package-candidate.sh" --version "$version" --output "$working/second" >/dev/null
+"$repository/scripts/package-candidate.sh" --version "$version" --status "$status" --output "$working/first" >/dev/null
+"$repository/scripts/package-candidate.sh" --version "$version" --status "$status" --output "$working/second" >/dev/null
 
 cmp "$working/first/$archive" "$working/second/$archive"
 cmp "$working/first/$checksum" "$working/second/$checksum"
@@ -58,10 +75,12 @@ cmp "$repository/THIRD_PARTY_LICENSES.txt" "$root/THIRD_PARTY_LICENSES.txt"
 grep -Fxq "artifact=${artifact}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "commit=${commit}" "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "status=${status}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/docs/installation.md"
+grep -Fxq "Stato: ${status}" "$root/docs/installation.md"
 grep -Fq 'artifact="maestro-${version}-linux-amd64"' "$root/docs/installation.md"
-if grep -R -Fq '@MAESTRO_VERSION@' "$root"; then
-    printf 'archive contains an unresolved version token\n' >&2
+if grep -R -Fq '@MAESTRO_' "$root"; then
+    printf 'archive contains an unresolved documentation token\n' >&2
     exit 1
 fi
 grep -Fq '"id": "maestro-laravel-mini"' "$root/fixtures/laravel-v1/dataset.json"
@@ -115,5 +134,5 @@ if grep -aERq -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_
     exit 1
 fi
 
-printf 'packaging candidate verified: %s commit=%s\n' "$archive" "$commit"
+printf 'artifact verified: %s commit=%s status=%s\n' "$archive" "$commit" "$status"
 sha256sum "$working/first/$archive"

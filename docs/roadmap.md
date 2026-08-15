@@ -668,6 +668,11 @@ hardening capability-aware limita il prompt read-only alle capacità dichiarate
 e conserva il protocollo guarded soltanto per profili sperimentali mutativi;
 il gate riparte con `pc.5` senza cambiare modello, timeout, task o criteri.
 
+`pc.5` supera poi il doppio packaging, il preflight dall'archive e due quick
+start read-only consecutivi (`completed`, una read reale, risposta corretta e
+fixture invariata). È la baseline validata per il nuovo artifact distinto
+`v0.1.0-rc.1`; nessun `pc.N` viene rinominato retroattivamente.
+
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution
 o selezione automatica di provider e modello.
