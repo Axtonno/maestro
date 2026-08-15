@@ -442,8 +442,11 @@ prodotto. Evidenze, contenimento e strategia di ripresa sono in
 
 Gli hardening successivi a `pc.1` sono inclusi nel packaging candidate
 `v0.1.0-pc.2`, prodotto e verificato integralmente dal commit
-`b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710`. `pc.2` è l'unico candidate
-ammesso per i gate live successivi; non è ancora una release candidate.
+`b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710`. Il quick start read-only esatto
+dall'archive è positivo, ma il primo run mutativo ha confermato la necessità di
+una coreografia deterministica tra lettura e patch. `pc.2` non è quindi
+promuovibile. La ripresa dei gate live richiede un nuovo candidate prodotto
+dopo l'hardening descritto in ADR-0028; non è ancora una release candidate.
 
 ---
 

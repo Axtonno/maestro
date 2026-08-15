@@ -381,15 +381,18 @@ L'Agent Runtime:
 5. traduce i descriptor tool nel contratto `provider.Tool`;
 6. invoca il Provider Runtime condiviso;
 7. valida ogni tool call completa e la associa a un call ID stabile;
-8. prepara, autorizza ed esegue le chiamate entro i limiti;
+8. esegue al massimo la prima chiamata del turno e restituisce errori
+   recuperabili correlati alle eventuali chiamate successive;
 9. aggiunge messaggi `tool` correlati e prosegue;
 10. valida il terminale e chiude la sessione una sola volta.
 
-Chiamate multiple in un turno vengono eseguite nell'ordine dichiarato nella
-baseline. Non vengono parallelizzate implicitamente: ordine degli effetti,
-approvazioni e risultati restano quindi comprensibili. Streaming può essere
-usato per output e delta tool, ma una call viene preparata soltanto dopo aver
-ricostruito arguments JSON completi.
+Chiamate multiple in un turno vengono contabilizzate nell'ordine dichiarato,
+ma soltanto la prima può raggiungere il Tool Runtime. Le altre devono essere
+riproposte dopo il risultato correlato `dependency_not_ready`: ordine degli
+effetti, approvazioni e dipendenze resta quindi osservabile. `workspace.patch`
+richiede inoltre una lettura verificata in un turno precedente. Streaming può
+essere usato per output e delta tool, ma una call viene considerata soltanto
+dopo aver ricostruito arguments JSON completi.
 
 Retry del Provider Runtime e retry semantici dell'agente restano concetti
 distinti. Il run non ripete automaticamente tool mutanti dopo una failure

@@ -2,8 +2,10 @@ package agent
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -110,7 +112,7 @@ func TestAgentLoopRejectsUnknownToolWithoutInvocation(t *testing.T) {
 	}
 }
 
-func TestAgentLoopExecutesMultipleCallsInProviderOrder(t *testing.T) {
+func TestAgentLoopExecutesOnlyFirstCallAndReturnsRecoverableDependency(t *testing.T) {
 	providers := &generationStub{responses: []provider.CompletionResponse{
 		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{
 			{ID: "call-2", Name: "fixture_second", Arguments: json.RawMessage(`{}`)},
@@ -129,8 +131,49 @@ func TestAgentLoopExecutesMultipleCallsInProviderOrder(t *testing.T) {
 	if err != nil || result.Session().Counters().ToolCalls != 2 {
 		t.Fatalf("multiple calls failed: result=%#v err=%v", result, err)
 	}
-	if len(order) != 2 || order[0] != "second" || order[1] != "first" {
-		t.Fatalf("provider order was not preserved: %#v", order)
+	if len(order) != 1 || order[0] != "second" || first.executions != 0 {
+		t.Fatalf("dependent call reached execution: order=%#v first=%d", order, first.executions)
+	}
+	requests := providers.Requests()
+	if len(requests) != 2 || len(requests[1].Messages) != 5 ||
+		!containsAll(requests[1].Messages[4].Content, `"outcome":"invalid"`, `"reason":"dependency_not_ready"`, `"recoverable":true`) {
+		t.Fatalf("recoverable dependency result was not returned: %#v", requests)
+	}
+}
+
+func TestToolChoreographyRequiresVerifiedReadForPatch(t *testing.T) {
+	read := workspaceDescriptor(t, workspaceReadToolID, "workspace_read", pkgTool.EffectWorkspaceInspect)
+	patch := workspaceDescriptor(t, workspacePatchToolID, "workspace_patch", pkgTool.EffectWorkspaceMutate)
+	descriptors := map[string]pkgTool.Descriptor{"workspace_read": read, "workspace_patch": patch}
+	tools := []provider.Tool{{Name: "workspace_read"}, {Name: "workspace_patch"}}
+	state := &toolChoreography{}
+
+	if available := state.toolsForTurn(tools, descriptors); len(available) != 1 || available[0].Name != "workspace_read" {
+		t.Fatalf("patch was available without read evidence: %#v", available)
+	}
+	content := "package main\n"
+	digest := sha256.Sum256([]byte(content))
+	readContent, _ := json.Marshal(map[string]string{
+		"path": "main.go", "digest": fmt.Sprintf("%x", digest), "content": content,
+	})
+	readResult, _ := pkgTool.NewResult(pkgTool.ResultSuccess, string(readContent), "application/json", "read", 1, false, "")
+	state.afterCall(read, readResult)
+	if available := state.toolsForTurn(tools, descriptors); len(available) != 2 {
+		t.Fatalf("patch was not enabled by verified evidence: %#v", available)
+	}
+
+	valid, _ := json.Marshal(map[string]string{
+		"path": "main.go", "old": "package main", "new": "package changed", "expected_digest": fmt.Sprintf("%x", digest),
+	})
+	if _, execute, err := state.beforeCall(patch, valid, 0); err != nil || !execute {
+		t.Fatalf("valid observed patch was rejected: execute=%t err=%v", execute, err)
+	}
+	stale, _ := json.Marshal(map[string]string{
+		"path": "main.go", "old": "package main", "new": "package changed", "expected_digest": strings.Repeat("0", 64),
+	})
+	result, execute, err := state.beforeCall(patch, stale, 0)
+	if err != nil || execute || result.Reason() != "stale_observation" || result.Outcome() != pkgTool.ResultInvalid {
+		t.Fatalf("stale patch was not recoverable: result=%#v execute=%t err=%v", result, execute, err)
 	}
 }
 
@@ -361,6 +404,15 @@ func (fixture *loopTool) Execute(context.Context, pkgTool.PreparedInvocation) (p
 func loopToolDescriptor(t *testing.T, id pkgTool.ID, name pkgTool.Name) pkgTool.Descriptor {
 	t.Helper()
 	descriptor, err := pkgTool.NewDescriptor(id, name, "1", "Loop fixture tool.", json.RawMessage(`{"type":"object"}`), []pkgTool.Effect{pkgTool.EffectLocalCompute})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return descriptor
+}
+
+func workspaceDescriptor(t *testing.T, id pkgTool.ID, name pkgTool.Name, effect pkgTool.Effect) pkgTool.Descriptor {
+	t.Helper()
+	descriptor, err := pkgTool.NewDescriptor(id, name, "1", "Workspace fixture tool.", json.RawMessage(`{"type":"object"}`), []pkgTool.Effect{effect})
 	if err != nil {
 		t.Fatal(err)
 	}

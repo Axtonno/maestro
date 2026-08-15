@@ -300,7 +300,8 @@ cancellabile e bounded capace di completare task o eseguire tool call correlate.
 - invocare provider e modello esatti tramite Provider Runtime;
 - gestire terminale testuale e finish reason tool calls;
 - validare call ID, nome, arguments e cardinalità per turno;
-- eseguire tool call multiple in ordine dichiarato;
+- contabilizzare tool call multiple in ordine dichiarato, eseguire soltanto la
+  prima e restituire alle successive un risultato recuperabile correlato;
 - aggiungere risultati denied/failed come messaggi tool tipizzati;
 - impedire retry implicito degli effetti mutanti;
 - supportare streaming con assemblaggio bounded dei delta tool;
@@ -315,7 +316,7 @@ cancellabile e bounded capace di completare task o eseguire tool call correlate.
 - solo tool registrati e inclusi nel run possono essere invocati;
 - ogni tool result mantiene correlazione con la call originaria;
 - arguments incompleti o malformati non raggiungono `Prepare`;
-- call multiple non vengono parallelizzate implicitamente;
+- call multiple non vengono parallelizzate né eseguite nello stesso turno;
 - un turn provider produce al massimo una transizione terminale;
 - ogni iterazione consuma budget prima di avviarne una successiva.
 

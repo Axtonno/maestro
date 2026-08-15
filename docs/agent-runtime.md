@@ -15,10 +15,14 @@ corrente costruisce una conversazione con ruoli system, user, assistant e tool,
 autorizza la chiamata modello, invoca il Provider Runtime esatto e interpreta
 una risposta finale oppure le tool call.
 
-Le tool call multiple restano nell'ordine dichiarato dal provider e non
-vengono parallelizzate. Al termine testuale lo step diventa completed; quando
-tutti gli step sono completed o skipped, la sessione termina con `completed` e
-l'ultimo contenuto testuale diventa il `RunResult`.
+Le tool call multiple restano nell'ordine dichiarato dal provider e consumano
+il budget, ma soltanto la prima raggiunge preparazione, autorizzazione ed
+esecuzione nel turno corrente. Le successive ricevono un risultato correlato
+`dependency_not_ready` e devono essere riproposte dal modello in un nuovo
+turno. Al termine testuale lo step diventa completed, salvo che una mutazione
+già proposta sia ancora pendente; quando tutti gli step sono completed o
+skipped, la sessione termina con `completed` e l'ultimo contenuto testuale
+diventa il `RunResult`.
 
 # Tool adapter
 
@@ -34,6 +38,12 @@ Per ogni call il runtime:
 4. costruisce `tool.Invocation` ed `ExecutionRequest`;
 5. attraversa il solo percorso pubblico `Tool Runtime.Invoke`;
 6. serializza il risultato in un messaggio tool JSON tipizzato.
+
+La coreografia interna rende `workspace.patch` disponibile soltanto dopo una
+`workspace.read` riuscita e verificata. Path, digest SHA-256 e testo `old`
+devono provenire dall'ultima osservazione valida; gli scostamenti producono un
+risultato recuperabile prima di `Prepare` e quindi prima di qualsiasi approval.
+L'Agent Runtime non corregge arguments e non ritenta automaticamente effetti.
 
 Il messaggio include outcome, reason, content, media type, item count,
 truncation e deny disposition. Un deny recoverable torna al modello; un deny
@@ -54,9 +64,11 @@ eccedente non raggiungono il Tool Runtime.
 # Budget e terminali
 
 Un turno viene consumato prima della chiamata provider; usage e byte vengono
-registrati prima dell'iterazione successiva. Ogni tool call consuma il budget
-prima di `Invoke`, mentre ogni risultato consuma byte prima di tornare al
-modello. Sono applicati sia `MaxToolCalls` sia `MaxToolCallsPerTurn`.
+registrati prima dell'iterazione successiva. Ogni tool call proposta consuma il
+budget prima dell'eventuale `Invoke`, mentre ogni risultato, incluso quello
+sintetico recuperabile, consuma byte prima di tornare al modello. Sono applicati
+sia `MaxToolCalls` sia `MaxToolCallsPerTurn`; quest'ultimo limita la cardinalità
+della risposta provider, mentre il limite operativo è una esecuzione per turno.
 
 Cancellation e deadline attraversano provider, approval e tool execution.
 Errori vengono classificati nei terminali permission, limit, provider, tool,

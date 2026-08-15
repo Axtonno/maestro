@@ -37,6 +37,7 @@ func (loop *agentLoop) Run(
 		return "", pkgAgent.TerminalInternalFailure, err
 	}
 	seenCalls := make(map[pkgTool.CallID]struct{})
+	choreography := &toolChoreography{}
 	lastContent := ""
 	turn := 0
 
@@ -75,7 +76,8 @@ func (loop *agentLoop) Run(
 			publishAgentEvent(loop.events, pkgAgent.EventTurnStarted, sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone))
 			turn++
 			completionRequest := provider.CompletionRequest{
-				Model: request.Model(), Messages: messages, Tools: providerTools,
+				Model: request.Model(), Messages: messages,
+				Tools:      choreography.toolsForTurn(providerTools, descriptors),
 				ToolChoice: provider.ToolChoice{Mode: provider.ToolChoiceAuto},
 			}
 			response, err := loop.complete(ctx, request, completionRequest)
@@ -113,6 +115,13 @@ func (loop *agentLoop) Run(
 					_ = current.transitionStep(step.ID(), pkgAgent.StepFailed, "provider_failed")
 					return "", pkgAgent.TerminalProviderFailure, pkgAgent.ErrProviderFailed
 				}
+				if choreography.requiresMutation() {
+					messages = append(messages, provider.Message{
+						Role:    provider.RoleSystem,
+						Content: "A requested workspace mutation has not completed. Continue with the single declared tool needed by the latest recoverable result; do not return a final answer yet.",
+					})
+					continue
+				}
 				if err := current.transitionStep(step.ID(), pkgAgent.StepCompleted, ""); err != nil {
 					return "", pkgAgent.TerminalInternalFailure, err
 				}
@@ -144,6 +153,24 @@ func (loop *agentLoop) Run(
 				if err := current.consume(counterDelta{toolCalls: 1}); err != nil {
 					return "", pkgAgent.TerminalLimit, err
 				}
+				choreographyResult, execute, err := choreography.beforeCall(descriptor, call.Arguments, callIndex)
+				if err != nil {
+					return "", pkgAgent.TerminalInternalFailure, err
+				}
+				if !execute {
+					messageContent, err := encodeToolResult(choreographyResult)
+					if err != nil {
+						return "", pkgAgent.TerminalInternalFailure, err
+					}
+					if err := current.consume(counterDelta{sessionBytes: len(messageContent)}); err != nil {
+						return "", pkgAgent.TerminalLimit, err
+					}
+					messages = append(messages, provider.Message{
+						Role: provider.RoleTool, Content: messageContent,
+						ToolCallID: string(callID), ToolName: call.Name,
+					})
+					continue
+				}
 				execution, err := pkgTool.NewExecutionRequest(
 					invocation, request.Policy(), request.Approver(),
 					pkgTool.ExecutionLimits{
@@ -162,6 +189,7 @@ func (loop *agentLoop) Run(
 					}
 					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
 				}
+				choreography.afterCall(descriptor, result)
 				if mutating && result.Outcome() != pkgTool.ResultDenied && !current.snapshotValue().ContextStale() {
 					if err := current.markStale(); err != nil {
 						return "", pkgAgent.TerminalInternalFailure, err

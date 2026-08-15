@@ -32,6 +32,7 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 		"expected_digest": fmt.Sprintf("%x", digest),
 	})
 	provider := &fixtureProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "read-1", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"app/Order.php"}`)}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
 		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "patch-1", Name: "workspace_patch", Arguments: arguments}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
 		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Order updated."}, FinishReason: pkgProvider.FinishReasonStop},
 	}}
@@ -67,6 +68,11 @@ func TestApplicationExecutesPromptedMutationWithTerminalApprover(t *testing.T) {
 		"expected_digest": fmt.Sprintf("%x", digest),
 	})
 	provider := &fixtureProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{
+			{ID: "read-1", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"app/Order.php"}`)},
+			{ID: "patch-premature", Name: "workspace_patch", Arguments: arguments},
+		}}, FinishReason: pkgProvider.FinishReasonToolCalls},
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Premature completion."}, FinishReason: pkgProvider.FinishReasonStop},
 		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "patch-1", Name: "workspace_patch", Arguments: arguments}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
 		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Approved update."}, FinishReason: pkgProvider.FinishReasonStop},
 	}}
@@ -81,11 +87,14 @@ func TestApplicationExecutesPromptedMutationWithTerminalApprover(t *testing.T) {
 	result, err := configured.ExecuteWithOptions(t.Context(), "Update Order", ExecuteOptions{
 		Approver: NewTerminalApprover(strings.NewReader("once\n"), &approvalOutput, true),
 	})
-	if err != nil || result.Session().Terminal() != pkgAgent.TerminalCompleted {
+	if err != nil || result.Session().Terminal() != pkgAgent.TerminalCompleted || result.Content() != "Approved update." {
 		t.Fatalf("result=%#v err=%v", result, err)
 	}
 	if !strings.Contains(approvalOutput.String(), "workspace.mutate resource=app/Order.php workspace=laravel") || strings.Contains(approvalOutput.String(), "expected_digest") {
 		t.Fatalf("unsafe or incomplete approval output: %q", approvalOutput.String())
+	}
+	if strings.Count(approvalOutput.String(), "workspace.mutate resource=app/Order.php workspace=laravel") != 1 {
+		t.Fatalf("premature patch reached approval: %q", approvalOutput.String())
 	}
 }
 

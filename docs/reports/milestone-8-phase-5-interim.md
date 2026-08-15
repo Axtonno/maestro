@@ -2,7 +2,7 @@
 
 Data: 2026-08-13
 
-Aggiornato: 2026-08-15 — packaging candidate `v0.1.0-pc.2`
+Aggiornato: 2026-08-15 — gate live `v0.1.0-pc.2` e hardening ADR-0028
 
 Stato: In corso, validazione live sospesa
 
@@ -66,6 +66,43 @@ contengano il token di versione non risolto.
 Un primo build `pc.2` preliminare dal commit precedente è stato scartato prima
 di qualsiasi test live perché la guida inclusa citava ancora `pc.1`. I relativi
 file sono stati spostati fuori da `dist/` e non costituiscono artifact validi.
+
+## Gate live esatto di `pc.2`
+
+Il candidate definitivo è stato estratto nuovamente in `/tmp` e usato senza
+checkout. Checksum, `maestro version`, `doctor`, `models` e `agents` sono
+risultati positivi. Il quick start Laravel read-only, con la configurazione
+inclusa e streaming abilitato, ha completato correttamente:
+
+| Misura | Risultato |
+|---|---:|
+| Terminale | `completed` |
+| Model turns | 2 |
+| Tool calls | 1 |
+| Input tokens | 2905 |
+| Output tokens | 104 |
+| Durata | 363027 ms |
+
+Il run ha letto `OrderController.php` e ha identificato correttamente
+`OrderService`. Questa prova sostituisce, per il percorso read-only, la prova
+precedente basata sul profilo temporaneamente ridotto.
+
+Il primo run mutativo da una nuova estrazione ha invece emesso due call nello
+stesso turno: lettura e patch dipendente. Il runtime di `pc.2` ha terminato con
+`tool_failure` prima di mostrare un prompt di approval. Il confronto con il
+file estratto direttamente dall'archive conferma in entrambi i casi SHA-256
+`4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd`:
+nessuna modifica è avvenuta. La serie richiesta di tre mutazioni consecutive è
+stata fermata correttamente a `0/3`; non è stato eseguito ulteriore prompt
+tuning e `pc.2` è classificato non promuovibile.
+
+ADR-0028 registra l'hardening conseguente: una sola esecuzione tool per turno,
+risultato recuperabile correlato per le call eccedenti, `workspace.patch`
+nascosto fino a una read verificata, digest/path/testo `old` vincolati
+all'ultima osservazione e rifiuto di un terminale testuale mentre una mutazione
+proposta resta incompleta. I test al confine applicativo dimostrano che una
+patch prematura non raggiunge né approval né esecuzione. L'hardening non è
+presente in `pc.2` e richiede un nuovo packaging candidate.
 
 # Ambiente live rilevato
 
@@ -185,7 +222,7 @@ devono essere usati per chiudere la Milestone 3.
 - nessun `llama-server` o `maestro bench smoke` resta attivo;
 - la memoria disponibile è tornata a circa 12 GiB;
 - nessun artifact o modello è stato modificato;
-- il candidate `pc.1` non è stato promosso;
+- i candidate `pc.1` e `pc.2` non sono stati promossi;
 - la matrice llama.cpp e la Fase 5 restano aperte.
 
 # Gate repository dopo l'hardening
@@ -205,6 +242,11 @@ Ripetuto cinque volte a sistema stabile, osserva `36394–41950 ns/op`,
 indicatore dell'host, non un budget di release. Nessun packaging candidate è
 stato generato da un worktree contenente modifiche o file non tracciati.
 
+Dopo ADR-0028, suite ripetuta tre volte, race detector e vet sono verdi. Il
+benchmark ripetuto cinque volte osserva `42385–44923 ns/op`, `15581 B/op` e
+`220 allocs/op`; l'allocazione aggiuntiva corrisponde allo stato interno della
+coreografia e non modifica il carattere bounded del loop.
+
 # Strategia sicura di ripresa
 
 Il router multi-modello non deve essere rieseguito su questo host. La prossima
@@ -221,7 +263,8 @@ structured output e tool calling vanno provati con il solo modello chat;
 embedding in un processo separato. Lifecycle/router va eseguito soltanto su un
 host con memoria sufficiente o classificato esplicitamente come non validato.
 
-Il percorso Ollama deve essere ripreso da una copia pulita della fixture e deve
+Il percorso Ollama deve essere ripreso da un nuovo candidate e da una copia
+pulita della fixture e deve
 dimostrare una patch reale, approval one-shot, reindex e risposta finale prima
 di procedere a deny, EOF, no-TTY, SIGINT, hard limit e installazione pulita.
 
@@ -232,5 +275,6 @@ di procedere a deny, EOF, no-TTY, SIGINT, hard limit e installazione pulita.
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
 con profilo ridotto. Restano blocker lo scenario mutativo Ollama, la matrice
 llama.cpp, l'installazione pulita completa e tutti i gate operativi finali. La
-Milestone 3 resta formalmente aperta. La ripresa deve usare esclusivamente
-`v0.1.0-pc.2`; `pc.1` resta una baseline storica e non può essere promosso.
+Milestone 3 resta formalmente aperta. `pc.1` e `pc.2` restano baseline storiche
+e non possono essere promossi. La ripresa richiede un nuovo packaging candidate
+costruito dal commit pulito che incorpora ADR-0028.

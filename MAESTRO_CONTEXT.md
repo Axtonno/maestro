@@ -2059,5 +2059,8 @@ commit `b9f571ac5914d2565e2a7bd28f4d5d6fc14a2710`. Il doppio build normalizzato
 produce SHA-256
 `91ef1bb196e9904ef3f3f0fefccf3a80acba22f14da43cdccbf9a83680fa41bc`;
 versione, manifest, guida renderizzata, configurazione, fixture e installazione
-fuori dal checkout sono verdi. La ripresa della Fase 5 deve usare soltanto
-`pc.2`, che resta un packaging candidate e non una release candidate.
+fuori dal checkout sono verdi. Il quick start read-only esatto dall'archive è
+positivo, ma il primo run mutativo ha confermato una dipendenza non governata
+tra read e patch nello stesso turno. `pc.2` non è promuovibile. ADR-0028 rende
+la coreografia deterministica; un nuovo packaging candidate dovrà superare i
+gate prima della ripresa live.
