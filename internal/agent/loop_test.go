@@ -86,6 +86,8 @@ func TestInitialMessagesAreScopedToDeclaredToolEffects(t *testing.T) {
 		"at most one tool call per response",
 		"invoke it through the declared tool interface",
 		"declared tool set is read-only",
+		"exact declared function name",
+		"logical path relative to the workspace",
 	) || strings.Contains(messages[0].Content, "copy expected_digest exactly") {
 		t.Fatalf("read-only protocol advertises mutation: %#v", messages)
 	}

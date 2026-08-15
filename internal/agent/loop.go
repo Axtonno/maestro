@@ -303,7 +303,7 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 	if mutationEnabled {
 		system += " Read a file before mutating it. For guarded writes or patches, copy expected_digest exactly from the read result's digest field and copy old text exactly from its content field, preserving whitespace and real newline characters. Never invent placeholders or escaped newline text."
 	} else {
-		system += " The declared tool set is read-only. Do not request, name, or simulate mutating tools."
+		system += " The declared tool set is read-only. Do not request, name, or simulate mutating tools. Use an exact declared function name and only fields from that function's schema. For workspace paths, pass the logical path relative to the workspace exactly as shown by the task or evidence; never add a leading slash, a physical workspace root, a file URI, or parent traversal."
 	}
 	system += " Return a final answer only after the step is actually complete."
 
