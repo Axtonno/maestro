@@ -541,7 +541,7 @@ deterministici. Il report conclusivo è
 
 # Milestone 8 — Productization v0.1.0
 
-Stato: In corso — Fasi 1–4 completate
+Stato: In corso — Fasi 1–5 completate
 
 Obiettivo:
 
@@ -556,7 +556,7 @@ Fasi previste:
 | 2 | Configurazione e CLI minima | Completata |
 | 3 | Esperienza operativa | Completata |
 | 4 | Packaging e installazione | Completata |
-| 5 | Validazione live e release candidate | In corso — NO-GO RC |
+| 5 | Validazione live e release candidate | Completata — `v0.1.0-rc.2` |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare |
 
 La CLI minima comprende `doctor`, `models`, `agents`, `run` e `version`. La
@@ -672,6 +672,16 @@ il gate riparte con `pc.5` senza cambiare modello, timeout, task o criteri.
 start read-only consecutivi (`completed`, una read reale, risposta corretta e
 fixture invariata). È la baseline validata per il nuovo artifact distinto
 `v0.1.0-rc.1`; nessun `pc.N` viene rinominato retroattivamente.
+
+Il run di conferma di `rc.1` termina però `tool_failure`; l'artifact resta
+immutabile e non promuovibile. Un hardening aggiuntivo rende espliciti nomi
+funzione, campi schema e path logici relativi per il profilo read-only, senza
+cambiare modello, timeout, task o criteri. `pc.6` supera due run consecutivi e
+il distinto `v0.1.0-rc.2`, commit
+`ab109a5f878b8e1f10d69327736f014ad916a970`, SHA-256
+`442090c6e2dac6095aa4532d658def42cd39e04a34baff401b3a92aec1fd9105`,
+supera doppio packaging, installazione pulita, CLI completa e run live di
+conferma. La Fase 5 è completata; la Fase 6 è il prossimo gate.
 
 Non fanno parte della v0.1.0 SDK stabile, packaging di plugin/tool terzi,
 sandbox, memoria persistente, multi-agent, shell, Git, Docker, remote execution

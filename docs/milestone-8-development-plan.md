@@ -1,10 +1,10 @@
 # Milestone 8 — v0.1.0 Productization Development Plan
 
-Versione: 0.5.0
+Versione: 0.6.0
 
-Stato: In esecuzione — Fasi 1–4 completate, Fase 5 in corso
+Stato: In esecuzione — Fasi 1–5 completate, Fase 6 da avviare
 
-Data: 2026-08-13
+Data: 2026-08-15
 
 Documenti di riferimento:
 
@@ -36,7 +36,7 @@ sviluppo o conoscere le API Go interne.
 | 2 | Configurazione e CLI minima | Completata | Fase 1 |
 | 3 | Esperienza operativa | Completata | Fase 2 |
 | 4 | Packaging e installazione | Completata | Fasi 2–3 |
-| 5 | Validazione live e release candidate | In corso | Fasi 2–4 |
+| 5 | Validazione live e release candidate | Completata | Fasi 2–4 |
 | 6 | Documentazione pubblica e v0.1.0 | Da avviare | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto al gate, ma documentazione e test vengono
@@ -368,7 +368,7 @@ Gate: **superato**. Report: `reports/milestone-8-phase-4.md`.
 
 # Fase 5 — Validazione live e release candidate
 
-Stato: In corso — confine read-only approvato, preparazione `pc.4`; NO-GO RC.
+Stato: Completata — `v0.1.0-rc.2` validata; GO alla Fase 6.
 
 ## Obiettivo
 
@@ -515,6 +515,17 @@ stessi gate live e senza modifiche a modello, timeout, task o criteri.
 packaging, installazione pulita, CLI completa e due quick start consecutivi con
 una read reale, risposta corretta e digest invariato. Diventa la baseline
 validata per produrre il distinto `v0.1.0-rc.1`; non viene rinominato.
+
+`rc.1` supera packaging e preflight, ma fallisce il run di conferma con
+`tool_failure`; resta immutabile e non promuovibile. Senza modificare modello,
+timeout, task o criteri, il protocollo read-only viene irrobustito per imporre
+nomi funzione e campi dello schema esatti e path logici relativi. Il nuovo
+`pc.6`, commit `ab109a5f878b8e1f10d69327736f014ad916a970`, supera due
+quick start consecutivi. Dal medesimo commit viene prodotto il distinto
+`v0.1.0-rc.2`, SHA-256
+`442090c6e2dac6095aa4532d658def42cd39e04a34baff401b3a92aec1fd9105`:
+doppio packaging, installazione pulita, CLI, doctor 9/9 e run di conferma sono
+verdi, con una read reale e fixture invariata. Il gate di Fase 5 è superato.
 
 ---
 

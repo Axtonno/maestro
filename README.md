@@ -352,9 +352,9 @@ prima dei test live. Un packaging candidate non è ancora una release
 candidate. Dettagli in `docs/packaging-candidate.md` e
 `docs/reports/milestone-8-phase-4.md`.
 
-La Fase 5 è in corso e non esiste ancora una release candidate. La baseline
-installabile `v0.1.0-pc.3` è verde per packaging e reference agent read-only,
-ma non è promuovibile: `llama3.1:8b` fallisce il gate mutativo,
+La Fase 5 è completata e `v0.1.0-rc.2` è la release candidate validata. La
+matrice mutativa non ha prodotto una fixture: `llama3.1:8b` fallisce il gate
+mutativo,
 `rnj-1:8b-instruct-q4_K_M` si arresta al gate read-only e
 `ibm/granite4.1:8b`, pur superando tool protocol 3/3 e read-only 2/2, termina
 `deadline_exceeded` nel primo tentativo mutativo prima di approval e patch.
@@ -368,9 +368,14 @@ mutativa e llama.cpp sono sperimentali/non supportati. Il primo candidate del
 nuovo confine, `pc.4`, ha fallito il primo quick start con `tool_failure`: il
 prompt descriveva ancora capacità mutative non dichiarate. L'hardening
 successivo rende il protocollo capability-aware; `pc.5` supera due quick start
-consecutivi da installazione pulita ed è la baseline validata dalla quale viene
-prodotto il nuovo artifact distinto `v0.1.0-rc.1`.
-Evidenze e matrice sono in `docs/reports/milestone-8-phase-5-interim.md` e
+consecutivi, ma il distinto `rc.1` fallisce il run di conferma e non viene
+promosso. Un ulteriore hardening dei nomi, campi e path read-only produce
+`pc.6`, verde su due run consecutivi, e infine `rc.2`: commit
+`ab109a5f878b8e1f10d69327736f014ad916a970`, SHA-256
+`442090c6e2dac6095aa4532d658def42cd39e04a34baff401b3a92aec1fd9105`.
+Checksum, installazione pulita, CLI completa, run live e fixture invariata sono
+verdi. La Fase 6 deve ancora completare il gate della release finale. Evidenze
+e matrice sono in `docs/reports/milestone-8-phase-5.md` e
 `docs/reports/milestone-8-model-selection.md`.
 
 Uso essenziale:

@@ -4,9 +4,10 @@ Data: 2026-08-13
 
 Aggiornato: 2026-08-15 — gate live `pc.3` e selezione fail-fast dei modelli
 
-Stato: In corso — ADR-0029 approvato, preparazione candidate read-only
+Stato: Chiuso come report storico interim; il gate finale è in
+`milestone-8-phase-5.md`
 
-Verdetto: **NO-GO alla release candidate**
+Verdetto storico al momento del report: **NO-GO alla release candidate**
 
 ---
 
@@ -408,7 +409,9 @@ sovrascritto.
 
 # Verdetto
 
-**Fase 5 non conclusa. NO-GO alla release candidate e alla release.**
+**Verdetto storico di questo checkpoint: Fase 5 non conclusa e NO-GO alla
+release candidate.** Il gate è stato successivamente riaperto e concluso in
+`milestone-8-phase-5.md`; questa frase non rappresenta lo stato corrente.
 
 Sono valide la Smoke matrix Ollama provider-level e la prova Laravel read-only
 con configurazione esatta di `pc.3`. La matrice mutativa 8B non produce un

@@ -1958,8 +1958,8 @@ assegnati alla Milestone 8 o a evoluzioni successive.
 
 ## Gate post-Milestone 7 e percorso v0.1.0
 
-Stato: GO alla Milestone 8; Fasi 1–4 completate; Fase 5 in corso con NO-GO RC;
-v0.1.0 non ancora pronta.
+Stato: GO alla Milestone 8; Fasi 1–5 completate; `v0.1.0-rc.2` validata;
+Fase 6 da avviare e v0.1.0 non ancora pubblicata.
 
 Il gate in `docs/release-readiness-audit.md` accetta la Milestone 7 come
 baseline ingegneristica e registra il divario di prodotto senza riaprirne
@@ -2159,3 +2159,21 @@ installazione pulita, doctor 9/9, models, agents e due quick start consecutivi.
 I run completano in 330122 ms e 52386 ms, ciascuno con una read reale e
 risposta corretta; il digest della fixture resta invariato. `pc.5` è la baseline
 validata per produrre il distinto `v0.1.0-rc.1` e non viene rinominato.
+
+Il distinto `rc.1` supera packaging riproducibile e preflight, ma il run di
+conferma termina `tool_failure` dopo una tool call; la fixture resta invariata.
+L'artifact è storico e non promuovibile. Senza cambiare modello, timeout, task
+o criteri, il protocollo read-only viene irrobustito per richiedere nome
+funzione e campi schema esatti e path logici relativi senza root fisica, slash
+iniziale, URI o parent traversal.
+
+`pc.6`, commit `ab109a5f878b8e1f10d69327736f014ad916a970`, supera doppio
+packaging, installazione pulita, CLI completa e due quick start consecutivi con
+una read reale, risposta corretta e digest invariato. Il distinto
+`v0.1.0-rc.2` dallo stesso commit è byte-riproducibile, misura 3598576 byte e
+ha SHA-256
+`442090c6e2dac6095aa4532d658def42cd39e04a34baff401b3a92aec1fd9105`.
+Da una nuova directory pulita supera checksum, version/help, profilo read-only,
+doctor 9/9, models, agents e un run di conferma `completed` in 64296 ms con una
+read reale. La fixture resta invariata. La Fase 5 è completata e la Fase 6 è il
+prossimo gate; tag e artifact finali v0.1.0 non sono ancora prodotti.

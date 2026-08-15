@@ -2,7 +2,7 @@
 
 Data: 2026-08-15
 
-Stato: Superata su `v0.1.0-pc.5`
+Stato: Superata su `v0.1.0-pc.5`, riconfermata su `pc.6` e `rc.2`
 
 ---
 
@@ -68,3 +68,32 @@ installazione pulita e la fixture resta invariata.
 **Gate di installazione pulita superato.** `pc.5` soddisfa il percorso utente
 read-only definito da ADR-0029. La promozione deve produrre un nuovo artifact
 con identità e manifest `release-candidate`; `pc.5` non viene rinominato.
+
+# Riconferma dopo `rc.1`
+
+Il distinto `rc.1` ha superato l'installazione ma fallito il run live di
+conferma ed è stato escluso. Dopo l'hardening degli argomenti read-only,
+`pc.6` ha ripetuto il gate da una nuova directory contenente inizialmente
+soltanto archive e checksum. Il candidate, commit
+`ab109a5f878b8e1f10d69327736f014ad916a970`, SHA-256
+`a148df8ff46d412ba85a39429f02048911d0793d3494db031a79cfa8ea76207b`,
+ha completato due run consecutivi in 320075 ms e 66128 ms, ciascuno con una
+read reale, risposta corretta ed exit code 0.
+
+La prova conclusiva usa il nuovo artifact, senza rinominare i precedenti:
+
+| Campo | Valore |
+|---|---|
+| Artifact | `maestro-v0.1.0-rc.2-linux-amd64.tar.gz` |
+| Commit | `ab109a5f878b8e1f10d69327736f014ad916a970` |
+| SHA-256 | `442090c6e2dac6095aa4532d658def42cd39e04a34baff401b3a92aec1fd9105` |
+| Dimensione | 3598576 byte |
+| Manifest | `release-candidate` |
+
+Da un'ulteriore directory pulita sono verdi checksum, estrazione, version,
+help, configurazione read-only, doctor 9/9, models e agents. Il run di
+conferma termina `completed` in 64296 ms, con due turni, una read reale,
+2888/94 token, risposta `OrderService::create` ed exit code 0. Il controller
+mantiene lo stesso digest prima e dopo tutte le prove.
+
+**La clean installation della release candidate `rc.2` è superata.**
