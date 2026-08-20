@@ -91,7 +91,7 @@ func TestAgentLoopRecoversTextualPseudoToolCallThroughDeclaredInterface(t *testi
 	}
 	requests := providers.Requests()
 	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
-		!strings.Contains(requests[1].Messages[3].Content, "described a declared tool call as text") {
+		!strings.Contains(requests[1].Messages[3].Content, "emitted tool-call-shaped JSON as text") {
 		t.Fatalf("protocol correction was not sent: %#v", requests)
 	}
 }
@@ -114,6 +114,27 @@ func TestAgentLoopAcceptsFinalAnswerThatNamesDeclaredTool(t *testing.T) {
 	}
 	if got := len(providers.Requests()); got != 1 {
 		t.Fatalf("unexpected correction turn: got %d requests", got)
+	}
+}
+
+func TestDescribesToolCallRejectsDeclaredAndUnknownEmbeddedShapes(t *testing.T) {
+	for _, content := range []string{
+		`{"name":"workspace_read","arguments":{"path":"main.go"}}`,
+		"Use this next:\n```json\n" + `{"name":"workspace_execute","parameters":{"command":"cat main.go"}}` + "\n```",
+		`[{"function":{"name":"other_tool","input":{"path":"main.go"}}}]`,
+	} {
+		if !describesToolCall(content) {
+			t.Fatalf("tool-call-shaped content was accepted: %q", content)
+		}
+	}
+	for _, content := range []string{
+		"The workspace_read result explains the service.",
+		`{"name":"OrderService","description":"application service"}`,
+		`{"parameters":{"path":"main.go"}}`,
+	} {
+		if describesToolCall(content) {
+			t.Fatalf("normal final content was rejected: %q", content)
+		}
 	}
 }
 

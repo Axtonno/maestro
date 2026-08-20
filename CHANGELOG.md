@@ -18,8 +18,9 @@ deve essere dichiarato nelle note di release.
 - la policy conserva `README.md` e i metadata versionati della fixture, così
   il quick start mantiene il contesto qualificato della v0.1.0.
 - una pseudo-tool-call JSON incorporata in testo esplicativo viene riconosciuta
-  quando nomina esattamente un tool dichiarato e usa arguments, parameters o
-  input; il loop richiede il canale tool reale senza eseguire la pseudo-call.
+  quando presenta una forma tool-call (`name` con `arguments`, `parameters` o
+  `input`), anche se nomina un tool inesistente; il loop richiede il canale
+  tool reale senza eseguire o accettare la pseudo-call.
 
 Nessun tool, permesso o support claim mutativo viene aggiunto.
 

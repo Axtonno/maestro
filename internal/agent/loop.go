@@ -115,10 +115,10 @@ func (loop *agentLoop) Run(
 					_ = current.transitionStep(step.ID(), pkgAgent.StepFailed, "provider_failed")
 					return "", pkgAgent.TerminalProviderFailure, pkgAgent.ErrProviderFailed
 				}
-				if describesDeclaredToolCall(assistant.Content, providerTools) {
+				if len(providerTools) > 0 && describesToolCall(assistant.Content) {
 					messages = append(messages, provider.Message{
 						Role:    provider.RoleSystem,
-						Content: "The previous assistant response described a declared tool call as text. The step is not complete. Invoke the exact declared tool interface now; do not print its name or arguments as assistant content.",
+						Content: "The previous assistant response emitted tool-call-shaped JSON as text. The step is not complete. Invoke one of the declared tool interfaces through the provider tool channel now; do not print a tool name or arguments as assistant content.",
 					})
 					continue
 				}
@@ -246,7 +246,7 @@ func (loop *agentLoop) Run(
 	}
 }
 
-func describesDeclaredToolCall(content string, tools []provider.Tool) bool {
+func describesToolCall(content string) bool {
 	trimmed := strings.TrimSpace(content)
 	if strings.HasPrefix(trimmed, "```") {
 		if newline := strings.IndexByte(trimmed, '\n'); newline >= 0 {
@@ -255,55 +255,48 @@ func describesDeclaredToolCall(content string, tools []provider.Tool) bool {
 		trimmed = strings.TrimSuffix(trimmed, "```")
 		trimmed = strings.TrimSpace(trimmed)
 	}
-	declared := make(map[string]struct{}, len(tools))
-	for _, candidate := range tools {
-		if candidate.Name != "" {
-			declared[candidate.Name] = struct{}{}
-		}
-	}
-	if decodeContainsDeclaredToolCall(trimmed, declared) {
+	if decodeContainsToolCall(trimmed) {
 		return true
 	}
 	for index := 0; index < len(trimmed); index++ {
 		if trimmed[index] != '{' && trimmed[index] != '[' {
 			continue
 		}
-		if decodeContainsDeclaredToolCall(trimmed[index:], declared) {
+		if decodeContainsToolCall(trimmed[index:]) {
 			return true
 		}
 	}
 	return false
 }
 
-func decodeContainsDeclaredToolCall(candidate string, declared map[string]struct{}) bool {
+func decodeContainsToolCall(candidate string) bool {
 	decoder := json.NewDecoder(strings.NewReader(candidate))
 	var value any
 	if decoder.Decode(&value) != nil {
 		return false
 	}
-	return containsDeclaredToolCall(value, declared)
+	return containsToolCall(value)
 }
 
-func containsDeclaredToolCall(value any, declared map[string]struct{}) bool {
+func containsToolCall(value any) bool {
 	switch typed := value.(type) {
 	case []any:
 		for _, item := range typed {
-			if containsDeclaredToolCall(item, declared) {
+			if containsToolCall(item) {
 				return true
 			}
 		}
 	case map[string]any:
 		name, hasName := typed["name"].(string)
-		_, isDeclared := declared[name]
 		_, hasArguments := typed["arguments"]
 		_, hasParameters := typed["parameters"]
 		_, hasInput := typed["input"]
-		if hasName && isDeclared && (hasArguments || hasParameters || hasInput) {
+		if hasName && strings.TrimSpace(name) != "" && (hasArguments || hasParameters || hasInput) {
 			return true
 		}
 		for key, item := range typed {
 			if key == "function" || key == "tool_call" || key == "tool_calls" {
-				if containsDeclaredToolCall(item, declared) {
+				if containsToolCall(item) {
 					return true
 				}
 			}
