@@ -730,7 +730,7 @@ Il gate, il design e il piano operativo sono descritti in
 
 # Milestone 9 — Post-release & Benchmark Closure
 
-Stato: In corso — Fasi 1–5 completate; audit finale in corso
+Stato: Completata — Fasi 1–6, v0.1.1 e gate finale conclusi
 
 Obiettivi:
 
@@ -761,7 +761,7 @@ v0.1.x, chiusura benchmark/llama.cpp e audit finale. Il dettaglio è in
 
 # Milestone 10 — Controlled Mutation
 
-Stato: Pianificata — subordinata al gate della Milestone 9
+Stato: Pronta — GO dalla Milestone 9; non ancora avviata
 
 Obiettivo:
 
@@ -786,8 +786,8 @@ Scope candidato:
 Composer, Artisan, PHPUnit, sandbox, recovery e multi-agent restano fuori
 scope.
 
-Il release contract viene fissato da un nuovo ADR soltanto dopo le evidenze
-della Milestone 9.
+Il release contract viene fissato da un nuovo ADR all'avvio della milestone,
+usando le evidenze e i limiti consegnati dalla Milestone 9.
 
 ---
 

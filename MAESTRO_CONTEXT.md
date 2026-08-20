@@ -2234,11 +2234,14 @@ reference agent Laravel:
 read -> prepare patch -> preview -> approval -> apply -> reindex -> final
 ```
 
-La Milestone 9 — Post-release & Benchmark Closure ha completato le Fasi 1–5.
-Le prove live hanno qualificato artifact e workspace reali, identificato il bug
-di indicizzazione v0.1.0 e qualificato la correzione v0.1.1. ADR-0030 chiude la
-Milestone 3 con Ollama baseline positiva e llama.cpp non supportato. Resta
-l'audit finale GO/NO-GO.
+La Milestone 9 — Post-release & Benchmark Closure è completata. Le prove live
+hanno qualificato artifact e workspace reali, identificato il bug di
+indicizzazione v0.1.0 e rilasciato la correzione v0.1.1. L'artifact finale
+incorpora `ba938abc6553bc87a89088eb6763a3e255aba4f8`, ha SHA-256
+`d894568cd65c261a75212274d7ab8a45eafa950660594b6c22cc777eb8ab9cf1`,
+supera due quick start consecutivi e ha tag annotato `v0.1.1`. ADR-0030 chiude
+la Milestone 3 con Ollama baseline positiva e llama.cpp non supportato. Il gate
+finale dà GO alla Milestone 10, che non è ancora avviata.
 
 La Milestone 9 viene eseguita in sei fasi: contratto di osservazione, artifact
 e preflight fuori dal checkout, workspace reali e resilienza operativa, triage
@@ -2258,7 +2261,7 @@ esistente, con diff concreta e approval exact-fingerprint. La creazione tramite
 processi, sandbox, recovery, multi-agent, tool esterni e modifiche coordinate
 multi-file restano fuori scope.
 
-Il piano operativo è in `docs/v0.2.0-development-plan.md`. Un nuovo ADR di
-release verrà scritto solo dopo il gate di osservazione e la decisione formale
-sullo stato llama.cpp; la presenza dei tool mutativi sperimentali non amplia la
-compatibility promise corrente.
+Il piano operativo è in `docs/v0.2.0-development-plan.md`. Il gate di
+osservazione e la decisione llama.cpp sono conclusi; il nuovo ADR di release è
+la prima attività della Milestone 10. La presenza dei tool mutativi
+sperimentali non amplia la compatibility promise corrente.
