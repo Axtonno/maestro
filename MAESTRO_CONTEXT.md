@@ -2269,9 +2269,9 @@ fase della Milestone 10. La presenza dei tool mutativi sperimentali non amplia
 la compatibility promise corrente.
 
 La Milestone 10 è ora in corso. `docs/milestone-10-development-plan.md` la
-suddivide in sei fasi sequenziali; le Fasi 1–2 sono completate e ADR-0031
-congela il contratto Controlled Mutation. `workspace.patch` prepara ora
-contenuto risultante e diff prima dell'approval e lega la preview al
-fingerprint. Il percorso candidato resta limitato a un file esistente
-`app/**/*.php`; il profilo v0.1.x è read-only. La Fase 3 deve integrare la
-preview nell'approver e introdurre l'opt-in separato.
+suddivide in sei fasi sequenziali; le Fasi 1–3 sono completate e ADR-0031
+congela il contratto Controlled Mutation. `workspace.patch` prepara contenuto
+risultante e diff prima dell'approval; l'approver mutativo richiede TTY,
+preview e allow once. `configs/maestro.mutating.example.yaml` è l'opt-in
+separato, mentre il profilo v0.1.x resta read-only. La Fase 4 deve introdurre
+commit atomico e fault injection.

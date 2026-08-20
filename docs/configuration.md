@@ -14,8 +14,9 @@ Il file YAML di prodotto descrive tutti i target necessari a diagnosticare ed
 eseguire il reference agent. Non sostituisce `pkg/runtime.Config`, che resta il
 contratto generico dei componenti Go.
 
-La configurazione completa di esempio è in
-`configs/maestro.example.yaml`. Nell'artifact distribuito il relativo
+La configurazione read-only completa è in `configs/maestro.example.yaml`. Il
+profilo candidato mutativo, separato e opt-in, è in
+`configs/maestro.mutating.example.yaml`. Nell'artifact distribuito il relativo
 `workspace.root` seleziona `../fixtures/laravel-v1`; quando il file viene
 copiato altrove deve essere sostituito con il progetto reale.
 
@@ -116,15 +117,23 @@ policy:
 del workspace selezionato. Le classi workspace valgono soltanto per tool
 inclusi esplicitamente e action sul workspace `laravel`.
 
-Con un TTY attendibile, `prompt` mostra le action preparate e accetta deny,
-allow one-shot o allow per la stessa action durante il run. EOF, input invalido
-e modalità non interattiva negano in sicurezza; cancellazione e deadline non
-concedono authority e interrompono il run. Non esiste auto-approval né un flag
-globale `--yes`.
+Con un TTY attendibile, `prompt` mostra le action preparate. Per una
+`workspace.patch` mostra anche intenzione, path logico, digest, precondizione e
+diff content-bound e accetta soltanto deny oppure allow one-shot. EOF, input
+invalido, richiesta di grant per run e modalità non interattiva negano in
+sicurezza; cancellazione e deadline non concedono authority e interrompono il
+run. Non esiste auto-approval né un flag globale `--yes`.
 
-La configurazione inclusa nega sempre `workspace_mutate`. I valori `allow` e
-`prompt` restano accettati dallo schema 0.x per test e integrazioni
-sperimentali, ma non appartengono alla compatibility promise v0.1.x.
+La configurazione inclusa nega sempre `workspace_mutate`. Lo schema 0.x può
+ancora decodificare `allow` e `workspace.write` per contratti sperimentali, ma
+il composition root di prodotto li rifiuta. I soli profili eseguibili sono:
+
+- read-only, senza tool mutativi e con `workspace_mutate: deny`;
+- Controlled Mutation candidato, con `workspace.read`, `workspace.patch` e
+  `workspace_mutate: prompt`.
+
+Il secondo profilo non è ancora una compatibility promise: la qualificazione
+live appartiene alla Milestone 11.
 
 ## `limits`
 

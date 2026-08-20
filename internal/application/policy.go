@@ -20,7 +20,7 @@ type ProductPolicy struct {
 }
 
 func NewProductPolicy(config productconfig.Config) (*ProductPolicy, error) {
-	if err := config.Validate(); err != nil {
+	if err := config.ValidateExecutionProfile(); err != nil {
 		return nil, err
 	}
 	tools := make(map[pkgTool.ID]struct{}, len(config.Agent.Tools))
@@ -62,6 +62,9 @@ func (policy *ProductPolicy) Decide(ctx context.Context, request pkgTool.Permiss
 		}
 		if configured == "deny" {
 			return deny("configured_deny")
+		}
+		if action.Effect() == pkgTool.EffectWorkspaceMutate && configured != "prompt" {
+			return deny("mutation_requires_prompt")
 		}
 		if configured == "prompt" {
 			mode = "prompt"

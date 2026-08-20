@@ -103,9 +103,10 @@ result
 ```
 
 Su terminale interattivo una policy `prompt` attiva l'Approver descritto in
-`operational-experience.md`. Con stdin non interattivo non viene chiesta
-approvazione: la decisione è deny. Per automazione occorre configurare
-esplicitamente `allow` soltanto sulle classi necessarie; non esiste `--yes`.
+`operational-experience.md`. Per `workspace.patch` il prompt include la diff
+concreta e offre soltanto deny o allow once. Con stdin non interattivo non viene
+chiesta approvazione: la decisione è deny. `allow` può essere configurato
+soltanto per classi non mutative; non esiste automazione mutativa né `--yes`.
 
 ## `version`
 

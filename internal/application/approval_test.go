@@ -3,6 +3,7 @@ package application
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"strings"
@@ -68,6 +69,69 @@ func TestTerminalApproverRendersActionsWithoutDisclosureFingerprint(t *testing.T
 	}
 	if strings.Contains(got, string(fingerprint)) {
 		t.Fatalf("disclosure fingerprint leaked: %q", got)
+	}
+}
+
+func TestTerminalApproverRendersExactPatchPreviewAndRejectsRunGrant(t *testing.T) {
+	invocation, _ := pkgTool.NewInvocation("workspace.patch", "call-patch", "run-patch", json.RawMessage(`{"path":"app/Order.php"}`))
+	action, _ := pkgTool.NewAction(pkgTool.EffectWorkspaceMutate, "app/Order.php", "laravel")
+	pathField, _ := pkgTool.NewPreviewField("path", "app/Order.php")
+	digestField, _ := pkgTool.NewPreviewField("expected_sha256", strings.Repeat("a", 64))
+	preview, _ := pkgTool.NewPreview(
+		"Replace one exact occurrence in app/Order.php",
+		[]pkgTool.PreviewField{pathField, digestField},
+		"--- a/app/Order.php\n+++ b/app/Order.php\n@@ -1,1 +1,1 @@\n-old\n+new\n",
+		"text/x-diff",
+	)
+	prepared, _ := pkgTool.NewPreparedInvocationWithPreview(invocation, "1", invocation.Arguments(), []pkgTool.Action{action}, preview)
+	request, _ := pkgTool.NewToolPermissionRequest("policy.patch", prepared)
+
+	for _, testCase := range []struct {
+		name, input, reason string
+		interactive         bool
+		kind                pkgTool.ApprovalKind
+	}{
+		{name: "once", input: "once\n", reason: "terminal_allow_once", interactive: true, kind: pkgTool.ApprovalAllow},
+		{name: "run rejected", input: "run\n", reason: "input_invalid", interactive: true, kind: pkgTool.ApprovalDeny},
+		{name: "deny", input: "deny\n", reason: "terminal_deny", interactive: true, kind: pkgTool.ApprovalDeny},
+		{name: "invalid", input: "yes\n", reason: "input_invalid", interactive: true, kind: pkgTool.ApprovalDeny},
+		{name: "eof", reason: "input_unavailable", interactive: true, kind: pkgTool.ApprovalDeny},
+		{name: "non interactive", input: "once\n", reason: "non_interactive", kind: pkgTool.ApprovalDeny},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var output bytes.Buffer
+			approval, err := NewTerminalApprover(strings.NewReader(testCase.input), &output, testCase.interactive).Approve(t.Context(), request)
+			if err != nil || approval.Kind() != testCase.kind || approval.Reason() != testCase.reason {
+				t.Fatalf("approval=%#v err=%v", approval, err)
+			}
+			got := output.String()
+			if !testCase.interactive {
+				if got != "" {
+					t.Fatalf("non-interactive approval rendered output: %q", got)
+				}
+				return
+			}
+			for _, expected := range []string{"proposal: Replace one exact occurrence", "path: app/Order.php", strings.Repeat("a", 64), "-old", "+new", "[d]eny/[o]nce"} {
+				if !strings.Contains(got, expected) {
+					t.Fatalf("patch approval output %q lacks %q", got, expected)
+				}
+			}
+			if strings.Contains(got, "[r]un") {
+				t.Fatalf("mutation offered a run grant: %q", got)
+			}
+		})
+	}
+}
+
+func TestTerminalApproverRejectsMutationWithoutPreparedPreview(t *testing.T) {
+	invocation, _ := pkgTool.NewInvocation("workspace.patch", "call-patch", "run-patch", json.RawMessage(`{"path":"app/Order.php"}`))
+	action, _ := pkgTool.NewAction(pkgTool.EffectWorkspaceMutate, "app/Order.php", "laravel")
+	prepared, _ := pkgTool.NewPreparedInvocation(invocation, "1", invocation.Arguments(), []pkgTool.Action{action})
+	request, _ := pkgTool.NewToolPermissionRequest("policy.patch", prepared)
+	var output bytes.Buffer
+	approval, err := NewTerminalApprover(strings.NewReader("once\n"), &output, true).Approve(t.Context(), request)
+	if err != nil || approval.Kind() != pkgTool.ApprovalDeny || approval.Reason() != "preview_unavailable" || output.Len() != 0 {
+		t.Fatalf("approval=%#v output=%q err=%v", approval, output.String(), err)
 	}
 }
 

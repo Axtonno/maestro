@@ -553,7 +553,7 @@ policy:
   id: policy.test
   model: %s
   workspace_inspect: allow
-  workspace_mutate: allow
+  workspace_mutate: prompt
 limits:
   duration: 1m
   model_turns: 5

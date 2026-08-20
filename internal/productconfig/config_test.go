@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -49,6 +50,46 @@ func TestPublishedExampleMatchesCurrentSchema(t *testing.T) {
 	}
 	if config.Policy.WorkspaceMutation != "deny" {
 		t.Fatalf("published example must deny workspace mutation: %q", config.Policy.WorkspaceMutation)
+	}
+}
+
+func TestPublishedMutatingExampleIsSeparateExplicitAndPrompted(t *testing.T) {
+	config, err := Load("../../configs/maestro.mutating.example.yaml")
+	if err != nil {
+		t.Fatalf("published mutating example is invalid: %v", err)
+	}
+	if err := config.ValidateExecutionProfile(); err != nil {
+		t.Fatalf("published mutating execution profile is invalid: %v", err)
+	}
+	ids := config.ToolIDs()
+	if !slices.Contains(ids, "workspace.read") || !slices.Contains(ids, "workspace.patch") || slices.Contains(ids, "workspace.write") {
+		t.Fatalf("unexpected mutating tool profile: %v", ids)
+	}
+	if config.Policy.WorkspaceMutation != "prompt" || config.Models.Chat != "ibm/granite4.1:8b" {
+		t.Fatalf("unexpected mutating policy/model: %#v", config)
+	}
+}
+
+func TestExecutionProfileRejectsImplicitOrUnsupportedMutation(t *testing.T) {
+	for _, testCase := range []struct {
+		name   string
+		mutate func(*Config)
+	}{
+		{name: "patch allow", mutate: func(config *Config) { config.Policy.WorkspaceMutation = "allow" }},
+		{name: "patch without read", mutate: func(config *Config) { config.Agent.Tools = []string{"workspace.patch"} }},
+		{name: "write", mutate: func(config *Config) { config.Agent.Tools = []string{"workspace.read", "workspace.write"} }},
+		{name: "read-only prompt", mutate: func(config *Config) {
+			config.Agent.Tools = []string{"workspace.read"}
+			config.Policy.WorkspaceMutation = "prompt"
+		}},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			config := validConfig(t.TempDir())
+			testCase.mutate(&config)
+			if err := config.ValidateExecutionProfile(); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("unsupported execution profile accepted: %v", err)
+			}
+		})
 	}
 }
 
@@ -144,7 +185,7 @@ func validConfig(root string) Config {
 		Models:    ModelsConfig{Chat: "fixture-model"},
 		Workspace: WorkspaceConfig{ID: "laravel", Root: filepath.Clean(root), Framework: "laravel"},
 		Agent:     AgentConfig{ID: "agent.reference", Tools: []string{"workspace.read", "workspace.patch"}},
-		Policy:    PolicyConfig{ID: "policy.test", Model: "allow", WorkspaceInspect: "allow", WorkspaceMutation: "allow"},
+		Policy:    PolicyConfig{ID: "policy.test", Model: "allow", WorkspaceInspect: "allow", WorkspaceMutation: "prompt"},
 		Limits:    LimitsConfig{Duration: Duration{time.Minute}, ModelTurns: 5, ToolCalls: 4, ToolCallsPerTurn: 2, PlanSteps: 3, PlanRevisions: 2, ToolResultBytes: 65536, SessionBytes: 1048576, InputTokens: 10000, OutputTokens: 10000},
 		Context:   ContextConfig{Retrieval: "lexical", TopK: 5, MaxTokens: 1024, ReservedTokens: 128, SafetyTokens: 64},
 	}
@@ -174,7 +215,7 @@ policy:
   id: policy.test
   model: allow
   workspace_inspect: allow
-  workspace_mutate: allow
+  workspace_mutate: prompt
 limits:
   duration: 1m
   model_turns: 5

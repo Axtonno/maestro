@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +44,9 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 		t.Fatalf("build application: %v", err)
 	}
 	defer configured.Close(context.Background())
-	result, err := configured.Execute(t.Context(), "Update Order class")
+	result, err := configured.ExecuteWithOptions(t.Context(), "Update Order class", ExecuteOptions{
+		Approver: NewTerminalApprover(strings.NewReader("once\n"), io.Discard, true),
+	})
 	if err != nil {
 		t.Fatalf("execute reference agent: %v", err)
 	}
@@ -158,7 +161,10 @@ func TestApplicationExecutesPromptedMutationWithTerminalApprover(t *testing.T) {
 	if err != nil || result.Session().Terminal() != pkgAgent.TerminalCompleted || result.Content() != "Approved update." {
 		t.Fatalf("result=%#v err=%v", result, err)
 	}
-	if !strings.Contains(approvalOutput.String(), "workspace.mutate resource=app/Order.php workspace=laravel") || strings.Contains(approvalOutput.String(), "expected_digest") {
+	if !strings.Contains(approvalOutput.String(), "workspace.mutate resource=app/Order.php workspace=laravel") ||
+		!strings.Contains(approvalOutput.String(), "expected_sha256:") ||
+		!strings.Contains(approvalOutput.String(), "-class Order {}") ||
+		!strings.Contains(approvalOutput.String(), "+final class Order {}") {
 		t.Fatalf("unsafe or incomplete approval output: %q", approvalOutput.String())
 	}
 	if strings.Count(approvalOutput.String(), "workspace.mutate resource=app/Order.php workspace=laravel") != 1 {
@@ -189,6 +195,7 @@ func TestProductPolicyRejectsTargetsAndPromptsForConfiguredMutation(t *testing.T
 		t.Fatalf("expected mutation prompt, got %#v %v", decision, err)
 	}
 	config.Policy.WorkspaceMutation = "deny"
+	config.Agent.Tools = []string{"workspace.read"}
 	denyPolicy, err := NewProductPolicy(config)
 	if err != nil {
 		t.Fatal(err)
@@ -295,7 +302,7 @@ func testConfig(root string) productconfig.Config {
 		Models:    productconfig.ModelsConfig{Chat: "fixture-model"},
 		Workspace: productconfig.WorkspaceConfig{ID: "laravel", Root: filepath.Clean(root), Framework: "laravel"},
 		Agent:     productconfig.AgentConfig{ID: "agent.reference", Tools: []string{"workspace.read", "workspace.patch"}},
-		Policy:    productconfig.PolicyConfig{ID: "policy.test", Model: "allow", WorkspaceInspect: "allow", WorkspaceMutation: "allow"},
+		Policy:    productconfig.PolicyConfig{ID: "policy.test", Model: "allow", WorkspaceInspect: "allow", WorkspaceMutation: "prompt"},
 		Limits:    productconfig.LimitsConfig{Duration: productconfig.Duration{Duration: time.Minute}, ModelTurns: 5, ToolCalls: 4, ToolCallsPerTurn: 2, PlanSteps: 3, PlanRevisions: 2, ToolResultBytes: 65536, SessionBytes: 1048576, InputTokens: 10000, OutputTokens: 10000},
 		Context:   productconfig.ContextConfig{Retrieval: "lexical", TopK: 5, MaxTokens: 1024, ReservedTokens: 128, SafetyTokens: 64},
 	}

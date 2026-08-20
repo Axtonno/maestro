@@ -206,6 +206,39 @@ func (config Config) Validate() error {
 	return nil
 }
 
+// ValidateExecutionProfile narrows the versioned schema to one of the product
+// profiles supported by the application composition root. The generic 0.x
+// schema continues to parse experimental tool IDs, but cannot silently grant
+// them product authority.
+func (config Config) ValidateExecutionProfile() error {
+	if err := config.Validate(); err != nil {
+		return err
+	}
+	tools := make(map[string]struct{}, len(config.Agent.Tools))
+	for _, id := range config.Agent.Tools {
+		tools[id] = struct{}{}
+	}
+	_, patch := tools["workspace.patch"]
+	_, write := tools["workspace.write"]
+	_, read := tools["workspace.read"]
+	if write {
+		return fieldError("agent.tools", "workspace.write is outside the supported execution profiles")
+	}
+	if patch {
+		if !read {
+			return fieldError("agent.tools", "controlled mutation requires workspace.read before workspace.patch")
+		}
+		if config.Policy.WorkspaceMutation != "prompt" {
+			return fieldError("policy.workspace_mutate", "controlled mutation requires prompt")
+		}
+		return nil
+	}
+	if config.Policy.WorkspaceMutation != "deny" {
+		return fieldError("policy.workspace_mutate", "the read-only profile requires deny")
+	}
+	return nil
+}
+
 func validateProvider(config ProviderConfig) error {
 	id := pkgProvider.ID(config.ID)
 	if id != "ollama" && id != "llama.cpp" {

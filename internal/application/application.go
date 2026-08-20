@@ -49,7 +49,7 @@ type ExecuteOptions struct {
 }
 
 func Build(config productconfig.Config, dependencies Dependencies) (*Application, error) {
-	if err := config.Validate(); err != nil {
+	if err := config.ValidateExecutionProfile(); err != nil {
 		return nil, err
 	}
 	dependencies = normalizeDependencies(dependencies)

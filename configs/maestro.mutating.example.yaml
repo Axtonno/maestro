@@ -1,0 +1,51 @@
+version: 1
+
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 5m
+  api_key_env: ""
+
+models:
+  # Candidate only: operational qualification belongs to Milestone 11.
+  chat: ibm/granite4.1:8b
+  embedding: embeddinggemma:latest
+
+workspace:
+  id: laravel
+  root: ../fixtures/laravel-v1
+  framework: laravel
+
+agent:
+  id: agent.reference
+  streaming: true
+  tools:
+    - workspace.list
+    - workspace.read
+    - workspace.search
+    - workspace.patch
+
+policy:
+  id: policy.local-controlled-mutation
+  model: allow
+  workspace_inspect: allow
+  workspace_mutate: prompt
+
+limits:
+  duration: 10m
+  model_turns: 12
+  tool_calls: 24
+  tool_calls_per_turn: 4
+  plan_steps: 8
+  plan_revisions: 2
+  tool_result_bytes: 65536
+  session_bytes: 1048576
+  input_tokens: 32768
+  output_tokens: 8192
+
+context:
+  retrieval: lexical
+  top_k: 2
+  max_tokens: 2048
+  reserved_tokens: 512
+  safety_tokens: 256

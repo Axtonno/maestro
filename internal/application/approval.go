@@ -49,6 +49,16 @@ func (approver *TerminalApprover) Approve(ctx context.Context, request pkgTool.P
 	if !approver.interactive {
 		return denyApproval("non_interactive")
 	}
+	mutating := requestHasMutation(request)
+	if mutating {
+		prepared, ok := request.Prepared()
+		if !ok {
+			return denyApproval("preview_unavailable")
+		}
+		if _, ok := prepared.Preview(); !ok {
+			return denyApproval("preview_unavailable")
+		}
+	}
 
 	approver.render(request)
 	line, err := approver.readLine(ctx)
@@ -62,6 +72,9 @@ func (approver *TerminalApprover) Approve(ctx context.Context, request pkgTool.P
 	case "o", "once":
 		return pkgTool.NewApproval(pkgTool.ApprovalAllow, "terminal_allow_once", "", pkgTool.GrantOneShot)
 	case "r", "run":
+		if mutating {
+			return denyApproval("input_invalid")
+		}
 		return pkgTool.NewApproval(pkgTool.ApprovalAllow, "terminal_allow_run", "", pkgTool.GrantRun)
 	case "", "d", "deny":
 		return denyApproval("terminal_deny")
@@ -82,6 +95,16 @@ func (approver *TerminalApprover) render(request pkgTool.PermissionRequest) {
 	}
 	if prepared, ok := request.Prepared(); ok {
 		safeWrite("  tool: %s\n", prepared.Invocation().Tool())
+		if preview, exists := prepared.Preview(); exists {
+			safeWrite("  proposal: %s\n", preview.Summary())
+			for _, field := range preview.Fields() {
+				safeWrite("  %s: %s\n", field.Label(), field.Value())
+			}
+			safeWrite("  preview (%s):\n%s", preview.MediaType(), preview.Body())
+			if !strings.HasSuffix(preview.Body(), "\n") {
+				safeWrite("\n")
+			}
+		}
 	}
 	for index, action := range request.Actions() {
 		if action.Effect() == pkgTool.EffectModelDisclose {
@@ -98,7 +121,20 @@ func (approver *TerminalApprover) render(request pkgTool.PermissionRequest) {
 			safeWrite("  action %d: %s resource=%s\n", index+1, action.Effect(), action.Resource())
 		}
 	}
-	safeWrite("allow? [d]eny/[o]nce/[r]un (default deny): ")
+	if requestHasMutation(request) {
+		safeWrite("allow this exact patch? [d]eny/[o]nce (default deny): ")
+	} else {
+		safeWrite("allow? [d]eny/[o]nce/[r]un (default deny): ")
+	}
+}
+
+func requestHasMutation(request pkgTool.PermissionRequest) bool {
+	for _, action := range request.Actions() {
+		if action.Effect() == pkgTool.EffectWorkspaceMutate {
+			return true
+		}
+	}
+	return false
 }
 
 func (approver *TerminalApprover) readLine(ctx context.Context) (string, error) {

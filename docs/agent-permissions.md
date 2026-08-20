@@ -93,3 +93,9 @@ concedere implicitamente tutti i contenuti del workspace.
 - panic: isolato al boundary e mai convertito in allow.
 
 Il testo del modello non decide disposition o grant scope.
+
+Nel profilo Controlled Mutation della v0.2.0 il contratto generico viene
+ristretto: una action `workspace.mutate` deve avere preview content-bound e
+l'approver terminale può emettere soltanto un grant one-shot. Un input `run`,
+una preview assente o una policy mutativa `allow` falliscono chiusi. I grant
+run-scoped restano disponibili per action non mutative nei contratti generici.
