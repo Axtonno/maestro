@@ -50,10 +50,13 @@ path.
 # Mutazioni e precondizioni
 
 `workspace.write` richiede un digest SHA-256 esatto oppure `absent` per una
-creazione atomica `O_EXCL`. Per un file esistente, digest, lettura e scrittura
-avvengono sulla stessa handle aperta. `workspace.patch` richiede digest esatto
-e una sola occorrenza del testo da sostituire. Mismatch o occorrenza ambigua
-producono `ResultFailed/precondition_failed` senza overwrite.
+creazione `O_EXCL`, ma resta fuori dal profilo Controlled Mutation.
+`workspace.patch` richiede digest esatto e una sola occorrenza del testo da
+sostituire. Su Linux scrive un temporaneo nella stessa directory, preserva i
+permessi, esegue `fsync`, rivalida inode e contenuto e usa `renameat` come unico
+punto di commit atomico seguito dal sync della directory. Mismatch o
+occorrenza ambigua producono `ResultFailed/precondition_failed` senza
+overwrite; un failure dopo il rename dichiara esplicitamente `applied: true`.
 
 Contenuto, dimensioni, UTF-8, item e output rispettano sia la ScanPolicy del
 workspace sia gli ExecutionLimits del Tool Runtime.

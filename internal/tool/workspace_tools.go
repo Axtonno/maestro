@@ -45,6 +45,7 @@ type workspaceTool struct {
 	registry   *WorkspaceRegistry
 	operation  workspaceOperation
 	descriptor pkgTool.Descriptor
+	atomicOps  atomicFileOps
 }
 
 // NewWorkspaceTools constructs the framework-neutral reference filesystem
@@ -76,7 +77,10 @@ func NewWorkspaceTools(registry *WorkspaceRegistry) ([]pkgTool.Tool, error) {
 		if err != nil {
 			return nil, err
 		}
-		tools = append(tools, &workspaceTool{registry: registry, operation: specification.operation, descriptor: descriptor})
+		tools = append(tools, &workspaceTool{
+			registry: registry, operation: specification.operation,
+			descriptor: descriptor, atomicOps: defaultAtomicFileOps(),
+		})
 	}
 	return tools, nil
 }
@@ -129,7 +133,7 @@ func (tool *workspaceTool) Execute(ctx context.Context, prepared pkgTool.Prepare
 	case workspaceWrite:
 		return executeWrite(ctx, root, workspace, prepared.Arguments())
 	case workspacePatch:
-		return executePatch(ctx, root, workspace, prepared.Arguments())
+		return executePatch(ctx, root, workspace, prepared.Arguments(), tool.atomicOps)
 	default:
 		return pkgTool.Result{}, pkgTool.ErrExecutionFailed
 	}
@@ -569,7 +573,13 @@ func executeWrite(ctx context.Context, root *os.Root, workspace pkgContext.Works
 	return mutationResult(arguments.Path, arguments.Content)
 }
 
-func executePatch(ctx context.Context, root *os.Root, workspace pkgContext.Workspace, raw json.RawMessage) (pkgTool.Result, error) {
+func executePatch(
+	ctx context.Context,
+	root *os.Root,
+	workspace pkgContext.Workspace,
+	raw json.RawMessage,
+	ops atomicFileOps,
+) (pkgTool.Result, error) {
 	var arguments preparedPatchArguments
 	if err := decodeStrict(raw, &arguments); err != nil {
 		return pkgTool.Result{}, err
@@ -577,21 +587,38 @@ func executePatch(ctx context.Context, root *os.Root, workspace pkgContext.Works
 	if err := validatePhysicalPath(root, arguments.Path, false, false); err != nil {
 		return pkgTool.Result{}, err
 	}
-	updated := ""
-	matched, err := replacePhysicalFile(ctx, root, arguments.Path, arguments.ExpectedDigest, workspace.Policy().MaxFileBytes, func(content string) (string, bool) {
-		if strings.Count(content, arguments.Old) != 1 {
-			return "", false
+	if int64(len(arguments.ProposedContent)) > workspace.Policy().MaxFileBytes {
+		return pkgTool.Result{}, pkgTool.ErrInvalidPreparedInvocation
+	}
+	outcome, err := replacePhysicalFileAtomically(
+		ctx, root, arguments.Path, arguments.ExpectedDigest,
+		arguments.Old, arguments.New, arguments.ProposedContent,
+		workspace.Policy().MaxFileBytes, ops,
+	)
+	if outcome.committed {
+		resultOutcome := pkgTool.ResultSuccess
+		reason := "written"
+		if err != nil {
+			resultOutcome = pkgTool.ResultFailed
+			reason = "post_commit_sync_failed"
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				resultOutcome = pkgTool.ResultCanceled
+				reason = "post_commit_canceled"
+			}
 		}
-		updated = strings.Replace(content, arguments.Old, arguments.New, 1)
-		return updated, updated == arguments.ProposedContent && int64(len(updated)) <= workspace.Policy().MaxFileBytes
-	})
+		return pkgTool.NewResult(
+			resultOutcome,
+			atomicResultContent(arguments.Path, arguments.ProposedContent, true, outcome.durable),
+			"application/json", reason, 1, false, "",
+		)
+	}
 	if err != nil {
 		return pkgTool.Result{}, err
 	}
-	if !matched {
+	if !outcome.matched {
 		return pkgTool.NewResult(pkgTool.ResultFailed, "", "", "precondition_failed", 0, false, "")
 	}
-	return mutationResult(arguments.Path, updated)
+	return pkgTool.Result{}, pkgTool.ErrExecutionFailed
 }
 
 func renderPatchDiff(logical, before, after string) (string, error) {

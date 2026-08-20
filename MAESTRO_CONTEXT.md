@@ -2269,9 +2269,9 @@ fase della Milestone 10. La presenza dei tool mutativi sperimentali non amplia
 la compatibility promise corrente.
 
 La Milestone 10 è ora in corso. `docs/milestone-10-development-plan.md` la
-suddivide in sei fasi sequenziali; le Fasi 1–3 sono completate e ADR-0031
+suddivide in sei fasi sequenziali; le Fasi 1–4 sono completate e ADR-0031
 congela il contratto Controlled Mutation. `workspace.patch` prepara contenuto
-risultante e diff prima dell'approval; l'approver mutativo richiede TTY,
-preview e allow once. `configs/maestro.mutating.example.yaml` è l'opt-in
-separato, mentre il profilo v0.1.x resta read-only. La Fase 4 deve introdurre
-commit atomico e fault injection.
+e diff prima dell'approval, richiede TTY e allow once e su Linux applica tramite
+temporaneo, sync e `renameat` atomico con fault injection. Il profilo mutativo
+è opt-in e quello v0.1.x resta read-only. La Fase 5 deve rendere espliciti
+freshness, reindex e terminali post-commit.
