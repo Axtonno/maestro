@@ -31,8 +31,6 @@ type EventPayload struct {
 	Decision       DecisionKind
 	Disposition    DenyDisposition
 	Outcome        ResultOutcome
-	Effect         EffectState
-	Durable        bool
 	Truncated      bool
 	DurationMillis int64
 	Failure        EventFailure

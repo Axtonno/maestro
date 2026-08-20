@@ -59,6 +59,16 @@ func (renderer *ProgressRenderer) Subscribe(events pkgRuntime.EventBus) error {
 
 func (renderer *ProgressRenderer) agentEvent(event pkgRuntime.Event) {
 	defer func() { _ = recover() }()
+	if event.Name() == pkgAgent.EventMutationTransitioned {
+		payload, ok := event.Payload().(pkgAgent.MutationEventPayload)
+		if !ok {
+			return
+		}
+		renderer.write("mutation\trun=%s stage=%s status=%s effect=%s durable=%t generation=%d\n",
+			payload.Run, payload.MutationStage, payload.MutationStatus, payload.MutationEffect,
+			payload.Durable, payload.WorkspaceGeneration)
+		return
+	}
 	payload, ok := event.Payload().(pkgAgent.EventPayload)
 	if !ok {
 		return
@@ -75,10 +85,6 @@ func (renderer *ProgressRenderer) agentEvent(event pkgRuntime.Event) {
 			payload.Run, payload.ModelTurns, payload.ToolCalls, payload.InputTokens, payload.OutputTokens)
 	case pkgAgent.EventLimitReached:
 		renderer.write("limit\trun=%s terminal=%s failure=%s\n", payload.Run, payload.Terminal, payload.Failure)
-	case pkgAgent.EventMutationTransitioned:
-		renderer.write("mutation\trun=%s stage=%s status=%s effect=%s durable=%t generation=%d\n",
-			payload.Run, payload.MutationStage, payload.MutationStatus, payload.MutationEffect,
-			payload.Durable, payload.WorkspaceGeneration)
 	case pkgAgent.EventSessionCompleted, pkgAgent.EventSessionFailed:
 		renderer.write("terminal\trun=%s reason=%s model_turns=%d tool_calls=%d duration_ms=%d\n",
 			payload.Run, payload.Terminal, payload.ModelTurns, payload.ToolCalls, payload.DurationMillis)

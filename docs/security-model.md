@@ -1,6 +1,6 @@
 # Maestro v0.1.x Security Model
 
-Data: 2026-08-15
+Data: 2026-08-20
 
 ## Sintesi
 
@@ -52,6 +52,21 @@ La v0.1.x non fornisce:
 - rollback generale, transazioni filesystem o recovery dopo crash;
 - validazione di sicurezza di plugin/tool di terze parti;
 - supporto operativo ai tool mutanti presenti nel codice sperimentale.
+
+## Profilo Controlled Mutation candidato
+
+La Milestone 10 consegna un profilo separato e opt-in per la futura v0.2.0.
+Non cambia il supporto v0.1.x. Il profilo accetta soltanto `workspace.patch` su
+un file PHP esistente sotto `app/`, dopo read verificata, preview concreta,
+TTY e approval one-shot. Il fingerprint lega la proposta all'esecuzione; il
+commit Linux usa temporaneo, sync, recheck e rename atomico. Ogni run ammette
+un solo tentativo e può completare soltanto dopo reindex e bundle fresh.
+
+Il profilo resta non supportato finché la Milestone 11 non supera i gate live.
+Non offre sandbox, rollback generale, recovery da crash, modifiche multi-file,
+creazione file, shell o Git. Un failure dopo il rename può lasciare la patch
+applicata con durability o refresh incompleti; gli stati redatti lo dichiarano
+e non tentano rollback implicito.
 
 Il profilo ufficiale read-only riduce l'autorità disponibile al modello, ma il
 processo Maestro conserva i normali permessi dell'utente. Eseguire Maestro su

@@ -2268,12 +2268,14 @@ osservazione e la decisione llama.cpp sono conclusi; ADR-0031 completa la prima
 fase della Milestone 10. La presenza dei tool mutativi sperimentali non amplia
 la compatibility promise corrente.
 
-La Milestone 10 è ora in corso. `docs/milestone-10-development-plan.md` la
-suddivide in sei fasi sequenziali; le Fasi 1–5 sono completate e ADR-0031
+La Milestone 10 è completata. `docs/milestone-10-development-plan.md` la
+suddivide in sei fasi sequenziali, tutte concluse, e ADR-0031
 congela il contratto Controlled Mutation. `workspace.patch` prepara contenuto
 e diff prima dell'approval, richiede TTY e allow once e su Linux applica tramite
 temporaneo, sync e `renameat` atomico con fault injection. Il profilo mutativo
 è opt-in e quello v0.1.x resta read-only. La sequenza redatta espone proposal,
 approval, apply e reindex; ogni run ammette un solo tentativo e nessun testo
-finale è possibile prima di una nuova generazione fresh. La Fase 6 deve
-completare matrice integrata, audit e decisione GO/NO-GO verso la Milestone 11.
+finale è possibile prima di una nuova generazione fresh. La matrice
+deterministica, l'audit pubblico e il profilo candidato sono consegnati; il
+verdetto è GO alla Milestone 11 per la sola qualificazione live, senza ampliare
+il support claim v0.1.x.

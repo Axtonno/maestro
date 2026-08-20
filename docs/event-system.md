@@ -4,7 +4,7 @@ Versione: 0.1.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-05
+Ultimo aggiornamento: 2026-08-20
 
 ---
 
@@ -90,6 +90,16 @@ Gli errori pubblici dell'Event System sono:
 
 Gli errori vengono arricchiti con il contesto dell'operazione e restano
 ispezionabili tramite `errors.Is`.
+
+# Lifecycle mutativo redatto
+
+La Milestone 10 aggiunge il topic pubblico
+`agent.mutation.transitioned`, trasportato da `agent.MutationEvent` e dal
+payload dedicato `agent.MutationEventPayload`. L'allowlist contiene soltanto
+run, agent, stadio `apply|reindex`, stato, effetto `unchanged|applied`,
+durability e generazione workspace. Proposta e approval derivano dagli eventi
+Tool Runtime già redatti. Nessuno di questi payload contiene path, diff,
+arguments, output tool o testo d'errore.
 
 ---
 

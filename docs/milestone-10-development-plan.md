@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–5 completate, Fase 6 pronta
+Stato: Completata — Fasi 1–6 concluse, GO alla Milestone 11
 
 Data: 2026-08-20
 
@@ -48,7 +48,7 @@ qualificazione live di provider, modello e hardware appartiene alla Milestone
 | 3 | Approval exact-fingerprint e opt-in di prodotto | Completata | Fase 2 |
 | 4 | Commit atomico e fault injection | Completata | Fase 3 |
 | 5 | Freshness, reindex e terminali applicativi | Completata | Fase 4 |
-| 6 | Integrazione, audit e chiusura | Pronta | Fasi 1–5 |
+| 6 | Integrazione, audit e chiusura | Completata | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto ai gate. Ogni fase produce un report sotto
 `docs/reports/`; una fase successiva non può trasformare un'invariante non

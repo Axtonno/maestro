@@ -44,6 +44,11 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 		t.Fatalf("build application: %v", err)
 	}
 	defer configured.Close(context.Background())
+	var progressOutput bytes.Buffer
+	progress := NewProgressRenderer(&progressOutput)
+	if err := progress.Subscribe(configured.Runtime().EventBus()); err != nil {
+		t.Fatalf("subscribe mutation progress: %v", err)
+	}
 	result, err := configured.ExecuteWithOptions(t.Context(), "Update Order class", ExecuteOptions{
 		Approver: NewTerminalApprover(strings.NewReader("once\n"), io.Discard, true),
 	})
@@ -56,6 +61,25 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 	updated, err := os.ReadFile(filename)
 	if err != nil || string(updated) != "<?php\nfinal class Order {}\n" {
 		t.Fatalf("unexpected workspace content %q: %v", updated, err)
+	}
+	progressText := progressOutput.String()
+	ordered := []string{
+		"stage=proposal status=prepared",
+		"stage=approval status=allowed",
+		"stage=apply status=succeeded effect=applied durable=true",
+		"stage=reindex status=started effect=applied durable=true",
+		"stage=reindex status=succeeded effect=applied durable=true generation=2",
+	}
+	previous := -1
+	for _, fragment := range ordered {
+		index := strings.Index(progressText, fragment)
+		if index <= previous {
+			t.Fatalf("mutation progress is missing or out of order: fragment=%q output=%q", fragment, progressText)
+		}
+		previous = index
+	}
+	if strings.Contains(progressText, root) || strings.Contains(progressText, "final class Order") || strings.Contains(progressText, fmt.Sprintf("%x", digest)) {
+		t.Fatalf("mutation progress leaked workspace data: %q", progressText)
 	}
 }
 

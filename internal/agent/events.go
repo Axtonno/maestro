@@ -19,6 +19,16 @@ func publishAgentEvent(events pkgRuntime.EventBus, topic string, payload pkgAgen
 	}()
 }
 
+func publishMutationEvent(events pkgRuntime.EventBus, payload pkgAgent.MutationEventPayload) {
+	if events == nil {
+		return
+	}
+	func() {
+		defer func() { _ = recover() }()
+		_ = events.Publish(pkgAgent.MutationEvent{Topic: pkgAgent.EventMutationTransitioned, Data: payload})
+	}()
+}
+
 func sessionEventPayload(snapshot pkgAgent.SessionSnapshot, duration time.Duration, failure pkgAgent.EventFailure) pkgAgent.EventPayload {
 	counters := snapshot.Counters()
 	payload := pkgAgent.EventPayload{

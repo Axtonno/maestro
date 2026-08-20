@@ -254,7 +254,7 @@ func toolEventPayload(request pkgTool.ExecutionRequest, result pkgTool.Result, a
 	return pkgTool.EventPayload{
 		Run: invocation.Run(), Tool: invocation.Tool(), Call: invocation.Call(),
 		ActionCount: actionCount, Decision: decision, Outcome: result.Outcome(),
-		Disposition: result.Disposition(), Effect: result.Effect(), Durable: result.Durable(), Truncated: result.Truncated(),
+		Disposition: result.Disposition(), Truncated: result.Truncated(),
 		DurationMillis: duration.Milliseconds(), Failure: failure,
 	}
 }

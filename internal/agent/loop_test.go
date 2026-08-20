@@ -594,15 +594,15 @@ func (recorder *agentEventRecorder) Publish(event pkgRuntime.Event) error {
 }
 func (*agentEventRecorder) Subscribe(string, pkgRuntime.Handler) error { return nil }
 func (*agentEventRecorder) Unsubscribe(string) error                   { return nil }
-func (recorder *agentEventRecorder) mutationTransitions() []pkgAgent.EventPayload {
+func (recorder *agentEventRecorder) mutationTransitions() []pkgAgent.MutationEventPayload {
 	recorder.mu.Lock()
 	defer recorder.mu.Unlock()
-	var transitions []pkgAgent.EventPayload
+	var transitions []pkgAgent.MutationEventPayload
 	for _, event := range recorder.events {
 		if event.Name() != pkgAgent.EventMutationTransitioned {
 			continue
 		}
-		payload, ok := event.Payload().(pkgAgent.EventPayload)
+		payload, ok := event.Payload().(pkgAgent.MutationEventPayload)
 		if ok {
 			transitions = append(transitions, payload)
 		}

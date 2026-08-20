@@ -39,6 +39,21 @@
   v0.1.0; la configurazione ufficiale non li registra.
 - Non esistono rollback generale, memoria persistente o recovery dopo restart.
 
+## Controlled Mutation candidato
+
+- `configs/maestro.mutating.example.yaml` è un profilo di qualificazione
+  opt-in, non una configurazione supportata dalla serie v0.1.x.
+- Soltanto `workspace.patch` su un file PHP esistente sotto `app/` appartiene
+  al candidato; `workspace.write`, creazione, delete, rename e multi-file non
+  sono qualificati.
+- Il commit atomico qualificabile è implementato per Linux. Il fallback su
+  altre piattaforme fallisce chiuso.
+- Non esiste rollback dopo il rename. Un failure di sync directory,
+  cancellazione o failure di reindex può lasciare il file applicato con stato
+  durable/fresh incompleto; la run termina senza testo finale.
+- Il profilo Ollama `ibm/granite4.1:8b` e il lower bound hardware sono soltanto
+  candidati. Gate e decisione live appartengono alla Milestone 11.
+
 ## Prodotto ed ecosistema
 
 - CLI, config schema e API Go sono sperimentali durante la serie 0.x.

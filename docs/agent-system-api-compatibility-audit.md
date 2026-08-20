@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: Audit finale completato — Fase 7
+Stato: Audit aggiornato — Milestone 10 completata
 
 Data: 2026-08-11
 
@@ -39,6 +39,25 @@ pkg/contextengine + pkg/provider --------+--> pkg/agent
 pkg/tool -X-> pkg/agent
 pkg/runtime -X-> pkg/tool/pkg/agent
 ```
+
+## Aggiornamento Controlled Mutation
+
+La Milestone 10 mantiene le implementazioni concrete sotto `internal/` e
+aggiunge contratti pubblici 0.x stretti:
+
+- `PreviewField`, `Preview` e `NewPreparedInvocationWithPreview` in
+  `pkg/tool`; la preview partecipa al fingerprint;
+- `EffectState`, `NewEffectResult`, `Result.Effect` e `Result.Durable` per
+  descrivere il lato del punto di commit;
+- `MutationEvent`, `MutationEventPayload` e gli enum di stage/status/effect in
+  `pkg/agent`;
+- `ErrMutationFailed` e `ErrContextRefreshFailed` per reason applicative
+  ispezionabili.
+
+Le estensioni sono additive e non modificano le firme esistenti. I payload
+mutativi usano un tipo dedicato invece di aggiungere campi a `EventPayload`,
+così i literal consumer preesistenti restano source-compatible. La promessa
+resta sperimentale 0.x e non amplia la compatibility matrix v0.1.x.
 
 ---
 

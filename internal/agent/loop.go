@@ -280,13 +280,13 @@ func (loop *agentLoop) publishMutation(
 	durable bool,
 	generation uint64,
 ) {
-	payload := sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone)
-	payload.MutationStage = stage
-	payload.MutationStatus = status
-	payload.MutationEffect = effect
-	payload.Durable = durable
-	payload.WorkspaceGeneration = generation
-	publishAgentEvent(loop.events, pkgAgent.EventMutationTransitioned, payload)
+	snapshot := current.snapshotValue()
+	payload := pkgAgent.MutationEventPayload{
+		Run: snapshot.Run(), Agent: snapshot.Agent(), MutationStage: stage,
+		MutationStatus: status, MutationEffect: effect, Durable: durable,
+		WorkspaceGeneration: generation,
+	}
+	publishMutationEvent(loop.events, payload)
 }
 
 func mutationStatusForResult(result pkgTool.Result) pkgAgent.MutationStatus {

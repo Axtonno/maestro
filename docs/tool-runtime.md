@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: Implementato — Milestone 7, Fasi 2–3
+Stato: Implementato — aggiornato dalla Milestone 10
 
 Data: 2026-08-12
 
@@ -68,6 +68,10 @@ un tool registrato. Il Runtime verifica nuovamente:
 - action valide;
 - ogni effect incluso nel set dichiarato dal descriptor.
 
+Per `workspace.patch`, `PreparedInvocation` include una preview immutabile e
+bounded. La preview entra nel fingerprint insieme a identità, arguments e
+action, quindi una proposta modificata non può riusare l'approval precedente.
+
 ---
 
 # Permit interno
@@ -98,6 +102,12 @@ pubblicazione:
 - content oltre `MaxOutputBytes` viene troncato su un confine UTF-8 valido;
 - `Truncated` viene impostato esplicitamente;
 - result malformati non entrano nella sessione futura.
+
+Un result mutativo può aggiungere `EffectUnchanged` o `EffectApplied` e la
+durability tramite `NewEffectResult`. Lo stato è validato e preservato anche
+quando il contenuto viene limitato. Questo permette al livello applicativo di
+distinguere un failure pre-commit da un esito successivo al punto di commit
+senza analizzare output JSON specifico del tool.
 
 Panic di `Prepare` ed `Execute` vengono convertiti in `ErrExecutionFailed` al
 boundary. Errori e context sono preservati tramite wrapping. Il Runtime non

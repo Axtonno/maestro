@@ -55,19 +55,26 @@ const (
 // model, policy, workspace, instruction, prompt, plan objective, content,
 // tool arguments/output, path, or external error text.
 type EventPayload struct {
+	Run            RunID
+	Agent          ID
+	Step           StepID
+	State          SessionState
+	StepState      StepStatus
+	Terminal       TerminalReason
+	PlanVersion    uint64
+	ModelTurns     int
+	ToolCalls      int
+	InputTokens    int
+	OutputTokens   int
+	DurationMillis int64
+	Failure        EventFailure
+}
+
+// MutationEventPayload is a dedicated redacted allowlist for the mutating
+// lifecycle. It contains no path, proposal, arguments, output, or error text.
+type MutationEventPayload struct {
 	Run                 RunID
 	Agent               ID
-	Step                StepID
-	State               SessionState
-	StepState           StepStatus
-	Terminal            TerminalReason
-	PlanVersion         uint64
-	ModelTurns          int
-	ToolCalls           int
-	InputTokens         int
-	OutputTokens        int
-	DurationMillis      int64
-	Failure             EventFailure
 	MutationStage       MutationStage
 	MutationStatus      MutationStatus
 	MutationEffect      MutationEffect
@@ -82,3 +89,11 @@ type Event struct {
 
 func (event Event) Name() string { return event.Topic }
 func (event Event) Payload() any { return event.Data }
+
+type MutationEvent struct {
+	Topic string
+	Data  MutationEventPayload
+}
+
+func (event MutationEvent) Name() string { return event.Topic }
+func (event MutationEvent) Payload() any { return event.Data }

@@ -1,0 +1,73 @@
+version: 1
+status: candidate_not_supported
+owner: milestone-11-mutation-qualification
+source_milestone: milestone-10-controlled-mutation
+
+target:
+  platform: linux_amd64
+  provider: ollama
+  model: ibm/granite4.1:8b
+  hardware_lower_bound:
+    cpu: Intel Core i5-8365U
+    logical_cpus: 8
+    ram_gib: 15
+    swap_gib: 4
+
+configuration:
+  product_profile: ../configs/maestro.mutating.example.yaml
+  workspace_fixture: ../fixtures/laravel-v1
+  mutation_tool: workspace.patch
+  approval: tty_allow_once
+  max_mutation_attempts_per_run: 1
+
+gates:
+  - id: A
+    scenario: direct_read_result_patch_protocol
+    required_passes: 3
+    fail_fast: true
+  - id: B
+    scenario: reference_agent_read_only
+    required_passes: 2
+    fail_fast: true
+  - id: C
+    scenario: reference_agent_controlled_mutation
+    required_passes: 3
+    fail_fast: true
+
+mutation_matrix:
+  - positive_exact_patch
+  - stale_digest
+  - traversal
+  - symlink
+  - user_deny
+  - approval_eof
+  - approval_no_tty
+  - approval_invalid_input
+  - cancellation_before_commit
+  - cancellation_after_commit
+  - filesystem_fault_before_commit
+  - refresh_failure_after_commit
+  - undeclared_tool
+  - approval_replay
+  - second_mutation_attempt
+
+required_observations:
+  - terminal_reason
+  - redacted_lifecycle_order
+  - exact_final_digest
+  - context_freshness
+  - temporary_file_cleanup
+
+report_redaction:
+  exclude:
+    - prompts
+    - responses
+    - tool_arguments
+    - tool_results
+    - physical_paths
+    - credentials
+
+qualification_outcomes:
+  - supported_on_lower_bound
+  - supported_on_proven_higher_requirement
+  - mutation_deferred

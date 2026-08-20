@@ -761,7 +761,7 @@ v0.1.x, chiusura benchmark/llama.cpp e audit finale. Il dettaglio è in
 
 # Milestone 10 — Controlled Mutation
 
-Stato: In corso — Fasi 1–5 completate, Fase 6 pronta
+Stato: Completata — Fasi 1–6 concluse, GO alla Milestone 11
 
 Obiettivo:
 
