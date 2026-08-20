@@ -26,3 +26,4 @@
 - [ADR-0027 – Apache-2.0 License for Maestro](ADR-0027.md)
 - [ADR-0028 – Deterministic Dependency Choreography for Workspace Mutations](ADR-0028.md)
 - [ADR-0029 – Read-Only v0.1.0 Product Boundary](ADR-0029.md)
+- [ADR-0030 – Chiusura Milestone 3 e stato llama.cpp](ADR-0030.md)

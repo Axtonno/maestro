@@ -24,7 +24,9 @@
 - `embeddinggemma:latest` è la fixture embedding, ma il quick start usa
   retrieval lessicale.
 - llama.cpp è sperimentale/non supportato; le prove router mode sull'hardware
-  target hanno causato OOM e non costituiscono una matrice valida.
+  target hanno causato OOM e non costituiscono una matrice valida. Il preflight
+  conclusivo non dispone di server, endpoint o profilo single-model e chiude
+  la Milestone 3 con esito non supportato, non con un PASS.
 - Modelli `rnj-1:8b-instruct-q4_K_M`, `ibm/granite4.1:8b`, `qwen3:8b` e
   `qwen2.5-coder:7b` non sono fixture del percorso supportato.
 

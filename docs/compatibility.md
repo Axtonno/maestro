@@ -18,7 +18,7 @@ operativo.
 | Reference agent | Supportato | `agent.reference`, analisi e interrogazione read-only |
 | Tool ufficiali | Supportati | `workspace.list`, `workspace.read`, `workspace.search` |
 | Mutazioni | Non supportate | `workspace.write`, `workspace.patch`, approval mutativa e agent mutante sono sperimentali |
-| llama.cpp | Non supportato | Adapter sperimentale; matrice live v0.1.0 non completata |
+| llama.cpp | Non supportato | Adapter sperimentale; preflight conclusivo incompatibile, nessuna matrice valida |
 | Isolamento | Non fornito | Componenti trusted in-process, nessuna sandbox o separazione di privilegi |
 
 La combinazione supportata è stata validata su un host Linux `amd64` CPU-only,
@@ -55,7 +55,7 @@ sperimentali durante la serie 0.x. I dettagli sono in
 
 ## Evidenze
 
-Le evidenze live e di installazione sono registrate in
-`docs/reports/milestone-8-phase-5.md` nel repository sorgente. L'archive include
-questa matrice, la configurazione esatta e la fixture usate dal percorso
-supportato.
+Le evidenze live e di installazione sono registrate nei report delle Milestone
+8 e 9 nel repository sorgente. ADR-0030 chiude la Milestone 3 senza promuovere
+llama.cpp. L'archive include questa matrice, la configurazione esatta e la
+fixture usate dal percorso supportato.

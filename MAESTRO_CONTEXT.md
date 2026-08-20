@@ -1015,7 +1015,7 @@ Stato: Superato.
 
 ## Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fasi 1–5 completate; milestone non ancora chiusa.
+Stato: Completata — Fasi 1–5 e decisione live concluse.
 
 La Fase 1 — Benchmark Contracts & Runner consegna:
 
@@ -1081,8 +1081,8 @@ La Fase 5 — Reporting & Hardware Profiles consegna:
 * report finale in `docs/reports/milestone-3-phase-5.md`;
 * ADR-0021 per JSON canonico, Markdown derivato e hardware dichiarativo.
 
-Il completamento della Fase 5 non chiude la Milestone 3. La milestone resta in
-corso fino a una decisione esplicita e alle eventuali verifiche live richieste.
+Il completamento della Fase 5 richiedeva una decisione live separata. ADR-0030
+registra quella decisione e chiude formalmente la Milestone 3.
 
 Validazione live Ollama del 2026-08-09:
 
@@ -1102,8 +1102,8 @@ Validazione live Ollama del 2026-08-09:
 * report in `docs/reports/milestone-3-live-ollama-validation.md`.
 
 La run Smoke live senza scenari failed è stata ottenuta con la fixture positiva
-`llama3.1:8b`; la Milestone 3 resta aperta per la successiva matrice llama.cpp e
-fino a una decisione esplicita di completamento.
+`llama3.1:8b`; ADR-0030 conserva questo risultato come baseline positiva della
+Milestone 3 completata.
 
 La seconda fixture `llama3.1:8b` supera la prova diretta: non-stream restituisce
 una tool call nativa e lo stream la emette nel primo chunk, seguito da un chunk
@@ -1114,8 +1114,8 @@ allinea le completion non-stream. Test mirati, gate Go, integration suite,
 embedding con ID catalogo esatto e lifecycle passano. Lo Smoke completo
 post-correzione produce 13 passed, 1 skipped e 0 failed: il gate live Ollama è
 verde. `qwen2.5-coder:7b` resta il caso negativo documentato e
-`llama3.1:8b` la fixture positiva. La Milestone 3 resta comunque in corso e non
-viene chiusa automaticamente.
+`llama3.1:8b` la fixture positiva. La chiusura formale è registrata separatamente
+da ADR-0030.
 
 Decisione fixture del gate Ollama:
 
@@ -1133,24 +1133,24 @@ Decisione fixture del gate Ollama:
 * il gate live Ollama è superato e la relativa documentazione è conclusa;
 * non servono altre fixture Ollama per questo gate.
 
-La matrice live llama.cpp resta un task pendente esplicito della Milestone 3,
-idealmente usando lo stesso modello base Llama 3.1 per isolare la differenza tra
-runtime e modello. Il task è rinviato perché non blocca Gestor, ma deve essere
-completato prima della chiusura formale della Milestone 3 o di una release
-pubblica importante.
+Il preflight conclusivo llama.cpp non trova binario, server, endpoint o profilo
+single-model configurato. Dopo due OOM storici in router mode, nessuna nuova
+matrice viene avviata sullo stesso host. llama.cpp resta sperimentale/non
+supportato; l'assenza della prova non è un PASS.
 
-Checkpoint di passaggio:
+Checkpoint di chiusura:
 
 | Punto | Decisione |
 |---|---|
-| Milestone 3 | In corso, sospesa dopo la validazione Ollama |
+| Milestone 3 | Completata con decisione ADR-0030 |
 | Ollama | Gate live superato con `llama3.1:8b` |
 | Qwen | `qwen2.5-coder:7b` è il caso negativo canonico |
-| llama.cpp | Matrice live rinviata e registrata come task pendente |
-| Motivo | Non blocca Gestor; resta obbligatoria prima della chiusura formale della Milestone 3 o di una release pubblica importante |
+| llama.cpp | Sperimentale/non supportato; preflight incompatibile |
+| Motivo | Nessun profilo live valido; router mode ha causato OOM sul target |
 
-Regola di avanzamento: la Milestone 3 non viene chiusa, ma non trattiene lo
-sviluppo architetturale successivo.
+Regola futura: un support claim llama.cpp richiede una nuova matrice su un
+profilo hardware–server–modello dichiarato; non riapre retroattivamente la
+Milestone 3.
 
 La milestone misura configurazioni complete hardware–provider–modello–plugin,
 non costruisce classifiche assolute tra modelli.
@@ -2234,12 +2234,11 @@ reference agent Laravel:
 read -> prepare patch -> preview -> approval -> apply -> reindex -> final
 ```
 
-La prima attività è la Milestone 9 — Post-release & Benchmark Closure. La
-baseline locale è raccolta in
-`docs/reports/v0.1.0-post-release-observation.md`; le prove live restano
-pendenti perché nella sessione di apertura Ollama non era in esecuzione. La
-suite completa è verde con una cache Go isolata e non sono stati identificati
-bug v0.1.x dalla sola analisi statica.
+La Milestone 9 — Post-release & Benchmark Closure ha completato le Fasi 1–5.
+Le prove live hanno qualificato artifact e workspace reali, identificato il bug
+di indicizzazione v0.1.0 e qualificato la correzione v0.1.1. ADR-0030 chiude la
+Milestone 3 con Ollama baseline positiva e llama.cpp non supportato. Resta
+l'audit finale GO/NO-GO.
 
 La Milestone 9 viene eseguita in sei fasi: contratto di osservazione, artifact
 e preflight fuori dal checkout, workspace reali e resilienza operativa, triage

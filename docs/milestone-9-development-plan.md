@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–3 completate
+Stato: In corso — Fasi 1–5 completate; Fase 6 in corso
 
 Data: 2026-08-15
 
@@ -39,9 +39,9 @@ tool mutativi sperimentali non amplia la compatibility promise della v0.1.x.
 | 1 | Contratto di osservazione e baseline | Completata | Milestone 8 |
 | 2 | Artifact e preflight fuori dal checkout | Completata | Fase 1 |
 | 3 | Workspace reali e resilienza operativa | Completata | Fase 2 |
-| 4 | Triage e stabilizzazione v0.1.x | In corso | Fase 3 |
-| 5 | Chiusura benchmark e decisione llama.cpp | Pianificata | Fase 4 |
-| 6 | Audit finale e gate Controlled Mutation | Pianificata | Fasi 1–5 |
+| 4 | Triage e stabilizzazione v0.1.x | Completata | Fase 3 |
+| 5 | Chiusura benchmark e decisione llama.cpp | Completata | Fase 4 |
+| 6 | Audit finale e gate Controlled Mutation | In corso | Fasi 1–5 |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può raccogliere evidenze
 preparatorie per la successiva, ma non viene dichiarata completata finché

@@ -2,9 +2,9 @@
 
 Versione: 1.0.0
 
-Stato: Fase 5 implementata; Milestone 3 ancora in corso
+Stato: Fase 5 implementata; Milestone 3 completata
 
-Ultimo aggiornamento: 2026-08-09
+Ultimo aggiornamento: 2026-08-20
 
 ---
 
@@ -127,6 +127,7 @@ gli scenari offline devono risultare `skipped` senza I/O provider.
 
 # Stato della milestone
 
-Il completamento della Fase 5 non chiude automaticamente la Milestone 3. La
-milestone resta **In corso — Fasi 1–5 completate**, in attesa di una decisione
-esplicita e delle eventuali verifiche live desiderate dall'utente.
+Il completamento della Fase 5 non chiudeva automaticamente la Milestone 3.
+ADR-0030 registra la decisione live conclusiva: Ollama è la baseline positiva;
+llama.cpp resta sperimentale/non supportato dopo preflight incompatibile e la
+milestone è formalmente completata.

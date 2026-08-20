@@ -2,9 +2,9 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–5 completate; milestone non ancora chiusa
+Stato: Completata — Fasi 1–5 e decisione live concluse
 
-Ultimo aggiornamento: 2026-08-09
+Ultimo aggiornamento: 2026-08-20
 
 Autori:
 - Antonio Cafeo
@@ -290,8 +290,8 @@ Rendering, profili hardware e gate della Fase 5 sono descritti in
 `benchmark-reporting.md`. Il report finale è disponibile in
 `reports/milestone-3-phase-5.md`.
 
-Il completamento delle cinque fasi non chiude automaticamente la milestone: lo
-stato resta in corso fino a una decisione esplicita.
+Il completamento delle cinque fasi ha richiesto una decisione live separata.
+ADR-0030 la registra e chiude formalmente la milestone.
 
 La validazione live Ollama del 2026-08-09 ha superato i test di integrazione ma
 non il gate Smoke completo: 9 scenari passed, 3 skipped e 2 failed sul tool
@@ -306,13 +306,16 @@ autorizzato un nuovo Smoke live con
 `MAESTRO_OLLAMA_EMBED_MODEL=embeddinggemma:latest`. L'adapter normalizza ora la
 sequenza tool call non terminale più terminale Ollama `stop` nel terminale
 neutrale `tool_calls`, senza alterare le altre cause. Il risultato post-fix è 13
-passed, 1 skipped e 0 failed: il gate live Ollama è verde. La milestone resta
-aperta fino a una decisione esplicita. `qwen2.5-coder:7b` resta il caso negativo
-documentato e `llama3.1:8b` la fixture positiva.
+passed, 1 skipped e 0 failed: il gate live Ollama è verde.
+`qwen2.5-coder:7b` resta il caso negativo documentato e `llama3.1:8b` la
+fixture positiva.
 
-Il gate Ollama non richiede ulteriori modelli. La prossima matrice live riguarda
-llama.cpp e dovrebbe usare, se disponibile, lo stesso modello base Llama 3.1
-per rendere il confronto principalmente un confronto tra runtime.
+Il preflight conclusivo non trova binario, server, endpoint o profilo
+single-model llama.cpp disponibile. Dopo i due precedenti OOM in router mode,
+nessuna nuova matrice viene avviata sullo stesso host. llama.cpp resta
+sperimentale/non supportato e la Milestone 3 è completata con questo esito,
+senza rappresentare gli skip come PASS. Dettagli in
+`reports/milestone-9-phase-5.md` e ADR-0030.
 
 ---
 

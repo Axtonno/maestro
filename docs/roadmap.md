@@ -281,7 +281,7 @@ di chiusura della Milestone 2.
 
 # Milestone 3 — Benchmark & Evaluation Layer
 
-Stato: In corso — Fasi 1–5 completate; milestone non ancora chiusa
+Stato: Completata — Fasi 1–5 e decisione live concluse
 
 Obiettivo:
 
@@ -328,16 +328,15 @@ Il Benchmark Layer valuta il sistema completo e non produce classifiche
 assolute tra modelli. Piano, metriche, rubriche e gate sono descritti in
 `benchmark-evaluation-plan.md`.
 
-Le cinque fasi pianificate sono implementate, ma la milestone resta aperta in
-attesa di una decisione esplicita e delle eventuali verifiche live desiderate.
+Le cinque fasi pianificate sono implementate. ADR-0030 registra la decisione
+live conclusiva e chiude formalmente la milestone.
 
 Validazione live Ollama del 2026-08-09: integration test superato; Smoke
 Benchmark con 9 passed, 3 skipped e 2 failed (`tool_call_missing` e
 `tool_stream_terminal_missing`). La verifica diretta di `/api/chat` a
 temperatura 0 riproduce entrambi i failure: nessuna risposta o chunk contiene
 `message.tool_calls`, mentre la chiamata è emessa come JSON testuale. Per questa
-fixture l'adapter Maestro non è l'origine della perdita. La milestone resta
-aperta. Il report è in
+fixture l'adapter Maestro non è l'origine della perdita. Il report è in
 `reports/milestone-3-live-ollama-validation.md`.
 
 La fixture alternativa `llama3.1:8b` supera il gate diretto e produce
@@ -346,27 +345,27 @@ terminale Ollama `stop` in `tool_calls` solo se nello stesso stream è stata
 tradotta una tool call; completion non-stream, altre cause terminali e stream
 senza tool call restano coerenti. Con `embeddinggemma:latest`, test mirati, gate
 Go, integration test, embedding e lifecycle passano. Il nuovo Smoke completo
-chiude con 13 passed, 1 skipped e 0 failed: il gate live Ollama è verde. La
-Milestone 3 resta aperta fino a una decisione esplicita di completamento.
+chiude con 13 passed, 1 skipped e 0 failed: il gate live Ollama è verde.
 `qwen2.5-coder:7b` resta il caso negativo documentato e `llama3.1:8b` la fixture
 positiva.
 
-La documentazione del gate Ollama è conclusa. La prossima verifica live della
-Milestone 3 è la matrice llama.cpp, idealmente con lo stesso modello base Llama
-3.1 per isolare le differenze del runtime dalla variabile modello.
+La documentazione del gate Ollama è conclusa. Il preflight finale llama.cpp
+non trova server, endpoint o profilo single-model configurato; router mode
+resta incompatibile con questo host dopo due OOM. Nessuna matrice viene
+avviata, gli skip non sono PASS e llama.cpp resta non supportato.
 
-Checkpoint di sospensione della Milestone 3:
+Checkpoint di chiusura della Milestone 3:
 
 | Punto | Decisione |
 |---|---|
-| Milestone 3 | In corso, sospesa dopo la validazione Ollama |
+| Milestone 3 | Completata con decisione ADR-0030 |
 | Ollama | Gate live superato con `llama3.1:8b` |
 | Qwen | `qwen2.5-coder:7b` conservato come caso negativo canonico |
-| llama.cpp | Matrice live rinviata e registrata come task pendente |
-| Motivo del rinvio | Non blocca Gestor; deve essere completata prima della chiusura formale della Milestone 3 o di una release pubblica importante |
+| llama.cpp | Sperimentale/non supportato; preflight incompatibile |
+| Motivo della decisione | Nessun profilo live valido; router mode ha causato OOM sul target |
 
-La Milestone 3 non trattiene lo sviluppo architetturale successivo. Il task
-pendente llama.cpp resta parte del suo criterio di chiusura.
+Un support claim llama.cpp futuro richiede una nuova matrice su un profilo
+hardware–server–modello dichiarato; non riapre retroattivamente la Milestone 3.
 
 ---
 
@@ -731,7 +730,7 @@ Il gate, il design e il piano operativo sono descritti in
 
 # Milestone 9 — Post-release & Benchmark Closure
 
-Stato: In corso — baseline locale raccolta, prove live pendenti
+Stato: In corso — Fasi 1–5 completate; audit finale in corso
 
 Obiettivi:
 
