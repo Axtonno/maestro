@@ -269,7 +269,20 @@ func (runtime *Runtime) coordinate(
 	}
 	content, terminal, err := runtime.loop.Run(ctx, current, request, bundle)
 	if err != nil {
-		return current.fail(terminal, kindForTerminal(terminal), "loop_failed", err)
+		reason := "loop_failed"
+		switch {
+		case terminal == pkgAgent.TerminalCanceled:
+			reason = "canceled"
+		case terminal == pkgAgent.TerminalDeadline:
+			reason = "deadline_exceeded"
+		case terminal == pkgAgent.TerminalLimit:
+			reason = "limit_exceeded"
+		case errors.Is(err, pkgAgent.ErrContextRefreshFailed):
+			reason = "context_refresh_failed"
+		case errors.Is(err, pkgAgent.ErrMutationFailed):
+			reason = "mutation_failed"
+		}
+		return current.fail(terminal, kindForTerminal(terminal), reason, err)
 	}
 	return current.finish(content, terminal)
 }

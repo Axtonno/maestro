@@ -42,14 +42,17 @@ func (renderer *ProgressRenderer) Subscribe(events pkgRuntime.EventBus) error {
 	for _, topic := range []string{
 		pkgAgent.EventSessionStarted, pkgAgent.EventPlanCreated, pkgAgent.EventPlanRevised,
 		pkgAgent.EventStepTransitioned, pkgAgent.EventTurnCompleted, pkgAgent.EventLimitReached,
+		pkgAgent.EventMutationTransitioned,
 		pkgAgent.EventSessionCompleted, pkgAgent.EventSessionFailed,
 	} {
 		if err := events.Subscribe(topic, renderer.agentEvent); err != nil {
 			return fmt.Errorf("subscribe progress topic %q: %w", topic, err)
 		}
 	}
-	if err := events.Subscribe(pkgTool.EventPermissionDecided, renderer.toolEvent); err != nil {
-		return fmt.Errorf("subscribe permission progress: %w", err)
+	for _, topic := range []string{pkgTool.EventInvocationPrepared, pkgTool.EventPermissionDecided} {
+		if err := events.Subscribe(topic, renderer.toolEvent); err != nil {
+			return fmt.Errorf("subscribe mutation progress topic %q: %w", topic, err)
+		}
 	}
 	return nil
 }
@@ -72,6 +75,10 @@ func (renderer *ProgressRenderer) agentEvent(event pkgRuntime.Event) {
 			payload.Run, payload.ModelTurns, payload.ToolCalls, payload.InputTokens, payload.OutputTokens)
 	case pkgAgent.EventLimitReached:
 		renderer.write("limit\trun=%s terminal=%s failure=%s\n", payload.Run, payload.Terminal, payload.Failure)
+	case pkgAgent.EventMutationTransitioned:
+		renderer.write("mutation\trun=%s stage=%s status=%s effect=%s durable=%t generation=%d\n",
+			payload.Run, payload.MutationStage, payload.MutationStatus, payload.MutationEffect,
+			payload.Durable, payload.WorkspaceGeneration)
 	case pkgAgent.EventSessionCompleted, pkgAgent.EventSessionFailed:
 		renderer.write("terminal\trun=%s reason=%s model_turns=%d tool_calls=%d duration_ms=%d\n",
 			payload.Run, payload.Terminal, payload.ModelTurns, payload.ToolCalls, payload.DurationMillis)
@@ -84,8 +91,23 @@ func (renderer *ProgressRenderer) toolEvent(event pkgRuntime.Event) {
 	if !ok {
 		return
 	}
-	renderer.write("permission\trun=%s decision=%s actions=%d failure=%s\n",
-		payload.Run, payload.Decision, payload.ActionCount, payload.Failure)
+	if payload.Tool != "workspace.patch" {
+		if event.Name() == pkgTool.EventPermissionDecided {
+			renderer.write("permission\trun=%s decision=%s actions=%d failure=%s\n",
+				payload.Run, payload.Decision, payload.ActionCount, payload.Failure)
+		}
+		return
+	}
+	switch event.Name() {
+	case pkgTool.EventInvocationPrepared:
+		renderer.write("mutation\trun=%s stage=proposal status=prepared\n", payload.Run)
+	case pkgTool.EventPermissionDecided:
+		status := "denied"
+		if payload.Decision == pkgTool.DecisionAllow {
+			status = "allowed"
+		}
+		renderer.write("mutation\trun=%s stage=approval status=%s\n", payload.Run, status)
+	}
 }
 
 func (renderer *ProgressRenderer) write(format string, values ...any) {

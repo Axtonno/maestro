@@ -79,6 +79,13 @@ snapshot indicizzato e bundle. Se refresh o build falliscono, la sessione
 rimane stale sulla precedente generazione e nessuno snapshot parziale diventa
 corrente.
 
+Una run può iniziare al massimo un tentativo mutativo. Un esito non successful
+è terminale e non viene restituito al modello per un retry; un secondo tentativo
+nella stessa run viene rifiutato prima di `Invoke`. Soltanto apply riuscito,
+`Index`, `Build` e `markFresh` riusciti consentono un nuovo turno e quindi una
+risposta finale. Gli esiti pubblicano stati redatti `apply` e `reindex`, inclusi
+commit applicato, durability e nuova generazione, senza path o contenuto.
+
 # Framework neutrality
 
 I tool dipendono esclusivamente da `contextengine.Workspace`. Il percorso di

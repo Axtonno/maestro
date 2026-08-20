@@ -254,7 +254,7 @@ func toolEventPayload(request pkgTool.ExecutionRequest, result pkgTool.Result, a
 	return pkgTool.EventPayload{
 		Run: invocation.Run(), Tool: invocation.Tool(), Call: invocation.Call(),
 		ActionCount: actionCount, Decision: decision, Outcome: result.Outcome(),
-		Disposition: result.Disposition(), Truncated: result.Truncated(),
+		Disposition: result.Disposition(), Effect: result.Effect(), Durable: result.Durable(), Truncated: result.Truncated(),
 		DurationMillis: duration.Milliseconds(), Failure: failure,
 	}
 }
@@ -373,10 +373,19 @@ func limitResult(request pkgTool.ExecutionRequest, result pkgTool.Result) (pkgTo
 	for !utf8.ValidString(content) {
 		content = content[:len(content)-1]
 	}
-	limited, err := pkgTool.NewResult(
-		result.Outcome(), content, result.MediaType(), result.Reason(),
-		result.ItemCount(), true, result.Disposition(),
-	)
+	var limited pkgTool.Result
+	var err error
+	if result.Effect() != "" {
+		limited, err = pkgTool.NewEffectResult(
+			result.Outcome(), content, result.MediaType(), result.Reason(),
+			result.ItemCount(), true, result.Disposition(), result.Effect(), result.Durable(),
+		)
+	} else {
+		limited, err = pkgTool.NewResult(
+			result.Outcome(), content, result.MediaType(), result.Reason(),
+			result.ItemCount(), true, result.Disposition(),
+		)
+	}
 	if err != nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInternal, "truncate_failed", err)
 	}

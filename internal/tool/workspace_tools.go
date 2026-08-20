@@ -606,17 +606,17 @@ func executePatch(
 				reason = "post_commit_canceled"
 			}
 		}
-		return pkgTool.NewResult(
+		return pkgTool.NewEffectResult(
 			resultOutcome,
 			atomicResultContent(arguments.Path, arguments.ProposedContent, true, outcome.durable),
-			"application/json", reason, 1, false, "",
+			"application/json", reason, 1, false, "", pkgTool.EffectApplied, outcome.durable,
 		)
 	}
 	if err != nil {
 		return pkgTool.Result{}, err
 	}
 	if !outcome.matched {
-		return pkgTool.NewResult(pkgTool.ResultFailed, "", "", "precondition_failed", 0, false, "")
+		return pkgTool.NewEffectResult(pkgTool.ResultFailed, "", "", "precondition_failed", 0, false, "", pkgTool.EffectUnchanged, false)
 	}
 	return pkgTool.Result{}, pkgTool.ErrExecutionFailed
 }

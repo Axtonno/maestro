@@ -15,6 +15,7 @@ import (
 	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	"github.com/antonio-cafeo/maestro/pkg/provider"
+	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
@@ -338,9 +339,11 @@ func TestMutationMarksContextStaleRefreshesAndUsesNewGeneration(t *testing.T) {
 	registry := internalTool.NewWorkspaceRegistry()
 	tools := allowedToolRuntime(t, &mutationTool{descriptor: mutationDescriptor(t), workspace: workspace.ID()})
 	options := DefaultOptions()
+	events := &agentEventRecorder{}
 	options.Providers = providers
 	options.Tools = tools
 	options.Workspaces = registry
+	options.EventBus = events
 	runtime, err := NewRuntimeWithOptions(contexts, options)
 	if err != nil {
 		t.Fatal(err)
@@ -360,6 +363,14 @@ func TestMutationMarksContextStaleRefreshesAndUsesNewGeneration(t *testing.T) {
 	requests := providers.Requests()
 	if len(requests) != 3 || !strings.Contains(requests[2].Messages[1].Content, "fresh evidence") {
 		t.Fatalf("next step did not use refreshed evidence: %#v", requests)
+	}
+	transitions := events.mutationTransitions()
+	if len(transitions) != 3 || transitions[0].MutationStage != pkgAgent.MutationStageApply ||
+		transitions[0].MutationStatus != pkgAgent.MutationSucceeded ||
+		transitions[1].MutationStage != pkgAgent.MutationStageReindex || transitions[1].MutationStatus != pkgAgent.MutationStarted ||
+		transitions[2].MutationStage != pkgAgent.MutationStageReindex || transitions[2].MutationStatus != pkgAgent.MutationSucceeded ||
+		transitions[2].WorkspaceGeneration != 2 {
+		t.Fatalf("unexpected mutation lifecycle: %#v", transitions)
 	}
 }
 
@@ -385,6 +396,100 @@ func TestRefreshFailurePreservesStaleSession(t *testing.T) {
 	snapshot, _ := runtime.Session("run-refresh-fail")
 	if !snapshot.ContextStale() || snapshot.WorkspaceGeneration() != 1 || snapshot.Terminal() != pkgAgent.TerminalToolFailure {
 		t.Fatalf("last valid generation was not preserved: %#v", snapshot)
+	}
+	var runErr *pkgAgent.RunError
+	if !errors.As(err, &runErr) || runErr.Reason != "context_refresh_failed" {
+		t.Fatalf("refresh failure reason was not preserved: %#v", err)
+	}
+}
+
+func TestMutationFailureIsTerminalAndNeverRetried(t *testing.T) {
+	workspace, initial, refreshed, refreshedSnapshot := refreshFixture(t)
+	contexts := &refreshContext{initial: initial, refreshed: refreshed, snapshot: refreshedSnapshot}
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-mutate", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}}, FinishReason: provider.FinishReasonToolCalls},
+		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-retry", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}}, FinishReason: provider.FinishReasonToolCalls},
+	}}
+	failed, err := pkgTool.NewEffectResult(pkgTool.ResultFailed, "", "", "precondition_failed", 0, false, "", pkgTool.EffectUnchanged, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture := &mutationTool{descriptor: mutationDescriptor(t), workspace: workspace.ID(), result: &failed}
+	registry := internalTool.NewWorkspaceRegistry()
+	tools := allowedToolRuntime(t, fixture)
+	options := DefaultOptions()
+	options.Providers, options.Tools, options.Workspaces = providers, tools, registry
+	runtime, _ := NewRuntimeWithOptions(contexts, options)
+	_ = runtime.Register(newAgentFixture(t, "agent.general", pendingPlan(t, "mutate")))
+	request := requestWithWorkspace(t, requestWithTools(t, runRequest(t, "run-mutation-fail", "agent.general", "workspace", 5), []pkgTool.ID{"fixture.mutate"}, false), workspace)
+
+	_, err = runtime.Run(context.Background(), request)
+	if !errors.Is(err, pkgAgent.ErrMutationFailed) || fixture.executions != 1 || len(providers.Requests()) != 1 {
+		t.Fatalf("mutation failure was retried: err=%v executions=%d requests=%d", err, fixture.executions, len(providers.Requests()))
+	}
+	var runErr *pkgAgent.RunError
+	if !errors.As(err, &runErr) || runErr.Reason != "mutation_failed" {
+		t.Fatalf("unexpected mutation failure reason: %#v", err)
+	}
+	snapshot, _ := runtime.Session("run-mutation-fail")
+	if snapshot.Terminal() != pkgAgent.TerminalToolFailure || snapshot.ContextStale() || snapshot.WorkspaceGeneration() != 2 || contexts.indexCalls != 1 {
+		t.Fatalf("failed mutation terminal state mismatch: snapshot=%#v index_calls=%d", snapshot, contexts.indexCalls)
+	}
+}
+
+func TestSecondMutationAttemptInSameRunIsRejectedBeforeExecution(t *testing.T) {
+	workspace, initial, refreshed, refreshedSnapshot := refreshFixture(t)
+	contexts := &refreshContext{initial: initial, refreshed: refreshed, snapshot: refreshedSnapshot}
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-first", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}}, FinishReason: provider.FinishReasonToolCalls},
+		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-second", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}}, FinishReason: provider.FinishReasonToolCalls},
+	}}
+	fixture := &mutationTool{descriptor: mutationDescriptor(t), workspace: workspace.ID()}
+	registry := internalTool.NewWorkspaceRegistry()
+	tools := allowedToolRuntime(t, fixture)
+	options := DefaultOptions()
+	options.Providers, options.Tools, options.Workspaces = providers, tools, registry
+	runtime, _ := NewRuntimeWithOptions(contexts, options)
+	_ = runtime.Register(newAgentFixture(t, "agent.general", pendingPlan(t, "mutate")))
+	request := requestWithWorkspace(t, requestWithTools(t, runRequest(t, "run-double-mutation", "agent.general", "workspace", 5), []pkgTool.ID{"fixture.mutate"}, false), workspace)
+
+	_, err := runtime.Run(context.Background(), request)
+	if !errors.Is(err, pkgAgent.ErrMutationFailed) || fixture.executions != 1 || len(providers.Requests()) != 2 || contexts.indexCalls != 1 {
+		t.Fatalf("second mutation reached execution: err=%v executions=%d requests=%d index_calls=%d", err, fixture.executions, len(providers.Requests()), contexts.indexCalls)
+	}
+}
+
+func TestPostCommitCancellationReportsAppliedEffectAndLeavesContextStale(t *testing.T) {
+	workspace, initial, refreshed, refreshedSnapshot := refreshFixture(t)
+	contexts := &refreshContext{initial: initial, refreshed: refreshed, snapshot: refreshedSnapshot}
+	providers := &generationStub{responses: []provider.CompletionResponse{{
+		Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-canceled", Name: "fixture_mutate", Arguments: json.RawMessage(`{}`)}}}, FinishReason: provider.FinishReasonToolCalls,
+	}}}
+	canceled, err := pkgTool.NewEffectResult(pkgTool.ResultCanceled, `{"applied":true,"durable":true}`, "application/json", "post_commit_canceled", 1, false, "", pkgTool.EffectApplied, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture := &mutationTool{descriptor: mutationDescriptor(t), workspace: workspace.ID(), result: &canceled}
+	registry := internalTool.NewWorkspaceRegistry()
+	tools := allowedToolRuntime(t, fixture)
+	events := &agentEventRecorder{}
+	options := DefaultOptions()
+	options.Providers, options.Tools, options.Workspaces, options.EventBus = providers, tools, registry, events
+	runtime, _ := NewRuntimeWithOptions(contexts, options)
+	_ = runtime.Register(newAgentFixture(t, "agent.general", pendingPlan(t, "mutate")))
+	request := requestWithWorkspace(t, requestWithTools(t, runRequest(t, "run-post-commit-cancel", "agent.general", "workspace", 5), []pkgTool.ID{"fixture.mutate"}, false), workspace)
+
+	_, err = runtime.Run(context.Background(), request)
+	var runErr *pkgAgent.RunError
+	if !errors.Is(err, pkgAgent.ErrRunCanceled) || !errors.As(err, &runErr) || runErr.Reason != "canceled" {
+		t.Fatalf("unexpected cancellation error: %#v", err)
+	}
+	snapshot, _ := runtime.Session("run-post-commit-cancel")
+	transitions := events.mutationTransitions()
+	if snapshot.Terminal() != pkgAgent.TerminalCanceled || !snapshot.ContextStale() || contexts.indexCalls != 0 ||
+		len(transitions) != 1 || transitions[0].MutationStatus != pkgAgent.MutationCanceled ||
+		transitions[0].MutationEffect != pkgAgent.MutationEffectApplied || !transitions[0].Durable {
+		t.Fatalf("post-commit cancellation state mismatch: snapshot=%#v transitions=%#v", snapshot, transitions)
 	}
 }
 
@@ -459,6 +564,8 @@ type loopTool struct {
 type mutationTool struct {
 	descriptor pkgTool.Descriptor
 	workspace  pkgContext.WorkspaceID
+	result     *pkgTool.Result
+	executions int
 }
 
 func (fixture *mutationTool) Descriptor() pkgTool.Descriptor { return fixture.descriptor }
@@ -466,8 +573,41 @@ func (fixture *mutationTool) Prepare(_ context.Context, invocation pkgTool.Invoc
 	action, _ := pkgTool.NewAction(pkgTool.EffectWorkspaceMutate, "main.go", fixture.workspace)
 	return pkgTool.NewPreparedInvocation(invocation, fixture.descriptor.Version(), invocation.Arguments(), []pkgTool.Action{action})
 }
-func (*mutationTool) Execute(context.Context, pkgTool.PreparedInvocation) (pkgTool.Result, error) {
-	return pkgTool.NewResult(pkgTool.ResultSuccess, "mutated", "text/plain", "completed", 1, false, "")
+func (fixture *mutationTool) Execute(context.Context, pkgTool.PreparedInvocation) (pkgTool.Result, error) {
+	fixture.executions++
+	if fixture.result != nil {
+		return *fixture.result, nil
+	}
+	return pkgTool.NewEffectResult(pkgTool.ResultSuccess, "mutated", "text/plain", "completed", 1, false, "", pkgTool.EffectApplied, true)
+}
+
+type agentEventRecorder struct {
+	mu     sync.Mutex
+	events []pkgRuntime.Event
+}
+
+func (recorder *agentEventRecorder) Publish(event pkgRuntime.Event) error {
+	recorder.mu.Lock()
+	recorder.events = append(recorder.events, event)
+	recorder.mu.Unlock()
+	return nil
+}
+func (*agentEventRecorder) Subscribe(string, pkgRuntime.Handler) error { return nil }
+func (*agentEventRecorder) Unsubscribe(string) error                   { return nil }
+func (recorder *agentEventRecorder) mutationTransitions() []pkgAgent.EventPayload {
+	recorder.mu.Lock()
+	defer recorder.mu.Unlock()
+	var transitions []pkgAgent.EventPayload
+	for _, event := range recorder.events {
+		if event.Name() != pkgAgent.EventMutationTransitioned {
+			continue
+		}
+		payload, ok := event.Payload().(pkgAgent.EventPayload)
+		if ok {
+			transitions = append(transitions, payload)
+		}
+	}
+	return transitions
 }
 
 type subjectPolicy struct {

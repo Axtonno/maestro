@@ -216,6 +216,7 @@ func TestWorkspacePatchReportsCommittedButUnsyncedDirectory(t *testing.T) {
 	}
 	result, err := patch.Execute(t.Context(), prepared)
 	if err != nil || result.Outcome() != pkgTool.ResultFailed || result.Reason() != "post_commit_sync_failed" ||
+		result.Effect() != pkgTool.EffectApplied || result.Durable() ||
 		!strings.Contains(result.Content(), `"applied":true`) || !strings.Contains(result.Content(), `"durable":false`) {
 		t.Fatalf("result=%#v err=%v", result, err)
 	}

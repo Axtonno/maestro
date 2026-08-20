@@ -271,6 +271,13 @@ func TestResultAndErrorSemantics(t *testing.T) {
 	if _, err := tool.NewResult(tool.ResultSuccess, "ok", "", "completed", 1, false, ""); !errors.Is(err, tool.ErrInvalidResult) {
 		t.Fatalf("expected missing media type rejection, got %v", err)
 	}
+	applied, err := tool.NewEffectResult(tool.ResultSuccess, "ok", "text/plain", "completed", 1, false, "", tool.EffectApplied, true)
+	if err != nil || applied.Effect() != tool.EffectApplied || !applied.Durable() || applied.Validate() != nil {
+		t.Fatalf("valid applied effect result: %#v err=%v", applied, err)
+	}
+	if _, err := tool.NewEffectResult(tool.ResultFailed, "", "", "failed", 0, false, "", tool.EffectUnchanged, true); !errors.Is(err, tool.ErrInvalidResult) {
+		t.Fatalf("expected durable unchanged effect rejection, got %v", err)
+	}
 	cause := errors.New("cause")
 	executionErr := tool.NewExecutionError(tool.ErrorPermission, "run-1", "workspace.file", "call-1", "policy_denied", cause)
 	if !errors.Is(executionErr, tool.ErrPermissionDenied) || !errors.Is(executionErr, cause) {

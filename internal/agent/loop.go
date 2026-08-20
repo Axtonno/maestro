@@ -40,6 +40,7 @@ func (loop *agentLoop) Run(
 	choreography := &toolChoreography{}
 	lastContent := ""
 	turn := 0
+	mutationAttempts := 0
 
 	for {
 		step, found, err := nextReadyStep(current.snapshotValue())
@@ -189,10 +190,20 @@ func (loop *agentLoop) Run(
 					return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, err)
 				}
 				mutating := descriptorHasEffect(descriptor, pkgTool.EffectWorkspaceMutate)
+				if mutating {
+					if mutationAttempts > 0 {
+						loop.publishMutation(current, pkgAgent.MutationStageApply, pkgAgent.MutationFailed, "", false, 0)
+						return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, pkgAgent.ErrMutationFailed)
+					}
+					mutationAttempts++
+				}
 				result, err := loop.tools.Invoke(ctx, execution)
 				if err != nil {
-					if mutating && !current.snapshotValue().ContextStale() {
-						_ = current.markStale()
+					if mutating {
+						if current.snapshotValue().ContextStale() {
+							loop.publishMutation(current, pkgAgent.MutationStageApply, mutationStatusForError(ctx), "", false, 0)
+						}
+						err = errors.Join(pkgAgent.ErrMutationFailed, err)
 					}
 					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
 				}
@@ -217,32 +228,93 @@ func (loop *agentLoop) Run(
 					_ = current.transitionStep(step.ID(), pkgAgent.StepBlocked, "permission_denied")
 					return "", pkgAgent.TerminalPermissionDenied, pkgAgent.ErrPermissionDenied
 				}
+				if mutating && result.Outcome() != pkgTool.ResultDenied {
+					loop.publishMutation(
+						current, pkgAgent.MutationStageApply, mutationStatusForResult(result),
+						mutationEffect(result.Effect()), result.Durable(), 0,
+					)
+				}
 				if result.Outcome() == pkgTool.ResultCanceled {
 					return "", reasonForError(ctx, pkgAgent.TerminalCanceled), pkgAgent.ErrRunCanceled
 				}
 				if mutating && current.snapshotValue().ContextStale() {
 					workspace, ok := request.WorkspaceTarget()
 					if !ok {
-						return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, pkgContext.ErrInvalidWorkspace)
+						loop.publishMutation(current, pkgAgent.MutationStageReindex, pkgAgent.MutationFailed, mutationEffect(result.Effect()), result.Durable(), 0)
+						return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, pkgAgent.ErrContextRefreshFailed, pkgContext.ErrInvalidWorkspace)
 					}
+					loop.publishMutation(current, pkgAgent.MutationStageReindex, pkgAgent.MutationStarted, mutationEffect(result.Effect()), result.Durable(), 0)
 					snapshot, refreshErr := loop.context.Index(ctx, workspace)
 					if refreshErr != nil {
-						return "", reasonForError(ctx, pkgAgent.TerminalToolFailure), errors.Join(pkgAgent.ErrToolFailed, refreshErr)
+						loop.publishMutation(current, pkgAgent.MutationStageReindex, mutationStatusForError(ctx), mutationEffect(result.Effect()), result.Durable(), 0)
+						return "", reasonForError(ctx, pkgAgent.TerminalToolFailure), errors.Join(pkgAgent.ErrToolFailed, pkgAgent.ErrContextRefreshFailed, refreshErr)
 					}
 					refreshed, refreshErr := loop.context.Build(ctx, request.Context())
 					if refreshErr != nil {
-						return "", reasonForError(ctx, pkgAgent.TerminalToolFailure), errors.Join(pkgAgent.ErrToolFailed, refreshErr)
+						loop.publishMutation(current, pkgAgent.MutationStageReindex, mutationStatusForError(ctx), mutationEffect(result.Effect()), result.Durable(), 0)
+						return "", reasonForError(ctx, pkgAgent.TerminalToolFailure), errors.Join(pkgAgent.ErrToolFailed, pkgAgent.ErrContextRefreshFailed, refreshErr)
 					}
 					if refreshed.Generation() != snapshot.Metadata().Generation {
-						return "", pkgAgent.TerminalInternalFailure, errors.New("context refresh returned a stale generation")
+						loop.publishMutation(current, pkgAgent.MutationStageReindex, pkgAgent.MutationFailed, mutationEffect(result.Effect()), result.Durable(), 0)
+						return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, pkgAgent.ErrContextRefreshFailed, errors.New("context refresh returned a stale generation"))
 					}
 					if err := current.markFresh(refreshed.Generation()); err != nil {
 						return "", pkgAgent.TerminalInternalFailure, err
 					}
 					bundle = refreshed
+					loop.publishMutation(current, pkgAgent.MutationStageReindex, pkgAgent.MutationSucceeded, mutationEffect(result.Effect()), result.Durable(), refreshed.Generation())
+				}
+				if mutating && result.Outcome() != pkgTool.ResultSuccess {
+					return "", pkgAgent.TerminalToolFailure, errors.Join(pkgAgent.ErrToolFailed, pkgAgent.ErrMutationFailed)
 				}
 			}
 		}
+	}
+}
+
+func (loop *agentLoop) publishMutation(
+	current *session,
+	stage pkgAgent.MutationStage,
+	status pkgAgent.MutationStatus,
+	effect pkgAgent.MutationEffect,
+	durable bool,
+	generation uint64,
+) {
+	payload := sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone)
+	payload.MutationStage = stage
+	payload.MutationStatus = status
+	payload.MutationEffect = effect
+	payload.Durable = durable
+	payload.WorkspaceGeneration = generation
+	publishAgentEvent(loop.events, pkgAgent.EventMutationTransitioned, payload)
+}
+
+func mutationStatusForResult(result pkgTool.Result) pkgAgent.MutationStatus {
+	switch result.Outcome() {
+	case pkgTool.ResultSuccess:
+		return pkgAgent.MutationSucceeded
+	case pkgTool.ResultCanceled:
+		return pkgAgent.MutationCanceled
+	default:
+		return pkgAgent.MutationFailed
+	}
+}
+
+func mutationStatusForError(ctx context.Context) pkgAgent.MutationStatus {
+	if ctx != nil && (errors.Is(ctx.Err(), context.Canceled) || errors.Is(ctx.Err(), context.DeadlineExceeded)) {
+		return pkgAgent.MutationCanceled
+	}
+	return pkgAgent.MutationFailed
+}
+
+func mutationEffect(effect pkgTool.EffectState) pkgAgent.MutationEffect {
+	switch effect {
+	case pkgTool.EffectApplied:
+		return pkgAgent.MutationEffectApplied
+	case pkgTool.EffectUnchanged:
+		return pkgAgent.MutationEffectUnchanged
+	default:
+		return ""
 	}
 }
 

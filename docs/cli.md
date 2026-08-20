@@ -89,6 +89,12 @@ eventi sintetici di sessione, piano, step, permission, contatori e terminale.
 Questi eventi derivano esclusivamente dalle allowlist pubbliche e non includono
 istruzione, prompt, contenuti, arguments o output tool.
 
+Nel profilo Controlled Mutation stderr espone inoltre la sequenza redatta
+`proposal -> approval -> apply -> reindex`. Lo stato applicativo distingue
+effetto invariato o applicato, durability e generazione fresh; non stampa path,
+diff o contenuto al di fuori del prompt locale di approval. Apply o refresh
+falliti terminano la run senza testo finale del modello.
+
 stdout è riservato al risultato stabile:
 
 ```text
