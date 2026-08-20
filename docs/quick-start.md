@@ -98,7 +98,7 @@ ambiguità è consigliato un path assoluto per un progetto reale.
 
 Il plugin indicizza le aree sorgente Laravel bounded (`app`, `bootstrap`,
 `config`, `database`, `lang`, sorgenti `resources`, `routes` e `tests`) e i
-manifest principali. Asset generati in `public`, dati runtime in `storage`,
+manifest/documenti root principali. Asset generati in `public`, dati runtime in `storage`,
 dipendenze e directory nascoste non entrano nello snapshot.
 
 ## Arresto e problemi

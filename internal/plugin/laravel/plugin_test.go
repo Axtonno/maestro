@@ -114,7 +114,7 @@ func TestPluginProvidesFrameworkNeutralWorkspace(t *testing.T) {
 	if policy.MaxFileBytes != maxLaravelSourceBytes {
 		t.Fatalf("unexpected Laravel source file limit: %d", policy.MaxFileBytes)
 	}
-	for _, required := range []string{"app/**", "resources/views/**", "routes/**", "composer.json"} {
+	for _, required := range []string{"app/**", "resources/views/**", "routes/**", "README.md", "composer.json", "dataset.json"} {
 		if !slices.Contains(policy.Include, required) {
 			t.Fatalf("Laravel source policy does not include %q: %#v", required, policy.Include)
 		}

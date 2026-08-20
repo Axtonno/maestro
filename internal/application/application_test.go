@@ -15,6 +15,7 @@ import (
 
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
 	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
@@ -57,6 +58,14 @@ func TestApplicationExecutesReferenceAgentPatchThroughConfiguredPolicy(t *testin
 
 func TestApplicationIndexesLaravelSourcesWithoutPublicAssets(t *testing.T) {
 	root := newLaravelWorkspace(t)
+	for name, content := range map[string]string{
+		"README.md":    "# Workspace\n",
+		"dataset.json": `{"version":"1.0.0"}`,
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if err := os.MkdirAll(filepath.Join(root, "public"), 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +112,11 @@ func TestApplicationIndexesLaravelSourcesWithoutPublicAssets(t *testing.T) {
 	}
 	if _, found := snapshot.Document("resources/views/large.blade.php"); !found {
 		t.Fatal("bounded Laravel view was not indexed")
+	}
+	for _, path := range []pkgContext.DocumentPath{"README.md", "dataset.json"} {
+		if _, found := snapshot.Document(path); !found {
+			t.Fatalf("root context document %q was not indexed", path)
+		}
 	}
 	if _, found := snapshot.Document("public/bundle.js"); found {
 		t.Fatal("generated public asset was indexed")

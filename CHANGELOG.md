@@ -15,6 +15,8 @@ deve essere dichiarato nelle note di release.
   limite complessivo di 64 MiB e gli stessi controlli su path e symlink;
 - il packaging seleziona le note di release corrispondenti alla patch release
   e rende la versione del quick start coerente con artifact e manifest.
+- la policy conserva `README.md` e i metadata versionati della fixture, così
+  il quick start mantiene il contesto qualificato della v0.1.0.
 
 Nessun tool, permesso o support claim mutativo viene aggiunto.
 
