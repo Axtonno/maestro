@@ -64,6 +64,7 @@ Completati:
 * installation.md
 * packaging-candidate.md
 * v0.2.0-development-plan.md
+* milestone-10-development-plan.md
 
 ---
 
@@ -2241,7 +2242,7 @@ incorpora `ba938abc6553bc87a89088eb6763a3e255aba4f8`, ha SHA-256
 `d894568cd65c261a75212274d7ab8a45eafa950660594b6c22cc777eb8ab9cf1`,
 supera due quick start consecutivi e ha tag annotato `v0.1.1`. ADR-0030 chiude
 la Milestone 3 con Ollama baseline positiva e llama.cpp non supportato. Il gate
-finale dà GO alla Milestone 10, che non è ancora avviata.
+finale ha dato GO alla Milestone 10, ora avviata con la Fase 1 completata.
 
 La Milestone 9 viene eseguita in sei fasi: contratto di osservazione, artifact
 e preflight fuori dal checkout, workspace reali e resilienza operativa, triage
@@ -2261,7 +2262,16 @@ esistente, con diff concreta e approval exact-fingerprint. La creazione tramite
 processi, sandbox, recovery, multi-agent, tool esterni e modifiche coordinate
 multi-file restano fuori scope.
 
-Il piano operativo è in `docs/v0.2.0-development-plan.md`. Il gate di
-osservazione e la decisione llama.cpp sono conclusi; il nuovo ADR di release è
-la prima attività della Milestone 10. La presenza dei tool mutativi
-sperimentali non amplia la compatibility promise corrente.
+Il piano di release è in `docs/v0.2.0-development-plan.md`; la scomposizione
+della Milestone 10 è in `docs/milestone-10-development-plan.md`. Il gate di
+osservazione e la decisione llama.cpp sono conclusi; ADR-0031 completa la prima
+fase della Milestone 10. La presenza dei tool mutativi sperimentali non amplia
+la compatibility promise corrente.
+
+La Milestone 10 è ora in corso. `docs/milestone-10-development-plan.md` la
+suddivide in sei fasi sequenziali; la Fase 1 è completata e ADR-0031 congela il
+contratto Controlled Mutation. Il percorso candidato consente un solo tentativo
+di `workspace.patch` per run su un file esistente `app/**/*.php`, con preview
+concreta, TTY e allow once, commit atomico e reindex obbligatorio. Il profilo
+v0.1.x resta read-only; la Fase 2 deve introdurre l'oggetto proposta autorevole
+e la preview sicura.

@@ -761,7 +761,7 @@ v0.1.x, chiusura benchmark/llama.cpp e audit finale. Il dettaglio è in
 
 # Milestone 10 — Controlled Mutation
 
-Stato: Pronta — GO dalla Milestone 9; non ancora avviata
+Stato: In corso — Fase 1 completata, Fase 2 pronta
 
 Obiettivo:
 
@@ -788,6 +788,11 @@ scope.
 
 Il release contract viene fissato da un nuovo ADR all'avvio della milestone,
 usando le evidenze e i limiti consegnati dalla Milestone 9.
+
+Il piano operativo suddivide la milestone in sei fasi: contratto, proposta e
+preview, approval e opt-in, commit atomico, freshness e terminali, audit
+finale. Il dettaglio è in `milestone-10-development-plan.md`; ADR-0031 congela
+il contratto di release.
 
 ---
 
