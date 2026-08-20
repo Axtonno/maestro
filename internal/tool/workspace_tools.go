@@ -26,6 +26,9 @@ const (
 	WorkspaceSearchID pkgTool.ID = "workspace.search"
 	WorkspaceWriteID  pkgTool.ID = "workspace.write"
 	WorkspacePatchID  pkgTool.ID = "workspace.patch"
+
+	maxPatchPreviewBytes  = 256 << 10
+	patchDiffContextLines = 3
 )
 
 type workspaceOperation string
@@ -80,7 +83,7 @@ func NewWorkspaceTools(registry *WorkspaceRegistry) ([]pkgTool.Tool, error) {
 
 func (tool *workspaceTool) Descriptor() pkgTool.Descriptor { return tool.descriptor }
 
-func (tool *workspaceTool) Prepare(_ context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
+func (tool *workspaceTool) Prepare(ctx context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
 	workspace, exists := tool.registry.Resolve(invocation.Run())
 	if !exists {
 		return pkgTool.PreparedInvocation{}, fmt.Errorf("workspace is not bound to run: %w", pkgTool.ErrInvalidInvocation)
@@ -96,6 +99,9 @@ func (tool *workspaceTool) Prepare(_ context.Context, invocation pkgTool.Invocat
 	action, err := pkgTool.NewAction(effect, logical, workspace.ID())
 	if err != nil {
 		return pkgTool.PreparedInvocation{}, err
+	}
+	if tool.operation == workspacePatch {
+		return tool.preparePatch(ctx, invocation, workspace, normalized, action)
 	}
 	return pkgTool.NewPreparedInvocation(invocation, tool.descriptor.Version(), normalized, []pkgTool.Action{action})
 }
@@ -156,6 +162,89 @@ type patchArguments struct {
 	Old            string `json:"old"`
 	New            string `json:"new"`
 	ExpectedDigest string `json:"expected_digest"`
+}
+
+type preparedPatchArguments struct {
+	Path            string `json:"path"`
+	Old             string `json:"old"`
+	New             string `json:"new"`
+	ExpectedDigest  string `json:"expected_digest"`
+	ProposedContent string `json:"proposed_content"`
+}
+
+func (tool *workspaceTool) preparePatch(
+	ctx context.Context,
+	invocation pkgTool.Invocation,
+	workspace pkgContext.Workspace,
+	normalized json.RawMessage,
+	action pkgTool.Action,
+) (pkgTool.PreparedInvocation, error) {
+	if err := ctx.Err(); err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	var arguments patchArguments
+	if err := decodeStrict(normalized, &arguments); err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	if err := validateSupportedPatchPath(arguments.Path); err != nil {
+		return pkgTool.PreparedInvocation{}, pkgTool.ErrInvalidInvocation
+	}
+	root, err := openPhysicalRoot(workspace)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	defer root.Close()
+	if err := validatePhysicalPath(root, arguments.Path, false, false); err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	content, err := readPhysicalFile(ctx, root, arguments.Path, workspace.Policy().MaxFileBytes)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	if digest(content) != arguments.ExpectedDigest || strings.Count(content, arguments.Old) != 1 || arguments.Old == arguments.New {
+		return pkgTool.PreparedInvocation{}, fmt.Errorf("patch proposal precondition failed: %w", pkgTool.ErrInvalidInvocation)
+	}
+	proposed := strings.Replace(content, arguments.Old, arguments.New, 1)
+	if int64(len(proposed)) > workspace.Policy().MaxFileBytes {
+		return pkgTool.PreparedInvocation{}, pkgTool.ErrLimitExceeded
+	}
+	diff, err := renderPatchDiff(arguments.Path, content, proposed)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	fields := make([]pkgTool.PreviewField, 0, 4)
+	for _, value := range [][2]string{
+		{"tool", string(WorkspacePatchID)},
+		{"path", arguments.Path},
+		{"expected_sha256", arguments.ExpectedDigest},
+		{"precondition", "existing_regular_utf8_php_single_exact_occurrence"},
+	} {
+		field, fieldErr := pkgTool.NewPreviewField(value[0], value[1])
+		if fieldErr != nil {
+			return pkgTool.PreparedInvocation{}, fieldErr
+		}
+		fields = append(fields, field)
+	}
+	preview, err := pkgTool.NewPreview(
+		"Replace one exact occurrence in "+arguments.Path,
+		fields,
+		diff,
+		"text/x-diff",
+	)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	preparedArguments, err := json.Marshal(preparedPatchArguments{
+		Path: arguments.Path, Old: arguments.Old, New: arguments.New,
+		ExpectedDigest: arguments.ExpectedDigest, ProposedContent: proposed,
+	})
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	return pkgTool.NewPreparedInvocationWithPreview(
+		invocation, tool.descriptor.Version(), preparedArguments,
+		[]pkgTool.Action{action}, preview,
+	)
 }
 
 func (tool *workspaceTool) normalize(arguments json.RawMessage, workspace pkgContext.Workspace) (json.RawMessage, string, error) {
@@ -222,6 +311,18 @@ func (tool *workspaceTool) normalize(arguments json.RawMessage, workspace pkgCon
 	default:
 		return nil, "", pkgTool.ErrInvalidInvocation
 	}
+}
+
+func validateSupportedPatchPath(logical string) error {
+	if validateLogical(logical, false) != nil || !strings.HasPrefix(logical, "app/") || !strings.HasSuffix(logical, ".php") {
+		return pkgContext.ErrInvalidPath
+	}
+	for _, part := range strings.Split(logical, "/") {
+		if strings.HasPrefix(part, ".") {
+			return pkgContext.ErrInvalidPath
+		}
+	}
+	return nil
 }
 
 func decodeStrict(arguments json.RawMessage, target any) error {
@@ -469,7 +570,7 @@ func executeWrite(ctx context.Context, root *os.Root, workspace pkgContext.Works
 }
 
 func executePatch(ctx context.Context, root *os.Root, workspace pkgContext.Workspace, raw json.RawMessage) (pkgTool.Result, error) {
-	var arguments patchArguments
+	var arguments preparedPatchArguments
 	if err := decodeStrict(raw, &arguments); err != nil {
 		return pkgTool.Result{}, err
 	}
@@ -482,7 +583,7 @@ func executePatch(ctx context.Context, root *os.Root, workspace pkgContext.Works
 			return "", false
 		}
 		updated = strings.Replace(content, arguments.Old, arguments.New, 1)
-		return updated, int64(len(updated)) <= workspace.Policy().MaxFileBytes
+		return updated, updated == arguments.ProposedContent && int64(len(updated)) <= workspace.Policy().MaxFileBytes
 	})
 	if err != nil {
 		return pkgTool.Result{}, err
@@ -491,6 +592,70 @@ func executePatch(ctx context.Context, root *os.Root, workspace pkgContext.Works
 		return pkgTool.NewResult(pkgTool.ResultFailed, "", "", "precondition_failed", 0, false, "")
 	}
 	return mutationResult(arguments.Path, updated)
+}
+
+func renderPatchDiff(logical, before, after string) (string, error) {
+	oldLines := splitDiffLines(before)
+	newLines := splitDiffLines(after)
+	prefix := 0
+	for prefix < len(oldLines) && prefix < len(newLines) && oldLines[prefix] == newLines[prefix] {
+		prefix++
+	}
+	suffix := 0
+	for suffix < len(oldLines)-prefix && suffix < len(newLines)-prefix &&
+		oldLines[len(oldLines)-1-suffix] == newLines[len(newLines)-1-suffix] {
+		suffix++
+	}
+	if prefix == len(oldLines) && prefix == len(newLines) {
+		return "", fmt.Errorf("patch preview has no changes: %w", pkgTool.ErrInvalidInvocation)
+	}
+	start := max(0, prefix-patchDiffContextLines)
+	oldChangeEnd := len(oldLines) - suffix
+	newChangeEnd := len(newLines) - suffix
+	oldEnd := min(len(oldLines), oldChangeEnd+patchDiffContextLines)
+	newEnd := min(len(newLines), newChangeEnd+patchDiffContextLines)
+
+	var rendered strings.Builder
+	fmt.Fprintf(&rendered, "--- a/%s\n+++ b/%s\n", logical, logical)
+	fmt.Fprintf(&rendered, "@@ -%d,%d +%d,%d @@\n", start+1, oldEnd-start, start+1, newEnd-start)
+	for _, line := range oldLines[start:prefix] {
+		appendDiffLine(&rendered, ' ', line)
+	}
+	for _, line := range oldLines[prefix:oldChangeEnd] {
+		appendDiffLine(&rendered, '-', line)
+	}
+	for _, line := range newLines[prefix:newChangeEnd] {
+		appendDiffLine(&rendered, '+', line)
+	}
+	oldContextStart := oldChangeEnd
+	newContextStart := newChangeEnd
+	contextLines := min(oldEnd-oldContextStart, newEnd-newContextStart)
+	for index := 0; index < contextLines; index++ {
+		appendDiffLine(&rendered, ' ', oldLines[oldContextStart+index])
+	}
+	if rendered.Len() > maxPatchPreviewBytes {
+		return "", fmt.Errorf("patch preview exceeds %d bytes: %w", maxPatchPreviewBytes, pkgTool.ErrLimitExceeded)
+	}
+	return rendered.String(), nil
+}
+
+func splitDiffLines(content string) []string {
+	if content == "" {
+		return nil
+	}
+	lines := strings.SplitAfter(content, "\n")
+	if lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+	return lines
+}
+
+func appendDiffLine(builder *strings.Builder, marker byte, line string) {
+	builder.WriteByte(marker)
+	builder.WriteString(line)
+	if !strings.HasSuffix(line, "\n") {
+		builder.WriteString("\n\\ No newline at end of file\n")
+	}
 }
 
 func readPhysicalFile(ctx context.Context, root *os.Root, logical string, maxBytes int64) (string, error) {

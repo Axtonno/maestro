@@ -49,6 +49,7 @@ type PreparedInvocation struct {
 	version     Version
 	arguments   json.RawMessage
 	actions     []Action
+	preview     *Preview
 	fingerprint Fingerprint
 }
 
@@ -57,6 +58,28 @@ func NewPreparedInvocation(
 	version Version,
 	normalizedArguments json.RawMessage,
 	actions []Action,
+) (PreparedInvocation, error) {
+	return newPreparedInvocation(invocation, version, normalizedArguments, actions, nil)
+}
+
+// NewPreparedInvocationWithPreview constructs a prepared invocation whose
+// bounded human presentation is covered by the same execution fingerprint.
+func NewPreparedInvocationWithPreview(
+	invocation Invocation,
+	version Version,
+	normalizedArguments json.RawMessage,
+	actions []Action,
+	preview Preview,
+) (PreparedInvocation, error) {
+	return newPreparedInvocation(invocation, version, normalizedArguments, actions, &preview)
+}
+
+func newPreparedInvocation(
+	invocation Invocation,
+	version Version,
+	normalizedArguments json.RawMessage,
+	actions []Action,
+	preview *Preview,
 ) (PreparedInvocation, error) {
 	if err := invocation.Validate(); err != nil {
 		return PreparedInvocation{}, fmt.Errorf("prepared invocation source: %w: %w", err, ErrInvalidPreparedInvocation)
@@ -80,10 +103,18 @@ func NewPreparedInvocation(
 			return PreparedInvocation{}, fmt.Errorf("prepared action %d effect %q is reserved for model permissions: %w", index, action.effect, ErrInvalidPreparedInvocation)
 		}
 	}
-	fingerprint := fingerprintPrepared(invocation, version, normalized, clonedActions)
+	var copiedPreview *Preview
+	if preview != nil {
+		if err := preview.Validate(); err != nil {
+			return PreparedInvocation{}, err
+		}
+		copyValue := clonePreview(*preview)
+		copiedPreview = &copyValue
+	}
+	fingerprint := fingerprintPrepared(invocation, version, normalized, clonedActions, copiedPreview)
 	return PreparedInvocation{
 		invocation: invocation, version: version, arguments: normalized,
-		actions: clonedActions, fingerprint: fingerprint,
+		actions: clonedActions, preview: copiedPreview, fingerprint: fingerprint,
 	}, nil
 }
 
@@ -94,13 +125,20 @@ func (prepared PreparedInvocation) Arguments() json.RawMessage {
 }
 func (prepared PreparedInvocation) Actions() []Action        { return slices.Clone(prepared.actions) }
 func (prepared PreparedInvocation) Fingerprint() Fingerprint { return prepared.fingerprint }
+func (prepared PreparedInvocation) Preview() (Preview, bool) {
+	if prepared.preview == nil {
+		return Preview{}, false
+	}
+	return clonePreview(*prepared.preview), true
+}
 
 func (prepared PreparedInvocation) Validate() error {
-	rebuilt, err := NewPreparedInvocation(
+	rebuilt, err := newPreparedInvocation(
 		prepared.invocation,
 		prepared.version,
 		prepared.arguments,
 		prepared.actions,
+		prepared.preview,
 	)
 	if err != nil {
 		return err
@@ -111,7 +149,7 @@ func (prepared PreparedInvocation) Validate() error {
 	return nil
 }
 
-func fingerprintPrepared(invocation Invocation, version Version, arguments json.RawMessage, actions []Action) Fingerprint {
+func fingerprintPrepared(invocation Invocation, version Version, arguments json.RawMessage, actions []Action, preview *Preview) Fingerprint {
 	hash := sha256.New()
 	writeFingerprintPart(hash, string(invocation.tool))
 	writeFingerprintPart(hash, string(version))
@@ -122,6 +160,16 @@ func fingerprintPrepared(invocation Invocation, version Version, arguments json.
 		writeFingerprintPart(hash, string(action.effect))
 		writeFingerprintPart(hash, action.resource)
 		writeFingerprintPart(hash, string(action.workspace))
+	}
+	if preview != nil {
+		writeFingerprintPart(hash, "preview")
+		writeFingerprintPart(hash, preview.summary)
+		for _, field := range preview.fields {
+			writeFingerprintPart(hash, field.label)
+			writeFingerprintPart(hash, field.value)
+		}
+		writeFingerprintPart(hash, preview.mediaType)
+		writeFingerprintPart(hash, preview.body)
 	}
 	return Fingerprint(hex.EncodeToString(hash.Sum(nil)))
 }

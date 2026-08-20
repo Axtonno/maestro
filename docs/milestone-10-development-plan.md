@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fase 1 completata, Fase 2 pronta
+Stato: In corso — Fasi 1–2 completate, Fase 3 pronta
 
 Data: 2026-08-20
 
@@ -44,8 +44,8 @@ qualificazione live di provider, modello e hardware appartiene alla Milestone
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
 | 1 | Contratto di release e threat boundary | Completata | Milestone 9 |
-| 2 | Proposta patch autorevole e preview sicura | Pronta | Fase 1 |
-| 3 | Approval exact-fingerprint e opt-in di prodotto | Pianificata | Fase 2 |
+| 2 | Proposta patch autorevole e preview sicura | Completata | Fase 1 |
+| 3 | Approval exact-fingerprint e opt-in di prodotto | Pronta | Fase 2 |
 | 4 | Commit atomico e fault injection | Pianificata | Fase 3 |
 | 5 | Freshness, reindex e terminali applicativi | Pianificata | Fase 4 |
 | 6 | Integrazione, audit e chiusura | Pianificata | Fasi 1–5 |

@@ -1111,8 +1111,11 @@ func TestCompositionExposesIsolatedAgentToolCatalogsAndGestorSources(t *testing.
 func TestReferenceAgentAutonomousWorkspaceScenarioAndRedactedEvents(t *testing.T) {
 	runtime := New()
 	root := t.TempDir()
-	filename := filepath.Join(root, "main.go")
-	original := "package original\n"
+	if err := os.Mkdir(filepath.Join(root, "app"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	filename := filepath.Join(root, "app", "Order.php")
+	original := "<?php\nclass Order {}\n"
 	if err := os.WriteFile(filename, []byte(original), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -1127,10 +1130,10 @@ func TestReferenceAgentAutonomousWorkspaceScenarioAndRedactedEvents(t *testing.T
 	}
 	sum := sha256.Sum256([]byte(original))
 	patchArguments, _ := json.Marshal(map[string]string{
-		"path": "main.go", "old": "package original", "new": "package updated", "expected_digest": fmt.Sprintf("%x", sum),
+		"path": "app/Order.php", "old": "class Order {}", "new": "final class Order {}", "expected_digest": fmt.Sprintf("%x", sum),
 	})
 	provider := &scriptedAgentProvider{responses: []pkgProvider.CompletionResponse{
-		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "read-1", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"main.go"}`)}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
+		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "read-1", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"app/Order.php"}`)}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
 		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, ToolCalls: []pkgProvider.ToolCall{{ID: "patch-1", Name: "workspace_patch", Arguments: patchArguments}}}, FinishReason: pkgProvider.FinishReasonToolCalls},
 		{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Workspace updated."}, FinishReason: pkgProvider.FinishReasonStop},
 	}}
@@ -1166,7 +1169,7 @@ func TestReferenceAgentAutonomousWorkspaceScenarioAndRedactedEvents(t *testing.T
 	}); err != nil {
 		t.Fatal(err)
 	}
-	query, _ := pkgContext.NewRetrievalQuery("workspace", "package original", pkgContext.RetrievalQueryOptions{
+	query, _ := pkgContext.NewRetrievalQuery("workspace", "class Order", pkgContext.RetrievalQueryOptions{
 		Methods: []pkgContext.RetrievalMethod{pkgContext.RetrievalLexical}, TopK: 5,
 	})
 	request, err := pkgAgent.NewRunRequest(
@@ -1188,7 +1191,7 @@ func TestReferenceAgentAutonomousWorkspaceScenarioAndRedactedEvents(t *testing.T
 		t.Fatalf("autonomous scenario failed: result=%#v err=%v", result, err)
 	}
 	updated, err := os.ReadFile(filename)
-	if err != nil || string(updated) != "package updated\n" {
+	if err != nil || string(updated) != "<?php\nfinal class Order {}\n" {
 		t.Fatalf("workspace was not patched: %q %v", updated, err)
 	}
 	if result.Session().ContextStale() || result.Session().WorkspaceGeneration() != 2 {
@@ -1200,7 +1203,7 @@ func TestReferenceAgentAutonomousWorkspaceScenarioAndRedactedEvents(t *testing.T
 	observed := append([]string(nil), topics...)
 	eventMu.Unlock()
 	serialized := string(encoded)
-	for _, secret := range []string{"super-secret", "main.go", "package original", "package updated"} {
+	for _, secret := range []string{"super-secret", "app/Order.php", "class Order", "final class Order"} {
 		if strings.Contains(serialized, secret) {
 			t.Fatalf("event payload leaked %q: %s", secret, serialized)
 		}

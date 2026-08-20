@@ -120,6 +120,35 @@ func TestPreparedInvocationBindsIdentityArgumentsActionsAndRun(t *testing.T) {
 	}
 }
 
+func TestPreparedInvocationPreviewIsBoundedDefensiveAndFingerprintBound(t *testing.T) {
+	invocation, _ := tool.NewInvocation("workspace.patch", "call-1", "run-1", json.RawMessage(`{"path":"app/Order.php"}`))
+	action, _ := tool.NewAction(tool.EffectWorkspaceMutate, "app/Order.php", "workspace")
+	field, _ := tool.NewPreviewField("path", "app/Order.php")
+	fields := []tool.PreviewField{field}
+	preview, err := tool.NewPreview("Patch app/Order.php", fields, "--- a/app/Order.php\n+++ b/app/Order.php\n", "text/x-diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prepared, err := tool.NewPreparedInvocationWithPreview(invocation, "1", invocation.Arguments(), []tool.Action{action}, preview)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fields[0], _ = tool.NewPreviewField("path", "changed.php")
+	got, ok := prepared.Preview()
+	if !ok || got.Fields()[0].Value() != "app/Order.php" || got.Body() != preview.Body() {
+		t.Fatalf("preview storage is not defensive: %#v", got)
+	}
+	changedField, _ := tool.NewPreviewField("path", "app/Changed.php")
+	changedPreview, _ := tool.NewPreview("Patch app/Order.php", []tool.PreviewField{changedField}, preview.Body(), preview.MediaType())
+	changed, _ := tool.NewPreparedInvocationWithPreview(invocation, "1", invocation.Arguments(), []tool.Action{action}, changedPreview)
+	if prepared.Fingerprint() == changed.Fingerprint() {
+		t.Fatal("preview is absent from prepared fingerprint")
+	}
+	if _, err := tool.NewPreview("unsafe\nsummary", []tool.PreviewField{field}, "diff", "text/x-diff"); !errors.Is(err, tool.ErrInvalidPreparedInvocation) {
+		t.Fatalf("unsafe preview accepted: %v", err)
+	}
+}
+
 func TestPermissionRequestsKeepToolAndModelAuthoritySeparate(t *testing.T) {
 	invocation, _ := tool.NewInvocation("workspace.file", "call-1", "run-1", json.RawMessage(`{"path":"src/main.go"}`))
 	inspect, _ := tool.NewAction(tool.EffectWorkspaceInspect, "src/main.go", "workspace")

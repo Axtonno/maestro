@@ -20,7 +20,13 @@ func TestWorkspaceToolsListReadSearchWriteAndPatch(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(root, "src"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.Mkdir(filepath.Join(root, "app"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(filepath.Join(root, "src", "main.go"), []byte("package main\nfunc main() {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "app", "Order.php"), []byte("<?php\nclass Order {}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	runtime, _, run := workspaceRuntime(t, root)
@@ -39,22 +45,118 @@ func TestWorkspaceToolsListReadSearchWriteAndPatch(t *testing.T) {
 	}
 
 	written := invokeWorkspace(t, runtime, run, WorkspaceWriteID, json.RawMessage(`{"path":"src/new.go","content":"package new\n","expected_digest":"absent"}`))
-	digest := resultDigest(t, written.Content())
+	if written.Outcome() != pkgTool.ResultSuccess {
+		t.Fatalf("write failed: %#v", written)
+	}
+	existing := invokeWorkspace(t, runtime, run, WorkspaceReadID, json.RawMessage(`{"path":"app/Order.php"}`))
+	digest := resultDigest(t, existing.Content())
 	patchedArguments, _ := json.Marshal(map[string]string{
-		"path": "src/new.go", "old": "package new", "new": "package changed", "expected_digest": digest,
+		"path": "app/Order.php", "old": "class Order {}", "new": "final class Order {}", "expected_digest": digest,
 	})
 	patched := invokeWorkspace(t, runtime, run, WorkspacePatchID, patchedArguments)
 	if patched.Outcome() != pkgTool.ResultSuccess {
 		t.Fatalf("patch failed: %#v", patched)
 	}
-	content, err := os.ReadFile(filepath.Join(root, "src", "new.go"))
-	if err != nil || string(content) != "package changed\n" {
+	content, err := os.ReadFile(filepath.Join(root, "app", "Order.php"))
+	if err != nil || string(content) != "<?php\nfinal class Order {}\n" {
 		t.Fatalf("unexpected patched file: %q %v", content, err)
 	}
 
 	conflict := invokeWorkspace(t, runtime, run, WorkspaceWriteID, json.RawMessage(`{"path":"src/new.go","content":"overwrite","expected_digest":"absent"}`))
 	if conflict.Outcome() != pkgTool.ResultFailed || conflict.Reason() != "precondition_failed" {
 		t.Fatalf("expected content precondition conflict: %#v", conflict)
+	}
+}
+
+func TestWorkspacePatchPreparesAuthoritativePreviewWithoutMutation(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "app"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	original := "<?php\nclass Order\n{\n    public function total(): int { return 1; }\n}\n"
+	logical := "app/Order.php"
+	if err := os.WriteFile(filepath.Join(root, filepath.FromSlash(logical)), []byte(original), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := pkgContext.NewWorkspace("workspace", root, pkgContext.WorkspaceOptions{
+		Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry := NewWorkspaceRegistry()
+	run := pkgTool.RunID("run-preview")
+	if err := registry.Bind(run, workspace); err != nil {
+		t.Fatal(err)
+	}
+	tools, err := NewWorkspaceTools(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var patchTool pkgTool.Tool
+	for _, candidate := range tools {
+		if candidate.Descriptor().ID() == WorkspacePatchID {
+			patchTool = candidate
+		}
+	}
+	arguments, _ := json.Marshal(map[string]string{
+		"path": logical, "old": "return 1", "new": "return 2", "expected_digest": digest(original),
+	})
+	invocation, _ := pkgTool.NewInvocation(WorkspacePatchID, "call-preview", run, arguments)
+	prepared, err := patchTool.Prepare(context.Background(), invocation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, ok := prepared.Preview()
+	if !ok || preview.MediaType() != "text/x-diff" || !strings.Contains(preview.Body(), "-    public function total(): int { return 1; }") ||
+		!strings.Contains(preview.Body(), "+    public function total(): int { return 2; }") {
+		t.Fatalf("unexpected patch preview: %#v", preview)
+	}
+	if strings.Contains(preview.Body(), root) || strings.Contains(preview.Summary(), root) {
+		t.Fatalf("physical root leaked in preview: %#v", preview)
+	}
+	content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(logical)))
+	if err != nil || string(content) != original {
+		t.Fatalf("prepare mutated workspace: %q %v", content, err)
+	}
+}
+
+func TestWorkspacePatchPreparationRejectsUnsupportedAndAmbiguousProposals(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "app"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range map[string]string{
+		"app/Order.php": "same same\n",
+		"app/data.txt":  "same\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, filepath.FromSlash(name)), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	workspace, _ := pkgContext.NewWorkspace("workspace", root, pkgContext.WorkspaceOptions{Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy()})
+	registry := NewWorkspaceRegistry()
+	run := pkgTool.RunID("run-reject-preview")
+	_ = registry.Bind(run, workspace)
+	tools, _ := NewWorkspaceTools(registry)
+	var patchTool pkgTool.Tool
+	for _, candidate := range tools {
+		if candidate.Descriptor().ID() == WorkspacePatchID {
+			patchTool = candidate
+		}
+	}
+	for index, test := range []struct {
+		path, old, expected string
+	}{
+		{path: "app/data.txt", old: "same", expected: digest("same\n")},
+		{path: "app/Order.php", old: "same", expected: digest("same same\n")},
+		{path: "app/Order.php", old: "same same", expected: digest("stale")},
+	} {
+		arguments, _ := json.Marshal(map[string]string{"path": test.path, "old": test.old, "new": "changed", "expected_digest": test.expected})
+		invocation, _ := pkgTool.NewInvocation(WorkspacePatchID, pkgTool.CallID(fmt.Sprintf("call-reject-%d", index)), run, arguments)
+		if _, err := patchTool.Prepare(context.Background(), invocation); err == nil {
+			t.Fatalf("unsupported proposal accepted: %#v", test)
+		}
 	}
 }
 
