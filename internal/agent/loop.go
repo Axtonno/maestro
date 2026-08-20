@@ -255,18 +255,31 @@ func describesDeclaredToolCall(content string, tools []provider.Tool) bool {
 		trimmed = strings.TrimSuffix(trimmed, "```")
 		trimmed = strings.TrimSpace(trimmed)
 	}
-	if !strings.HasPrefix(trimmed, "{") && !strings.HasPrefix(trimmed, "[") {
-		return false
-	}
-	var value any
-	if json.Unmarshal([]byte(trimmed), &value) != nil {
-		return false
-	}
 	declared := make(map[string]struct{}, len(tools))
 	for _, candidate := range tools {
 		if candidate.Name != "" {
 			declared[candidate.Name] = struct{}{}
 		}
+	}
+	if decodeContainsDeclaredToolCall(trimmed, declared) {
+		return true
+	}
+	for index := 0; index < len(trimmed); index++ {
+		if trimmed[index] != '{' && trimmed[index] != '[' {
+			continue
+		}
+		if decodeContainsDeclaredToolCall(trimmed[index:], declared) {
+			return true
+		}
+	}
+	return false
+}
+
+func decodeContainsDeclaredToolCall(candidate string, declared map[string]struct{}) bool {
+	decoder := json.NewDecoder(strings.NewReader(candidate))
+	var value any
+	if decoder.Decode(&value) != nil {
+		return false
 	}
 	return containsDeclaredToolCall(value, declared)
 }

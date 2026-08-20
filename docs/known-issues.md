@@ -5,11 +5,11 @@
 - `llama3.1:8b` è generativo: formulazione, token e latenza variano fra run.
 - Su Intel Core i5-8365U CPU-only le prove hanno richiesto da circa un minuto a
   oltre cinque minuti.
-- Una pseudo-tool-call JSON valida che nomina un tool dichiarato non viene
-  accettata come risposta finale: Maestro richiede l'invocazione
-  dell'interfaccia nel turno successivo, entro gli stessi hard limit. Una tool
-  call malformata può ancora terminare `tool_failure`; non esiste retry
-  implicito generalizzato.
+- Una pseudo-tool-call JSON valida, anche incorporata in testo esplicativo,
+  che nomina un tool dichiarato non viene accettata come risposta finale:
+  Maestro richiede l'invocazione dell'interfaccia nel turno successivo, entro
+  gli stessi hard limit. Una tool call malformata può ancora terminare
+  `tool_failure`; non esiste retry implicito generalizzato.
 - Il reason sintetico finale di alcuni hard limit è `execution_failed`, mentre
   l'evento terminale precedente resta `limit_exceeded` e autorevole.
 - Sui workspace reali `llama3.1:8b` può alternare una run valida a

@@ -17,6 +17,9 @@ deve essere dichiarato nelle note di release.
   e rende la versione del quick start coerente con artifact e manifest.
 - la policy conserva `README.md` e i metadata versionati della fixture, così
   il quick start mantiene il contesto qualificato della v0.1.0.
+- una pseudo-tool-call JSON incorporata in testo esplicativo viene riconosciuta
+  quando nomina esattamente un tool dichiarato e usa arguments, parameters o
+  input; il loop richiede il canale tool reale senza eseguire la pseudo-call.
 
 Nessun tool, permesso o support claim mutativo viene aggiunto.
 

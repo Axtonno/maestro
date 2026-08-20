@@ -79,9 +79,10 @@ Su successo stdout contiene run ID, terminale, contatori e una sezione
 stampato intenzionalmente. Un run fallito non scrive risultato su stdout e
 stampa su stderr un reason code sintetico, non la catena d'errore provider.
 
-Una risposta JSON che descrive una chiamata a un tool dichiarato, ma non usa
-il canale tool del provider, non conclude lo step. Maestro aggiunge una
-correzione protocollare e richiede l'invocazione reale nel turno successivo.
+Una risposta JSON, anche incorporata in testo esplicativo, che descrive una
+chiamata a un tool dichiarato ma non usa il canale tool del provider non
+conclude lo step. Maestro aggiunge una correzione protocollare e richiede
+l'invocazione reale nel turno successivo.
 Il turno consuma i medesimi hard limit: non è un retry gratuito e non esegue
 effetti implicitamente. Una normale risposta finale che nomina un tool resta
 valida.

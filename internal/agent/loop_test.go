@@ -58,7 +58,8 @@ func TestAgentLoopExecutesCorrelatedToolCallAndCompletesPlan(t *testing.T) {
 func TestAgentLoopRecoversTextualPseudoToolCallThroughDeclaredInterface(t *testing.T) {
 	providers := &generationStub{responses: []provider.CompletionResponse{
 		{
-			Message:      provider.Message{Role: provider.RoleAssistant, Content: `{"name":"fixture_read","parameters":{"path":"main.go"}}`},
+			Message: provider.Message{Role: provider.RoleAssistant, Content: "The file must be inspected first.\n\nHere's a tool call:\n\n" +
+				`{"name":"fixture_read","parameters":{"path":"main.go"}}`},
 			FinishReason: provider.FinishReasonStop,
 			Usage:        provider.Usage{InputTokens: 3, OutputTokens: 2},
 		},
