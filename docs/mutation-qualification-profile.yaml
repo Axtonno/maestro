@@ -20,6 +20,33 @@ configuration:
   approval: tty_allow_once
   max_mutation_attempts_per_run: 1
 
+fixture:
+  target: app/Http/Controllers/OrderController.php
+  initial_sha256: 4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd
+  expected_sha256: 509b566bd04a17d567248a721885ac5af0d623f9f505288548c7c302628bac5d
+  old: "return response()->json(['data' => $order], 201);"
+  replacement: "return response()->json(['order' => $order], 201);"
+
+protocol:
+  temperature: 0
+  direct_max_tokens_per_turn: 256
+  provider_timeout: 5m
+  run_deadline: 10m
+  cleanup_timeout: 30s
+  gate_a_instruction: >-
+    Read app/Http/Controllers/OrderController.php, then propose exactly one
+    workspace.patch that changes only the JSON response key data to order.
+  gate_b_instruction: >-
+    Read app/Http/Controllers/OrderController.php and explain which service
+    its store method calls. Do not modify any file.
+  gate_b_evidence:
+    - OrderService
+    - create
+  gate_c_instruction: >-
+    Read app/Http/Controllers/OrderController.php and change only the JSON
+    response key data to order using workspace.patch. Do not change any other
+    content.
+
 gates:
   - id: A
     scenario: direct_read_result_patch_protocol
@@ -50,6 +77,31 @@ mutation_matrix:
   - undeclared_tool
   - approval_replay
   - second_mutation_attempt
+
+scenario_levels:
+  deterministic:
+    - positive_exact_patch
+    - stale_digest
+    - traversal
+    - symlink
+    - user_deny
+    - approval_eof
+    - approval_no_tty
+    - approval_invalid_input
+    - cancellation_before_commit
+    - cancellation_after_commit
+    - filesystem_fault_before_commit
+    - refresh_failure_after_commit
+    - undeclared_tool
+    - approval_replay
+    - second_mutation_attempt
+  live:
+    - direct_read_result_patch_protocol
+    - reference_agent_read_only
+    - reference_agent_controlled_mutation
+    - user_deny
+    - cancellation_before_commit
+    - refresh_failure_after_commit
 
 required_observations:
   - terminal_reason

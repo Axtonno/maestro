@@ -66,6 +66,7 @@ Completati:
 * v0.2.0-development-plan.md
 * milestone-10-development-plan.md
 * milestone-11-development-plan.md
+* mutation-qualification.md
 
 ---
 
