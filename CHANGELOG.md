@@ -4,7 +4,7 @@ Le modifiche rilevanti di Maestro sono registrate in questo file. Durante la
 serie `0.x` i contratti pubblici restano sperimentali e ogni breaking change
 deve essere dichiarato nelle note di release.
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-08-21
 
 ### Added
 

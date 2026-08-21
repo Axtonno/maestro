@@ -63,7 +63,9 @@ sperimentali durante la serie 0.x. I dettagli sono in
 ## Evidenze
 
 Le evidenze live e di installazione sono registrate nei report delle Milestone
-8 e 9 nel repository sorgente. ADR-0030 chiude la Milestone 3 senza promuovere
-llama.cpp; ADR-0032 chiude la Milestone 11 senza promuovere Controlled
-Mutation. L'archive v0.2.0 include questa matrice, la configurazione esatta e
-la fixture usate dal percorso supportato.
+8, 9 e 12 nel repository sorgente. La Milestone 12 qualifica packaging,
+installazione, quick start consecutivi e gate operativi dell'esatto percorso
+read-only. ADR-0030 chiude la Milestone 3 senza promuovere llama.cpp; ADR-0032
+chiude la Milestone 11 senza promuovere Controlled Mutation. L'archive v0.2.0
+include questa matrice, la configurazione esatta e la fixture usate dal
+percorso supportato.

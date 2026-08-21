@@ -1,6 +1,6 @@
 # Maestro v0.2.0 Security Model
 
-Data: 2026-08-20
+Data: 2026-08-21
 
 ## Sintesi
 
@@ -34,6 +34,9 @@ loopback; l'utente deve considerare attendibile ogni endpoint alternativo.
   dimensione;
 - authorization su action concrete; una risposta del modello non concede
   authority;
+- le istruzioni strette `Read <logical-path> ...` del reference agent
+  eseguono una `workspace.read` verificata tramite Tool Runtime prima della
+  prima inferenza, senza interpretare testo del modello come invocazione;
 - hard limit su durata, turni, tool call, piano, token e byte;
 - SIGINT/SIGTERM cooperativi e shutdown applicativo bounded a 30 secondi;
 - eventi e diagnostiche con allowlist redatte;

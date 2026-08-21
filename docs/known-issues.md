@@ -3,13 +3,17 @@
 ## Modello e prestazioni
 
 - `llama3.1:8b` è generativo: formulazione, token e latenza variano fra run.
-- Su Intel Core i5-8365U CPU-only le prove hanno richiesto da circa un minuto a
-  oltre cinque minuti.
+- Su Intel Core i5-8365U CPU-only le prove possono richiedere da pochi secondi
+  a diversi minuti, secondo lo stato del modello e dell'host.
 - Una pseudo-tool-call JSON valida, anche incorporata in testo esplicativo e
   anche se nomina un tool inesistente, non viene accettata come risposta
   finale: Maestro richiede un'invocazione dichiarata nel turno successivo,
-  entro gli stessi hard limit. Una tool call provider-level malformata può
-  ancora terminare `tool_failure`; non esiste retry implicito generalizzato.
+  entro gli stessi hard limit. Per una richiesta stretta
+  `Read <logical-path> ...`, il reference agent esegue invece una read
+  verificata tramite Tool Runtime prima della prima inferenza. Arguments
+  invalidi di un tool read-only sono recuperabili in modo redatto; failure di
+  esecuzione, tool mutanti e altri errori restano terminali e non esiste retry
+  implicito generalizzato.
 - Il reason sintetico finale di alcuni hard limit è `execution_failed`, mentre
   l'evento terminale precedente resta `limit_exceeded` e autorevole.
 - Sui workspace reali `llama3.1:8b` può alternare una run valida a

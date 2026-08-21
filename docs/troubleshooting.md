@@ -65,6 +65,12 @@ sola volta il task identico dopo aver verificato `doctor`; se il problema è
 riproducibile, conservare versione, commit, terminale e contatori senza
 allegare workspace sensibili.
 
+Nella v0.2.0 gli arguments invalidi di un tool read-only possono essere
+corretti dal modello entro gli stessi hard limit. Una richiesta stretta
+`Read <logical-path> ...` esegue la read tramite Tool Runtime prima della prima
+inferenza. Queste protezioni non si applicano ai tool mutanti o ai failure di
+esecuzione, che restano terminali.
+
 ## `limit_exceeded`
 
 È stato raggiunto un hard limit configurato. Lo stderr indica il terminale e i
