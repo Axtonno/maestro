@@ -62,6 +62,9 @@ Output consegnato:
 
 Un runtime funzionante senza alcun provider.
 
+I sei report di fase retrospettivi e `reports/milestone-1-final.md` documentano
+la consegna e il gate storico.
+
 ---
 
 # Fase 5 — Provider Runtime/Configuration
@@ -254,6 +257,9 @@ Output consegnato:
 
 Una Provider Layer capace di evolvere indipendentemente dalla progressione del
 Runtime Core e del Plugin Runtime.
+
+I dieci report di fase retrospettivi e `reports/milestone-2-final.md`
+documentano la consegna e il gate storico.
 
 Gate finale della milestone:
 
