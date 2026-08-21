@@ -144,6 +144,11 @@ e la [Security Policy](SECURITY.md) prima di usare workspace sensibili.
 Vedere [Known Issues](docs/known-issues.md) e
 [Troubleshooting](docs/troubleshooting.md).
 
+La Milestone 11 ha confermato deterministicamente gli invarianti della
+Controlled Mutation, ma il candidato live ha fallito Gate A. ADR-0032 rinvia
+quindi la mutazione: la Milestone 12 procede soltanto verso una v0.2.0
+read-only e non modifica la matrice di supporto sopra dichiarata.
+
 ## Documentazione
 
 Per iniziare:

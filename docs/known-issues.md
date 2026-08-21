@@ -35,8 +35,8 @@
 - Non esiste sandbox o isolamento di processo.
 - I plugin e tool built-in sono trusted in-process e usano i privilegi
   dell'utente.
-- Tool mutanti e approval mutativa sono implementati ma non supportati nella
-  v0.1.0; la configurazione ufficiale non li registra.
+- Tool mutanti e approval mutativa sono implementati ma non supportati; la
+  configurazione ufficiale non li registra.
 - Non esistono rollback generale, memoria persistente o recovery dopo restart.
 
 ## Controlled Mutation candidato
@@ -51,8 +51,11 @@
 - Non esiste rollback dopo il rename. Un failure di sync directory,
   cancellazione o failure di reindex può lasciare il file applicato con stato
   durable/fresh incompleto; la run termina senza testo finale.
-- Il profilo Ollama `ibm/granite4.1:8b` e il lower bound hardware sono soltanto
-  candidati. Gate e decisione live appartengono alla Milestone 11.
+- Il profilo Ollama `ibm/granite4.1:8b` e il lower bound hardware restano
+  candidati non supportati. La Milestone 11 ha superato matrice deterministica
+  15/15 e preflight, ma Gate A è fallito al primo tentativo per arguments patch
+  non esatti. Gate B/C non sono stati eseguiti per fail-fast; ADR-0032 registra
+  `mutation_deferred`.
 
 ## Prodotto ed ecosistema
 

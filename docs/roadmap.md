@@ -798,7 +798,7 @@ il contratto di release.
 
 # Milestone 11 — Mutation Qualification
 
-Stato: In corso — Gate A fallito, Gate B/C non eseguiti
+Stato: Completata — `mutation_deferred`, ADR-0032
 
 Obiettivi:
 
@@ -816,19 +816,22 @@ di approval.
 
 Il piano operativo separa contratto e baseline, implementazione del benchmark,
 matrice deterministica e congelamento del candidato, Gate A, Gate B, Gate C e
-audit finale. Il dettaglio è in `milestone-11-development-plan.md`.
+audit finale. Il candidato supera matrice deterministica e preflight, ma Gate A
+fallisce al primo tentativo; Gate B/C non vengono eseguiti per fail-fast. Il
+supporto mutativo è rinviato. Il dettaglio è in
+`milestone-11-development-plan.md` e `reports/milestone-11-final.md`.
 
 ---
 
 # Milestone 12 — Productization v0.2.0
 
-Stato: Pianificata
+Stato: Autorizzata — productization read-only
 
 Obiettivi:
 
-- configurazioni di esempio distinte read-only e mutating;
+- configurazione ed esempio supportati esclusivamente read-only;
 - packaging candidate riproducibile e installazione pulita;
-- quick start read-only consecutivi e matrice mutativa completa;
+- quick start read-only consecutivi;
 - gate deny, EOF, no-TTY, SIGINT, deadline e hard limit;
 - scansione anti-leak e aggiornamento di compatibility, security e known
   issues;
@@ -836,8 +839,9 @@ Obiettivi:
   successivo alla documentazione;
 - tag verificato contro il commit incorporato nel binario.
 
-La release è guidata dal contratto di sicurezza e dalla validazione live, non
-dalla sola presenza di `workspace.write` e `workspace.patch` nel codice.
+ADR-0032 limita il GO al confine read-only. La release è guidata dal contratto
+di sicurezza e dalla validazione live, non dalla sola presenza di
+`workspace.write` e `workspace.patch` nel codice.
 
 Il piano completo è in `v0.2.0-development-plan.md`.
 

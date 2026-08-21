@@ -28,3 +28,4 @@
 - [ADR-0029 – Read-Only v0.1.0 Product Boundary](ADR-0029.md)
 - [ADR-0030 – Chiusura Milestone 3 e stato llama.cpp](ADR-0030.md)
 - [ADR-0031 – Contratto Controlled Mutation v0.2.0](ADR-0031.md)
+- [ADR-0032 – Rinvio della Controlled Mutation dopo la qualificazione](ADR-0032.md)

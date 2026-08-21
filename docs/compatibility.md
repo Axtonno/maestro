@@ -1,6 +1,6 @@
 # Maestro v0.1.x Compatibility Matrix
 
-Data: 2026-08-15
+Data: 2026-08-21
 
 Questa pagina è la fonte autorevole per ciò che la serie v0.1.x dichiara supportato.
 La presenza di codice, adapter o test deterministici non equivale a supporto
@@ -25,6 +25,13 @@ La combinazione supportata è stata validata su un host Linux `amd64` CPU-only,
 Intel Core i5-8365U, 15 GiB RAM e 4 GiB swap. Questo profilo descrive la prova,
 non un requisito minimo universale. Su CPU simili una singola run può richiedere
 diversi minuti.
+
+La Milestone 11 non amplia questa matrice. Il candidato mutativo con
+`ibm/granite4.1:8b` supera 15/15 scenari deterministici e il preflight sullo
+stesso lower bound, ma fallisce il primo tentativo del Gate A live con una
+patch call non esatta. Gate B e Gate C non sono stati eseguiti per fail-fast;
+ADR-0032 registra `mutation_deferred`. Queste evidenze non qualificano né il
+modello né `workspace.patch` come supportati.
 
 Dalla v0.1.1 i workspace Laravel reali sono indicizzati tramite la scan policy
 sorgente del plugin. Asset generati, storage runtime e dipendenze non entrano
@@ -57,5 +64,6 @@ sperimentali durante la serie 0.x. I dettagli sono in
 
 Le evidenze live e di installazione sono registrate nei report delle Milestone
 8 e 9 nel repository sorgente. ADR-0030 chiude la Milestone 3 senza promuovere
-llama.cpp. L'archive include questa matrice, la configurazione esatta e la
-fixture usate dal percorso supportato.
+llama.cpp; ADR-0032 chiude la Milestone 11 senza promuovere Controlled
+Mutation. L'archive v0.1.1 include questa matrice, la configurazione esatta e
+la fixture usate dal percorso supportato.

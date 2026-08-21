@@ -68,6 +68,7 @@ Completati:
 * milestone-11-development-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
+* reports/milestone-11-final.md
 
 ---
 
@@ -183,6 +184,26 @@ Il repository e ogni artifact includono il testo Apache-2.0. `NOTICE` e
 `THIRD_PARTY_LICENSES.txt` conservano attribution e termini delle dipendenze
 distribuite. La scelta è vincolante dalla Fase 4; la Fase 6 ne verifica la
 pubblicazione definitiva.
+
+---
+
+## ADR-0031
+
+Contratto Controlled Mutation v0.2.0.
+
+Il candidato limita l'autorità a una singola patch esatta su un file PHP
+esistente sotto `app/`, con read verificata, preview, TTY, approval one-shot,
+commit atomico Linux e reindex obbligatorio prima del final.
+
+---
+
+## ADR-0032
+
+Rinvio della Controlled Mutation dopo la qualificazione.
+
+La matrice deterministica e il preflight sono positivi, ma Gate A fallisce al
+primo tentativo. L'esito è `mutation_deferred`; Gate B/C non vengono eseguiti e
+la Milestone 12 riceve un GO limitato alla productization read-only.
 
 ---
 
@@ -2231,7 +2252,7 @@ incorporato nel binario. Fase 6, Milestone 8 e v0.1.0 sono concluse.
 
 # Direzione v0.2.0
 
-La v0.2.0 è pianificata come vertical slice mutativo controllato per il
+La v0.2.0 era pianificata come vertical slice mutativo controllato per il
 reference agent Laravel:
 
 ```text
@@ -2282,3 +2303,12 @@ finale è possibile prima di una nuova generazione fresh. La matrice
 deterministica, l'audit pubblico e il profilo candidato sono consegnati; il
 verdetto è GO alla Milestone 11 per la sola qualificazione live, senza ampliare
 il support claim v0.1.x.
+
+La Milestone 11 è completata con esito `mutation_deferred`. Il candidato
+`v0.2.0-m11-qc.2` supera la matrice deterministica 15/15 e il preflight live sul
+lower bound, ma Gate A fallisce al primo tentativo con
+`patch_tool_call_invalid`, classificato come limite del modello. La fixture
+resta byte-identica, senza approval o effetti; Gate B e Gate C non vengono
+eseguiti per fail-fast. ADR-0032 mantiene Controlled Mutation e
+`ibm/granite4.1:8b` fuori dal support claim e dà GO alla Milestone 12 soltanto
+per una productization v0.2.0 read-only.

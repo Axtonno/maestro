@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 5–6 contabilizzate, Gate B/C non eseguiti
+Stato: Completata — `mutation_deferred`, GO Milestone 12 read-only
 
 Data: 2026-08-21
 
@@ -51,7 +51,7 @@ release candidate appartengono alla Milestone 12.
 | 4 | Preflight live e Gate A | Conclusa — FAIL Gate A | Fase 3 |
 | 5 | Gate B read-only | Non eseguita — stop Gate A | Fase 4 |
 | 6 | Gate C Controlled Mutation | Non eseguita — stop Gate A | Fase 5 |
-| 7 | Audit, verdetto e handoff | Pianificata | Fasi 1–6 |
+| 7 | Audit, verdetto e handoff | Completata | Fasi 1–6 |
 
 Le fasi sono sequenziali rispetto ai gate. Un failure in Gate A impedisce Gate
 B; un failure in Gate B impedisce Gate C; il primo failure di una serie arresta
@@ -409,3 +409,13 @@ La Milestone 11 è completata soltanto quando:
 Fino al superamento del gate finale, la presenza di `workspace.patch`, della
 configurazione mutativa o dei report intermedi non rende Controlled Mutation
 una capability supportata.
+
+## Chiusura
+
+Il candidato `v0.2.0-m11-qc.2` ha superato la matrice deterministica 15/15 e
+il preflight live, ma Gate A è fallito al primo tentativo con
+`patch_tool_call_invalid`. Gate B e Gate C non sono stati eseguiti per la stop
+rule. ADR-0032 seleziona l'esito ammesso `mutation_deferred`: il supporto
+mutativo non viene ampliato e la Milestone 12 può procedere soltanto con la
+productization read-only. Il report conclusivo è
+`reports/milestone-11-final.md`.

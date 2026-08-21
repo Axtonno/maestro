@@ -62,7 +62,10 @@ TTY e approval one-shot. Il fingerprint lega la proposta all'esecuzione; il
 commit Linux usa temporaneo, sync, recheck e rename atomico. Ogni run ammette
 un solo tentativo e può completare soltanto dopo reindex e bundle fresh.
 
-Il profilo resta non supportato finché la Milestone 11 non supera i gate live.
+La Milestone 11 ha concluso i gate con `mutation_deferred`: Gate A è fallito al
+primo tentativo e la stop rule ha impedito Gate B e Gate C. Il profilo resta
+quindi non supportato; la matrice deterministica e il preflight superati non
+concedono autorità operativa né ampliano il threat boundary.
 Non offre sandbox, rollback generale, recovery da crash, modifiche multi-file,
 creazione file, shell o Git. Un failure dopo il rename può lasciare la patch
 applicata con durability o refresh incompleti; gli stati redatti lo dichiarano
