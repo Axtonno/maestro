@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Avviata — Fasi 1–5 completate, Fase 6 da avviare
+Stato: Completata — Fasi 1–6, release v0.2.0 e tag verificati
 
 Data: 2026-08-21
 
@@ -44,7 +44,7 @@ supporto.
 | 3 | Packaging candidate e installazione pulita | Completata | Fase 2 |
 | 4 | Gate operativi, sicurezza e anti-leak | Completata | Fase 3 |
 | 5 | Qualificazione live e release candidate | Completata | Fasi 3–4 |
-| 6 | Documentazione, release finale e tag | Pianificata | Fase 5 |
+| 6 | Documentazione, release finale e tag | Completata | Fase 5 |
 
 Le fasi sono sequenziali rispetto al gate. Ogni fase produce un report sotto
 `docs/reports/`; la Fase 6 produce anche
@@ -285,7 +285,7 @@ Gate: **superato**.
 
 # Fase 6 — Documentazione, release finale e tag
 
-Stato: In corso — documentazione pubblica congelata al commit
+Stato: Completata — documentazione pubblica congelata al commit
 `fac2ae347d9fd6e03e9faef466d11bafa961370c`.
 
 ## Obiettivo
@@ -327,6 +327,8 @@ l'identità fino al tag.
 - `docs/releases/v0.2.0.md`;
 - `docs/reports/milestone-12-phase-6.md`;
 - `docs/reports/milestone-12-final.md`.
+
+Gate: **superato**.
 
 ---
 

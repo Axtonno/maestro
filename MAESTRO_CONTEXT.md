@@ -2370,3 +2370,13 @@ La documentazione pubblica v0.2.0 è congelata al commit
 `fac2ae347d9fd6e03e9faef466d11bafa961370c`. La build finale deve partire da
 un commit pulito discendente e distinto, poi superare doppio packaging,
 installazione, quick start di conferma e verifica del tag.
+
+La Milestone 12 è completata con verdetto GO per v0.2.0 read-only. L'artifact
+finale `maestro-v0.2.0-linux-amd64.tar.gz` ha SHA-256
+`c2d2a6f35178e91ad0c62d3c27f4ff2c33eedb46fd5fb327535890638e963758`
+e incorpora `5b05237362370fa79f133e159105a6a99050e81a`, commit discendente dal freeze
+documentale. Doppio packaging, installazione pulita, doctor 9/9, conferma live,
+fixture invariata, suite tripla, race, vet e anti-leak sono verdi. Il tag
+annotato `v0.2.0`, il manifest e il binario coincidono sul commit artifact.
+Controlled Mutation resta non supportata; il tag non è stato pubblicato su un
+remote.

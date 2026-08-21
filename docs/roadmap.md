@@ -825,7 +825,7 @@ supporto mutativo è rinviato. Il dettaglio è in
 
 # Milestone 12 — Productization v0.2.0
 
-Stato: Avviata — Fasi 1–5 completate, RC read-only qualificato
+Stato: Completata — v0.2.0 read-only e tag verificati
 
 Obiettivi:
 
@@ -852,8 +852,10 @@ documentazione con release finale e tag. Il piano operativo è in
 La Fase 5 qualifica `v0.2.0-rc.1`, commit
 `e8aaad800f1a72eb395f895ba5c8b54195ce0388`, dopo due quick start consecutivi
 sull'archive installato e i gate live di cancellazione, deadline e hard limit.
-La Fase 6 deve ancora congelare la documentazione, costruire e verificare
-l'artifact finale distinto e creare il tag.
+La Fase 6 congela la documentazione, costruisce l'artifact finale distinto dal
+commit `5b05237362370fa79f133e159105a6a99050e81a` e verifica che archive,
+manifest, binario e tag annotato `v0.2.0` concordino. Il verdetto finale è GO
+limitato al percorso read-only; la pubblicazione remota non è stata eseguita.
 
 ---
 
