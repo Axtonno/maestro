@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fase 5 contabilizzata, Gate B non eseguito
+Stato: In corso — Fasi 5–6 contabilizzate, Gate B/C non eseguiti
 
 Data: 2026-08-21
 
@@ -50,7 +50,7 @@ release candidate appartengono alla Milestone 12.
 | 3 | Matrice deterministica e candidato congelato | Completata | Fase 2 |
 | 4 | Preflight live e Gate A | Conclusa — FAIL Gate A | Fase 3 |
 | 5 | Gate B read-only | Non eseguita — stop Gate A | Fase 4 |
-| 6 | Gate C Controlled Mutation | Pianificata | Fase 5 |
+| 6 | Gate C Controlled Mutation | Non eseguita — stop Gate A | Fase 5 |
 | 7 | Audit, verdetto e handoff | Pianificata | Fasi 1–6 |
 
 Le fasi sono sequenziali rispetto ai gate. Un failure in Gate A impedisce Gate

@@ -798,7 +798,7 @@ il contratto di release.
 
 # Milestone 11 — Mutation Qualification
 
-Stato: In corso — Gate A fallito, Gate B non eseguito
+Stato: In corso — Gate A fallito, Gate B/C non eseguiti
 
 Obiettivi:
 
