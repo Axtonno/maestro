@@ -72,6 +72,7 @@ Completati:
 * reports/milestone-11-final.md
 * reports/milestone-12-phase-1.md
 * reports/milestone-12-phase-2.md
+* reports/milestone-12-phase-3.md
 
 ---
 
@@ -2334,3 +2335,11 @@ finali. Il packaging include il contratto API v0.2.0 e verifica esplicitamente
 che profilo e documentazione mutativi non siano distribuiti. Suite completa,
 race detector, vet, sintassi degli script e confine list/read/search più deny
 mutativo sono verdi.
+
+La Fase 3 della Milestone 12 è completata. Il packaging candidate
+`v0.2.0-pc.1`, commit `7d3f45ee0268fc758b9e3722e57c91e486065615`, ha SHA-256
+`e5f98bedcb94ab40236d3f315cf9af0be976825abbd2d9a6ea756ad26200fc13` e
+supera doppio build byte-identico, checksum, archive audit e installazione
+fuori dal checkout. `version`, help e `agents` sono verdi; il preflight Ollama
+reale completa `doctor` 9/9 e `models` conferma `llama3.1:8b`. Il candidate
+resta `packaging-candidate`, è conservato fuori dal repository e non è un RC.

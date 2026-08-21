@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Avviata — Fasi 1–2 completate, Fase 3 da avviare
+Stato: Avviata — Fasi 1–3 completate, Fase 4 da avviare
 
 Data: 2026-08-21
 
@@ -41,8 +41,8 @@ supporto.
 |---|---|---|---|
 | 1 | Contratto di release e baseline | Completata | Milestone 11 |
 | 2 | Superficie di prodotto read-only | Completata | Fase 1 |
-| 3 | Packaging candidate e installazione pulita | Da avviare | Fase 2 |
-| 4 | Gate operativi, sicurezza e anti-leak | Pianificata | Fase 3 |
+| 3 | Packaging candidate e installazione pulita | Completata | Fase 2 |
+| 4 | Gate operativi, sicurezza e anti-leak | Da avviare | Fase 3 |
 | 5 | Qualificazione live e release candidate | Pianificata | Fasi 3–4 |
 | 6 | Documentazione, release finale e tag | Pianificata | Fase 5 |
 
@@ -161,6 +161,8 @@ Gate: **superato**.
 
 # Fase 3 — Packaging candidate e installazione pulita
 
+Stato: Completata — `v0.2.0-pc.1`.
+
 ## Obiettivo
 
 Produrre un `v0.2.0-pc.N` identificabile e riproducibile, installarlo fuori dal
@@ -192,6 +194,8 @@ checkout e dimostrare che contiene soltanto la superficie supportata.
 - `v0.2.0-pc.N` e checksum conservati fuori dal repository;
 - evidenza di installazione pulita;
 - `docs/reports/milestone-12-phase-3.md`.
+
+Gate: **superato**.
 
 ---
 
