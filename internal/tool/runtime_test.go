@@ -178,6 +178,22 @@ func TestInvokeValidatesPreparedOutputAndDeclaredEffects(t *testing.T) {
 	}
 }
 
+func TestInvokeClassifiesInvalidPreparationWithoutExecution(t *testing.T) {
+	runtime := newRuntime(&fixtureAuthorizer{decision: allowDecision(t)})
+	candidate := newFixtureTool(t, "workspace.read", "workspace_read", pkgTool.EffectWorkspaceInspect)
+	candidate.prepare = func(context.Context, pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
+		return pkgTool.PreparedInvocation{}, pkgTool.ErrInvalidInvocation
+	}
+	_ = runtime.Register(candidate)
+
+	_, err := runtime.Invoke(context.Background(), executionRequest(t, "workspace.read", 1024))
+	var executionErr *pkgTool.ExecutionError
+	if !errors.As(err, &executionErr) || executionErr.Kind != pkgTool.ErrorInvalid ||
+		executionErr.Reason != "prepare_failed" || candidate.executions.Load() != 0 {
+		t.Fatalf("unexpected preparation failure: err=%v executions=%d", err, candidate.executions.Load())
+	}
+}
+
 func TestInvokeAppliesOutputAndItemLimits(t *testing.T) {
 	runtime := newRuntime(&fixtureAuthorizer{decision: allowDecision(t)})
 	candidate := newFixtureTool(t, "workspace.read", "workspace_read", pkgTool.EffectWorkspaceInspect)

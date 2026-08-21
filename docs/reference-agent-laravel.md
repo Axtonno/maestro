@@ -37,6 +37,9 @@ Quando l'istruzione inizia esplicitamente con `Read`, il reference agent non
 accetta una risposta finale finché `workspace.read` non è stata eseguita con
 successo. Una risposta testuale che simula o sostiene di avere già letto il
 file viene corretta entro gli stessi hard limit, senza inventare evidenza.
+Arguments invalidi di un tool read-only vengono restituiti al modello come
+risultato redatto e recuperabile; ogni correzione consuma comunque turno e tool
+call e non si applica ai tool mutanti o ai failure di esecuzione.
 
 La scan policy Laravel è distinta dalla policy filesystem generica. Include
 `app`, `bootstrap`, `config`, `database`, `lang`, le aree sorgente di

@@ -212,8 +212,16 @@ func (loop *agentLoop) Run(
 							loop.publishMutation(current, pkgAgent.MutationStageApply, mutationStatusForError(ctx), "", false, 0)
 						}
 						err = errors.Join(pkgAgent.ErrMutationFailed, err)
+						return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
 					}
-					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
+					recoverable, ok, recoverErr := recoverableReadOnlyInvocationError(descriptor, err)
+					if recoverErr != nil {
+						return "", pkgAgent.TerminalInternalFailure, recoverErr
+					}
+					if !ok {
+						return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
+					}
+					result = recoverable
 				}
 				if result.Outcome() == pkgTool.ResultSuccess && descriptor.ID() == workspaceReadToolID {
 					workspaceReadObserved = true
@@ -491,6 +499,18 @@ func requiresWorkspaceRead(request pkgAgent.RunRequest, descriptors map[string]p
 		}
 	}
 	return false
+}
+
+func recoverableReadOnlyInvocationError(descriptor pkgTool.Descriptor, err error) (pkgTool.Result, bool, error) {
+	var executionErr *pkgTool.ExecutionError
+	if descriptorHasEffect(descriptor, pkgTool.EffectWorkspaceMutate) ||
+		!descriptorHasEffect(descriptor, pkgTool.EffectWorkspaceInspect) ||
+		!errors.As(err, &executionErr) || executionErr.Kind != pkgTool.ErrorInvalid ||
+		executionErr.Reason != "prepare_failed" {
+		return pkgTool.Result{}, false, nil
+	}
+	result, resultErr := recoverableChoreographyResult("invalid_arguments", "use_exact_declared_schema")
+	return result, resultErr == nil, resultErr
 }
 
 func nextReadyStep(snapshot pkgAgent.SessionSnapshot) (pkgAgent.PlanStep, bool, error) {

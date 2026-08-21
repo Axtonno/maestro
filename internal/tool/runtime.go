@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgRuntime "github.com/antonio-cafeo/maestro/pkg/runtime"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
@@ -185,7 +186,7 @@ func (runtime *Runtime) Invoke(ctx context.Context, request pkgTool.ExecutionReq
 	defer cancel()
 	prepared, err := prepare(executionContext, candidate, invocation)
 	if err != nil {
-		return pkgTool.Result{}, classifyExecutionError(request, "prepare_failed", err)
+		return pkgTool.Result{}, classifyPreparationError(request, err)
 	}
 	if err := validatePrepared(descriptor, invocation, prepared); err != nil {
 		return pkgTool.Result{}, executionError(request, pkgTool.ErrorInvalid, "invalid_prepared_invocation", err)
@@ -412,4 +413,16 @@ func classifyExecutionError(request pkgTool.ExecutionRequest, reason string, err
 		return contextExecutionError(request, err)
 	}
 	return executionError(request, pkgTool.ErrorExecution, reason, errors.Join(pkgTool.ErrExecutionFailed, err))
+}
+
+func classifyPreparationError(request pkgTool.ExecutionRequest, err error) error {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return contextExecutionError(request, err)
+	}
+	if errors.Is(err, pkgTool.ErrInvalidInvocation) ||
+		errors.Is(err, pkgTool.ErrInvalidPreparedInvocation) ||
+		errors.Is(err, pkgContext.ErrInvalidPath) {
+		return executionError(request, pkgTool.ErrorInvalid, "prepare_failed", err)
+	}
+	return executionError(request, pkgTool.ErrorExecution, "prepare_failed", errors.Join(pkgTool.ErrExecutionFailed, err))
 }

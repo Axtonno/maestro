@@ -162,6 +162,52 @@ func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) 
 	}
 }
 
+func TestReferenceAgentRecoversInvalidReadArgumentsWithinLimits(t *testing.T) {
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{
+			Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{
+				ID: "call-invalid-read", Name: "workspace_read", Arguments: json.RawMessage(`{"file":"app/Order.php"}`),
+			}}},
+			FinishReason: provider.FinishReasonToolCalls,
+		},
+		{
+			Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{
+				ID: "call-valid-read", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"app/Order.php"}`),
+			}}},
+			FinishReason: provider.FinishReasonToolCalls,
+		},
+		{
+			Message:      provider.Message{Role: provider.RoleAssistant, Content: "OrderService::create is called."},
+			FinishReason: provider.FinishReasonStop,
+		},
+	}}
+	fixture := &inspectionLoopTool{
+		descriptor:      workspaceDescriptor(t, workspaceReadToolID, "workspace_read", pkgTool.EffectWorkspaceInspect),
+		invalidPrepares: 1,
+	}
+	runtime := loopRuntime(t, providers, allowedToolRuntime(t, fixture), pendingPlan(t, "inspect"))
+	if err := runtime.Register(newAgentFixture(t, ReferenceAgentID, pendingPlan(t, "inspect"))); err != nil {
+		t.Fatal(err)
+	}
+	request := requestWithTools(
+		t, requestWithInstruction(t, runRequest(t, "run-invalid-read", ReferenceAgentID, "workspace", 4), "Read app/Order.php."),
+		[]pkgTool.ID{workspaceReadToolID}, false,
+	)
+
+	result, err := runtime.Run(context.Background(), request)
+	if err != nil || result.Content() != "OrderService::create is called." || fixture.executions != 1 {
+		t.Fatalf("invalid read did not recover: result=%#v executions=%d err=%v", result, fixture.executions, err)
+	}
+	if counters := result.Session().Counters(); counters.ModelTurns != 3 || counters.ToolCalls != 2 {
+		t.Fatalf("unexpected counters: %#v", counters)
+	}
+	requests := providers.Requests()
+	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
+		!containsAll(requests[1].Messages[3].Content, `"outcome":"invalid"`, `"reason":"invalid_arguments"`, `"required_action":"use_exact_declared_schema"`) {
+		t.Fatalf("missing redacted recovery result: %#v", requests)
+	}
+}
+
 func TestDescribesToolCallRejectsDeclaredAndUnknownEmbeddedShapes(t *testing.T) {
 	for _, content := range []string{
 		`{"name":"workspace_read","arguments":{"path":"main.go"}}`,
@@ -606,12 +652,17 @@ type loopTool struct {
 }
 
 type inspectionLoopTool struct {
-	descriptor pkgTool.Descriptor
-	executions int
+	descriptor      pkgTool.Descriptor
+	invalidPrepares int
+	executions      int
 }
 
 func (fixture *inspectionLoopTool) Descriptor() pkgTool.Descriptor { return fixture.descriptor }
 func (fixture *inspectionLoopTool) Prepare(_ context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
+	if fixture.invalidPrepares > 0 {
+		fixture.invalidPrepares--
+		return pkgTool.PreparedInvocation{}, pkgTool.ErrInvalidInvocation
+	}
 	action, _ := pkgTool.NewAction(pkgTool.EffectWorkspaceInspect, "app/Order.php", "workspace")
 	return pkgTool.NewPreparedInvocation(invocation, fixture.descriptor.Version(), invocation.Arguments(), []pkgTool.Action{action})
 }
