@@ -52,6 +52,33 @@ deadline nuova di dieci minuti; il cleanup non può essere contato come PASS se
 fallisce. I gate successivi vengono orchestrati soltanto dopo il PASS del gate
 precedente.
 
+La matrice deterministica per sviluppatori esegue direttamente i package che
+possiedono i fault seam e produce entrambi i report:
+
+```text
+maestro bench mutation \
+  --mode deterministic \
+  --output mutation-deterministic.json \
+  --markdown mutation-deterministic.md
+```
+
+Prima dei gate live si esegue il preflight read-only:
+
+```text
+maestro bench mutation --mode preflight
+```
+
+I gate live vengono invocati separatamente e in ordine:
+
+```text
+maestro bench mutation --mode gate-a --output gate-a.json
+maestro bench mutation --mode gate-b --output gate-b.json
+maestro bench mutation --mode gate-c --output gate-c.json
+```
+
+Gate C rifiuta stdin non interattivo prima dell'I/O provider. Su TTY presenta
+la preview reale e richiede una nuova risposta `o`/`once` per ogni tentativo.
+
 ---
 
 # Evidenza fisica

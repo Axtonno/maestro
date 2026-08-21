@@ -69,7 +69,7 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 	case "version":
 		return runVersion(arguments[1:], stdout, stderr, dependencies)
 	case "bench":
-		return runBench(arguments[1:], stdout, stderr)
+		return runBench(arguments[1:], stdin, stdout, stderr, dependencies)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", arguments[0])
 		printRootUsage(stderr)
@@ -77,7 +77,7 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 	}
 }
 
-func runBench(arguments []string, stdout io.Writer, stderr io.Writer) int {
+func runBench(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
 	if len(arguments) == 0 || arguments[0] == "help" || arguments[0] == "--help" ||
 		arguments[0] == "-h" {
 		printBenchUsage(stdout)
@@ -95,7 +95,7 @@ func runBench(arguments []string, stdout io.Writer, stderr io.Writer) int {
 	case "laravel":
 		return runBenchLaravel(arguments[1:], stdout, stderr)
 	case "mutation":
-		return runBenchMutation(arguments[1:], stdout, stderr)
+		return runBenchMutation(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "render":
 		return runBenchRender(arguments[1:], stdout, stderr)
 	default:

@@ -50,6 +50,8 @@ type ReportBuild struct {
 
 type Sample struct {
 	Attempt          int       `json:"attempt"`
+	Scenario         string    `json:"scenario"`
+	EvidenceCode     string    `json:"evidence_code"`
 	State            string    `json:"state"`
 	ReasonCode       string    `json:"reason_code,omitempty"`
 	FailureClass     string    `json:"failure_class,omitempty"`
@@ -112,7 +114,8 @@ func (report Report) Validate() error {
 }
 
 func (sample Sample) Validate(report Report, expectedAttempt int) error {
-	if sample.Attempt != expectedAttempt || !validState(sample.State) || sample.StartedAt.IsZero() ||
+	if sample.Attempt != expectedAttempt || !safeID(sample.Scenario, 128) ||
+		!safeID(sample.EvidenceCode, 128) || !validState(sample.State) || sample.StartedAt.IsZero() ||
 		sample.StartedAt.Before(report.CreatedAt) || sample.StartedAt.After(report.CompletedAt) ||
 		sample.DurationMS < 0 || math.IsNaN(sample.DurationMS) || math.IsInf(sample.DurationMS, 0) ||
 		sample.ModelTurns < 0 || sample.ToolCalls < 0 || sample.MutationAttempts < 0 ||
@@ -201,8 +204,8 @@ func EncodeReportMarkdown(writer io.Writer, report Report) error {
 	}
 	rendered.WriteString("\n## Workspace evidence\n\n")
 	for _, sample := range report.Samples {
-		fmt.Fprintf(&rendered, "- Attempt %d: initial `%s`, final `%s`, workspace `%s`.\n",
-			sample.Attempt, sample.InitialSHA256, sample.FinalSHA256, sample.WorkspaceDigest)
+		fmt.Fprintf(&rendered, "- Attempt %d (`%s`, `%s`): initial `%s`, final `%s`, workspace `%s`.\n",
+			sample.Attempt, sample.Scenario, sample.EvidenceCode, sample.InitialSHA256, sample.FinalSHA256, sample.WorkspaceDigest)
 	}
 	_, err := io.WriteString(writer, rendered.String())
 	return err

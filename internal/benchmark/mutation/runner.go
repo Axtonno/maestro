@@ -12,6 +12,8 @@ import (
 )
 
 type AttemptResult struct {
+	Scenario         string
+	EvidenceCode     string
 	State            string
 	ReasonCode       string
 	FailureClass     string
@@ -89,6 +91,12 @@ func RunGate(ctx context.Context, options RunnerOptions, attempt AttemptFunc) (R
 				result.ReasonCode = "attempt_deadline"
 			}
 		}
+		if result.Scenario == "" {
+			result.Scenario = gate.Scenario
+		}
+		if result.EvidenceCode == "" {
+			result.EvidenceCode = "live_observation"
+		}
 		sample := sampleFromResult(index, attemptStarted, completed.Sub(attemptStarted), result)
 		report.Samples = append(report.Samples, sample)
 		if result.State != "passed" {
@@ -113,7 +121,8 @@ func RunGate(ctx context.Context, options RunnerOptions, attempt AttemptFunc) (R
 
 func sampleFromResult(index int, started time.Time, duration time.Duration, result AttemptResult) Sample {
 	return Sample{
-		Attempt: index, State: result.State, ReasonCode: result.ReasonCode,
+		Attempt: index, Scenario: result.Scenario, EvidenceCode: result.EvidenceCode,
+		State: result.State, ReasonCode: result.ReasonCode,
 		FailureClass: result.FailureClass, StartedAt: started,
 		DurationMS: float64(duration) / float64(time.Millisecond), Terminal: result.Terminal,
 		ModelTurns: result.ModelTurns, ToolCalls: result.ToolCalls,

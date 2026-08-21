@@ -70,13 +70,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "attempt", "state", "started_at", "duration_ms", "terminal",
+        "attempt", "scenario", "evidence_code", "state", "started_at", "duration_ms", "terminal",
         "model_turns", "tool_calls", "mutation_attempts", "approval",
         "lifecycle", "initial_sha256", "expected_sha256", "final_sha256",
         "workspace_digest", "context_freshness", "temporary_cleanup"
       ],
       "properties": {
         "attempt": {"type": "integer", "minimum": 1},
+        "scenario": {"type": "string", "minLength": 1, "maxLength": 128},
+        "evidence_code": {"type": "string", "minLength": 1, "maxLength": 128},
         "state": {"$ref": "#/$defs/state"},
         "reason_code": {"type": "string", "minLength": 1, "maxLength": 128},
         "failure_class": {"enum": ["product", "model", "environment", "operator", "harness"]},

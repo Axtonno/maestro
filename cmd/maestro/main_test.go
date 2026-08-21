@@ -174,6 +174,23 @@ func TestBenchMutationValidatesFrozenProfileAndFixture(t *testing.T) {
 	}
 }
 
+func TestBenchMutationGateCRejectsNonInteractiveInputBeforeProviderIO(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	dependencies := defaultCommandDependencies()
+	dependencies.isTerminal = func(io.Reader) bool { return false }
+	exitCode := runWithIO(
+		[]string{
+			"bench", "mutation", "--profile", "../../docs/mutation-qualification-profile.yaml",
+			"--mode", "gate-c",
+		},
+		strings.NewReader("o\n"), &stdout, &stderr, dependencies,
+	)
+	if exitCode != 3 || !strings.Contains(stderr.String(), "requires an interactive TTY") || stdout.Len() != 0 {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+}
+
 func TestBenchLaravelWritesMarkdownAndRenderReproducesItFromJSON(t *testing.T) {
 	t.Setenv("MAESTRO_OLLAMA_BASE_URL", "")
 	directory := t.TempDir()

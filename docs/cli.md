@@ -125,7 +125,9 @@ maestro bench mutation \
 ```
 
 Questo comando non esegue prove live né abilita da solo Controlled Mutation.
-Vedere `mutation-benchmark.md`.
+Le modalità `deterministic`, `preflight`, `gate-a`, `gate-b` e `gate-c` sono
+riservate alla Milestone 11. Gate C richiede una TTY reale e non dispone di
+auto-approval. Vedere `mutation-benchmark.md`.
 
 ## `version`
 
