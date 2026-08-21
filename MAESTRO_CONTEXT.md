@@ -2365,3 +2365,8 @@ consecutivi con un turno modello e una read reale. Il distinto
 doppio packaging, installazione pulita, doctor 9/9, due quick start, SIGINT,
 deadline e hard limit sono verdi. La fixture resta byte-identica e nessuna
 capability mutativa entra nel percorso. La Fase 6 è il prossimo gate.
+
+La documentazione pubblica v0.2.0 è congelata al commit
+`fac2ae347d9fd6e03e9faef466d11bafa961370c`. La build finale deve partire da
+un commit pulito discendente e distinto, poi superare doppio packaging,
+installazione, quick start di conferma e verifica del tag.

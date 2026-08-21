@@ -285,6 +285,9 @@ Gate: **superato**.
 
 # Fase 6 — Documentazione, release finale e tag
 
+Stato: In corso — documentazione pubblica congelata al commit
+`fac2ae347d9fd6e03e9faef466d11bafa961370c`.
+
 ## Obiettivo
 
 Chiudere la documentazione sulla base dell'evidenza RC, produrre un artifact
