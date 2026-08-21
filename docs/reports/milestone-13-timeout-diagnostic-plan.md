@@ -2,7 +2,7 @@
 
 Data: 2026-08-21
 
-Stato: pianificato, non avviato
+Stato: completato; esito in `milestone-13-timeout-diagnostic.md`
 
 ## Scopo
 
