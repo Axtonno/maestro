@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fase 4 conclusa con FAIL Gate A
+Stato: In corso — Fase 5 contabilizzata, Gate B non eseguito
 
 Data: 2026-08-21
 
@@ -49,7 +49,7 @@ release candidate appartengono alla Milestone 12.
 | 2 | Developer Benchmark mutativo | Completata | Fase 1 |
 | 3 | Matrice deterministica e candidato congelato | Completata | Fase 2 |
 | 4 | Preflight live e Gate A | Conclusa — FAIL Gate A | Fase 3 |
-| 5 | Gate B read-only | Pianificata | Fase 4 |
+| 5 | Gate B read-only | Non eseguita — stop Gate A | Fase 4 |
 | 6 | Gate C Controlled Mutation | Pianificata | Fase 5 |
 | 7 | Audit, verdetto e handoff | Pianificata | Fasi 1–6 |
 
