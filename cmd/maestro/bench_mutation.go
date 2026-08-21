@@ -284,6 +284,10 @@ func runDeterministicMutationBenchmark(
 	command := exec.CommandContext(ctx, "go", "test", "-count=1",
 		"./internal/tool", "./internal/application", "./internal/agent", "./internal/benchmark/mutation")
 	command.Dir = repository
+	command.Env = os.Environ()
+	if os.Getenv("GOCACHE") == "" {
+		command.Env = append(command.Env, "GOCACHE=/tmp/maestro-go-build")
+	}
 	command.Stdout = io.Discard
 	command.Stderr = io.Discard
 	if err := command.Run(); err != nil {
