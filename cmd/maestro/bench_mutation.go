@@ -19,6 +19,7 @@ import (
 	"github.com/antonio-cafeo/maestro/internal/application"
 	internalBenchmark "github.com/antonio-cafeo/maestro/internal/benchmark"
 	"github.com/antonio-cafeo/maestro/internal/benchmark/mutation"
+	"github.com/antonio-cafeo/maestro/internal/buildinfo"
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
@@ -208,8 +209,7 @@ func runLiveMutationBenchmark(
 		fmt.Fprintln(stderr, "mutation qualification hardware: unavailable")
 		return 1
 	}
-	version, commit := internalBenchmark.BuildMetadata()
-	build := mutation.ReportBuild{Version: version, Commit: commit}
+	build := mutationBuildIdentity()
 	if executable, executableError := os.Executable(); executableError == nil {
 		build.Digest, _ = fileSHA256(executable)
 	}
@@ -295,8 +295,7 @@ func runDeterministicMutationBenchmark(
 		fmt.Fprintln(stderr, "mutation qualification hardware: unavailable")
 		return 1
 	}
-	version, commit := internalBenchmark.BuildMetadata()
-	build := mutation.ReportBuild{Version: version, Commit: commit}
+	build := mutationBuildIdentity()
 	if executable, executableError := os.Executable(); executableError == nil {
 		build.Digest, _ = fileSHA256(executable)
 	}
@@ -338,4 +337,19 @@ func fileSHA256(name string) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func mutationBuildIdentity() mutation.ReportBuild {
+	current := buildinfo.Current()
+	build := mutation.ReportBuild{Version: current.Version, Commit: current.Commit}
+	if current.Version == "devel" || current.Commit == "unknown" {
+		version, commit := internalBenchmark.BuildMetadata()
+		if version != "" {
+			build.Version = version
+		}
+		if commit != "" {
+			build.Commit = commit
+		}
+	}
+	return build
 }
