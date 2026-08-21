@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Avviata — Fasi 1–3 completate, Fase 4 da avviare
+Stato: Avviata — Fasi 1–4 completate, Fase 5 da avviare
 
 Data: 2026-08-21
 
@@ -42,8 +42,8 @@ supporto.
 | 1 | Contratto di release e baseline | Completata | Milestone 11 |
 | 2 | Superficie di prodotto read-only | Completata | Fase 1 |
 | 3 | Packaging candidate e installazione pulita | Completata | Fase 2 |
-| 4 | Gate operativi, sicurezza e anti-leak | Da avviare | Fase 3 |
-| 5 | Qualificazione live e release candidate | Pianificata | Fasi 3–4 |
+| 4 | Gate operativi, sicurezza e anti-leak | Completata | Fase 3 |
+| 5 | Qualificazione live e release candidate | Da avviare | Fasi 3–4 |
 | 6 | Documentazione, release finale e tag | Pianificata | Fase 5 |
 
 Le fasi sono sequenziali rispetto al gate. Ogni fase produce un report sotto
@@ -201,6 +201,8 @@ Gate: **superato**.
 
 # Fase 4 — Gate operativi, sicurezza e anti-leak
 
+Stato: Completata — `v0.2.0-pc.1`.
+
 ## Obiettivo
 
 Verificare sul packaging candidate i terminali e gli invarianti di sicurezza
@@ -232,6 +234,8 @@ che non richiedono un esito generativo positivo.
 - matrice operativa e di sicurezza del candidate;
 - report anti-leak redatto;
 - `docs/reports/milestone-12-phase-4.md`.
+
+Gate: **superato**.
 
 ---
 

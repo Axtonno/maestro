@@ -73,6 +73,7 @@ Completati:
 * reports/milestone-12-phase-1.md
 * reports/milestone-12-phase-2.md
 * reports/milestone-12-phase-3.md
+* reports/milestone-12-phase-4.md
 
 ---
 
@@ -2343,3 +2344,13 @@ supera doppio build byte-identico, checksum, archive audit e installazione
 fuori dal checkout. `version`, help e `agents` sono verdi; il preflight Ollama
 reale completa `doctor` 9/9 e `models` conferma `llama3.1:8b`. Il candidate
 resta `packaging-candidate`, è conservato fuori dal repository e non è un RC.
+
+La Fase 4 della Milestone 12 è completata sullo stesso `v0.2.0-pc.1`. EOF e
+input oltre 1 MiB falliscono con exit 2 e stdout vuoto; un profilo incluso
+alterato a `workspace_mutate: allow` viene respinto in composition. SIGINT
+termina `canceled`/130 in 3004 ms, la deadline a 1 secondo termina
+`deadline_exceeded`/130 in 1006 ms e `model_turns: 1` termina
+`limit_exceeded`/1 dopo una sola read. Tutti i casi conservano il digest della
+fixture, non mostrano approval in modalità non interattiva e superano la
+scansione anti-leak. Suite `-count=3`, race detector, vet e script syntax sono
+verdi.
