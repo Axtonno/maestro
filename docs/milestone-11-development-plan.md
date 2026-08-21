@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: In corso — Fasi 1–2 completate
+Stato: In corso — Fasi 1–3 completate
 
 Data: 2026-08-21
 
@@ -47,7 +47,7 @@ release candidate appartengono alla Milestone 12.
 |---|---|---|---|
 | 1 | Contratto di qualificazione e baseline | Completata | Milestone 10 |
 | 2 | Developer Benchmark mutativo | Completata | Fase 1 |
-| 3 | Matrice deterministica e candidato congelato | Pianificata | Fase 2 |
+| 3 | Matrice deterministica e candidato congelato | Completata | Fase 2 |
 | 4 | Preflight live e Gate A | Pianificata | Fase 3 |
 | 5 | Gate B read-only | Pianificata | Fase 4 |
 | 6 | Gate C Controlled Mutation | Pianificata | Fase 5 |

@@ -798,7 +798,7 @@ il contratto di release.
 
 # Milestone 11 — Mutation Qualification
 
-Stato: In corso — Fasi 1–2 completate
+Stato: In corso — Fasi 1–3 completate
 
 Obiettivi:
 
