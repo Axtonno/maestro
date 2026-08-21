@@ -4,7 +4,7 @@ Versione: 0.2.0
 
 Stato: Living Document
 
-Ultimo aggiornamento: 2026-08-13
+Ultimo aggiornamento: 2026-08-21
 
 Autori:
 - Antonio Cafeo
@@ -798,7 +798,7 @@ il contratto di release.
 
 # Milestone 11 — Mutation Qualification
 
-Stato: Pianificata
+Stato: In corso — Fasi 1–7 pianificate
 
 Obiettivi:
 
@@ -813,6 +813,10 @@ Obiettivi:
 Il benchmark include patch positiva, digest stale, traversal/symlink, deny,
 cancellazione, reindex, failure durante l'effetto, tool non dichiarato e replay
 di approval.
+
+Il piano operativo separa contratto e baseline, implementazione del benchmark,
+matrice deterministica e congelamento del candidato, Gate A, Gate B, Gate C e
+audit finale. Il dettaglio è in `milestone-11-development-plan.md`.
 
 ---
 
