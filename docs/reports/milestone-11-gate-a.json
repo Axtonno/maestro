@@ -1,0 +1,56 @@
+{
+  "schema_version": "mutation-qualification-report/1.0.0",
+  "run_id": "mutation-766a2175f62d0ee28dc2b702",
+  "created_at": "2026-08-21T13:16:40.76950278+02:00",
+  "completed_at": "2026-08-21T13:18:40.888917571+02:00",
+  "duration_ms": 120119.4148,
+  "profile": {
+    "version": 1,
+    "digest": "a64b7557ccd24f32bb4fb7cee7d64b630e16ec017c0776b2549d86bcd8480cac",
+    "target": "linux_amd64/ollama",
+    "model": "ibm/granite4.1:8b"
+  },
+  "build": {
+    "version": "v0.2.0-m11-qc.2",
+    "commit": "7e8ba62da22ad1942f3688b880922eacbec0889f",
+    "digest": "9870772b25f482eb4a5e539cea86e44aa19740e929c5789eab091d10c70101a3"
+  },
+  "hardware": {
+    "os": "linux",
+    "architecture": "amd64",
+    "cpu": "Intel(R) Core(TM) i5-8365U CPU @ 1.60GHz",
+    "logical_cpus": 8,
+    "memory_mb": 15643
+  },
+  "gate": "A",
+  "scenario": "direct_read_result_patch_protocol",
+  "required_passes": 3,
+  "fail_fast": true,
+  "state": "failed",
+  "samples": [
+    {
+      "attempt": 1,
+      "scenario": "direct_read_result_patch_protocol",
+      "evidence_code": "direct_provider_protocol",
+      "state": "failed",
+      "reason_code": "patch_tool_call_invalid",
+      "failure_class": "model",
+      "started_at": "2026-08-21T13:16:40.769538628+02:00",
+      "duration_ms": 120119.377386,
+      "terminal": "provider_failure",
+      "model_turns": 2,
+      "tool_calls": 2,
+      "mutation_attempts": 0,
+      "approval": "not_requested",
+      "lifecycle": [
+        "terminal_failed"
+      ],
+      "initial_sha256": "4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd",
+      "expected_sha256": "509b566bd04a17d567248a721885ac5af0d623f9f505288548c7c302628bac5d",
+      "final_sha256": "4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd",
+      "workspace_digest": "9cea0e1691a6a65d572c5a0e3b7059340e0df588482359e84c20c6c384010030",
+      "context_freshness": "not_applicable",
+      "temporary_cleanup": "clean"
+    }
+  ]
+}

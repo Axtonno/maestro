@@ -13,9 +13,9 @@ Markdown senza I/O provider.
 
 | Evidenza | Valore |
 |---|---|
-| Versione candidato | `v0.2.0-m11-qc.1` |
-| Commit | `39d87074067d78991dc11e0e82beea1abbd328ab` |
-| Binario SHA-256 | `7468241bc39cad5157720157dae381c036876d5c0dc0eaa12e065ab8c3e68f5e` |
+| Versione candidato | `v0.2.0-m11-qc.2` |
+| Commit | `7e8ba62da22ad1942f3688b880922eacbec0889f` |
+| Binario SHA-256 | `9870772b25f482eb4a5e539cea86e44aa19740e929c5789eab091d10c70101a3` |
 | Dimensione | 9.310.464 byte |
 | Piattaforma | Linux `amd64` |
 | Profilo SHA-256 | `a64b7557ccd24f32bb4fb7cee7d64b630e16ec017c0776b2549d86bcd8480cac` |
@@ -44,8 +44,8 @@ stesso digest con contesto fresh e terminale completed.
 
 ## Report
 
-- `reports/milestone-11-deterministic.json`;
-- `reports/milestone-11-deterministic.md`.
+- `reports/milestone-11-deterministic-qc2.json`;
+- `reports/milestone-11-deterministic-qc2.md`.
 
 Entrambi hanno permessi `0600`. La scansione non trova root fisiche, directory
 temporanee, testo della patch o nomi dei campi payload esclusi.
@@ -72,3 +72,14 @@ Esito: **PASS**.
 
 La Fase 3 è completata. Preflight e Gate A devono usare esclusivamente questo
 binario, commit e profilo.
+
+## Ripetizione del congelamento
+
+Il primo candidato `qc.1` aveva matrice deterministica verde, ma il preflight
+confrontava letteralmente la descrizione CPU e non normalizzava i marker
+`(R)/(TM)` esposti da `/proc/cpuinfo`. Il candidato è stato invalidato senza
+eseguire Gate A. La correzione è coperta da test; suite, race detector, vet e
+matrice 15/15 sono stati ripetuti integralmente sul commit `7e8ba62...`.
+
+`qc.1` e i suoi report restano evidenza storica non qualificabile. `qc.2` è il
+solo candidato autorevole per le fasi live.
