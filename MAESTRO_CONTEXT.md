@@ -66,9 +66,11 @@ Completati:
 * v0.2.0-development-plan.md
 * milestone-10-development-plan.md
 * milestone-11-development-plan.md
+* milestone-12-development-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
 * reports/milestone-11-final.md
+* reports/milestone-12-phase-1.md
 
 ---
 
@@ -2312,3 +2314,12 @@ resta byte-identica, senza approval o effetti; Gate B e Gate C non vengono
 eseguiti per fail-fast. ADR-0032 mantiene Controlled Mutation e
 `ibm/granite4.1:8b` fuori dal support claim e dà GO alla Milestone 12 soltanto
 per una productization v0.2.0 read-only.
+
+La Milestone 12 è avviata. `docs/milestone-12-development-plan.md` la divide in
+sei fasi sequenziali: contratto e baseline, superficie di prodotto read-only,
+packaging e installazione pulita, gate operativi/sicurezza/anti-leak,
+qualificazione live con release candidate immutabile, documentazione e release
+finale con tag verificato. La Fase 1 è completata sulla baseline
+`2ddbb7bd850f25fb805775d82acaf57c831bd53d`: suite, race detector, vet e doppio
+packaging v0.1.1 sono verdi. Nessun artifact v0.2.0 è stato prodotto e il
+support claim resta invariato.

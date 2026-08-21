@@ -825,7 +825,7 @@ supporto mutativo è rinviato. Il dettaglio è in
 
 # Milestone 12 — Productization v0.2.0
 
-Stato: Autorizzata — productization read-only
+Stato: Avviata — Fase 1 completata, productization read-only
 
 Obiettivi:
 
@@ -843,7 +843,11 @@ ADR-0032 limita il GO al confine read-only. La release è guidata dal contratto
 di sicurezza e dalla validazione live, non dalla sola presenza di
 `workspace.write` e `workspace.patch` nel codice.
 
-Il piano completo è in `v0.2.0-development-plan.md`.
+La milestone è divisa in sei fasi sequenziali: contratto e baseline, superficie
+read-only, packaging, gate operativi e di sicurezza, qualificazione live e RC,
+documentazione con release finale e tag. Il piano operativo è in
+`milestone-12-development-plan.md`; il contesto di release complessivo resta in
+`v0.2.0-development-plan.md`.
 
 ---
 
@@ -878,6 +882,7 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - milestone-8-development-plan.md
 - milestone-9-development-plan.md
 - v0.2.0-development-plan.md
+- milestone-12-development-plan.md
 - reports/v0.1.0-post-release-observation.md
 - configuration.md
 - cli.md
