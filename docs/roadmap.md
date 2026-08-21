@@ -865,6 +865,154 @@ limitato al percorso read-only; la pubblicazione remota non è stata eseguita.
 
 ---
 
+# Milestone 13 — Field Validation & Adoption
+
+Stato: Pianificata — subordinata alla pubblicazione remota di v0.2.0
+
+Obiettivo:
+
+Validare il prodotto v0.2.0 su almeno due progetti Laravel reali, esterni alle
+fixture e al repository di sviluppo, prima di definire il contratto v0.3.0.
+
+La milestone non è feature-driven. Misura installazione dalla GitHub Release,
+preflight, completion rate, qualità delle risposte, durata, turni, token, tool
+calling, compatibilità osservata, immutabilità, containment e anti-leak. La
+coorte target include un progetto piccolo e uno medio e usa task ripetibili su
+controller, service, dipendenze e flussi multi-file. Almeno un progetto con
+configurazione Docker viene analizzato senza concedere a Maestro accesso a
+Docker, shell o processi.
+
+Il primo gate completa la distribuzione di v0.2.0: push dei commit finali e del
+tag annotato esistente, GitHub Release con archive/checksum/note già
+qualificati e installazione dell'asset riscaricato dal canale pubblico.
+
+La serie `v0.2.x` riceve soltanto bug fix, documentazione e hardening entro il
+confine read-only. Controlled Mutation resta sperimentale; la sua recovery è
+separata e ogni nuova qualificazione ufficiale riparte da Gate A.
+
+La milestone termina con un report di prodotto, non necessariamente con una
+release. Il report decide se v0.3.0 deve privilegiare Read-only Developer
+Experience, Controlled Mutation oppure ecosistema e integrazioni. In assenza
+di un nuovo input mutativo qualificabile, la direzione raccomandata è la prima.
+
+Il protocollo completo è in `milestone-13-field-validation-plan.md`; i task
+minimi sono in `field-validation-task-matrix.md`.
+
+---
+
+# Milestone 14 — Controlled Mutation Recovery
+
+Stato: Pianificata — successiva al report della Milestone 13
+
+Obiettivo:
+
+Determinare se Controlled Mutation possa essere qualificata tramite un
+protocollo di proposta più semplice per i modelli locali oppure richieda un
+nuovo modello e un profilo hardware superiore.
+
+La milestone parte dall'analisi forense di `patch_tool_call_invalid` tramite
+una diagnostica development-only su fixture non sensibili. Confronta patch
+completa, edit proposal search/replace, structured output e tool schema
+minimale. L'eventuale proposta del modello resta input non fidato: Maestro
+compila deterministicamente digest, contenuto risultante, patch, diff e
+fingerprint, rifiutando campi mancanti, ambiguità e repair euristici.
+
+Il lower bound Granite/ThinkPad viene provato prima di cercare modelli o
+hardware superiori. Se necessario, l'esplorazione usa temporaneamente una
+seconda macchina o un server Ollama su LAN fidata prima di qualsiasi acquisto.
+
+La Milestone 14 termina con un protocollo model-facing e un compilatore
+candidati, oppure con un rinvio motivato. Non qualifica piattaforma, hardware o
+modello e non produce una release. I Gate A/B/C ufficiali appartengono alla
+Milestone 15.
+
+Il piano operativo è in `milestone-14-controlled-mutation-recovery-plan.md`.
+
+---
+
+# Milestone 15 — Reference Hardware & Mutation Qualification
+
+Stato: Pianificata — subordinata all'handoff della Milestone 14
+
+Obiettivo:
+
+Qualificare una combinazione dichiarata di piattaforma, hardware, provider e
+modello per Controlled Mutation.
+
+Il profilo iniziale usa Windows con WSL2/Ubuntu 24.04, 32 GB RAM nominali, RTX
+5070 12 GB, Ollama dentro WSL2 e workspace sul filesystem Linux sotto `/home`.
+Non viene eseguito un porting Windows nativo e sono esclusi workspace sotto
+`/mnt/*` o `drvfs`, perché la qualifica dipende da temporaneo, sync e rename
+atomico con semantiche Linux.
+
+La progressione verifica prima piattaforma/GPU e la release v0.2.0 read-only,
+quindi misura RAM, VRAM, offload e latenza. Granite 8B ripete il solo Gate A
+diagnostico; se fallisce, la selezione passa a candidati superiori iniziando
+dalla classe 14B compatibile. Un solo modello resta residente per serie.
+
+Solo il candidato congelato esegue Gate A `3/3`, Gate B `2/2` e Gate C `3/3`
+formali e fail-fast, seguiti dalla matrice negativa e di sicurezza. Gli esiti
+ammessi sono `mutation_qualified`, `model_rejected`, `platform_rejected`,
+`hardware_insufficient` e `mutation_deferred`.
+
+La milestone non produce una release. Un esito `mutation_qualified` dà GO alla
+Milestone 16 sul profilo esatto; prima del support claim deve essere deciso se
+productizzare WSL2 o ripetere il gate finale su Linux nativo con hardware
+equivalente.
+
+Il piano operativo è in
+`milestone-15-reference-hardware-mutation-qualification-plan.md`.
+
+---
+
+# Milestone 16 — Productization v0.3.0
+
+Stato: Condizionata — si apre soltanto con `mutation_qualified` dalla
+Milestone 15
+
+Obiettivo:
+
+Trasformare l'esatta combinazione Controlled Mutation qualificata in una
+release v0.3.0 installabile, documentata e pubblicata, senza ampliare il
+contratto tecnico durante la productization.
+
+La release mantiene il profilo read-only come default e introduce una
+configurazione mutativa separata ed esplicitamente opt-in. Compatibility
+matrix, requisito hardware, piattaforma, filesystem, provider, modello,
+quantizzazione e limiti coincidono con il candidate record della Milestone 15;
+un reference hardware qualificato non viene presentato come minimo teorico
+senza una prova di confine separata.
+
+La milestone produce packaging candidate, installazione pulita, gate
+deterministici e di sicurezza, Gate A/B/C live ripetuti, release candidate,
+documentazione pubblica, artifact finale, tag annotato e GitHub Release
+v0.3.0. Packaging candidate, RC e release sono artifact distinti e
+immutabili.
+
+Se un fix cambia protocollo, modello, hardware, filesystem, authority, limiti
+o criteri, il lavoro torna alla Milestone 15. Un failure non autorizza una
+v0.3.0 mutativa con gate ridotti né una v0.3.0 read-only silenziosamente
+ridefinita.
+
+Il piano operativo è in `milestone-16-productization-v0.3.0-plan.md`.
+
+## Sequenza post-v0.2.0
+
+```text
+Milestone 13 — Field Validation & Adoption
+    -> Milestone 14 — Controlled Mutation Recovery
+        -> Milestone 15 — Reference Hardware & Mutation Qualification
+            ├── mutation_qualified -> Milestone 16 — Productization v0.3.0
+            └── altro esito        -> Controlled Mutation resta non supportata
+```
+
+La sequenza dimostra prima il valore del prodotto esistente, poi verifica il
+protocollo senza dipendere dal nuovo hardware, quindi qualifica la tupla
+piattaforma–hardware–provider–modello. La release mutativa esiste nel piano
+soltanto come conseguenza dell'ultimo PASS.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.
@@ -897,6 +1045,11 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - milestone-9-development-plan.md
 - v0.2.0-development-plan.md
 - milestone-12-development-plan.md
+- milestone-13-field-validation-plan.md
+- field-validation-task-matrix.md
+- milestone-14-controlled-mutation-recovery-plan.md
+- milestone-15-reference-hardware-mutation-qualification-plan.md
+- milestone-16-productization-v0.3.0-plan.md
 - reports/v0.1.0-post-release-observation.md
 - configuration.md
 - cli.md
