@@ -136,13 +136,14 @@ func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) 
 		},
 	}}
 	fixture := &inspectionLoopTool{descriptor: workspaceDescriptor(t, workspaceReadToolID, "workspace_read", pkgTool.EffectWorkspaceInspect)}
-	runtime := loopRuntime(t, providers, allowedToolRuntime(t, fixture), pendingPlan(t, "inspect"))
+	list := &loopTool{descriptor: workspaceDescriptor(t, "workspace.list", "workspace_list", pkgTool.EffectWorkspaceInspect)}
+	runtime := loopRuntime(t, providers, allowedToolRuntime(t, fixture, list), pendingPlan(t, "inspect"))
 	if err := runtime.Register(newAgentFixture(t, ReferenceAgentID, pendingPlan(t, "inspect"))); err != nil {
 		t.Fatal(err)
 	}
 	request := requestWithTools(
 		t, requestWithInstruction(t, runRequest(t, "run-reference-read", ReferenceAgentID, "workspace", 4), "Read app/Order.php."),
-		[]pkgTool.ID{workspaceReadToolID}, false,
+		[]pkgTool.ID{"workspace.list", workspaceReadToolID}, false,
 	)
 
 	result, err := runtime.Run(context.Background(), request)
@@ -157,7 +158,9 @@ func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) 
 	}
 	requests := providers.Requests()
 	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
-		!strings.Contains(requests[1].Messages[3].Content, "has not read the requested workspace file") {
+		!strings.Contains(requests[1].Messages[3].Content, "has not read the requested workspace file") ||
+		len(requests[0].Tools) != 1 || requests[0].Tools[0].Name != "workspace_read" ||
+		len(requests[2].Tools) != 2 {
 		t.Fatalf("missing inspection correction: %#v", requests)
 	}
 }

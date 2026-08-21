@@ -21,6 +21,8 @@ deve essere dichiarato nelle note di release.
   `workspace.read` riuscita prima di accettare il testo finale;
 - gli arguments invalidi dei soli tool read-only possono essere corretti dal
   modello entro gli hard limit tramite un risultato sintetico redatto;
+- prima della read richiesta dal quick start, il modello vede soltanto
+  `workspace.read` e riceve regole esplicite sul solo campo `path`;
 - la configurazione distribuita resta read-only con soli list/read/search e
   `workspace_mutate: deny`;
 - packaging e quick start non includono il profilo mutante né presentano

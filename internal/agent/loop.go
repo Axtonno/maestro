@@ -77,9 +77,13 @@ func (loop *agentLoop) Run(
 			}
 			publishAgentEvent(loop.events, pkgAgent.EventTurnStarted, sessionEventPayload(current.snapshotValue(), 0, pkgAgent.EventFailureNone))
 			turn++
+			turnTools := choreography.toolsForTurn(providerTools, descriptors)
+			if requiresWorkspaceRead(request, descriptors) && !workspaceReadObserved {
+				turnTools = onlyWorkspaceReadTool(turnTools, descriptors)
+			}
 			completionRequest := provider.CompletionRequest{
 				Model: request.Model(), Messages: messages,
-				Tools:      choreography.toolsForTurn(providerTools, descriptors),
+				Tools:      turnTools,
 				ToolChoice: provider.ToolChoice{Mode: provider.ToolChoiceAuto},
 			}
 			response, err := loop.complete(ctx, request, completionRequest)
@@ -462,7 +466,7 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 	} else {
 		system += " The declared tool set is read-only. Do not request, name, or simulate mutating tools."
 		if requiresWorkspaceRead(request, nil) {
-			system += " For a task that begins with an explicit read instruction, the reference agent must successfully invoke the declared workspace read tool before returning a final answer."
+			system += " For a task that begins with an explicit read instruction, the reference agent must successfully invoke the declared workspace read tool before returning a final answer. Before that read succeeds, it is the only available function. Its arguments object must contain the required field path; copy the logical relative path from the Task exactly and do not substitute file, filename, resource, root, or an absolute path."
 		}
 		system += " Use an exact declared function name and only fields from that function's schema. For workspace paths, pass the logical path relative to the workspace exactly as shown by the task or evidence; never add a leading slash, a physical workspace root, a file URI, or parent traversal."
 	}
@@ -499,6 +503,15 @@ func requiresWorkspaceRead(request pkgAgent.RunRequest, descriptors map[string]p
 		}
 	}
 	return false
+}
+
+func onlyWorkspaceReadTool(tools []provider.Tool, descriptors map[string]pkgTool.Descriptor) []provider.Tool {
+	for _, tool := range tools {
+		if descriptor, ok := descriptors[tool.Name]; ok && descriptor.ID() == workspaceReadToolID {
+			return []provider.Tool{tool}
+		}
+	}
+	return nil
 }
 
 func recoverableReadOnlyInvocationError(descriptor pkgTool.Descriptor, err error) (pkgTool.Result, bool, error) {

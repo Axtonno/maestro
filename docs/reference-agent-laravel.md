@@ -40,6 +40,9 @@ file viene corretta entro gli stessi hard limit, senza inventare evidenza.
 Arguments invalidi di un tool read-only vengono restituiti al modello come
 risultato redatto e recuperabile; ogni correzione consuma comunque turno e tool
 call e non si applica ai tool mutanti o ai failure di esecuzione.
+Prima della read obbligatoria, il provider vede soltanto `workspace.read`; dopo
+il successo torna disponibile l'intero tool set read-only. Il path deve essere
+copiato dall'istruzione come path logico relativo.
 
 La scan policy Laravel è distinta dalla policy filesystem generica. Include
 `app`, `bootstrap`, `config`, `database`, `lang`, le aree sorgente di
