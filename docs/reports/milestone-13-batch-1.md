@@ -52,6 +52,17 @@ come bug di prodotto o limite del modello per esclusione.
 ## Decisione
 
 La campagna resta sospesa. Le prime ripetizioni non vengono rieseguite e il
-profilo congelato non viene modificato. Prima del blocco successivo occorre
-registrare una decisione esplicita sul valore diagnostico di ulteriori run con
-lo stesso timeout e verificare disponibilità del budget operativo.
+profilo congelato non viene modificato.
+
+> Ulteriori run ufficiali con lo stesso profilo e lo stesso timeout hanno
+> valore diagnostico marginale e restano sospese.
+
+Prima di un eventuale Batch 2 viene svolta un'indagine separata, esclusa dalla
+matrice ufficiale e dai suoi denominatori. Batch 1 non viene rieseguito,
+reinterpretato o ricalcolato. Il piano diagnostico è descritto in
+`milestone-13-timeout-diagnostic-plan.md`.
+
+Il risultato non sostiene ancora l'adozione del profilo di riferimento su
+task Laravel reali, ma costituisce evidenza utile di Field Validation: gli
+invarianti read-only reggono mentre affidabilità e qualità osservate non sono
+accettabili.
