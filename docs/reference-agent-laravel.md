@@ -33,6 +33,11 @@ i marker strutturali e rende disponibile il workspace generico.
 La root fisica non viene inserita nel prompt. I tool usano path logici relativi
 e rifiutano traversal e symlink.
 
+Quando l'istruzione inizia esplicitamente con `Read`, il reference agent non
+accetta una risposta finale finché `workspace.read` non è stata eseguita con
+successo. Una risposta testuale che simula o sostiene di avere già letto il
+file viene corretta entro gli stessi hard limit, senza inventare evidenza.
+
 La scan policy Laravel è distinta dalla policy filesystem generica. Include
 `app`, `bootstrap`, `config`, `database`, `lang`, le aree sorgente di
 `resources`, `routes`, `tests`, i manifest principali e la documentazione root;

@@ -17,6 +17,8 @@ deve essere dichiarato nelle note di release.
 
 ### Security
 
+- le istruzioni esplicite `Read ...` del reference agent richiedono una
+  `workspace.read` riuscita prima di accettare il testo finale;
 - la configurazione distribuita resta read-only con soli list/read/search e
   `workspace_mutate: deny`;
 - packaging e quick start non includono il profilo mutante né presentano

@@ -118,6 +118,50 @@ func TestAgentLoopAcceptsFinalAnswerThatNamesDeclaredTool(t *testing.T) {
 	}
 }
 
+func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) {
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{
+			Message:      provider.Message{Role: provider.RoleAssistant, Content: "The file says the service creates the order."},
+			FinishReason: provider.FinishReasonStop,
+		},
+		{
+			Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{
+				ID: "call-reference-read", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"app/Order.php"}`),
+			}}},
+			FinishReason: provider.FinishReasonToolCalls,
+		},
+		{
+			Message:      provider.Message{Role: provider.RoleAssistant, Content: "The inspected file calls OrderService::create."},
+			FinishReason: provider.FinishReasonStop,
+		},
+	}}
+	fixture := &inspectionLoopTool{descriptor: workspaceDescriptor(t, workspaceReadToolID, "workspace_read", pkgTool.EffectWorkspaceInspect)}
+	runtime := loopRuntime(t, providers, allowedToolRuntime(t, fixture), pendingPlan(t, "inspect"))
+	if err := runtime.Register(newAgentFixture(t, ReferenceAgentID, pendingPlan(t, "inspect"))); err != nil {
+		t.Fatal(err)
+	}
+	request := requestWithTools(
+		t, requestWithInstruction(t, runRequest(t, "run-reference-read", ReferenceAgentID, "workspace", 4), "Read app/Order.php."),
+		[]pkgTool.ID{workspaceReadToolID}, false,
+	)
+
+	result, err := runtime.Run(context.Background(), request)
+	if err != nil {
+		t.Fatalf("run reference agent: %v", err)
+	}
+	if result.Content() != "The inspected file calls OrderService::create." || fixture.executions != 1 {
+		t.Fatalf("final was accepted without inspection: result=%#v executions=%d", result, fixture.executions)
+	}
+	if counters := result.Session().Counters(); counters.ModelTurns != 3 || counters.ToolCalls != 1 {
+		t.Fatalf("unexpected counters: %#v", counters)
+	}
+	requests := providers.Requests()
+	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
+		!strings.Contains(requests[1].Messages[3].Content, "has not read the requested workspace file") {
+		t.Fatalf("missing inspection correction: %#v", requests)
+	}
+}
+
 func TestDescribesToolCallRejectsDeclaredAndUnknownEmbeddedShapes(t *testing.T) {
 	for _, content := range []string{
 		`{"name":"workspace_read","arguments":{"path":"main.go"}}`,
@@ -561,6 +605,21 @@ type loopTool struct {
 	order      *[]string
 }
 
+type inspectionLoopTool struct {
+	descriptor pkgTool.Descriptor
+	executions int
+}
+
+func (fixture *inspectionLoopTool) Descriptor() pkgTool.Descriptor { return fixture.descriptor }
+func (fixture *inspectionLoopTool) Prepare(_ context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
+	action, _ := pkgTool.NewAction(pkgTool.EffectWorkspaceInspect, "app/Order.php", "workspace")
+	return pkgTool.NewPreparedInvocation(invocation, fixture.descriptor.Version(), invocation.Arguments(), []pkgTool.Action{action})
+}
+func (fixture *inspectionLoopTool) Execute(context.Context, pkgTool.PreparedInvocation) (pkgTool.Result, error) {
+	fixture.executions++
+	return pkgTool.NewResult(pkgTool.ResultSuccess, "order source", "text/plain", "completed", 1, false, "")
+}
+
 type mutationTool struct {
 	descriptor pkgTool.Descriptor
 	workspace  pkgContext.WorkspaceID
@@ -699,6 +758,18 @@ func requestWithTools(t *testing.T, source pkgAgent.RunRequest, tools []pkgTool.
 	request, err := pkgAgent.NewRunRequest(
 		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), source.Instruction(), source.Limits(),
 		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: tools, Approver: source.Approver(), Streaming: streaming},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return request
+}
+
+func requestWithInstruction(t *testing.T, source pkgAgent.RunRequest, instruction string) pkgAgent.RunRequest {
+	t.Helper()
+	request, err := pkgAgent.NewRunRequest(
+		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), instruction, source.Limits(),
+		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: source.Tools(), Approver: source.Approver(), Streaming: source.Streaming()},
 	)
 	if err != nil {
 		t.Fatal(err)

@@ -41,6 +41,7 @@ func (loop *agentLoop) Run(
 	lastContent := ""
 	turn := 0
 	mutationAttempts := 0
+	workspaceReadObserved := false
 
 	for {
 		step, found, err := nextReadyStep(current.snapshotValue())
@@ -130,6 +131,13 @@ func (loop *agentLoop) Run(
 					})
 					continue
 				}
+				if requiresWorkspaceRead(request, descriptors) && !workspaceReadObserved {
+					messages = append(messages, provider.Message{
+						Role:    provider.RoleSystem,
+						Content: "The reference agent has not read the requested workspace file through the declared read tool yet. The step is not complete. Invoke the declared workspace read tool through the provider tool channel now; do not claim to have read tool results before the invocation succeeds.",
+					})
+					continue
+				}
 				if err := current.transitionStep(step.ID(), pkgAgent.StepCompleted, ""); err != nil {
 					return "", pkgAgent.TerminalInternalFailure, err
 				}
@@ -206,6 +214,9 @@ func (loop *agentLoop) Run(
 						err = errors.Join(pkgAgent.ErrMutationFailed, err)
 					}
 					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
+				}
+				if result.Outcome() == pkgTool.ResultSuccess && descriptor.ID() == workspaceReadToolID {
+					workspaceReadObserved = true
 				}
 				choreography.afterCall(descriptor, result)
 				if mutating && result.Outcome() != pkgTool.ResultDenied && !current.snapshotValue().ContextStale() {
@@ -441,7 +452,11 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 	if mutationEnabled {
 		system += " Read a file before mutating it. For guarded writes or patches, copy expected_digest exactly from the read result's digest field and copy old text exactly from its content field, preserving whitespace and real newline characters. Never invent placeholders or escaped newline text."
 	} else {
-		system += " The declared tool set is read-only. Do not request, name, or simulate mutating tools. Use an exact declared function name and only fields from that function's schema. For workspace paths, pass the logical path relative to the workspace exactly as shown by the task or evidence; never add a leading slash, a physical workspace root, a file URI, or parent traversal."
+		system += " The declared tool set is read-only. Do not request, name, or simulate mutating tools."
+		if requiresWorkspaceRead(request, nil) {
+			system += " For a task that begins with an explicit read instruction, the reference agent must successfully invoke the declared workspace read tool before returning a final answer."
+		}
+		system += " Use an exact declared function name and only fields from that function's schema. For workspace paths, pass the logical path relative to the workspace exactly as shown by the task or evidence; never add a leading slash, a physical workspace root, a file URI, or parent traversal."
 	}
 	system += " Return a final answer only after the step is actually complete."
 
@@ -460,6 +475,22 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 		{Role: provider.RoleSystem, Content: system},
 		{Role: provider.RoleUser, Content: user.String()},
 	}
+}
+
+func requiresWorkspaceRead(request pkgAgent.RunRequest, descriptors map[string]pkgTool.Descriptor) bool {
+	instruction := strings.ToLower(strings.TrimSpace(request.Instruction()))
+	if request.Agent() != ReferenceAgentID || !strings.HasPrefix(instruction, "read ") {
+		return false
+	}
+	if descriptors == nil {
+		return true
+	}
+	for _, descriptor := range descriptors {
+		if descriptor.ID() == workspaceReadToolID {
+			return true
+		}
+	}
+	return false
 }
 
 func nextReadyStep(snapshot pkgAgent.SessionSnapshot) (pkgAgent.PlanStep, bool, error) {
