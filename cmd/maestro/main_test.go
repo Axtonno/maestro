@@ -157,6 +157,23 @@ func TestBenchLaravelWithoutProviderLoadsDatasetAndProducesSkippedReport(t *test
 	}
 }
 
+func TestBenchMutationValidatesFrozenProfileAndFixture(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := run(
+		[]string{"bench", "mutation", "--profile", "../../docs/mutation-qualification-profile.yaml"},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stderr.Len() != 0 {
+		t.Fatalf("exit=%d stderr=%q", exitCode, stderr.String())
+	}
+	if output := stdout.String(); !strings.Contains(output, "version=1 gates=3 scenarios=15") ||
+		!strings.Contains(output, "linux_amd64/ollama\tibm/granite4.1:8b") {
+		t.Fatalf("unexpected mutation validation output: %q", output)
+	}
+}
+
 func TestBenchLaravelWritesMarkdownAndRenderReproducesItFromJSON(t *testing.T) {
 	t.Setenv("MAESTRO_OLLAMA_BASE_URL", "")
 	directory := t.TempDir()

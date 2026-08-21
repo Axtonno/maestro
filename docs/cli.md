@@ -114,6 +114,19 @@ concreta e offre soltanto deny o allow once. Con stdin non interattivo non viene
 chiesta approvazione: la decisione è deny. `allow` può essere configurato
 soltanto per classi non mutative; non esiste automazione mutativa né `--yes`.
 
+## `bench mutation`
+
+La qualificazione mutativa usa un profilo separato e inizialmente ne valida il
+contratto e la fixture:
+
+```text
+maestro bench mutation \
+  --profile docs/mutation-qualification-profile.yaml
+```
+
+Questo comando non esegue prove live né abilita da solo Controlled Mutation.
+Vedere `mutation-benchmark.md`.
+
 ## `version`
 
 ```text
