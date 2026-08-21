@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Avviata — Fasi 1–4 completate, Fase 5 da avviare
+Stato: Avviata — Fasi 1–5 completate, Fase 6 da avviare
 
 Data: 2026-08-21
 
@@ -43,7 +43,7 @@ supporto.
 | 2 | Superficie di prodotto read-only | Completata | Fase 1 |
 | 3 | Packaging candidate e installazione pulita | Completata | Fase 2 |
 | 4 | Gate operativi, sicurezza e anti-leak | Completata | Fase 3 |
-| 5 | Qualificazione live e release candidate | Da avviare | Fasi 3–4 |
+| 5 | Qualificazione live e release candidate | Completata | Fasi 3–4 |
 | 6 | Documentazione, release finale e tag | Pianificata | Fase 5 |
 
 Le fasi sono sequenziali rispetto al gate. Ogni fase produce un report sotto
@@ -241,6 +241,8 @@ Gate: **superato**.
 
 # Fase 5 — Qualificazione live e release candidate
 
+Stato: Completata — `v0.2.0-rc.1`.
+
 ## Obiettivo
 
 Qualificare l'esatto percorso supportato con Ollama e modello reali, quindi
@@ -276,6 +278,8 @@ produrre e congelare un release candidate distinto.
 - evidenze live del candidate e dell'RC;
 - identità immutabile del `v0.2.0-rc.N` qualificato;
 - `docs/reports/milestone-12-phase-5.md`.
+
+Gate: **superato**.
 
 ---
 

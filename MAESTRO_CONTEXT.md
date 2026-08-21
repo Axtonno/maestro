@@ -2354,3 +2354,14 @@ termina `canceled`/130 in 3004 ms, la deadline a 1 secondo termina
 fixture, non mostrano approval in modalità non interattiva e superano la
 scansione anti-leak. Suite `-count=3`, race detector, vet e script syntax sono
 verdi.
+
+La Fase 5 della Milestone 12 è completata. I candidate `pc.1`–`pc.4` restano
+respinti e immutabili dopo failure live distinti; ogni hardening è entrato in
+un nuovo candidate. `v0.2.0-pc.5`, commit
+`e8aaad800f1a72eb395f895ba5c8b54195ce0388`, supera due quick start
+consecutivi con un turno modello e una read reale. Il distinto
+`v0.2.0-rc.1` ha SHA-256
+`056f557abe0b95a3a1d758b8827e04907500a988b719e2af9a6ddbfb24886fab`:
+doppio packaging, installazione pulita, doctor 9/9, due quick start, SIGINT,
+deadline e hard limit sono verdi. La fixture resta byte-identica e nessuna
+capability mutativa entra nel percorso. La Fase 6 è il prossimo gate.
