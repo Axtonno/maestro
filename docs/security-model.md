@@ -1,10 +1,10 @@
-# Maestro v0.1.x Security Model
+# Maestro v0.2.0 Security Model
 
 Data: 2026-08-20
 
 ## Sintesi
 
-Maestro v0.1.x è un'applicazione locale trusted in-process, non una sandbox. Il
+Maestro v0.2.0 è un'applicazione locale trusted in-process, non una sandbox. Il
 percorso supportato è read-only e usa soltanto Ollama locale,
 `llama3.1:8b` e i tool list/read/search su un workspace Laravel scelto
 esplicitamente dall'utente.
@@ -18,10 +18,10 @@ esplicitamente dall'utente.
 | Modello | Non autorevole; propone output e tool call, mai permessi |
 | Provider configurato | Riceve istruzione e contesto esplicitamente disclosed |
 | Tool/plugin built-in | Codice trusted eseguito nello stesso processo e con i privilegi dell'utente |
-| Estensioni terze | Fuori dal supporto v0.1.x |
+| Estensioni terze | Fuori dal supporto v0.2.0 |
 
 Cambiare `provider.base_url` può inviare istruzioni e sezioni selezionate del
-workspace a quel servizio. La promessa v0.1.x copre soltanto Ollama locale su
+workspace a quel servizio. La promessa v0.2.0 copre soltanto Ollama locale su
 loopback; l'utente deve considerare attendibile ogni endpoint alternativo.
 
 ## Garanzie implementate
@@ -42,7 +42,7 @@ loopback; l'utente deve considerare attendibile ogni endpoint alternativo.
 
 ## Non garanzie
 
-La v0.1.x non fornisce:
+La v0.2.0 non fornisce:
 
 - sandbox, container, seccomp, namespace o separazione di processo;
 - riduzione automatica dei privilegi del sistema operativo;
@@ -55,8 +55,8 @@ La v0.1.x non fornisce:
 
 ## Profilo Controlled Mutation candidato
 
-La Milestone 10 consegna un profilo separato e opt-in per la futura v0.2.0.
-Non cambia il supporto v0.1.x. Il profilo accetta soltanto `workspace.patch` su
+La Milestone 10 ha consegnato un profilo separato e opt-in, ma la v0.2.0 non lo
+promuove al supporto. Il profilo accetta soltanto `workspace.patch` su
 un file PHP esistente sotto `app/`, dopo read verificata, preview concreta,
 TTY e approval one-shot. Il fingerprint lega la proposta all'esecuzione; il
 commit Linux usa temporaneo, sync, recheck e rename atomico. Ogni run ammette
@@ -96,7 +96,7 @@ dall'utente.
 - mantenere Ollama su loopback e non esporlo senza autenticazione/rete fidata;
 - verificare archive e checksum prima dell'estrazione;
 - esaminare la configurazione e la root prima di ogni run;
-- non aggiungere `workspace.write` o `workspace.patch` al profilo v0.1.x;
+- non aggiungere `workspace.write` o `workspace.patch` al profilo v0.2.0;
 - interrompere run inattese con SIGINT e controllare il terminale redatto;
 - non inserire credenziali nel file YAML o nel workspace della fixture.
 

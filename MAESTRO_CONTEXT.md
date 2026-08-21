@@ -71,6 +71,7 @@ Completati:
 * mutation-benchmark.md
 * reports/milestone-11-final.md
 * reports/milestone-12-phase-1.md
+* reports/milestone-12-phase-2.md
 
 ---
 
@@ -2323,3 +2324,13 @@ finale con tag verificato. La Fase 1 è completata sulla baseline
 `2ddbb7bd850f25fb805775d82acaf57c831bd53d`: suite, race detector, vet e doppio
 packaging v0.1.1 sono verdi. Nessun artifact v0.2.0 è stato prodotto e il
 support claim resta invariato.
+
+La Fase 2 della Milestone 12 è completata. README, changelog, configurazione,
+CLI, installazione, quick start, compatibility matrix, security model, known
+issues, troubleshooting e reference agent sono allineati al target v0.2.0
+read-only. `docs/v0.2.0-api-compatibility.md` registra le sole aggiunte Go
+sperimentali e additive; `docs/releases/v0.2.0.md` resta candidate fino ai gate
+finali. Il packaging include il contratto API v0.2.0 e verifica esplicitamente
+che profilo e documentazione mutativi non siano distribuiti. Suite completa,
+race detector, vet, sintassi degli script e confine list/read/search più deny
+mutativo sono verdi.

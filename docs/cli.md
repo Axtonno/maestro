@@ -1,6 +1,6 @@
-# Maestro v0.1 CLI
+# Maestro v0.2.0 CLI
 
-Stato: Contratto pubblico sperimentale v0.1.0
+Stato: Contratto pubblico sperimentale v0.2.0
 
 Data: 2026-08-15
 
@@ -79,7 +79,7 @@ Il comando carica e avvia il plugin Laravel, ottiene il Workspace autorevole,
 indicizza il contesto, costruisce una query lessicale, crea una `RunRequest` con
 target e hard limit configurati e invoca `Agent Runtime.Run`.
 
-Nel percorso supportato v0.1.0 il `RunRequest` espone soltanto i tool read-only
+Nel percorso supportato v0.2.0 il `RunRequest` espone soltanto i tool read-only
 `workspace.list`, `workspace.read` e `workspace.search`; la configurazione
 inclusa nega ogni effetto `workspace.mutate`. Tool e approval mutativi restano
 sperimentali e fuori dal quick start.
@@ -125,9 +125,10 @@ maestro bench mutation \
 ```
 
 Questo comando non esegue prove live né abilita da solo Controlled Mutation.
-Le modalità `deterministic`, `preflight`, `gate-a`, `gate-b` e `gate-c` sono
-riservate alla Milestone 11. Gate C richiede una TTY reale e non dispone di
-auto-approval. Vedere `mutation-benchmark.md`.
+Le modalità `deterministic`, `preflight`, `gate-a`, `gate-b` e `gate-c` restano
+strumenti di qualificazione e non ampliano la superficie supportata. Gate C
+richiede una TTY reale e non dispone di auto-approval. Vedere
+`mutation-benchmark.md` e ADR-0032.
 
 ## `version`
 
@@ -137,7 +138,7 @@ maestro version
 
 Stampa versione e commit e aggiunge `dirty true` quando il build info Go lo
 dichiara. Un build locale senza metadata restituisce `devel` e `unknown`;
-l'artifact v0.1.0 incorpora versione e commit esatti durante il packaging.
+l'artifact v0.2.0 incorpora versione e commit esatti durante il packaging.
 
 # Exit code
 

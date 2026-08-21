@@ -825,7 +825,7 @@ supporto mutativo è rinviato. Il dettaglio è in
 
 # Milestone 12 — Productization v0.2.0
 
-Stato: Avviata — Fase 1 completata, productization read-only
+Stato: Avviata — Fasi 1–2 completate, productization read-only
 
 Obiettivi:
 

@@ -1,14 +1,14 @@
-# Maestro v0.1.x Compatibility Matrix
+# Maestro v0.2.0 Compatibility Matrix
 
 Data: 2026-08-21
 
-Questa pagina è la fonte autorevole per ciò che la serie v0.1.x dichiara supportato.
+Questa pagina è la fonte autorevole per ciò che v0.2.0 dichiara supportato.
 La presenza di codice, adapter o test deterministici non equivale a supporto
 operativo.
 
 ## Percorso supportato
 
-| Dimensione | Stato v0.1.x | Confine verificato |
+| Dimensione | Stato v0.2.0 | Confine verificato |
 |---|---|---|
 | Sistema operativo | Supportato | Linux `amd64` |
 | Provider | Supportato | Ollama su endpoint esplicito; baseline `http://127.0.0.1:11434` |
@@ -26,7 +26,7 @@ Intel Core i5-8365U, 15 GiB RAM e 4 GiB swap. Questo profilo descrive la prova,
 non un requisito minimo universale. Su CPU simili una singola run può richiedere
 diversi minuti.
 
-La Milestone 11 non amplia questa matrice. Il candidato mutativo con
+La v0.2.0 non amplia questa matrice. Il candidato mutativo con
 `ibm/granite4.1:8b` supera 15/15 scenari deterministici e il preflight sullo
 stesso lower bound, ma fallisce il primo tentativo del Gate A live con una
 patch call non esatta. Gate B e Gate C non sono stati eseguiti per fail-fast;
@@ -40,7 +40,7 @@ v0.1.0 senza modificare tool o autorità.
 
 ## Compatibilità non dichiarata
 
-Non sono qualificati per la serie v0.1.x:
+Non sono qualificati per v0.2.0:
 
 - Linux `arm64`, macOS e Windows;
 - endpoint Ollama remoti o esposti a reti non attendibili;
@@ -58,12 +58,12 @@ non esiste un gate di release sufficiente per una promessa pubblica.
 
 CLI, schema `version: 1` e package Go pubblici sono disponibili ma restano
 sperimentali durante la serie 0.x. I dettagli sono in
-`v0.1.0-api-compatibility.md`. `internal/` non è API.
+`v0.2.0-api-compatibility.md`. `internal/` non è API.
 
 ## Evidenze
 
 Le evidenze live e di installazione sono registrate nei report delle Milestone
 8 e 9 nel repository sorgente. ADR-0030 chiude la Milestone 3 senza promuovere
 llama.cpp; ADR-0032 chiude la Milestone 11 senza promuovere Controlled
-Mutation. L'archive v0.1.1 include questa matrice, la configurazione esatta e
+Mutation. L'archive v0.2.0 include questa matrice, la configurazione esatta e
 la fixture usate dal percorso supportato.

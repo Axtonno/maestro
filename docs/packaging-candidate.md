@@ -1,6 +1,6 @@
 # Maestro Packaging and Release Artifacts
 
-Stato: Contratto di packaging v0.1.0
+Stato: Contratto di packaging v0.2.0
 
 Lo stesso percorso riproducibile produce packaging candidate, release
 candidate e release finale. Lo stato è sempre esplicito nel manifest e nella
@@ -15,9 +15,9 @@ Il nome è:
 maestro-<version>-linux-amd64.tar.gz
 ```
 
-La Fase 4 ha prodotto la prima iterazione `v0.1.0-pc.1`; le iterazioni
-successive conservano lo stesso formato e incorporano gli hardening emersi nei
-gate live. `ARTIFACT-MANIFEST.txt` registra versione, commit, piattaforma,
+La Milestone 12 usa candidate `v0.2.0-pc.N`; ogni iterazione conserva lo stesso
+formato e incorpora gli hardening emersi prima del nuovo congelamento.
+`ARTIFACT-MANIFEST.txt` registra versione, commit, piattaforma,
 versione Go e fixture. La guida d'installazione inclusa viene renderizzata con
 la versione esatta dell'archive e `maestro version` deve restituire la stessa
 versione e lo stesso commit.
@@ -30,8 +30,8 @@ artifact `pc.N` fallito non viene rinominato o sovrascritto.
 La release finale usa `--status release` e una versione senza prerelease:
 
 ```sh
-./scripts/verify-package-candidate.sh --version v0.1.0 --status release
-./scripts/package-candidate.sh --version v0.1.0 --status release --output dist
+./scripts/verify-package-candidate.sh --version v0.2.0 --status release
+./scripts/package-candidate.sh --version v0.2.0 --status release --output dist
 ```
 
 Deve essere prodotta da un worktree pulito successivo alla documentazione
@@ -47,7 +47,7 @@ candidate non viene rinominata come release.
   compatibilità, troubleshooting e release notes;
 - configurazione strict `version: 1` senza secret;
 - profilo ufficiale read-only senza tool mutanti e con
-  `workspace_mutate: deny`;
+  `workspace_mutate: deny`; il profilo mutante del repository è escluso;
 - fixture `maestro-laravel-mini@1.0.0`, priva di dipendenze installate;
 - manifest dell'artifact.
 

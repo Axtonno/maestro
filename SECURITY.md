@@ -2,7 +2,7 @@
 
 ## Supported version
 
-La serie supportata iniziale è `0.1.x`. Le capacità dichiarate sperimentali o
+La release supportata corrente è `0.2.0`. Le capacità dichiarate sperimentali o
 non supportate nella compatibility matrix non ricevono una promessa operativa,
 ma i problemi che compromettono il confine read-only o la sicurezza del core
 sono comunque rilevanti.
@@ -19,7 +19,7 @@ commit, piattaforma, impatto, prerequisiti e una riproduzione minima redatta.
 
 ## Scope notes
 
-Maestro v0.1.0 è trusted in-process e non dichiara una sandbox. L'esecuzione di
+Maestro v0.2.0 è trusted in-process e non dichiara una sandbox. L'esecuzione di
 estensioni non attendibili con i privilegi dell'utente non è una vulnerabilità
 rispetto al modello dichiarato. Sono invece in scope, tra gli altri:
 

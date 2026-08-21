@@ -1,4 +1,4 @@
-# Maestro v0.1.x Quick Start
+# Maestro v0.2.0 Quick Start
 
 Questo percorso parte esclusivamente dall'archive Linux `amd64` e dal checksum
 pubblicati. Non richiede il checkout del repository.

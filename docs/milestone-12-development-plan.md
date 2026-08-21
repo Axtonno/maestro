@@ -2,7 +2,7 @@
 
 Versione: 0.1.0
 
-Stato: Avviata — Fase 1 completata, Fase 2 da avviare
+Stato: Avviata — Fasi 1–2 completate, Fase 3 da avviare
 
 Data: 2026-08-21
 
@@ -40,8 +40,8 @@ supporto.
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
 | 1 | Contratto di release e baseline | Completata | Milestone 11 |
-| 2 | Superficie di prodotto read-only | Da avviare | Fase 1 |
-| 3 | Packaging candidate e installazione pulita | Pianificata | Fase 2 |
+| 2 | Superficie di prodotto read-only | Completata | Fase 1 |
+| 3 | Packaging candidate e installazione pulita | Da avviare | Fase 2 |
 | 4 | Gate operativi, sicurezza e anti-leak | Pianificata | Fase 3 |
 | 5 | Qualificazione live e release candidate | Pianificata | Fasi 3–4 |
 | 6 | Documentazione, release finale e tag | Pianificata | Fase 5 |
@@ -118,6 +118,8 @@ Gate: **superato**.
 
 # Fase 2 — Superficie di prodotto read-only
 
+Stato: Completata.
+
 ## Obiettivo
 
 Rendere configurazione, documentazione inclusa e contratti di compatibilità
@@ -152,6 +154,8 @@ mutanti dal percorso pubblicato.
 - superficie documentale e configurazione v0.2.0;
 - test del confine read-only pubblicato;
 - `docs/reports/milestone-12-phase-2.md`.
+
+Gate: **superato**.
 
 ---
 

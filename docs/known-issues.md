@@ -1,4 +1,4 @@
-# Maestro v0.1.x Known Issues and Limitations
+# Maestro v0.2.0 Known Issues and Limitations
 
 ## Modello e prestazioni
 
@@ -42,7 +42,7 @@
 ## Controlled Mutation candidato
 
 - `configs/maestro.mutating.example.yaml` è un profilo di qualificazione
-  opt-in, non una configurazione supportata dalla serie v0.1.x.
+  opt-in, non una configurazione supportata dalla v0.2.0.
 - Soltanto `workspace.patch` su un file PHP esistente sotto `app/` appartiene
   al candidato; `workspace.write`, creazione, delete, rename e multi-file non
   sono qualificati.

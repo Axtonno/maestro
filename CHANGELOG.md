@@ -4,6 +4,33 @@ Le modifiche rilevanti di Maestro sono registrate in questo file. Durante la
 serie `0.x` i contratti pubblici restano sperimentali e ogni breaking change
 deve essere dichiarato nelle note di release.
 
+## [0.2.0] - Unreleased
+
+### Added
+
+- contratti sperimentali per preview content-bound, risultato mutativo ed
+  eventi redatti del lifecycle apply/reindex;
+- implementazione Linux di `workspace.patch` atomica e fail-closed, mantenuta
+  fuori dal profilo ufficiale;
+- benchmark versionato per la qualificazione Controlled Mutation, con matrice
+  deterministica, gate fail-fast e report redatti.
+
+### Security
+
+- la configurazione distribuita resta read-only con soli list/read/search e
+  `workspace_mutate: deny`;
+- packaging e quick start non includono il profilo mutante né presentano
+  `workspace.patch` come supportato;
+- ADR-0032 registra `mutation_deferred` dopo il failure del primo Gate A live.
+
+### Compatibility
+
+- CLI e schema YAML `version: 1` del percorso supportato restano invariati;
+- le API Go aggiunte sono sperimentali e additive; nessuna API viene
+  stabilizzata dalla release;
+- Linux `amd64`, Ollama e `llama3.1:8b` restano l'unica combinazione
+  qualificabile per il reference agent Laravel read-only.
+
 ## [0.1.1] - 2026-08-15
 
 ### Fixed
@@ -62,3 +89,4 @@ Nessun tool, permesso o support claim mutativo viene aggiunto.
 
 [0.1.0]: https://github.com/Axtonno/maestro/releases/tag/v0.1.0
 [0.1.1]: https://github.com/Axtonno/maestro/releases/tag/v0.1.1
+[0.2.0]: https://github.com/Axtonno/maestro/releases/tag/v0.2.0

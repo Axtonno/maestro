@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-version="v0.1.0-pc.1"
+version="v0.2.0-pc.1"
 status="packaging-candidate"
 while (($# > 0)); do
     case "$1" in
@@ -69,7 +69,7 @@ for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGE
     docs/operational-experience.md docs/packaging-candidate.md \
     docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
-    docs/v0.1.0-api-compatibility.md docs/laravel-plugin.md \
+    docs/v0.2.0-api-compatibility.md docs/laravel-plugin.md \
     "$release_notes" \
     configs/maestro.example.yaml fixtures/laravel-v1/dataset.json \
     fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
@@ -106,6 +106,13 @@ if grep -Eq 'workspace\.(write|patch)' "$root/configs/maestro.example.yaml"; the
 fi
 grep -Eq '^[[:space:]]*workspace_mutate:[[:space:]]*deny[[:space:]]*$' \
     "$root/configs/maestro.example.yaml"
+for unsupported in configs/maestro.mutating.example.yaml \
+    docs/mutation-qualification.md docs/mutation-benchmark.md; do
+    [[ ! -e "$root/$unsupported" ]] || {
+        printf 'archive publishes unsupported mutation surface: %s\n' "$unsupported" >&2
+        exit 1
+    }
+done
 
 version_output="$($root/maestro version)"
 grep -Fxq "maestro ${version}" <<<"$version_output"

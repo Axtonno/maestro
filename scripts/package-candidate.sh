@@ -115,7 +115,7 @@ cp docs/installation.md docs/configuration.md docs/cli.md \
     docs/operational-experience.md docs/packaging-candidate.md \
     docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
-    docs/v0.1.0-api-compatibility.md docs/laravel-plugin.md "$root/docs/"
+    docs/v0.2.0-api-compatibility.md docs/laravel-plugin.md "$root/docs/"
 mkdir -p "$root/docs/releases"
 cp "$release_notes" "$root/docs/releases/"
 cp configs/maestro.example.yaml "$root/configs/"

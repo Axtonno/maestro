@@ -1,11 +1,11 @@
-# Maestro v0.1.x Troubleshooting
+# Maestro v0.2.0 Troubleshooting
 
 ## Il checksum fallisce
 
 Non estrarre né eseguire l'archive. Scaricare nuovamente sia `.tar.gz` sia
 `.sha256` dalla stessa release e ripetere `sha256sum -c`.
 
-## `maestro version` non mostra la versione v0.1.x attesa
+## `maestro version` non mostra la versione v0.2.0 attesa
 
 Si sta usando un altro binario o un build locale. Eseguire `./maestro version`
 dalla directory estratta e confrontare il commit con
@@ -48,7 +48,7 @@ multipli e versioni diverse da `1` sono rifiutati. Confrontare il file con
 
 Provider, modello o capability richiesta non è disponibile. Eseguire `doctor`
 e `models`; non cambiare modello casualmente se si vuole restare nel percorso
-qualificato v0.1.x.
+qualificato v0.2.0.
 
 ## Un progetto reale termina prima della prima tool call
 
