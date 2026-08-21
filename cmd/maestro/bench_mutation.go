@@ -116,7 +116,7 @@ func runMutationPreflight(
 	lower := profile.Target.HardwareLowerBound
 	swapMB := linuxSwapMB()
 	if hardware.LogicalCPUs < lower.LogicalCPUs || hardware.MemoryMB < lower.RAMGiB*1024 ||
-		swapMB+1 < lower.SwapGiB*1024 || !strings.Contains(hardware.CPU, lower.CPU) {
+		swapMB+1 < lower.SwapGiB*1024 || !cpuMeetsLowerBound(hardware.CPU, lower.CPU) {
 		fmt.Fprintln(stdout, "fail\thardware\tlower_bound_not_met")
 		failed = true
 	} else {
@@ -146,6 +146,33 @@ func runMutationPreflight(
 		return 1
 	}
 	return 0
+}
+
+func cpuMeetsLowerBound(actual string, required string) bool {
+	normalize := func(value string) []string {
+		value = strings.ToLower(value)
+		for _, marker := range []string{"(r)", "(tm)", "cpu"} {
+			value = strings.ReplaceAll(value, marker, " ")
+		}
+		if before, _, exists := strings.Cut(value, "@"); exists {
+			value = before
+		}
+		return strings.Fields(value)
+	}
+	actualTokens := make(map[string]struct{})
+	for _, token := range normalize(actual) {
+		actualTokens[token] = struct{}{}
+	}
+	requiredTokens := normalize(required)
+	if len(requiredTokens) == 0 {
+		return false
+	}
+	for _, token := range requiredTokens {
+		if _, exists := actualTokens[token]; !exists {
+			return false
+		}
+	}
+	return true
 }
 
 func loadMutationPreflightConfig(profile mutation.Profile, root string) (productconfig.Config, error) {

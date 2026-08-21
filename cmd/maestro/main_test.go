@@ -191,6 +191,18 @@ func TestBenchMutationGateCRejectsNonInteractiveInputBeforeProviderIO(t *testing
 	}
 }
 
+func TestMutationPreflightNormalizesCPUTrademarkMarkers(t *testing.T) {
+	if !cpuMeetsLowerBound(
+		"Intel(R) Core(TM) i5-8365U CPU @ 1.60GHz",
+		"Intel Core i5-8365U",
+	) {
+		t.Fatal("equivalent CPU identity did not meet the lower bound")
+	}
+	if cpuMeetsLowerBound("Intel Core i3-1000", "Intel Core i5-8365U") {
+		t.Fatal("different CPU identity met the lower bound")
+	}
+}
+
 func TestBenchLaravelWritesMarkdownAndRenderReproducesItFromJSON(t *testing.T) {
 	t.Setenv("MAESTRO_OLLAMA_BASE_URL", "")
 	directory := t.TempDir()
