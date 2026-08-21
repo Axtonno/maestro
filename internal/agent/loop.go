@@ -72,6 +72,16 @@ func (loop *agentLoop) Run(
 				_ = current.transitionStep(step.ID(), pkgAgent.StepBlocked, "permission_denied")
 				return "", pkgAgent.TerminalPermissionDenied, pkgAgent.ErrPermissionDenied
 			}
+			if !workspaceReadObserved {
+				var bootstrapped bool
+				messages, bootstrapped, err = loop.bootstrapReferenceRead(
+					ctx, current, request, messages, descriptors, seenCalls, choreography,
+				)
+				if err != nil {
+					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
+				}
+				workspaceReadObserved = bootstrapped
+			}
 			if err := current.consume(counterDelta{modelTurns: 1}); err != nil {
 				return "", pkgAgent.TerminalLimit, err
 			}
@@ -512,6 +522,106 @@ func onlyWorkspaceReadTool(tools []provider.Tool, descriptors map[string]pkgTool
 		}
 	}
 	return nil
+}
+
+func (loop *agentLoop) bootstrapReferenceRead(
+	ctx context.Context,
+	current *session,
+	request pkgAgent.RunRequest,
+	messages []provider.Message,
+	descriptors map[string]pkgTool.Descriptor,
+	seenCalls map[pkgTool.CallID]struct{},
+	choreography *toolChoreography,
+) ([]provider.Message, bool, error) {
+	logical, required := explicitReferenceReadPath(request)
+	if !required {
+		return messages, false, nil
+	}
+	var descriptor pkgTool.Descriptor
+	var providerName string
+	for name, candidate := range descriptors {
+		if candidate.ID() == workspaceReadToolID {
+			descriptor, providerName = candidate, name
+			break
+		}
+	}
+	if providerName == "" {
+		return messages, false, nil
+	}
+	arguments, err := json.Marshal(struct {
+		Path string `json:"path"`
+	}{Path: logical})
+	if err != nil {
+		return messages, false, err
+	}
+	callID := pkgTool.CallID(fmt.Sprintf("maestro-%s-pre-read", request.Run()))
+	invocation, err := pkgTool.NewInvocation(descriptor.ID(), callID, pkgTool.RunID(request.Run()), arguments)
+	if err != nil {
+		return messages, false, err
+	}
+	if _, duplicate := seenCalls[callID]; duplicate {
+		return messages, false, pkgTool.ErrInvalidInvocation
+	}
+	seenCalls[callID] = struct{}{}
+	if err := current.consume(counterDelta{
+		toolCalls:    1,
+		sessionBytes: len(callID) + len(providerName) + len(arguments),
+	}); err != nil {
+		return messages, false, err
+	}
+	execution, err := pkgTool.NewExecutionRequest(
+		invocation, request.Policy(), request.Approver(),
+		pkgTool.ExecutionLimits{
+			MaxDuration:    request.Limits().MaxDuration,
+			MaxOutputBytes: request.Limits().MaxToolResultBytes,
+			MaxItems:       100_000,
+		},
+	)
+	if err != nil {
+		return messages, false, err
+	}
+	result, err := loop.tools.Invoke(ctx, execution)
+	if err != nil {
+		return messages, false, err
+	}
+	if result.Outcome() == pkgTool.ResultDenied {
+		return messages, false, pkgTool.ErrPermissionDenied
+	}
+	if result.Outcome() != pkgTool.ResultSuccess {
+		return messages, false, pkgTool.ErrExecutionFailed
+	}
+	messageContent, err := encodeToolResult(result)
+	if err != nil {
+		return messages, false, err
+	}
+	if err := current.consume(counterDelta{sessionBytes: len(messageContent)}); err != nil {
+		return messages, false, err
+	}
+	choreography.afterCall(descriptor, result)
+	return append(messages,
+		provider.Message{
+			Role: provider.RoleAssistant,
+			ToolCalls: []provider.ToolCall{{
+				ID: string(callID), Name: providerName, Arguments: arguments,
+			}},
+		},
+		provider.Message{
+			Role: provider.RoleTool, Content: messageContent,
+			ToolCallID: string(callID), ToolName: providerName,
+		},
+	), true, nil
+}
+
+func explicitReferenceReadPath(request pkgAgent.RunRequest) (string, bool) {
+	if request.Agent() != ReferenceAgentID {
+		return "", false
+	}
+	fields := strings.Fields(request.Instruction())
+	if len(fields) < 2 || !strings.EqualFold(fields[0], "read") ||
+		strings.ContainsAny(fields[1], "\"'`") {
+		return "", false
+	}
+	return fields[1], true
 }
 
 func recoverableReadOnlyInvocationError(descriptor pkgTool.Descriptor, err error) (pkgTool.Result, bool, error) {

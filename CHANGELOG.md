@@ -23,6 +23,9 @@ deve essere dichiarato nelle note di release.
   modello entro gli hard limit tramite un risultato sintetico redatto;
 - prima della read richiesta dal quick start, il modello vede soltanto
   `workspace.read` e riceve regole esplicite sul solo campo `path`;
+- le istruzioni `Read <logical-path> ...` eseguono una read deterministica
+  attraverso Tool Runtime prima della prima inferenza, conservando policy,
+  containment, hard limit e correlazione del risultato;
 - la configurazione distribuita resta read-only con soli list/read/search e
   `workspace_mutate: deny`;
 - packaging e quick start non includono il profilo mutante né presentano

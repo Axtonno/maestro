@@ -33,16 +33,19 @@ i marker strutturali e rende disponibile il workspace generico.
 La root fisica non viene inserita nel prompt. I tool usano path logici relativi
 e rifiutano traversal e symlink.
 
-Quando l'istruzione inizia esplicitamente con `Read`, il reference agent non
-accetta una risposta finale finché `workspace.read` non è stata eseguita con
-successo. Una risposta testuale che simula o sostiene di avere già letto il
-file viene corretta entro gli stessi hard limit, senza inventare evidenza.
+Quando l'istruzione inizia esplicitamente con `Read` seguito da un path logico
+non quotato, il reference agent esegue deterministicamente `workspace.read`
+attraverso Tool Runtime prima della prima inferenza. La policy, il containment,
+i limiti e gli eventi restano quelli di una normale tool call. Il modello
+riceve il risultato correlato e non può completare sulla sola pretesa testuale
+di avere letto il file.
 Arguments invalidi di un tool read-only vengono restituiti al modello come
 risultato redatto e recuperabile; ogni correzione consuma comunque turno e tool
 call e non si applica ai tool mutanti o ai failure di esecuzione.
-Prima della read obbligatoria, il provider vede soltanto `workspace.read`; dopo
-il successo torna disponibile l'intero tool set read-only. Il path deve essere
-copiato dall'istruzione come path logico relativo.
+Se l'istruzione non soddisfa la grammatica stretta, la selezione resta al
+modello; per un task che inizia comunque con `Read`, prima della read riuscita
+il provider vede soltanto `workspace.read`. Dopo il successo torna disponibile
+l'intero tool set read-only.
 
 La scan policy Laravel è distinta dalla policy filesystem generica. Include
 `app`, `bootstrap`, `config`, `database`, `lang`, le aree sorgente di

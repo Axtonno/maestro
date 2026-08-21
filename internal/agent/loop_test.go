@@ -119,22 +119,10 @@ func TestAgentLoopAcceptsFinalAnswerThatNamesDeclaredTool(t *testing.T) {
 }
 
 func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) {
-	providers := &generationStub{responses: []provider.CompletionResponse{
-		{
-			Message:      provider.Message{Role: provider.RoleAssistant, Content: "The file says the service creates the order."},
-			FinishReason: provider.FinishReasonStop,
-		},
-		{
-			Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{
-				ID: "call-reference-read", Name: "workspace_read", Arguments: json.RawMessage(`{"path":"app/Order.php"}`),
-			}}},
-			FinishReason: provider.FinishReasonToolCalls,
-		},
-		{
-			Message:      provider.Message{Role: provider.RoleAssistant, Content: "The inspected file calls OrderService::create."},
-			FinishReason: provider.FinishReasonStop,
-		},
-	}}
+	providers := &generationStub{responses: []provider.CompletionResponse{{
+		Message:      provider.Message{Role: provider.RoleAssistant, Content: "The inspected file calls OrderService::create."},
+		FinishReason: provider.FinishReasonStop,
+	}}}
 	fixture := &inspectionLoopTool{descriptor: workspaceDescriptor(t, workspaceReadToolID, "workspace_read", pkgTool.EffectWorkspaceInspect)}
 	list := &loopTool{descriptor: workspaceDescriptor(t, "workspace.list", "workspace_list", pkgTool.EffectWorkspaceInspect)}
 	runtime := loopRuntime(t, providers, allowedToolRuntime(t, fixture, list), pendingPlan(t, "inspect"))
@@ -153,15 +141,16 @@ func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) 
 	if result.Content() != "The inspected file calls OrderService::create." || fixture.executions != 1 {
 		t.Fatalf("final was accepted without inspection: result=%#v executions=%d", result, fixture.executions)
 	}
-	if counters := result.Session().Counters(); counters.ModelTurns != 3 || counters.ToolCalls != 1 {
+	if counters := result.Session().Counters(); counters.ModelTurns != 1 || counters.ToolCalls != 1 {
 		t.Fatalf("unexpected counters: %#v", counters)
 	}
 	requests := providers.Requests()
-	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
-		!strings.Contains(requests[1].Messages[3].Content, "has not read the requested workspace file") ||
-		len(requests[0].Tools) != 1 || requests[0].Tools[0].Name != "workspace_read" ||
-		len(requests[2].Tools) != 2 {
-		t.Fatalf("missing inspection correction: %#v", requests)
+	if len(requests) != 1 || len(requests[0].Messages) != 4 ||
+		len(requests[0].Messages[2].ToolCalls) != 1 ||
+		requests[0].Messages[2].ToolCalls[0].Name != "workspace_read" ||
+		requests[0].Messages[3].Role != provider.RoleTool ||
+		len(requests[0].Tools) != 2 {
+		t.Fatalf("missing deterministic read bootstrap: %#v", requests)
 	}
 }
 
@@ -193,7 +182,7 @@ func TestReferenceAgentRecoversInvalidReadArgumentsWithinLimits(t *testing.T) {
 		t.Fatal(err)
 	}
 	request := requestWithTools(
-		t, requestWithInstruction(t, runRequest(t, "run-invalid-read", ReferenceAgentID, "workspace", 4), "Read app/Order.php."),
+		t, requestWithInstruction(t, runRequest(t, "run-invalid-read", ReferenceAgentID, "workspace", 4), "Explain app/Order.php."),
 		[]pkgTool.ID{workspaceReadToolID}, false,
 	)
 
@@ -208,6 +197,26 @@ func TestReferenceAgentRecoversInvalidReadArgumentsWithinLimits(t *testing.T) {
 	if len(requests) != 3 || len(requests[1].Messages) != 4 ||
 		!containsAll(requests[1].Messages[3].Content, `"outcome":"invalid"`, `"reason":"invalid_arguments"`, `"required_action":"use_exact_declared_schema"`) {
 		t.Fatalf("missing redacted recovery result: %#v", requests)
+	}
+}
+
+func TestExplicitReferenceReadPathIsStrict(t *testing.T) {
+	base := runRequest(t, "run-read-path", ReferenceAgentID, "workspace", 4)
+	for _, testCase := range []struct {
+		instruction string
+		path        string
+		ok          bool
+	}{
+		{instruction: "Read app/Order.php and explain it.", path: "app/Order.php", ok: true},
+		{instruction: "read routes/api.php", path: "routes/api.php", ok: true},
+		{instruction: "Explain app/Order.php."},
+		{instruction: `Read "app/Order.php" and explain it.`},
+	} {
+		request := requestWithInstruction(t, base, testCase.instruction)
+		path, ok := explicitReferenceReadPath(request)
+		if path != testCase.path || ok != testCase.ok {
+			t.Fatalf("instruction=%q path=%q ok=%t", testCase.instruction, path, ok)
+		}
 	}
 }
 
