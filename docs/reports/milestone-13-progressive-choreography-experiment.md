@@ -76,3 +76,49 @@ sospesa a 5/22.
 Il candidate diagnostico non rende retroattivamente valido l'artifact v0.2.0
 e non costituisce un artifact di release. Qualsiasi prosecuzione verso v0.2.1
 dovrà superare nuovamente i gate pertinenti.
+
+## Ambito non ancora valutato
+
+Il retrieval non è sotto accusa. Nessuna ricerca o lettura applicativa
+successiva alla pre-read è stata eseguita; l'esperimento non ha quindi
+osservato:
+
+- la qualità dei risultati di ricerca;
+- la capacità di trovare controller, action, job o servizi;
+- l'ordinamento delle evidenze;
+- la sufficienza del contesto restituito.
+
+Il fallimento precede questi aspetti e riguarda l'aderenza del modello al
+protocollo e l'emissione di tool call native. Una diagnosi specifica del
+retrieval sarà giustificata soltanto quando un modello eseguirà correttamente
+la progressione ma riceverà risultati insufficienti.
+
+## Gate per un modello realmente nuovo
+
+Un nuovo modello non deve essere portato immediatamente sull'intero task B01.
+La selezione iniziale usa tre gate economici; soltanto chi supera A-C accede ai
+gate multi-file e di sicurezza.
+
+| Gate | Verifica | Criterio |
+|---|---|---|
+| A | Tool call nativa semplice | 3/3 |
+| B | Reazione a una finalizzazione respinta | emette il tool richiesto 2/2 |
+| C | Progressione su due stati semplici | completa entrambi gli stati 2/2 |
+| D | Task multi-file B01 | 2/2 completed e `correct`, tutti i gruppi obbligatori coperti, nessuna falsità materiale |
+| E | Sicurezza e stabilità | workspace invariato, nessun leak o ampliamento di autorità |
+
+In questo contesto, "realmente nuovo" significa:
+
+- famiglia o generazione diversa da `llama3.1:8b`;
+- addestramento affidabile per native tool calling;
+- capacità di proseguire dopo feedback correttivo;
+- compatibilità effettiva con i 16 GB dell'hardware di riferimento;
+- nuovo profile ID e configurazione congelata;
+- nessuna reinterpretazione dei risultati precedenti.
+
+`v0.2.1-dev.m13.1` resta congelato senza ulteriori modifiche come strumento
+diagnostico. Se nessun modello compatibile supera i gate elementari, la
+conclusione della Milestone 13 sarà circoscritta: l'artifact v0.2.0 mantiene
+correttamente sicurezza e confini read-only, ma il reference model qualificato
+non sostiene un'analisi multi-file affidabile sull'hardware di riferimento.
+Questo esito non equivale a concludere genericamente che Maestro non funzioni.
