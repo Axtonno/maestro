@@ -926,7 +926,7 @@ func TestDirectComponentRegistrationDoesNotClassifyPlugin(t *testing.T) {
 func TestGestorCompositionRootRefreshesAndResolvesComponentsProvidersAndPlugins(t *testing.T) {
 	runtime := New()
 	initial := runtime.Gestor().Snapshot().Metadata()
-	if !initial.Current || initial.Generation != 1 || initial.DescriptorCount != 13 {
+	if !initial.Current || initial.Generation != 1 || initial.DescriptorCount != expectedGestorDescriptorCount() {
 		t.Fatalf("unexpected initial Gestor snapshot: %#v", initial)
 	}
 	if got := initial.Sources(); !reflect.DeepEqual(got, []pkgGestor.SourceID{
@@ -1056,7 +1056,7 @@ func TestGestorCompositionRootRefreshesAndResolvesComponentsProvidersAndPlugins(
 func TestCompositionExposesIsolatedAgentToolCatalogsAndGestorSources(t *testing.T) {
 	first := New()
 	second := New()
-	if len(first.Tools().Descriptors()) != 5 || len(first.Agents().Descriptors()) != 1 {
+	if len(first.Tools().Descriptors()) != 5 || len(first.Agents().Descriptors()) != expectedBuiltInAgentCount() {
 		t.Fatalf("unexpected built-in catalogs: tools=%d agents=%d", len(first.Tools().Descriptors()), len(first.Agents().Descriptors()))
 	}
 	if policies := first.Tools().Policies(); len(policies) != 0 {
@@ -1068,9 +1068,16 @@ func TestCompositionExposesIsolatedAgentToolCatalogsAndGestorSources(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	resolution, err := first.Gestor().Resolve(agentQuery)
-	if err != nil || resolution.Descriptor().Target.ID != "agent.reference" {
-		t.Fatalf("reference agent was not resolved: %#v %v", resolution, err)
+	agentCandidates, err := first.Gestor().Candidates(agentQuery)
+	if err != nil || len(agentCandidates) != expectedBuiltInAgentCount() {
+		t.Fatalf("built-in agents were not discovered: %#v %v", agentCandidates, err)
+	}
+	foundReference := false
+	for _, candidate := range agentCandidates {
+		foundReference = foundReference || candidate.Target.ID == "agent.reference"
+	}
+	if !foundReference {
+		t.Fatalf("reference agent was not discovered: %#v", agentCandidates)
 	}
 	toolQuery, _ := pkgGestor.NewQuery(pkgGestor.CapabilityToolInvoke, pkgGestor.QueryOptions{
 		TargetKind: pkgGestor.TargetKindTool, Scope: pkgGestor.ScopeTool, RequireAvailable: true,
@@ -1089,13 +1096,13 @@ func TestCompositionExposesIsolatedAgentToolCatalogsAndGestorSources(t *testing.
 	if first.Gestor().Snapshot().Metadata().Current {
 		t.Fatal("agent registration did not invalidate Gestor")
 	}
-	if !second.Gestor().Snapshot().Metadata().Current || len(second.Agents().Descriptors()) != 1 {
+	if !second.Gestor().Snapshot().Metadata().Current || len(second.Agents().Descriptors()) != expectedBuiltInAgentCount() {
 		t.Fatal("agent registration leaked into another composition root")
 	}
 	if err := first.Gestor().Refresh(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if candidates, err := first.Gestor().Candidates(agentQuery); err != nil || len(candidates) != 2 {
+	if candidates, err := first.Gestor().Candidates(agentQuery); err != nil || len(candidates) != expectedBuiltInAgentCount()+1 {
 		t.Fatalf("refreshed agent catalog mismatch: %#v %v", candidates, err)
 	}
 
@@ -1302,7 +1309,7 @@ func TestGestorCompositionPublishesRedactedRefreshFailure(t *testing.T) {
 	select {
 	case event := <-failed:
 		if event.Failure != pkgGestor.EventFailureSource ||
-			event.Generation != 1 || event.DescriptorCount != 13 {
+			event.Generation != 1 || event.DescriptorCount != expectedGestorDescriptorCount() {
 			t.Fatalf("unexpected failure payload: %#v", event)
 		}
 	case <-time.After(2 * time.Second):

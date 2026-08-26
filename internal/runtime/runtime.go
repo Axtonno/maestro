@@ -150,6 +150,9 @@ func newRuntimeWithServices(
 	if err := agentRuntime.Register(internalAgent.NewReferenceAgent()); err != nil {
 		panic(fmt.Sprintf("register reference agent: %v", err))
 	}
+	if err := registerDevelopmentAgents(agentRuntime); err != nil {
+		panic(fmt.Sprintf("register development agent: %v", err))
+	}
 	rt.agentRuntime = agentRuntime
 
 	rt.registryView = newRuntimeRegistry(rt)

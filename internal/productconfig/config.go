@@ -173,8 +173,8 @@ func (config Config) Validate() error {
 	if err := pkgAgent.ID(config.Agent.ID).Validate(); err != nil {
 		return fieldWrap("agent.id", err)
 	}
-	if config.Agent.ID != "agent.reference" {
-		return fieldError("agent.id", "v0.1.0 requires agent.reference")
+	if !supportedAgentID(config.Agent.ID) {
+		return fieldError("agent.id", "agent is not supported by this build")
 	}
 	if err := validateTools(config.Agent.Tools); err != nil {
 		return err

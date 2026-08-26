@@ -29,6 +29,27 @@ func publishMutationEvent(events pkgRuntime.EventBus, payload pkgAgent.MutationE
 	}()
 }
 
+func publishEvidenceEvent(
+	events pkgRuntime.EventBus,
+	run pkgAgent.RunID,
+	agent pkgAgent.ID,
+	stage pkgAgent.EvidenceStage,
+	status pkgAgent.EvidenceStatus,
+	decision pkgAgent.EvidenceDecision,
+	tool string,
+	result pkgAgent.EvidenceResult,
+	stop pkgAgent.EvidenceStopReason,
+) {
+	if events == nil {
+		return
+	}
+	publishAgentEvent(events, pkgAgent.EventEvidenceTransitioned, pkgAgent.EventPayload{
+		Run: run, Agent: agent, EvidenceStage: stage, EvidenceStatus: status,
+		EvidenceDecision: decision, EvidenceTool: tool, EvidenceResult: result,
+		EvidenceStop: stop,
+	})
+}
+
 func sessionEventPayload(snapshot pkgAgent.SessionSnapshot, duration time.Duration, failure pkgAgent.EventFailure) pkgAgent.EventPayload {
 	counters := snapshot.Counters()
 	payload := pkgAgent.EventPayload{

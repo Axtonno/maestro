@@ -21,6 +21,12 @@ func TestProgressRendererUsesOnlyRedactedEventPayloads(t *testing.T) {
 	events := runtime.EventBus()
 	_ = events.Publish(pkgAgent.Event{Topic: pkgAgent.EventPlanCreated, Data: pkgAgent.EventPayload{Run: "run-safe", PlanVersion: 2}})
 	_ = events.Publish(pkgAgent.Event{Topic: pkgAgent.EventStepTransitioned, Data: pkgAgent.EventPayload{Run: "run-safe", Step: "execute", StepState: pkgAgent.StepRunning}})
+	_ = events.Publish(pkgAgent.Event{Topic: pkgAgent.EventEvidenceTransitioned, Data: pkgAgent.EventPayload{
+		Run: "run-safe", EvidenceStage: pkgAgent.EvidenceStageControllerAction,
+		EvidenceStatus: pkgAgent.EvidencePending, EvidenceDecision: pkgAgent.EvidenceDecisionSearch,
+		EvidenceTool: "workspace.search", EvidenceResult: pkgAgent.EvidenceResultEmpty,
+		EvidenceStop: pkgAgent.EvidenceStopIncomplete,
+	}})
 	_ = events.Publish(pkgTool.Event{Topic: pkgTool.EventPermissionDecided, Data: pkgTool.EventPayload{Run: "run-safe", Decision: pkgTool.DecisionAllow, ActionCount: 2}})
 	_ = events.Publish(pkgTool.Event{Topic: pkgTool.EventInvocationPrepared, Data: pkgTool.EventPayload{Run: "run-safe", Tool: "workspace.patch", ActionCount: 1}})
 	_ = events.Publish(pkgTool.Event{Topic: pkgTool.EventPermissionDecided, Data: pkgTool.EventPayload{Run: "run-safe", Tool: "workspace.patch", Decision: pkgTool.DecisionAllow, ActionCount: 1}})
@@ -28,7 +34,7 @@ func TestProgressRendererUsesOnlyRedactedEventPayloads(t *testing.T) {
 	_ = events.Publish(pkgAgent.MutationEvent{Topic: pkgAgent.EventMutationTransitioned, Data: pkgAgent.MutationEventPayload{Run: "run-safe", MutationStage: pkgAgent.MutationStageReindex, MutationStatus: pkgAgent.MutationSucceeded, MutationEffect: pkgAgent.MutationEffectApplied, Durable: true, WorkspaceGeneration: 2}})
 	_ = events.Publish(pkgAgent.Event{Topic: pkgAgent.EventSessionCompleted, Data: pkgAgent.EventPayload{Run: "run-safe", Terminal: pkgAgent.TerminalCompleted, ModelTurns: 2, ToolCalls: 1, DurationMillis: 12}})
 	got := output.String()
-	for _, expected := range []string{"limits\tduration=10ns model_turns=2 tool_calls=3", "plan\trun=run-safe version=2", "step\trun=run-safe id=execute state=running", "permission\trun=run-safe decision=allow actions=2", "mutation\trun=run-safe stage=proposal status=prepared", "mutation\trun=run-safe stage=approval status=allowed", "mutation\trun=run-safe stage=apply status=succeeded effect=applied durable=true generation=0", "mutation\trun=run-safe stage=reindex status=succeeded effect=applied durable=true generation=2", "terminal\trun=run-safe reason=completed model_turns=2 tool_calls=1 duration_ms=12"} {
+	for _, expected := range []string{"limits\tduration=10ns model_turns=2 tool_calls=3", "plan\trun=run-safe version=2", "step\trun=run-safe id=execute state=running", "evidence\trun=run-safe stage=controller_action status=pending decision=search tool=workspace.search result=empty stop=incomplete_evidence", "permission\trun=run-safe decision=allow actions=2", "mutation\trun=run-safe stage=proposal status=prepared", "mutation\trun=run-safe stage=approval status=allowed", "mutation\trun=run-safe stage=apply status=succeeded effect=applied durable=true generation=0", "mutation\trun=run-safe stage=reindex status=succeeded effect=applied durable=true generation=2", "terminal\trun=run-safe reason=completed model_turns=2 tool_calls=1 duration_ms=12"} {
 		if !strings.Contains(got, expected) {
 			t.Fatalf("output %q lacks %q", got, expected)
 		}

@@ -38,6 +38,7 @@ func (loop *agentLoop) Run(
 	}
 	seenCalls := make(map[pkgTool.CallID]struct{})
 	choreography := &toolChoreography{}
+	progressiveEvidence := newProgressiveEvidenceState(request, loop.events)
 	lastContent := ""
 	turn := 0
 	mutationAttempts := 0
@@ -81,6 +82,11 @@ func (loop *agentLoop) Run(
 					return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
 				}
 				workspaceReadObserved = bootstrapped
+				if bootstrapped && progressiveEvidence != nil {
+					messages = append(messages, provider.Message{
+						Role: provider.RoleSystem, Content: progressiveEvidence.observeBootstrap(),
+					})
+				}
 			}
 			if err := current.consume(counterDelta{modelTurns: 1}); err != nil {
 				return "", pkgAgent.TerminalLimit, err
@@ -152,6 +158,10 @@ func (loop *agentLoop) Run(
 					})
 					continue
 				}
+				if accepted, correction := progressiveEvidence.evaluateAssistant(assistant.Content); !accepted {
+					messages = append(messages, provider.Message{Role: provider.RoleSystem, Content: correction})
+					continue
+				}
 				if err := current.transitionStep(step.ID(), pkgAgent.StepCompleted, ""); err != nil {
 					return "", pkgAgent.TerminalInternalFailure, err
 				}
@@ -188,6 +198,7 @@ func (loop *agentLoop) Run(
 					return "", pkgAgent.TerminalInternalFailure, err
 				}
 				if !execute {
+					progressiveEvidence.afterTool(descriptor, choreographyResult)
 					messageContent, err := encodeToolResult(choreographyResult)
 					if err != nil {
 						return "", pkgAgent.TerminalInternalFailure, err
@@ -219,6 +230,7 @@ func (loop *agentLoop) Run(
 					}
 					mutationAttempts++
 				}
+				progressiveEvidence.beforeTool(descriptor)
 				result, err := loop.tools.Invoke(ctx, execution)
 				if err != nil {
 					if mutating {
@@ -233,10 +245,12 @@ func (loop *agentLoop) Run(
 						return "", pkgAgent.TerminalInternalFailure, recoverErr
 					}
 					if !ok {
+						progressiveEvidence.toolFailed(descriptor)
 						return "", toolErrorTerminal(ctx, err), errors.Join(pkgAgent.ErrToolFailed, err)
 					}
 					result = recoverable
 				}
+				progressiveEvidence.afterTool(descriptor, result)
 				if result.Outcome() == pkgTool.ResultSuccess && descriptor.ID() == workspaceReadToolID {
 					workspaceReadObserved = true
 				}
@@ -481,6 +495,9 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 		system += " Use an exact declared function name and only fields from that function's schema. For workspace paths, pass the logical path relative to the workspace exactly as shown by the task or evidence; never add a leading slash, a physical workspace root, a file URI, or parent traversal."
 	}
 	system += " Return a final answer only after the step is actually complete."
+	if request.Agent() == ProgressiveReferenceAgentID {
+		system += " This development agent uses mandatory progressive evidence states: route, controller_action, referenced_symbols, then events_jobs_services. The runtime will report the current state after the deterministic route read. Do not skip states or return the task answer while a state is open. Close each state only with the exact JSON declaration requested by the runtime; declarations are protocol messages, not final answers."
+	}
 
 	var user strings.Builder
 	user.WriteString("Task: ")
@@ -501,7 +518,7 @@ func initialMessages(request pkgAgent.RunRequest, step pkgAgent.PlanStep, bundle
 
 func requiresWorkspaceRead(request pkgAgent.RunRequest, descriptors map[string]pkgTool.Descriptor) bool {
 	instruction := strings.ToLower(strings.TrimSpace(request.Instruction()))
-	if request.Agent() != ReferenceAgentID || !strings.HasPrefix(instruction, "read ") {
+	if !isReferenceAgent(request.Agent()) || !strings.HasPrefix(instruction, "read ") {
 		return false
 	}
 	if descriptors == nil {
@@ -613,7 +630,7 @@ func (loop *agentLoop) bootstrapReferenceRead(
 }
 
 func explicitReferenceReadPath(request pkgAgent.RunRequest) (string, bool) {
-	if request.Agent() != ReferenceAgentID {
+	if !isReferenceAgent(request.Agent()) {
 		return "", false
 	}
 	fields := strings.Fields(request.Instruction())

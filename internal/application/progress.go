@@ -42,6 +42,7 @@ func (renderer *ProgressRenderer) Subscribe(events pkgRuntime.EventBus) error {
 	for _, topic := range []string{
 		pkgAgent.EventSessionStarted, pkgAgent.EventPlanCreated, pkgAgent.EventPlanRevised,
 		pkgAgent.EventStepTransitioned, pkgAgent.EventTurnCompleted, pkgAgent.EventLimitReached,
+		pkgAgent.EventEvidenceTransitioned,
 		pkgAgent.EventMutationTransitioned,
 		pkgAgent.EventSessionCompleted, pkgAgent.EventSessionFailed,
 	} {
@@ -85,6 +86,10 @@ func (renderer *ProgressRenderer) agentEvent(event pkgRuntime.Event) {
 			payload.Run, payload.ModelTurns, payload.ToolCalls, payload.InputTokens, payload.OutputTokens)
 	case pkgAgent.EventLimitReached:
 		renderer.write("limit\trun=%s terminal=%s failure=%s\n", payload.Run, payload.Terminal, payload.Failure)
+	case pkgAgent.EventEvidenceTransitioned:
+		renderer.write("evidence\trun=%s stage=%s status=%s decision=%s tool=%s result=%s stop=%s\n",
+			payload.Run, payload.EvidenceStage, payload.EvidenceStatus, payload.EvidenceDecision,
+			payload.EvidenceTool, payload.EvidenceResult, payload.EvidenceStop)
 	case pkgAgent.EventSessionCompleted, pkgAgent.EventSessionFailed:
 		renderer.write("terminal\trun=%s reason=%s model_turns=%d tool_calls=%d duration_ms=%d\n",
 			payload.Run, payload.Terminal, payload.ModelTurns, payload.ToolCalls, payload.DurationMillis)

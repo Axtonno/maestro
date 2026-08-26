@@ -11,6 +11,54 @@ const (
 	EventTurnCompleted        = "agent.turn.completed"
 	EventLimitReached         = "agent.limit.reached"
 	EventMutationTransitioned = "agent.mutation.transitioned"
+	EventEvidenceTransitioned = "agent.evidence.transitioned"
+)
+
+type EvidenceStage string
+
+const (
+	EvidenceStageRoute              EvidenceStage = "route"
+	EvidenceStageControllerAction   EvidenceStage = "controller_action"
+	EvidenceStageReferencedSymbols  EvidenceStage = "referenced_symbols"
+	EvidenceStageEventsJobsServices EvidenceStage = "events_jobs_services"
+)
+
+type EvidenceStatus string
+
+const (
+	EvidencePending     EvidenceStatus = "pending"
+	EvidenceCovered     EvidenceStatus = "covered"
+	EvidenceUnavailable EvidenceStatus = "unavailable"
+)
+
+type EvidenceDecision string
+
+const (
+	EvidenceDecisionBootstrap EvidenceDecision = "bootstrap_read"
+	EvidenceDecisionRead      EvidenceDecision = "read"
+	EvidenceDecisionSearch    EvidenceDecision = "search"
+	EvidenceDecisionDeclare   EvidenceDecision = "declare"
+	EvidenceDecisionFinalize  EvidenceDecision = "finalize"
+)
+
+type EvidenceResult string
+
+const (
+	EvidenceResultPending  EvidenceResult = "pending"
+	EvidenceResultSuccess  EvidenceResult = "success"
+	EvidenceResultEmpty    EvidenceResult = "empty"
+	EvidenceResultFailed   EvidenceResult = "failed"
+	EvidenceResultAccepted EvidenceResult = "accepted"
+	EvidenceResultRejected EvidenceResult = "rejected"
+)
+
+type EvidenceStopReason string
+
+const (
+	EvidenceStopStageComplete       EvidenceStopReason = "stage_complete"
+	EvidenceStopDeclaredUnavailable EvidenceStopReason = "declared_unavailable"
+	EvidenceStopIncomplete          EvidenceStopReason = "incomplete_evidence"
+	EvidenceStopComplete            EvidenceStopReason = "complete"
 )
 
 type MutationStage string
@@ -55,19 +103,25 @@ const (
 // model, policy, workspace, instruction, prompt, plan objective, content,
 // tool arguments/output, path, or external error text.
 type EventPayload struct {
-	Run            RunID
-	Agent          ID
-	Step           StepID
-	State          SessionState
-	StepState      StepStatus
-	Terminal       TerminalReason
-	PlanVersion    uint64
-	ModelTurns     int
-	ToolCalls      int
-	InputTokens    int
-	OutputTokens   int
-	DurationMillis int64
-	Failure        EventFailure
+	Run              RunID
+	Agent            ID
+	Step             StepID
+	State            SessionState
+	StepState        StepStatus
+	Terminal         TerminalReason
+	PlanVersion      uint64
+	ModelTurns       int
+	ToolCalls        int
+	InputTokens      int
+	OutputTokens     int
+	DurationMillis   int64
+	Failure          EventFailure
+	EvidenceStage    EvidenceStage
+	EvidenceStatus   EvidenceStatus
+	EvidenceDecision EvidenceDecision
+	EvidenceTool     string
+	EvidenceResult   EvidenceResult
+	EvidenceStop     EvidenceStopReason
 }
 
 // MutationEventPayload is a dedicated redacted allowlist for the mutating

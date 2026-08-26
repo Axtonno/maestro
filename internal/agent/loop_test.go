@@ -154,6 +154,91 @@ func TestReferenceAgentRequiresSuccessfulWorkspaceReadBeforeFinal(t *testing.T) 
 	}
 }
 
+func TestProgressiveReferenceAgentRequiresDeclaredEvidenceStatesBeforeFinal(t *testing.T) {
+	declaration := func(stage pkgAgent.EvidenceStage) provider.CompletionResponse {
+		return provider.CompletionResponse{
+			Message: provider.Message{Role: provider.RoleAssistant, Content: fmt.Sprintf(
+				`{"evidence_stage":%q,"status":"covered","reason":"verified relevant source"}`, stage,
+			)},
+			FinishReason: provider.FinishReasonStop,
+		}
+	}
+	readCall := func(id, path string) provider.CompletionResponse {
+		arguments, _ := json.Marshal(map[string]string{"path": path})
+		return provider.CompletionResponse{
+			Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{
+				ID: id, Name: "workspace_read", Arguments: arguments,
+			}}},
+			FinishReason: provider.FinishReasonToolCalls,
+		}
+	}
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{Message: provider.Message{Role: provider.RoleAssistant, Content: "premature answer"}, FinishReason: provider.FinishReasonStop},
+		readCall("call-controller", "app/Http/Controllers/CaptureController.php"),
+		declaration(pkgAgent.EvidenceStageControllerAction),
+		readCall("call-action", "app/Actions/CaptureRequestAction.php"),
+		declaration(pkgAgent.EvidenceStageReferencedSymbols),
+		readCall("call-job", "app/Jobs/ForwardWebhookJob.php"),
+		declaration(pkgAgent.EvidenceStageEventsJobsServices),
+		{Message: provider.Message{Role: provider.RoleAssistant, Content: "verified final answer"}, FinishReason: provider.FinishReasonStop},
+	}}
+	read := &inspectionLoopTool{descriptor: workspaceDescriptor(t, workspaceReadToolID, "workspace_read", pkgTool.EffectWorkspaceInspect)}
+	tools := allowedToolRuntime(t, read)
+	events := &agentEventRecorder{}
+	options := DefaultOptions()
+	options.Providers, options.Tools, options.EventBus = providers, tools, events
+	runtime, err := NewRuntimeWithOptions(&contextStub{bundle: testBundle(t, "workspace")}, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := runtime.Register(newAgentFixture(t, ProgressiveReferenceAgentID, pendingPlan(t, "inspect"))); err != nil {
+		t.Fatal(err)
+	}
+	request := progressiveRunRequest(t, "run-progressive", "Read routes/web.php and explain the flow.")
+
+	result, err := runtime.Run(context.Background(), request)
+	if err != nil {
+		t.Fatalf("run progressive agent: %v", err)
+	}
+	if result.Content() != "verified final answer" || result.Session().Terminal() != pkgAgent.TerminalCompleted {
+		t.Fatalf("unexpected progressive result: %#v", result)
+	}
+	if counters := result.Session().Counters(); counters.ModelTurns != 8 || counters.ToolCalls != 4 {
+		t.Fatalf("unexpected progressive counters: %#v", counters)
+	}
+	if read.executions != 4 {
+		t.Fatalf("bootstrap and stage reads were not executed: %d", read.executions)
+	}
+	requests := providers.Requests()
+	if len(requests) != 8 || !strings.Contains(requests[1].Messages[len(requests[1].Messages)-1].Content, "Finalization was rejected") {
+		t.Fatalf("premature finalization was not corrected: %#v", requests)
+	}
+	transitions := events.evidenceTransitions()
+	if len(transitions) != 12 || transitions[0].EvidenceStage != pkgAgent.EvidenceStageRoute ||
+		transitions[0].EvidenceStatus != pkgAgent.EvidenceCovered ||
+		transitions[len(transitions)-1].EvidenceStop != pkgAgent.EvidenceStopComplete {
+		t.Fatalf("unexpected evidence trace: %#v", transitions)
+	}
+}
+
+func TestProgressiveEvidenceDeclarationRequiresObservedResult(t *testing.T) {
+	request := progressiveRunRequest(t, "run-progressive-state", "Read routes/web.php and explain the flow.")
+	state := newProgressiveEvidenceState(request, nil)
+	state.observeBootstrap()
+	covered := `{"evidence_stage":"controller_action","status":"covered","reason":"done"}`
+	if accepted, correction := state.evaluateAssistant(covered); accepted || !strings.Contains(correction, "requires at least one successful relevant workspace read") {
+		t.Fatalf("unsupported covered declaration was accepted: accepted=%t correction=%q", accepted, correction)
+	}
+	search := workspaceDescriptor(t, workspaceSearchToolID, "workspace_search", pkgTool.EffectWorkspaceInspect)
+	empty, _ := pkgTool.NewResult(pkgTool.ResultSuccess, "[]", "application/json", "searched", 0, false, "")
+	state.beforeTool(search)
+	state.afterTool(search, empty)
+	unavailable := `{"evidence_stage":"controller_action","status":"unavailable","reason":"no matching controller found"}`
+	if accepted, correction := state.evaluateAssistant(unavailable); accepted || !strings.Contains(correction, "Current evidence stage: referenced_symbols") {
+		t.Fatalf("supported unavailable declaration did not advance: accepted=%t correction=%q", accepted, correction)
+	}
+}
+
 func TestReferenceAgentRecoversInvalidReadArgumentsWithinLimits(t *testing.T) {
 	providers := &generationStub{responses: []provider.CompletionResponse{
 		{
@@ -732,6 +817,22 @@ func (recorder *agentEventRecorder) mutationTransitions() []pkgAgent.MutationEve
 	return transitions
 }
 
+func (recorder *agentEventRecorder) evidenceTransitions() []pkgAgent.EventPayload {
+	recorder.mu.Lock()
+	defer recorder.mu.Unlock()
+	var transitions []pkgAgent.EventPayload
+	for _, event := range recorder.events {
+		if event.Name() != pkgAgent.EventEvidenceTransitioned {
+			continue
+		}
+		payload, ok := event.Payload().(pkgAgent.EventPayload)
+		if ok {
+			transitions = append(transitions, payload)
+		}
+	}
+	return transitions
+}
+
 type subjectPolicy struct {
 	id    pkgTool.PolicyID
 	model pkgTool.Decision
@@ -821,6 +922,22 @@ func requestWithTools(t *testing.T, source pkgAgent.RunRequest, tools []pkgTool.
 	request, err := pkgAgent.NewRunRequest(
 		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), source.Instruction(), source.Limits(),
 		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: tools, Approver: source.Approver(), Streaming: streaming},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return request
+}
+
+func progressiveRunRequest(t *testing.T, run pkgAgent.RunID, instruction string) pkgAgent.RunRequest {
+	t.Helper()
+	source := runRequest(t, run, ProgressiveReferenceAgentID, "workspace", 4)
+	limits := source.Limits()
+	limits.MaxModelTurns = 12
+	limits.MaxToolCalls = 12
+	request, err := pkgAgent.NewRunRequest(
+		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), instruction, limits,
+		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: []pkgTool.ID{workspaceReadToolID}},
 	)
 	if err != nil {
 		t.Fatal(err)
