@@ -920,7 +920,7 @@ minimi sono in `field-validation-task-matrix.md`; il verdetto conclusivo è in
 
 # Milestone 14 — Interaction Modes & Direct Chat
 
-Stato: Pronta — priorità immediata dopo la chiusura della Milestone 13
+Stato: In corso — Fase 1, ADR interaction modes e CLI
 
 Obiettivo:
 
@@ -936,8 +936,11 @@ comportamento epistemico verificato quando il file manca. Il primo candidato è
 da Maestro.
 
 La milestone implementa e misura il percorso single-file sul computer attuale.
-Non produce una release e non riapre Controlled Mutation. Il piano operativo è
-in `milestone-14-interaction-modes-direct-chat-plan.md`.
+Non produce una release e non riapre Controlled Mutation. È suddivisa in sei
+fasi sequenziali: ADR e CLI, profili generativi osservabili, chat single-file,
+matrice deterministica e anti-leak, qualificazione live, audit e handoff. La
+Fase 1 è in corso; il piano operativo è in
+`milestone-14-interaction-modes-direct-chat-plan.md`.
 
 ---
 

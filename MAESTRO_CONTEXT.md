@@ -2409,14 +2409,16 @@ stabilmente sul profilo corrente e manca una modalità `direct/chat` distinta.
 `v0.2.0` resta storicamente valido nel perimetro della Milestone 12, Controlled
 Mutation resta non supportata e non viene prodotto `v0.2.1`.
 
-La Milestone 14 — Interaction Modes & Direct Chat è la priorità immediata.
+La Milestone 14 — Interaction Modes & Direct Chat è in corso con la Fase 1,
+dedicata all'ADR delle interaction modes e al contratto CLI.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con
 `num_ctx` e `thinking` osservabili e qualifica sul computer attuale il primo
 candidato `qwen2.5-coder:7b` tramite comportamento epistemico, correttezza,
-latenza, token, sicurezza e anti-leak. La milestone produce un candidate record,
-non una release.
+latenza, token, sicurezza e anti-leak. Le sei fasi sequenziali coprono ADR/CLI,
+profili, chat single-file, matrice deterministica, qualificazione live e audit
+finale. La milestone produce un candidate record, non una release.
 
 La Milestone 15 — Reference Hardware & Read-only Baseline usa Windows con
 WSL2/Ubuntu 24.04, 32 GB RAM nominali, RTX 5070 12 GB, Ollama dentro WSL2 e
