@@ -19,6 +19,24 @@ maestro version
 `maestro bench` resta compatibile. `maestro`, `maestro help` e
 `maestro --help` mostrano la root usage senza caricare configurazione.
 
+## Candidato Milestone 14
+
+La superficie development-only aggiunge due modalità esplicite:
+
+```text
+maestro chat
+maestro agent
+```
+
+`maestro agent` è il nome canonico futuro del percorso descritto oggi da
+`maestro run`. Durante la serie v0.3.x `run` resta un alias esatto e deprecato:
+usa lo stesso parser, application graph, output ed exit code e non effettua
+fallback a chat. La deprecazione è esposta nella help e nella documentazione,
+non tramite righe aggiuntive nell'output stabile della run.
+
+`maestro chat` appartiene alla Milestone 14 e non alla compatibility promise
+v0.2.0. La sua promozione dipende dalla Milestone 15.
+
 # Comandi
 
 ## `doctor`
@@ -114,6 +132,59 @@ concreta e offre soltanto deny o allow once. Con stdin non interattivo non viene
 chiesta approvazione: la decisione è deny. `allow` può essere configurato
 soltanto per classi non mutative; non esiste automazione mutativa né `--yes`.
 
+## `agent` candidato
+
+```text
+maestro agent --config config.yaml "Explain OrderController"
+```
+
+Il comando ha la stessa sintassi e semantica di `maestro run`. È l'unica
+modalità che può costruire Context Engine, retrieval, Agent Runtime, sessione,
+tool registry e approver. Un failure non avvia `maestro chat`.
+
+## `chat` candidato
+
+```text
+maestro chat \
+  --config config-v2.yaml \
+  --file routes/api.php \
+  "Quali endpoint, controller e action sono dichiarati?"
+```
+
+La domanda può essere posizionale oppure letta da stdin quando il positional è
+assente, entro 1 MiB. `--file` è opzionale ma singolo e accetta soltanto un
+path logico relativo sotto il workspace. Non accetta glob, directory o path
+assoluti. `--stream` è opt-in e viene abilitato soltanto dopo il gate di
+equivalenza della Milestone 14.
+
+Chat esegue una sola completion con zero tool e non costruisce retrieval,
+index, state machine, sessione o approver. Senza `--file` comunica al modello
+che non è disponibile contesto workspace; non seleziona file e non effettua
+fallback agentico.
+
+stdout usa l'envelope candidato:
+
+```text
+mode\tchat
+terminal\tcompleted
+model\tqwen2.5-coder:7b
+duration_ms\t...
+input_tokens\t...
+output_tokens\t...
+num_ctx_requested\t4096
+num_ctx_effective\t4096|unknown
+thinking_requested\tfalse
+thinking_effective\tfalse|unknown
+truncated\tfalse|unknown
+finish_reason\tstop
+result
+<contenuto finale>
+```
+
+Il contenuto finale è intenzionalmente visibile all'utente locale. Log,
+progress ed evidenze non includono domanda, prompt, response completa,
+contenuto del file, root fisica o secret.
+
 ## `bench mutation`
 
 La qualificazione mutativa usa un profilo separato e inizialmente ne valida il
@@ -150,6 +221,11 @@ l'artifact v0.2.0 incorpora versione e commit esatti durante il packaging.
 | 3 | Permission negata o approval non disponibile |
 | 4 | Provider, modello o capability non disponibile |
 | 130 | Cancellazione tramite interrupt |
+
+Per il candidato chat: input, configurazione o file non ammesso usano 2;
+provider, modello, capability o deadline provider usano 4; response invalida,
+hard limit e failure interna usano 1; interrupt usa 130. stderr espone soltanto
+`chat failed: <reason_code>` con reason code definiti da ADR-0033.
 
 # Stream e redazione
 

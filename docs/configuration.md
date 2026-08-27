@@ -171,3 +171,74 @@ maestro doctor --config /path/to/config.yaml
 
 Il parsing/configuration failure usa exit code 2. I failure operativi del
 preflight usano exit code 1 e sono rappresentati come check separati.
+
+---
+
+# Schema candidato Milestone 14
+
+La modalità direct chat usa un nuovo documento strict `version: 2`. Lo schema
+è development-only e non modifica retroattivamente il contratto v0.2.0. Un
+file v1 continua a essere valido per `maestro run` e `maestro agent`, ma
+`maestro chat` lo rifiuta con `chat_profile_required`; non viene derivato un
+profilo chat da `models.chat`.
+
+La forma candidata è:
+
+```yaml
+version: 2
+
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 10m
+  api_key_env: ""
+
+models:
+  embedding: embeddinggemma:latest
+
+workspace:
+  id: laravel
+  root: /absolute/path/to/project
+  framework: laravel
+
+interaction:
+  chat:
+    model: qwen2.5-coder:7b
+    timeout: 5m
+    streaming: false
+    num_ctx: 4096
+    thinking: "false"
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+  agent:
+    model: qwen3.5:9b
+    timeout: 10m
+    streaming: true
+    num_ctx: 8192
+    thinking: default
+
+agent:
+  id: agent.reference
+  tools:
+    - workspace.list
+    - workspace.read
+    - workspace.search
+```
+
+I blocchi `policy`, `limits` e `context` restano obbligatori e conservano la
+semantica v1. In v2 `agent.streaming` si sposta in
+`interaction.agent.streaming`; `models.chat` si sposta nei due campi `model`.
+`provider.timeout` resta il ceiling di trasporto comune, mentre i timeout dei
+profili delimitano la singola modalità e non possono superarlo.
+
+`num_ctx` è obbligatorio e positivo. `thinking` è una stringa enum obbligatoria
+con valori `default`, `true` o `false`, così il default del provider resta
+distinto da un'esplicita disabilitazione. Valori non supportati dall'adapter o
+dal modello falliscono il preflight invece di essere ignorati.
+
+I limiti chat sono indipendenti dai budget della sessione agentica:
+
+- `max_file_bytes` limita il solo file disclosed;
+- `max_output_bytes` limita l'assemblaggio della response;
+- domanda e file restano entrambi soggetti al timeout del profilo;
+- non esistono `top_k`, tool budget o fallback per la modalità chat.

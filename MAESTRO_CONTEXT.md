@@ -2409,8 +2409,9 @@ stabilmente sul profilo corrente e manca una modalità `direct/chat` distinta.
 `v0.2.0` resta storicamente valido nel perimetro della Milestone 12, Controlled
 Mutation resta non supportata e non viene prodotto `v0.2.1`.
 
-La Milestone 14 — Interaction Modes & Direct Chat è in corso con la Fase 1,
-dedicata all'ADR delle interaction modes e al contratto CLI.
+La Milestone 14 — Interaction Modes & Direct Chat è in corso. La Fase 1 ha
+approvato ADR-0033 e congelato interaction modes, contratto CLI e schema v2;
+la Fase 2 può iniziare dai profili generativi osservabili.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con

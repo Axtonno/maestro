@@ -79,6 +79,33 @@ processo Maestro conserva i normali permessi dell'utente. Eseguire Maestro su
 workspace o endpoint non attendibili richiede quindi la stessa prudenza di
 qualsiasi altro processo locale.
 
+## Candidato Direct Chat della Milestone 14
+
+La Milestone 14 introduce una superficie development-only separata, non
+supportata dalla v0.2.0. `maestro chat` riceve al massimo un file esplicitamente
+selezionato e costruisce soltanto provider completion/streaming. Non riceve
+Tool Runtime, Context Engine, index, Agent Runtime, sessione, policy mutativa o
+approver e non può usarli come fallback.
+
+Il loader applica confinement rispetto alla root configurata, rifiuta path
+assoluti, traversal, backslash, symlink in qualsiasi componente, file non
+regolari, dimensioni oltre limite, UTF-8 invalido, NUL e cambi durante la
+lettura. Il path fisico non viene disclosed. Domanda, path logico e contenuto
+sono delimitati; il contenuto workspace resta non attendibile e non può
+concedere tool o autorità.
+
+La request dichiara zero tool e `tool_choice: none`. Una tool call inattesa
+nella response è un protocol failure. Timeout, risposta vuota, output oltre
+limite o capability non supportata falliscono chiusi e non avviano
+`maestro agent`. `num_ctx` e `thinking` espliciti devono essere onorati o
+rifiutati; un valore non attestabile resta `unknown` e non viene presentato
+come confermato.
+
+Il risultato finale resta intenzionalmente visibile su stdout. Metadati, log e
+report escludono domanda, prompt, response completa, contenuto del file, root
+fisica e secret. Questa riduzione di autorità non rende sicuro inviare file
+sensibili a un endpoint provider non attendibile.
+
 ## Dati e output
 
 Il Context Engine indicizza localmente il workspace e seleziona sezioni entro i

@@ -2,7 +2,7 @@
 
 Data: 2026-08-27
 
-Stato: **IN CORSO**
+Stato: **COMPLETATA**
 
 ## Obiettivo
 
@@ -43,17 +43,28 @@ failure della baseline.
   possono sostenere un servizio chat separato senza introdurre un secondo
   agente.
 
-## Decisioni ancora da congelare
+## Decisioni congelate
 
-- destino e finestra di compatibilità di `maestro run`;
-- sintassi esatta di domanda, stdin, `--file` e streaming;
-- evoluzione strict dello schema v1 e comportamento dei file esistenti;
-- terminali, reason code, exit code e formato dei metadati chat;
-- confine delle dipendenze del servizio chat e preflight delle opzioni
-  provider-neutral.
+- `maestro agent` è il nome canonico del verified agent; `maestro run` resta
+  alias esatto e deprecato almeno per tutta la serie v0.3.x;
+- `maestro chat` accetta domanda da positional o stdin, un solo `--file`
+  opzionale e `--stream` opt-in dopo il gate di equivalenza;
+- lo schema strict v2 introduce profili chat e agent separati; lo schema v1
+  resta valido per agent/run ma non abilita chat implicitamente;
+- `num_ctx` e `thinking` devono essere mappati esattamente o rifiutati;
+- il servizio chat non riceve dipendenze agentiche e non possiede fallback;
+- terminali, exit code, reason code e output redatto sono congelati in
+  ADR-0033 e `cli.md`.
+
+## Deliverable
+
+- `docs/adr/ADR-0033.md` e aggiornamento dell'indice ADR;
+- contratti candidati in `cli.md`, `configuration.md`, `security-model.md` e
+  `compatibility.md`;
+- piano Milestone 14 dettagliato e checkpoint interno riproducibile.
 
 ## Stato del gate
 
-Il gate resta **APERTO**. Baseline, inventario e piano delle sei fasi sono
-disponibili; ADR e aggiornamenti dei contratti CLI/security devono essere
-completati prima di avviare la Fase 2.
+**PASS.** Baseline, inventario, ADR e contratti CLI/config/security sono
+coerenti; nessuna modifica applicativa o nuova autorità è stata introdotta. La
+Fase 2 può iniziare dai profili generativi e dai contratti provider-neutral.

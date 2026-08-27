@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: In corso — Fase 1 avviata
+Stato: In corso — Fase 1 completata, Fase 2 pronta
 
 Data: 2026-08-27
 
@@ -177,7 +177,7 @@ C0; non viene aperta una ricerca seriale indefinita.
 
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | ADR interaction modes e CLI | In corso | Milestone 13 |
+| 1 | ADR interaction modes e CLI | Completata | Milestone 13 |
 | 2 | Profili `num_ctx`/`thinking` osservabili | Non avviata | Fase 1 |
 | 3 | Implementazione `maestro chat` single-file | Non avviata | Fase 2 |
 | 4 | Matrice deterministica, negativa e anti-leak | Non avviata | Fase 3 |
@@ -232,7 +232,7 @@ un report sotto `docs/reports/`; la Fase 6 produce anche
 
 # Fase 1 — ADR interaction modes e CLI
 
-Stato: In corso.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -274,6 +274,8 @@ prima di estendere configurazione o provider.
 - ADR delle interaction modes;
 - aggiornamento del contratto CLI e di sicurezza;
 - `docs/reports/milestone-14-phase-1.md`.
+
+Gate: **superato**.
 
 ---
 
