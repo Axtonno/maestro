@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: In corso — Fase 2 completata, Fase 3 pronta
+Stato: In corso — Fase 4 avviata
 
 Data: 2026-08-27
 
@@ -179,8 +179,8 @@ C0; non viene aperta una ricerca seriale indefinita.
 |---|---|---|---|
 | 1 | ADR interaction modes e CLI | Completata | Milestone 13 |
 | 2 | Profili `num_ctx`/`thinking` osservabili | Completata | Fase 1 |
-| 3 | Implementazione `maestro chat` single-file | Non avviata | Fase 2 |
-| 4 | Matrice deterministica, negativa e anti-leak | Non avviata | Fase 3 |
+| 3 | Implementazione `maestro chat` single-file | Completata | Fase 2 |
+| 4 | Matrice deterministica, negativa e anti-leak | In corso | Fase 3 |
 | 5 | Qualificazione live sul computer attuale | Non avviata | Fase 4 |
 | 6 | Audit e handoff read-only | Non avviata | Fase 5 |
 
@@ -328,6 +328,8 @@ Gate: **superato**.
 
 # Fase 3 — Implementazione `maestro chat` single-file
 
+Stato: Completata.
+
 ## Obiettivo
 
 Consegnare una completion diretta bounded, inizialmente non-streaming, che
@@ -367,6 +369,8 @@ riceve soltanto domanda e file esplicitamente selezionato.
 - loader single-file bounded;
 - test unitari del percorso positivo e dei terminali principali;
 - `docs/reports/milestone-14-phase-3.md`.
+
+Gate: **superato**.
 
 ---
 

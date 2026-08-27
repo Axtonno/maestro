@@ -2413,7 +2413,10 @@ La Milestone 14 — Interaction Modes & Direct Chat è in corso. La Fase 1 ha
 approvato ADR-0033 e congelato interaction modes, contratto CLI e schema v2;
 la Fase 2 ha consegnato schema strict v2, profili separati, context window e
 thinking tri-state provider-neutral, mapping Ollama, preflight capability e
-propagazione nel verified agent. La Fase 3 può implementare direct chat.
+propagazione nel verified agent. La Fase 3 ha consegnato `maestro chat`, il
+servizio completion separato e il loader single-file confinato, bounded e
+fail-closed. La Fase 4 deve completare matrice negativa, equivalenza streaming
+e scansione anti-leak.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con

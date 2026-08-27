@@ -920,7 +920,7 @@ minimi sono in `field-validation-task-matrix.md`; il verdetto conclusivo è in
 
 # Milestone 14 — Interaction Modes & Direct Chat
 
-Stato: In corso — Fase 2 completata, Fase 3 pronta
+Stato: In corso — Fase 4, matrice deterministica e anti-leak
 
 Obiettivo:
 

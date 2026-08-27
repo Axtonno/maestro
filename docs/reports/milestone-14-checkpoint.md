@@ -5,11 +5,12 @@ Ultimo aggiornamento: 2026-08-27
 ## Stato corrente
 
 - milestone: in corso;
-- fase attiva: Fase 2 completata, commit da creare;
-- ultimo commit di fase: `a93c0e7` — Fase 1 completata;
+- fase attiva: transizione Fase 3 -> Fase 4;
+- ultimo commit di fase: `6e5639a` — Fase 2 completata; il commit Fase 3 è il
+  prossimo passo;
 - ultimo commit verde della baseline:
-  `a93c0e7`;
-- worktree atteso: modifiche complete della Fase 2 non ancora committate.
+  `6e5639a`;
+- worktree atteso: Fase 3 completa e verificata, non ancora committata.
 
 ## Evidenze verdi
 
@@ -30,6 +31,6 @@ Le suite Go richiedono `GOCACHE` sotto `/tmp` nell'ambiente Codex corrente.
 
 ## Prossimo passo riproducibile
 
-Creare il commit della Fase 2. Dopo il commit, aggiornare il checkpoint con il
-nuovo hash e avviare la Fase 3 con un application service chat separato,
-loader single-file confinato e comando CLI non-streaming.
+Creare il commit della Fase 3. Quindi implementare la Fase 4: matrice negativa
+completa, streaming esplicito con equivalenza deterministica, terminali
+deadline/cancel, immutabilità e harness anti-leak.

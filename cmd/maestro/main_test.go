@@ -319,6 +319,7 @@ func TestProductCommandsUseStrictConfigAndStableOutputs(t *testing.T) {
 		{name: "models", args: []string{"models", "--config", configPath}, contains: []string{"provider\tollama", "fixture-model"}},
 		{name: "agents", args: []string{"agents", "--config", configPath}, contains: []string{"agent.reference", "agent.run"}},
 		{name: "run argument", args: []string{"run", "--config", configPath, "Inspect", "Order"}, contains: []string{"run\trun-cli", "terminal\tcompleted", "model_turns\t1", "result\nCLI completed."}, progress: true},
+		{name: "agent argument", args: []string{"agent", "--config", configPath, "Inspect", "Order"}, contains: []string{"run\trun-cli", "terminal\tcompleted", "model_turns\t1", "result\nCLI completed."}, progress: true},
 		{name: "run stdin", args: []string{"run", "--config", configPath}, stdin: "Inspect Order\n", contains: []string{"terminal\tcompleted", "result\nCLI completed."}, progress: true},
 	}
 	for _, testCase := range tests {
@@ -342,6 +343,68 @@ func TestProductCommandsUseStrictConfigAndStableOutputs(t *testing.T) {
 				if !strings.Contains(stdout.String(), expected) {
 					t.Fatalf("output %q does not contain %q", stdout.String(), expected)
 				}
+			}
+		})
+	}
+}
+
+func TestChatCommandUsesV2ProfileAndStableRedactedEnvelope(t *testing.T) {
+	configPath, root := newCLIInteractionConfig(t)
+	provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
+		Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "GET /orders."},
+		FinishReason: pkgProvider.FinishReasonStop, Usage: pkgProvider.Usage{InputTokens: 10, OutputTokens: 3},
+	}}}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "--file", "routes/api.php", "Which routes exist?"},
+		strings.NewReader(""), &stdout, &stderr, cliTestDependencies(provider),
+	)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	for _, expected := range []string{
+		"mode\tchat", "terminal\tcompleted", "model\tchat-model",
+		"input_tokens\t10", "output_tokens\t3", "num_ctx_requested\t4096",
+		"num_ctx_effective\tunknown", "thinking_requested\tfalse",
+		"thinking_effective\tunknown", "result\nGET /orders.",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("output %q does not contain %q", stdout.String(), expected)
+		}
+	}
+	if strings.Contains(stdout.String(), root) || strings.Contains(stderr.String(), root) {
+		t.Fatalf("physical root leaked: stdout=%q stderr=%q", stdout.String(), stderr.String())
+	}
+	if len(provider.requests) != 1 || len(provider.requests[0].Tools) != 0 ||
+		provider.requests[0].ToolChoice.Mode != pkgProvider.ToolChoiceNone {
+		t.Fatalf("chat request was not tool-free: %#v", provider.requests)
+	}
+}
+
+func TestChatCommandFailsClosedWithSyntheticReasons(t *testing.T) {
+	v1 := newCLIConfig(t, "allow")
+	v2, _ := newCLIInteractionConfig(t)
+	for _, testCase := range []struct {
+		name     string
+		args     []string
+		wantCode int
+		want     string
+	}{
+		{name: "v1", args: []string{"chat", "--config", v1, "Question"}, wantCode: 2, want: "chat_profile_required"},
+		{name: "absolute", args: []string{"chat", "--config", v2, "--file", "/secret", "Question"}, wantCode: 2, want: "file_not_allowed"},
+		{name: "duplicate", args: []string{"chat", "--config", v2, "--file", "a", "--file", "b", "Question"}, wantCode: 2, want: "invalid_request"},
+		{name: "stream disabled", args: []string{"chat", "--config", v2, "--stream", "Question"}, wantCode: 4, want: "capability_unsupported"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(testCase.args, strings.NewReader(""), &stdout, &stderr, cliTestDependencies(&cliProvider{id: "ollama"}))
+			if code != testCase.wantCode || stdout.Len() != 0 || !strings.Contains(stderr.String(), "chat failed: "+testCase.want) {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+			if strings.Contains(stderr.String(), "/secret") {
+				t.Fatalf("rejected path leaked: %q", stderr.String())
 			}
 		})
 	}
@@ -520,11 +583,13 @@ func TestRunBoundsInteractiveInstruction(t *testing.T) {
 type cliProvider struct {
 	id        pkgProvider.ID
 	responses []pkgProvider.CompletionResponse
+	requests  []pkgProvider.CompletionRequest
 }
 
 func (provider *cliProvider) ID() pkgProvider.ID { return provider.id }
 
-func (provider *cliProvider) Complete(context.Context, pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+func (provider *cliProvider) Complete(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+	provider.requests = append(provider.requests, request)
 	if len(provider.responses) == 0 {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf("fixture provider failure")
 	}
@@ -623,4 +688,74 @@ context:
 		t.Fatal(err)
 	}
 	return path
+}
+
+func newCLIInteractionConfig(t *testing.T) (string, string) {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "routes"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "routes", "api.php"), []byte("<?php Route::get('/orders');\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	content := fmt.Sprintf(`version: 2
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 1m
+  api_key_env: ""
+models:
+  embedding: ""
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+interaction:
+  chat:
+    model: chat-model
+    timeout: 1m
+    streaming: false
+    num_ctx: 4096
+    thinking: "false"
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+  agent:
+    model: agent-model
+    timeout: 1m
+    streaming: false
+    num_ctx: 8192
+    thinking: default
+agent:
+  id: agent.reference
+  tools:
+    - workspace.read
+policy:
+  id: policy.test
+  model: allow
+  workspace_inspect: allow
+  workspace_mutate: deny
+limits:
+  duration: 1m
+  model_turns: 5
+  tool_calls: 4
+  tool_calls_per_turn: 2
+  plan_steps: 3
+  plan_revisions: 2
+  tool_result_bytes: 65536
+  session_bytes: 1048576
+  input_tokens: 10000
+  output_tokens: 10000
+context:
+  retrieval: lexical
+  top_k: 5
+  max_tokens: 1024
+  reserved_tokens: 128
+  safety_tokens: 64
+`, root)
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path, root
 }

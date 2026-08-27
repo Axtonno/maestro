@@ -64,8 +64,12 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 		return runModels(arguments[1:], stdout, stderr, dependencies)
 	case "agents":
 		return runAgents(arguments[1:], stdout, stderr, dependencies)
+	case "agent":
+		return runAgent("maestro agent", arguments[1:], stdin, stdout, stderr, dependencies)
+	case "chat":
+		return runChat(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "run":
-		return runAgent(arguments[1:], stdin, stdout, stderr, dependencies)
+		return runAgent("maestro run", arguments[1:], stdin, stdout, stderr, dependencies)
 	case "version":
 		return runVersion(arguments[1:], stdout, stderr, dependencies)
 	case "bench":
@@ -147,7 +151,9 @@ func printRootUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  doctor   validate configuration and operational prerequisites")
 	fmt.Fprintln(writer, "  models   list models from the explicitly configured provider")
 	fmt.Fprintln(writer, "  agents   list registered agents and capabilities")
-	fmt.Fprintln(writer, "  run      execute the configured reference agent")
+	fmt.Fprintln(writer, "  agent    execute the configured verified agent")
+	fmt.Fprintln(writer, "  chat     answer from one explicitly selected workspace file")
+	fmt.Fprintln(writer, "  run      deprecated alias for agent")
 	fmt.Fprintln(writer, "  version  print build version and commit")
 	fmt.Fprintln(writer, "  bench    run benchmark and evaluation commands")
 }

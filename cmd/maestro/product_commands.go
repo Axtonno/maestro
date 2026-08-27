@@ -90,8 +90,8 @@ func runAgents(arguments []string, stdout io.Writer, stderr io.Writer, dependenc
 	return 0
 }
 
-func runAgent(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
-	config, positionals, help, code := loadRunConfig(arguments, stdout, stderr, dependencies)
+func runAgent(name string, arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	config, positionals, help, code := loadRunConfig(name, arguments, stdout, stderr, dependencies)
 	if code != 0 || help {
 		return code
 	}
@@ -112,7 +112,7 @@ func runAgent(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.W
 		instruction = strings.TrimSpace(encoded)
 	}
 	if instruction == "" {
-		fmt.Fprintln(stderr, "maestro run requires an instruction argument or stdin")
+		fmt.Fprintf(stderr, "%s requires an instruction argument or stdin\n", name)
 		return 2
 	}
 	configured, err := application.Build(config, dependencies.application)
@@ -243,10 +243,10 @@ func loadConfigForCommand(name string, arguments []string, stdout io.Writer, std
 	return config, false, 0
 }
 
-func loadRunConfig(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) (productconfig.Config, []string, bool, int) {
-	flags := flag.NewFlagSet("maestro run", flag.ContinueOnError)
+func loadRunConfig(name string, arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) (productconfig.Config, []string, bool, int) {
+	flags := flag.NewFlagSet(name, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro run [--config path] [instruction]") }
+	flags.Usage = func() { fmt.Fprintf(stdout, "usage: %s [--config path] [instruction]\n", name) }
 	configPath := flags.String("config", "", "path to Maestro configuration")
 	if err := flags.Parse(arguments); err != nil {
 		if err == flag.ErrHelp {
