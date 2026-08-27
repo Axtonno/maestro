@@ -1,15 +1,17 @@
 # Milestone 14 — Controlled Mutation Recovery Plan
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Pianificata — successiva al report di Field Validation
+Stato: Pronta — autorizzata dal report di Field Validation; solo analisi,
+progettazione e prototipi development-only
 
-Data: 2026-08-21
+Data: 2026-08-21; aggiornamento 2026-08-27
 
 Documenti di riferimento:
 
 - `roadmap.md`;
 - `milestone-13-field-validation-plan.md`;
+- `reports/milestone-13-field-validation.md`;
 - `milestone-15-reference-hardware-mutation-qualification-plan.md`;
 - `milestone-16-productization-v0.3.0-plan.md`;
 - `milestone-11-development-plan.md`;
@@ -24,13 +26,14 @@ Documenti di riferimento:
 
 # Obiettivo operativo
 
-Determinare se Controlled Mutation possa essere qualificata tramite un
-protocollo di proposta più adatto ai modelli locali oppure richieda un nuovo
-modello e un profilo hardware superiore.
+Analizzare e progettare un eventuale recovery di Controlled Mutation tramite
+un protocollo di proposta verificabile, senza tentare di compensare i limiti
+read-only osservati nella Milestone 13.
 
-La milestone separa diagnosi e ricerca del protocollo dalla qualificazione
-ufficiale. Può produrre un protocollo model-facing e un compilatore candidati,
-quindi un handoff alla Milestone 15, ma non qualifica una combinazione
+La milestone separa diagnosi e progettazione del protocollo dalla
+qualificazione ufficiale. Può produrre un protocollo model-facing, fixture e
+matrici deterministiche e un compilatore candidato interno, quindi un handoff
+alla Milestone 15, ma non esegue gate live, non qualifica una combinazione
 hardware–provider–modello e non produce archive, release candidate, release o
 support claim.
 
@@ -128,8 +131,8 @@ deterministica, lossless e coperta da test.
 - confronto fra patch completa, edit proposal, structured output e tool schema
   minimale;
 - implementazione interna dell'eventuale compilatore deterministico;
-- matrice positiva e negativa senza effetti prima di qualsiasi gate live;
-- Gate A diagnostico sul lower bound corrente;
+- matrice positiva e negativa deterministica senza provider o effetti;
+- definizione dei gate sintetici da eseguire sulla nuova piattaforma;
 - definizione dei requisiti di handoff per hardware e modelli superiori;
 - verdetto sul protocollo e handoff alla Milestone 15.
 
@@ -143,8 +146,9 @@ deterministica, lossless e coperta da test.
 - più file, create/delete/rename, `workspace.write`, shell, Git, processi,
   Docker, Composer, Artisan, PHPUnit, sandbox, recovery o multi-agent;
 - acquisto di hardware prima dell'evidenza diagnostica;
+- nuove run live, selezione di modelli o tuning sul ThinkPad corrente;
 - qualificazione ufficiale di WSL2, GPU, provider o modello;
-- Gate A/B/C formali, che appartengono alla Milestone 15;
+- Gate A/B/C diagnostici o formali, che appartengono alla Milestone 15;
 - release v0.3.0 o ampliamento della compatibility matrix.
 
 ---
@@ -160,11 +164,11 @@ deterministica, lossless e coperta da test.
   nell'archive di prodotto;
 - ogni cattura applica limiti di byte, retention esplicita e cancellazione
   dopo la derivazione dei soli codici diagnostici pubblicabili;
-- il fail-fast della qualificazione ufficiale resta invariato. La campagna
-  forense è separata, senza effetti e senza approval e può raccogliere più
-  campioni per identificare la distribuzione degli errori;
-- provider, modello, hardware, schema, prompt, temperatura, token limit,
-  fixture e criteri restano congelati all'interno di ogni variante;
+- il fail-fast della qualificazione ufficiale resta invariato. Il lavoro
+  forense è separato, senza effetti e senza approval;
+- schema, fixture, payload sintetici e criteri restano congelati all'interno
+  di ogni variante; modello, provider e hardware non sono variabili di questa
+  milestone;
 - nessuna prova avvia provider, scarica modelli o modifica cataloghi;
 - i report pubblici conservano soltanto identità di variante, contatori,
   codici, classificazione, digest e risultato; mai payload grezzi;
@@ -176,9 +180,11 @@ deterministica, lossless e coperta da test.
 
 ---
 
-# Evidenza diagnostica development-only
+# Contratto dell'evidenza diagnostica development-only
 
-Per ogni campione forense vengono acquisiti localmente:
+La Milestone 14 definisce i campi che un futuro harness live dovrà acquisire.
+Non avvia nuove catture provider; può classificare raw locali preesistenti
+soltanto se conformi ai vincoli di retention e permesso. Il contratto comprende:
 
 | Campo | Scopo |
 |---|---|
@@ -190,24 +196,24 @@ Per ogni campione forense vengono acquisiti localmente:
 | modello, digest, parametri e durata | legare il risultato al profilo |
 | digest fixture pre/post | provare assenza di effetti |
 
-Questa evidenza usa un sink distinto dalle allowlist operative. L'attivazione
-deve essere esplicita, rifiutare workspace non allowlisted e fallire chiusa se
-permessi, destinazione o limiti di cattura non sono conformi. I report
-committabili contengono soltanto categorie come `invalid_json`,
+Questa evidenza userà un sink distinto dalle allowlist operative. La futura
+attivazione deve essere esplicita, rifiutare workspace non allowlisted e
+fallire chiusa se permessi, destinazione o limiti di cattura non sono conformi.
+I report committabili contengono soltanto categorie come `invalid_json`,
 `wrong_tool_name`, `missing_field`, `invalid_path`, `digest_mismatch`,
 `ambiguous_replace`, `textual_tool_call`, `truncated` o `unresolved`.
 
 ---
 
-# Matrice sperimentale
+# Matrice di progettazione
 
-Ogni variante usa la stessa read, la stessa modifica attesa e almeno tre
-conversazioni indipendenti. La campagna non è fail-fast e non esegue Tool
-Runtime, preview, approval o apply.
+Ogni variante usa la stessa read sintetica, la stessa modifica attesa e
+payload positivi e negativi versionati. Non vengono aperte conversazioni con
+un provider e non vengono eseguiti Tool Runtime, preview, approval o apply.
 
 | ID | Variante | Scopo | Evidenza positiva |
 |---|---|---|---|
-| `MR-P0` | Contratto patch attuale | riprodurre la baseline Milestone 11 | read valida e classificazione esatta della patch completa |
+| `MR-P0` | Contratto patch attuale | rappresentare la baseline Milestone 11 | read valida e classificazione esatta della patch completa |
 | `MR-P1` | Edit proposal search/replace | ridurre la complessità della rappresentazione | path, operation, old/new esatti e compilabili |
 | `MR-P2` | Structured output senza tool call | isolare il canale tool calling | oggetto strict valido e semanticamente esatto |
 | `MR-P3` | Tool call con schema minimale | verificare il canale nativo con schema ridotto | singola call nativa valida e semanticamente esatta |
@@ -217,13 +223,12 @@ Runtime, preview, approval o apply.
 che il compilatore trasformi l'output valido della variante scelta nella
 stessa patch autorevole richiesta dal contratto di sicurezza.
 
-Una coppia protocollo/modello supera la matrice soltanto con `3/3` proposte
-native o strutturate valide, `3/3` compilazioni esatte, zero repair euristici e
-fixture invariata. Uno schema può essere scelto per implementare e provare il
-compilatore anche quando Granite non raggiunge `3/3`, purché parsing, semantica
-e confine di sicurezza siano deterministici: in quel caso il risultato resta
-negativo per il modello e non anticipa il Gate A diagnostico. Nessun esito di
-questa matrice è un PASS della qualificazione ufficiale.
+Un protocollo supera la matrice di progettazione soltanto quando tutti i
+payload positivi producono la compilazione esatta, tutti i payload negativi
+sono rifiutati, non esiste repair euristico e la fixture resta invariata. Il
+risultato qualifica esclusivamente il contratto deterministico: non misura un
+modello, non anticipa un gate live e non è un PASS della qualificazione
+ufficiale.
 
 ---
 
@@ -257,12 +262,11 @@ derivare dalla stessa patch concreta.
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
 | 1 | Contratto di recovery e analisi forense | Non avviata | Milestone 13, ADR-0032 |
-| 2 | Esperimenti sul protocollo model-facing | Non avviata | Fase 1 |
+| 2 | Progettazione del protocollo model-facing | Non avviata | Fase 1 |
 | 3 | Compilatore deterministico e hardening | Non avviata | Fase 2 |
-| 4 | Gate A diagnostico sul lower bound | Non avviata | Fase 3 |
-| 5 | Audit del recovery e handoff hardware | Non avviata | Fasi 1–4 |
+| 4 | Audit del recovery e handoff hardware | Non avviata | Fasi 1–3 |
 
-Le cinque fasi sono ricerca e non contano come qualificazione. La Milestone 15
+Le quattro fasi sono ricerca e non contano come qualificazione. La Milestone 15
 riparte da una nuova baseline candidata e possiede piattaforma, hardware,
 modello e gate ufficiali. Ogni fase produce un report sotto `docs/reports/`.
 
@@ -277,66 +281,65 @@ prodotto o confondere diagnosi e qualificazione.
 
 ## Attività
 
-- congelare fixture, profilo Granite, prompt, schema, temperatura, token
-  limit, numero di campioni e retention della campagna forense;
+- congelare fixture, schema, tassonomia e retention dell'analisi forense;
 - mappare ogni punto di parsing e validazione che oggi converge in
   `patch_tool_call_invalid` a un codice diagnostico preciso;
-- implementare il sink development-only, opt-in, bounded e non incluso nel
-  packaging;
-- riprodurre la sequenza `read -> result -> patch` senza Tool Runtime,
+- progettare il sink development-only, opt-in, bounded e non incluso nel
+  packaging, senza attivarlo contro un provider in questa milestone;
+- riprodurre parsing e validazione della sequenza `read -> result -> patch`
+  con payload sintetici o evidenze locali già disponibili, senza Tool Runtime,
   approval o effetti;
-- acquisire response, arguments, validation stage, finish reason, usage e
-  schema esatto soltanto nella directory privata;
-- derivare un report redatto per categoria e distruggere i raw trace secondo
-  la retention congelata;
+- derivare un report redatto per categoria dalle sole evidenze ammesse e
+  applicare la retention congelata agli eventuali raw preesistenti;
 - verificare che eventi, log e renderer pubblici restino byte-invariati e non
   espongano i nuovi dati.
 
 ## Gate di uscita
 
-- diagnostica attivabile soltanto nel percorso di sviluppo e sulla fixture
+- contratto diagnostico limitato al percorso di sviluppo e a fixture
   allowlisted;
-- ogni failure riceve una categoria precisa oppure `unresolved` motivato;
+- ogni failure già osservabile riceve una categoria precisa oppure
+  `unresolved` motivato;
 - fixture byte-identica, zero approval e zero effetti in tutti i campioni;
 - raw trace assenti da Git, artifact, log ed eventi normali;
 - baseline repository-wide e anti-leak verdi.
 
 ## Deliverable
 
-- diagnostic harness interno;
+- design del diagnostic harness interno;
 - tassonomia degli errori;
 - `docs/reports/milestone-14-phase-1.md`.
 
 ---
 
-# Fase 2 — Esperimenti sul protocollo model-facing
+# Fase 2 — Progettazione del protocollo model-facing
 
 ## Obiettivo
 
-Stabilire se Granite riesca a rappresentare una modifica semplice e corretta
-quando digest, diff e contratto Tool Runtime vengono compilati da Maestro.
+Stabilire quale rappresentazione minima possa essere compilata da Maestro in
+una modifica semplice e corretta senza trasferire authority al modello.
 
 ## Attività
 
-- eseguire `MR-P0`–`MR-P4` con parametri e sample count congelati;
-- verificare tool calling nativo e structured output separatamente;
-- misurare validità sintattica, validità schema, esattezza semantica,
-  compilabilità, token, finish reason, truncation e durata;
-- confrontare varianti senza modificare prompt o schema dopo la prima run;
+- eseguire `MR-P0`–`MR-P4` su payload versionati positivi e negativi;
+- modellare separatamente tool calling nativo e structured output senza
+  invocare un provider;
+- verificare validità sintattica, validità schema, esattezza semantica e
+  compilabilità;
+- confrontare le varianti con criteri congelati;
 - rifiutare varianti che richiedono repair euristico o inferenza di dati
   assenti;
 - scegliere al massimo uno schema di protocollo deterministico da implementare
-  e registrare separatamente se Granite lo esegue `3/3` oppure richiede un
-  modello differente;
+  e definire i gate sintetici che un futuro modello dovrà superare;
 - congelare la decisione model-facing e il confine del compilatore in un ADR
   prima di modificare il percorso mutativo candidato.
 
 ## Gate di uscita
 
-- tutte le varianti hanno lo stesso numero di campioni eseguiti o uno stato
+- tutte le varianti hanno fixture positive e negative eseguite o uno stato
   `skipped` motivato;
 - causa del failure baseline e ruolo del canale tool sono distinti;
-- un solo schema model-facing è congelato con il suo esito diagnostico; se
+- un solo schema model-facing è congelato con il suo esito di progettazione; se
   nessuno schema conserva il confine di sicurezza, la recovery si arresta;
 - nessun risultato viene presentato come supporto operativo.
 
@@ -344,7 +347,7 @@ quando digest, diff e contratto Tool Runtime vengono compilati da Maestro.
 
 - report comparativo redatto;
 - ADR del protocollo candidato oppure decisione di recovery rinviata da
-  consegnare alla Fase 5;
+  consegnare alla Fase 4;
 - `docs/reports/milestone-14-phase-2.md`.
 
 ---
@@ -385,41 +388,7 @@ intenzione o authority non presenti nell'input validato.
 
 ---
 
-# Fase 4 — Gate A diagnostico sul lower bound
-
-## Obiettivo
-
-Verificare il candidato sul ThinkPad CPU-only e su Granite prima di cercare
-hardware o modelli superiori.
-
-## Attività
-
-- congelare commit, binario diagnostico, modello/digest, hardware, schema,
-  prompt, temperatura, limiti e fixture;
-- eseguire preflight senza avviare provider o scaricare modelli;
-- eseguire tre conversazioni indipendenti `read -> result -> edit proposal`;
-- compilare ogni proposta in una patch completa esatta senza eseguire il Tool
-  Runtime;
-- richiedere `3/3` consecutivo, zero effetti e fixture byte-identica;
-- arrestare il gate al primo failure e classificarlo con la tassonomia
-  forense;
-- evitare Gate B/C, preview e approval in questa fase.
-
-## Gate di uscita
-
-- Gate A diagnostico `3/3` oppure failure classificato;
-- stato del protocollo e requisiti del profilo superiore espliciti;
-- nessuna mutazione o support claim in entrambi i casi;
-- handoff alla Fase 5 senza eseguire Gate B/C.
-
-## Deliverable
-
-- evidenza redatta del Gate A diagnostico;
-- `docs/reports/milestone-14-phase-4.md`.
-
----
-
-# Fase 5 — Audit del recovery e handoff hardware
+# Fase 4 — Audit del recovery e handoff hardware
 
 ## Obiettivo
 
@@ -436,22 +405,21 @@ un solo contratto mutativo da qualificare sul reference hardware.
   contratto model-facing senza indebolire gli invarianti della Milestone 10;
 - dichiarare schema, canale model-facing, prompt, fixture, limiti e matrice
   esatti da trasferire;
-- registrare l'esito Granite/lower-bound senza trasformarlo in requisito
-  hardware o support claim;
-- consegnare alla Milestone 15 i criteri immutabili di Gate A/B/C e la matrice
-  negativa, senza eseguirli come gate ufficiali.
+- consegnare alla Milestone 15 i requisiti espliciti di `num_ctx`, `thinking`
+  e binding dell'evidenza, i gate sintetici read-only, i criteri immutabili di
+  Gate A/B/C mutativi e la matrice negativa, senza eseguirli in questa
+  milestone.
 
 ## Esiti ammessi
 
 | Esito | Significato |
 |---|---|
-| `protocol_candidate_lower_bound` | protocollo e compilatore superano il Gate A diagnostico con Granite sul lower bound |
-| `protocol_candidate_higher_profile_required` | protocollo deterministico disponibile, ma Granite/lower-bound non supera il Gate A diagnostico |
+| `protocol_candidate_ready_for_qualification` | protocollo e compilatore deterministici sono pronti per i gate sulla piattaforma della Milestone 15 |
 | `protocol_unchanged` | nessun protocollo semplificato è migliore senza indebolire il confine; la Milestone 15 riceve il contratto ADR-0031 |
 | `mutation_deferred_protocol` | nessun contratto sicuro e qualificabile può essere congelato |
 
-Uno skip, una singola proposta valida, il solo compilatore deterministico o un
-Gate A diagnostico non autorizzano un esito `mutation_qualified`.
+Uno skip, una singola fixture positiva o il solo compilatore deterministico
+non autorizzano un esito `mutation_qualified`.
 
 ## Gate di uscita
 

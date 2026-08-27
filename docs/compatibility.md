@@ -1,6 +1,6 @@
 # Maestro v0.2.0 Compatibility Matrix
 
-Data: 2026-08-21
+Data: 2026-08-21; aggiornamento 2026-08-27
 
 Questa pagina è la fonte autorevole per ciò che v0.2.0 dichiara supportato.
 La presenza di codice, adapter o test deterministici non equivale a supporto
@@ -32,6 +32,26 @@ stesso lower bound, ma fallisce il primo tentativo del Gate A live con una
 patch call non esatta. Gate B e Gate C non sono stati eseguiti per fail-fast;
 ADR-0032 registra `mutation_deferred`. Queste evidenze non qualificano né il
 modello né `workspace.patch` come supportati.
+
+## Esito della Field Validation
+
+La matrice sopra conserva il perimetro storico qualificato dalla Milestone 12;
+non costituisce una promessa di qualità per analisi Laravel multi-file. La
+Milestone 13 ha chiuso anticipatamente la matrice field a 5/22 per stop rule
+con classificazione `field_validation_completed_with_limitations` e decisione
+`adoption_no_go_on_reference_profile`. Sicurezza e immutabilità read-only sono
+state confermate, mentre affidabilità operativa e qualità multi-file sono
+risultate insufficienti sul profilo di riferimento.
+
+Le 17 run mancanti sono `not_run` e il Gate 0 di pubblicazione remota non è
+stato completato. Il verdetto non revoca retroattivamente l'identità
+dell'artifact v0.2.0, ma impedisce di promuoverlo come baseline affidabile per
+quel carico. Il report completo è in
+`reports/milestone-13-field-validation.md`.
+
+Una modalità `direct/chat` senza tool è soltanto una direzione diagnostica
+emersa dal confronto conclusivo; non appartiene alla superficie supportata di
+v0.2.0 e non opera come fallback del reference agent.
 
 Dalla v0.1.1 i workspace Laravel reali sono indicizzati tramite la scan policy
 sorgente del plugin. Asset generati, storage runtime e dipendenze non entrano

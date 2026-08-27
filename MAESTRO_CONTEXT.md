@@ -2386,25 +2386,36 @@ annotato `v0.2.0`, il manifest e il binario coincidono sul commit artifact.
 Controlled Mutation resta non supportata; il tag non è stato pubblicato su un
 remote.
 
-La Milestone 13 è pianificata come Field Validation & Adoption, non come nuovo
-ciclo di feature. Il suo Gate 0 pubblica l'esatto artifact v0.2.0 già
-qualificato, il checksum, le release notes e il tag annotato, quindi verifica
-una nuova installazione dall'asset della GitHub Release. Le fasi successive
-congelano una coorte di almeno due progetti Laravel reali, una matrice di task
-read-only ripetibili e metriche di affidabilità, qualità, prestazioni, tool
-calling, sicurezza e compatibilità. Il ciclo termina con un report di prodotto
-e la decisione sul contratto v0.3.0. La serie v0.2.x resta limitata a bug fix,
-documentazione e hardening; Controlled Mutation resta fuori supporto e può
-ripartire soltanto da Gate A in presenza di un nuovo input verificabile.
+La Milestone 13 — Field Validation & Adoption è conclusa con classificazione
+`field_validation_completed_with_limitations` e decisione
+`adoption_no_go_on_reference_profile`. La matrice ufficiale è chiusa a 5/22
+per stop rule: 2 completion, 3 provider failure, nessuna risposta `correct` e
+workspace invariato 5/5. Le 17 run residue sono `not_run`; la coorte di due
+progetti e il Gate 0 di pubblicazione remota non sono stati completati e
+restano limitazioni esplicite. Le diagnosi mostrano che più timeout non
+corregge la qualità multi-file, la choreography blocca finalizzazioni
+premature ma `llama3.1:8b` non progredisce, e `qwen3.5:9b` supera tool calling e
+smoke ma non converge semanticamente sul fixture. Il replay delle cinque
+query Qwen è deterministico. Un confronto conclusivo direct/chat mostra che il
+modello risponde correttamente con file allegato direttamente, mentre il loop
+agentico scade dopo read riuscite e ripetute; le completion semplici restano
+però lente e variabili e il percorso Maestro pre-caricato raggiunge la
+deadline. Sicurezza e immutabilità read-only sono confermate; affidabilità e
+qualità multi-file sono insufficienti. La conclusione non è “Maestro non
+funziona”: il verified agent richiede capacità di progressione non dimostrate
+stabilmente sul profilo corrente e manca una modalità `direct/chat` distinta.
+`v0.2.0` resta storicamente valido nel perimetro della Milestone 12, Controlled
+Mutation resta non supportata e non viene prodotto `v0.2.1`.
 
-La Milestone 14 è pianificata come Controlled Mutation Recovery dopo il report
-della Field Validation. Separa l'analisi forense development-only di
-`patch_tool_call_invalid` dalla qualificazione ufficiale e sperimenta una edit
-proposal minimale che Maestro può compilare deterministicamente nella patch
-concreta. Non sono ammessi repair euristici: path, read, occorrenza, digest,
-diff, fingerprint, approval e apply restano vincolati dagli invarianti della
-Milestone 10. Il lower bound Granite/ThinkPad riceve soltanto un Gate A
-diagnostico. La milestone termina con un contratto/compilatore candidato da
+La Milestone 14 — Controlled Mutation Recovery è autorizzata soltanto come
+analisi, progettazione e prototipazione development-only. Separa l'analisi
+forense di `patch_tool_call_invalid` dalla qualificazione ufficiale e progetta
+una edit proposal minimale che Maestro possa compilare deterministicamente
+nella patch concreta. Non sono ammessi repair euristici: path, read,
+occorrenza, digest, diff, fingerprint, approval e apply restano vincolati dagli
+invarianti della Milestone 10. Non vengono eseguiti un altro Gate A sul
+Granite/ThinkPad, selezione seriale di modelli o gate live. La milestone
+termina con contratto, matrici e un eventuale compilatore candidato interno da
 consegnare alla Milestone 15 oppure con un rinvio motivato; non produce release
 o qualificazione hardware.
 
@@ -2412,12 +2423,16 @@ La Milestone 15 è pianificata come Reference Hardware & Mutation Qualification.
 Il profilo candidato è Windows con WSL2/Ubuntu 24.04, 32 GB RAM nominali, RTX
 5070 12 GB, Ollama dentro WSL2 e fixture sul filesystem Linux sotto `/home`;
 Windows nativo e `/mnt/*` restano esclusi. La milestone qualifica prima
-piattaforma/GPU e baseline v0.2.0 read-only, misura RAM/VRAM/offload/latenza,
-ripete Gate A diagnostico con Granite e passa se necessario a candidati 14B.
-Soltanto un candidate record congelato esegue Gate A `3/3`, B `2/2` e C `3/3`
-formali, fail-fast, più matrice negativa e di sicurezza. Un esito
-`mutation_qualified` abilita soltanto la Milestone 16 per la Productization
-v0.3.0; non modifica v0.2.x e non costituisce da solo una release.
+piattaforma/GPU e un nuovo baseline read-only: `num_ctx` e `thinking` devono
+essere configurabili e osservabili, il binding dell'evidenza deve essere
+verificabile e `direct/chat` senza tool deve essere separato dal
+`verified agent`. Il primo misura contesto esplicito e domande circoscritte; i
+gate sintetici del secondo devono precedere B01. Soltanto dopo un B01 corretto
+2/2 riprende Controlled Mutation con candidate record separato, Gate A `3/3`,
+B `2/2` e C `3/3` formali, fail-fast, più matrice negativa e di sicurezza. Un
+esito `mutation_qualified` abilita soltanto la Milestone 16 per la
+Productization v0.3.0; non modifica v0.2.x e non costituisce da solo una
+release.
 
 La Milestone 16 è pianificata come Productization v0.3.0 condizionata. Non può
 aprirsi senza il verdetto esatto `mutation_qualified` e un candidate record

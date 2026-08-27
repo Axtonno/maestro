@@ -20,6 +20,21 @@
   `tool_failure` per arguments malformati o a `provider_failure` quando una
   singola inferenza supera il timeout; il runtime resta fail-closed e non
   applica retry impliciti.
+- La Field Validation della Milestone 13 ha chiuso la matrice a 5/22 per stop
+  rule con decisione `adoption_no_go_on_reference_profile`: 3/5 run ufficiali
+  sono terminate in `provider_failure` e le due completion sono state
+  classificate `partial` e `incorrect`. Aumentare il timeout ha migliorato la
+  completion, non la qualità multi-file.
+- La progressive choreography development-only impedisce finalizzazioni senza
+  evidenza, ma `llama3.1:8b` non ne segue la progressione. `qwen3.5:9b` supera
+  tool calling diretto e smoke provider, ma non converge sul fixture sintetico
+  osservato ed è `candidate_rejected`. Nessuno dei due esiti amplia il percorso
+  supportato o produce `v0.2.1`.
+- Il confronto direct/chat della Milestone 13 mostra una risposta single-file
+  corretta quando il file è allegato direttamente, ma latenze superiori a sei
+  minuti e un timeout nel percorso Maestro pre-caricato. Il prodotto non offre
+  ancora una modalità `direct/chat` separata dal reference agent; il risultato
+  è diagnostico e non costituisce supporto.
 
 ## Supporto ristretto
 
@@ -71,4 +86,6 @@
 - Nessuna selezione automatica di provider o modello.
 
 Vedere `compatibility.md` per la matrice autorevole e `troubleshooting.md` per
-le azioni operative.
+le azioni operative. Il report decisionale completo è in
+`reports/milestone-13-field-validation.md`; il confronto per modalità è in
+`reports/milestone-13-direct-chat-diagnostic.md`.

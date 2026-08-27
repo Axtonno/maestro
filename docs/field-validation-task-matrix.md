@@ -1,10 +1,15 @@
 # Milestone 13 — Field Validation Task Matrix
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Template congelabile — nessuna run eseguita
+Stato: Chiuso anticipatamente — 5/22 run ufficiali, 17 `not_run`
 
-Data: 2026-08-21
+Data: 2026-08-21; chiusura 2026-08-27
+
+La matrice sotto conserva il disegno originario. La stop rule ha chiuso la
+campagna dopo il primo blocco su `project-b`; nessuna cella mancante viene
+simulata o reinterpretata. Il verdetto è in
+`reports/milestone-13-field-validation.md`.
 
 Questa matrice definisce i task minimi della Field Validation. Prima della
 prima run, i placeholder vengono istanziati localmente con simboli verificati

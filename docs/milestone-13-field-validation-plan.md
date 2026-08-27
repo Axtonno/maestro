@@ -1,10 +1,12 @@
 # Milestone 13 — Field Validation & Adoption Plan
 
-Versione: 0.1.0
+Versione: 0.2.0
 
-Stato: Pianificata — avvio subordinato alla pubblicazione remota di v0.2.0
+Stato: Conclusa anticipatamente per stop rule —
+`field_validation_completed_with_limitations` /
+`adoption_no_go_on_reference_profile`
 
-Data: 2026-08-21
+Data: 2026-08-21; chiusura 2026-08-27
 
 Documenti di riferimento:
 
@@ -16,6 +18,14 @@ Documenti di riferimento:
 - `operational-experience.md`;
 - `field-validation-task-matrix.md`;
 - `adr/ADR-0032.md`.
+
+Nota di chiusura: questo documento conserva il protocollo pianificato. La
+campagna effettiva è stata arrestata a 5/22 run ufficiali; le 17 residue sono
+`not_run` e il Gate 0 pubblico non è stato completato. Evidenze, deviazioni,
+stop rule e decisione sono registrate in
+`reports/milestone-13-field-validation.md` senza reinterpretare la matrice. Il
+confronto conclusivo fra completion e agent loop è in
+`reports/milestone-13-direct-chat-diagnostic.md`.
 
 ---
 

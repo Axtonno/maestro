@@ -1,15 +1,16 @@
 # Milestone 15 — Reference Hardware & Mutation Qualification Plan
 
-Versione: 0.1.0
+Versione: 0.2.0
 
 Stato: Pianificata — subordinata all'handoff della Milestone 14
 
-Data: 2026-08-21
+Data: 2026-08-21; aggiornamento 2026-08-27
 
 Documenti di riferimento:
 
 - `roadmap.md`;
 - `milestone-14-controlled-mutation-recovery-plan.md`;
+- `reports/milestone-13-field-validation.md`;
 - `milestone-16-productization-v0.3.0-plan.md`;
 - `mutation-qualification.md`;
 - `mutation-qualification-profile.yaml`;
@@ -29,10 +30,11 @@ modello per Controlled Mutation.
 
 La milestone usa un reference hardware più capace per separare quattro cause
 possibili: incompatibilità WSL2, risorse insufficienti, limite del modello e
-failure del protocollo mutativo. Parte dalla release read-only pubblica,
-stabilisce una baseline GPU osservabile, ripete il solo Gate A diagnostico con
-Granite 8B e valuta poi candidati superiori, iniziando dalla classe 14B
-compatibile con il profilo.
+failure del protocollo mutativo. Parte dall'artifact read-only storico,
+stabilisce una baseline GPU osservabile e qualifica un nuovo baseline
+read-only con modalità `direct/chat` e `verified agent` distinte. La seconda
+deve convergere su gate sintetici e B01. Soltanto dopo riprende il percorso
+Controlled Mutation consegnato dalla Milestone 14.
 
 Un esito positivo qualifica soltanto la tupla esatta osservata e dà GO alla
 Milestone 16 per la Productization v0.3.0 mutativa. La milestone non produce una
@@ -131,19 +133,25 @@ la sola presenza di CUDA non costituiscono evidenza di offload.
 
 | Profilo | Hardware osservato | Autorità candidata |
 |---|---|---|
-| Read-only baseline | ThinkPad CPU-only, 16 GB nominali/15 GiB osservati | list/read/search, mutation deny |
+| Read-only storico | ThinkPad CPU-only, 16 GB nominali/15 GiB osservati | NO-GO di adozione M13; sola evidenza storica |
+| Nuovo baseline read-only | WSL2, 32 GB nominali, RTX 5070 12 GB | list/read/search, mutation deny |
 | Mutation candidate | WSL2, 32 GB nominali, RTX 5070 12 GB | singola patch opt-in, soltanto dopo qualifica |
 
-Il secondo profilo non sostituisce il primo. Un eventuale requisito superiore
-si applica soltanto a Controlled Mutation. La v0.2.x continua a dichiarare
-esclusivamente la compatibility matrix già pubblicata.
+Il nuovo baseline non riscrive il risultato storico del ThinkPad e non amplia
+retroattivamente la compatibility promise v0.2.x. La qualificazione mutativa
+non può iniziare finché il baseline read-only sulla nuova piattaforma non è
+verde.
 
 ---
 
 # Regole trasversali
 
-- la baseline read-only usa l'archive v0.2.0 riscaricato dalla GitHub Release,
-  non un binario locale o il checkout;
+- la baseline read-only usa l'archive v0.2.0 già qualificato e il suo SHA-256,
+  non un rebuild o il checkout; se la pubblicazione remota viene completata,
+  download e installazione pubblica costituiscono un gate separato;
+- la verifica storica di v0.2.0 precede un candidate build read-only distinto,
+  development-only e identificato; il candidate non è chiamato `v0.2.1`, non
+  modifica l'archive storico e non è presentato come release;
 - la qualificazione mutativa usa un nuovo candidate build identificato, mai
   presentato come release;
 - il contratto model-facing è quello consegnato dalla Milestone 14: durante la
@@ -153,6 +161,11 @@ esclusivamente la compatibility matrix già pubblicata.
 - host, WSL, kernel, distribuzione, filesystem, driver, GPU, RAM effettiva,
   Ollama, modello, digest, quantizzazione, context, limiti e timeout vengono
   congelati per ciascun candidate record;
+- `num_ctx` richiesto ed effettivo e `thinking` richiesto ed effettivo sono
+  configurabili, osservabili e registrati per ogni turno qualificante;
+- query, risultato, stato e decisione successiva sono legati da identificatori
+  e digest redatti sufficienti a verificare la progressione senza pubblicare
+  contenuti sensibili;
 - una variazione di uno di questi elementi crea un nuovo candidato e azzera i
   PASS della relativa serie;
 - un solo modello chat resta residente durante una serie; unload e load sono
@@ -161,6 +174,11 @@ esclusivamente la compatibility matrix già pubblicata.
   provider;
 - fixture, prompt, temperatura, schema, output atteso e stop rule vengono
   congelati prima della prima run;
+- i gate sintetici agentici read-only precedono B01; B01 precede qualsiasi
+  gate mutativo;
+- `direct/chat` non dichiara tool, non esegue retrieval e non costituisce un
+  fallback implicito del `verified agent`; prompt, limiti, metriche e terminali
+  sono congelati separatamente;
 - Gate A richiede `3/3`, Gate B `2/2`, Gate C `3/3`, consecutivi e fail-fast;
 - il PASS diagnostico non viene ereditato dal Gate A formale;
 - ogni failure pre-commit lascia la fixture byte-identica; ogni terminale
@@ -168,8 +186,9 @@ esclusivamente la compatibility matrix già pubblicata.
   rollback;
 - Gate C richiede TTY reale, preview concreta e `allow once`; non esistono
   auto-approval, grant run-scoped o retry impliciti;
-- raw response e arguments diagnostici restano nel sink development-only della
-  Milestone 14 e non entrano in report, log normali o artifact;
+- raw response e arguments diagnostici restano nel sink development-only
+  progettato dalla Milestone 14 e non entrano in report, log normali o
+  artifact;
 - report e output pubblicabili non includono prompt, response, diff, contenuti
   fixture, arguments, secret, path fisici o identificatori macchina non
   necessari;
@@ -207,9 +226,17 @@ congelati. Una singola completion riuscita non dimostra sufficienza hardware.
 
 # Selezione dei modelli
 
-Granite 8B è una baseline diagnostica, non il candidato preferito implicito.
-Se riproduce `patch_tool_call_invalid`, viene classificato e non sottoposto a
-prompt tuning indefinito.
+La prima selezione riguarda il baseline read-only, non Controlled Mutation.
+Shortlist, ordine e stop rule sono congelati prima della prima run. Ogni
+candidato misura prima `direct/chat` senza file e con file esplicito, poi
+riparte da tool calling elementare, continuazione multi-turno, correzione dopo
+finalizzazione respinta, smoke Maestro e choreography sintetica. Soltanto chi
+supera questi gate accede a B01; il baseline è verde solo con B01 `2/2`
+correct, tutti i gruppi obbligatori coperti e nessuna falsità materiale.
+
+Granite 8B entra in seguito come baseline diagnostica mutativa, non come
+candidato preferito implicito. Se riproduce `patch_tool_call_invalid`, viene
+classificato e non sottoposto a prompt tuning indefinito.
 
 La selezione superiore parte dalla classe 14B e richiede:
 
@@ -223,8 +250,8 @@ La selezione superiore parte dalla classe 14B e richiede:
 - un solo modello residente durante la serie;
 - nessun cambio del contratto per favorire un candidato.
 
-Numero massimo di candidati, ordine e stop rule vengono congelati prima del
-primo test 14B. Per ogni candidato il funnel diagnostico è:
+Numero massimo di candidati mutativi, ordine e stop rule vengono congelati
+prima del primo test 14B. Per ogni candidato il funnel diagnostico è:
 
 ```text
 structured edit proposal
@@ -244,7 +271,7 @@ canale nativo, ma non cambiano il contratto che sarà usato nel Gate A formale.
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
 | 1 | Qualificazione Windows/WSL2/GPU | Non avviata | Milestone 14 |
-| 2 | Baseline read-only v0.2.x | Non avviata | Fase 1 |
+| 2 | Nuovo baseline read-only | Non avviata | Fase 1 |
 | 3 | Profilo RAM, VRAM e latenza | Non avviata | Fase 2 |
 | 4 | Gate A diagnostico Granite 8B | Non avviata | Fase 3 |
 | 5 | Selezione candidati superiori | Condizionale | Fase 4 |
@@ -299,31 +326,51 @@ può eseguire Maestro/Ollama su filesystem Linux con accesso GPU osservabile.
 
 ---
 
-# Fase 2 — Baseline read-only v0.2.x
+# Fase 2 — Nuovo baseline read-only
 
 ## Obiettivo
 
-Separare problemi di piattaforma/GPU da problemi del protocollo mutativo usando
-prima il prodotto ufficiale read-only.
+Separare problemi di piattaforma/GPU e capacità agentica read-only da problemi
+del protocollo mutativo, qualificando prima un nuovo baseline sulla piattaforma
+candidata.
 
 ## Attività
 
-- scaricare archive e checksum v0.2.0 dalla GitHub Release pubblica in una
-  directory pulita dentro WSL2;
+- trasferire in una directory pulita dentro WSL2 l'archive v0.2.0 già
+  qualificato e il relativo checksum; non ricostruire dal checkout;
 - verificare checksum, estrazione, manifest, `version` e commit incorporato;
-- derivare il profilo ufficiale con root sulla fixture sotto `/home` e
+- derivare il profilo storico con root sulla fixture sotto `/home` e
   confermare list/read/search più `workspace_mutate: deny`;
 - eseguire `doctor` e richiedere 9/9, quindi `models` e `agents`;
-- eseguire due quick start read-only consecutivi con una read reale e risposta
-  semanticamente corretta;
+- eseguire sull'archive storico una conferma read-only e verificare workspace
+  invariato, senza usarla come prova di qualità multi-file;
+- produrre soltanto dopo un candidate build read-only distinto che renda
+  configurabili e osservabili `num_ctx`, `thinking` e binding dell'evidenza e
+  separi `direct/chat` da `verified agent`;
+- congelare shortlist, ordine, stop rule e candidate record read-only con
+  modello, digest, template, `num_ctx`, `thinking`, timeout e limiti effettivi;
+- eseguire il gate `direct/chat` senza file e richiedere un rifiuto
+  epistemicamente corretto, poi con lo stesso file esplicito e richiedere una
+  risposta single-file corretta; registrare latenza, token e thinking;
+- verificare che `direct/chat` non dichiari tool, non interroghi retrieval e
+  non effettui fallback al loop;
+- eseguire in ordine tool call elementare 3/3, continuazione dopo risultato
+  2/2 e correzione dopo finalizzazione respinta 2/2;
+- superare smoke provider non-streaming e streaming, normalizzazione delle
+  tool call e choreography sintetica con binding osservabile dell'evidenza;
+- eseguire B01 due volte soltanto dopo i gate sintetici e richiedere 2/2
+  `correct`, copertura di tutti i gruppi obbligatori e zero falsità materiali;
 - eseguire SIGINT e hard limit con terminali attesi e shutdown bounded;
 - confrontare digest e stato fisico dell'intero workspace prima/dopo;
 - eseguire scansione anti-leak di stdout, stderr ed evidenze redatte.
 
 ## Gate di uscita
 
-- installazione pubblica e `doctor` 9/9;
-- due quick start consecutivi `completed`;
+- archive storico verificato, `doctor` 9/9 e conferma read-only immutabile;
+- candidate build distinto, identificato e non presentato come release;
+- gate `direct/chat` verde senza tool, retrieval o fallback agentico;
+- gate diretti, smoke Maestro e choreography sintetica verdi;
+- B01 `2/2` completed e `correct`;
 - SIGINT e hard limit coerenti;
 - workspace byte-identico in ogni run;
 - nessun leak o accesso mutativo.
@@ -333,7 +380,7 @@ essere risolto o classificato prima della Fase 3.
 
 ## Deliverable
 
-- baseline read-only WSL2/GPU;
+- candidate record e baseline read-only WSL2/GPU;
 - `docs/reports/milestone-15-phase-2.md`.
 
 ---
@@ -627,6 +674,7 @@ verso la productization mutativa.
 
 | Esito | Conseguenza |
 |---|---|
+| `readonly_baseline_rejected` | nessun candidato read-only supera i gate sulla nuova piattaforma; il percorso mutativo non inizia |
 | `mutation_qualified` | GO alla Milestone 16 sul profilo esatto |
 | `model_rejected` | nuovo candidato possibile senza cambiare contratto; nuovo candidate record e Gate A da zero |
 | `platform_rejected` | WSL2 non entra nella compatibility matrix mutativa |
