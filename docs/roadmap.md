@@ -918,122 +918,124 @@ minimi sono in `field-validation-task-matrix.md`; il verdetto conclusivo è in
 
 ---
 
-# Milestone 14 — Controlled Mutation Recovery
+# Milestone 14 — Interaction Modes & Direct Chat
 
-Stato: Pronta — autorizzata dalla chiusura della Milestone 13; solo forense e
-development-only
-
-Obiettivo:
-
-Analizzare e progettare un eventuale recovery di Controlled Mutation senza
-confonderlo con i limiti read-only osservati nella Milestone 13.
-
-La milestone parte dall'analisi forense di `patch_tool_call_invalid` su
-evidenze e fixture non sensibili. Confronta patch completa, edit proposal
-search/replace, structured output e tool schema minimale come contratti di
-progetto. L'eventuale proposta resta input non fidato: Maestro deve poter
-compilare deterministicamente digest, contenuto risultante, patch, diff e
-fingerprint, rifiutando campi mancanti, ambiguità e repair euristici.
-
-Non vengono avviati un altro Gate A con Granite, una selezione seriale di
-modelli sul ThinkPad o una qualificazione live. Prototipi e harness restano
-interni, development-only e senza effetti; modello e hardware tornano in
-scope soltanto nella Milestone 15.
-
-La Milestone 14 termina con un protocollo model-facing progettato, invarianti
-e matrici deterministiche, un eventuale compilatore candidato interno oppure
-un rinvio motivato. Non qualifica piattaforma, hardware o modello e non
-produce una release. Tutti i gate live appartengono alla Milestone 15.
-
-Il piano operativo è in `milestone-14-controlled-mutation-recovery-plan.md`.
-
----
-
-# Milestone 15 — Reference Hardware & Mutation Qualification
-
-Stato: Pianificata — subordinata all'handoff della Milestone 14
+Stato: Pronta — priorità immediata dopo la chiusura della Milestone 13
 
 Obiettivo:
 
-Qualificare una combinazione dichiarata di piattaforma, hardware, provider e
-modello per Controlled Mutation.
+Separare formalmente `maestro chat` da `maestro agent`. Chat riceve contesto
+esplicito, non dichiara tool, non usa retrieval o state machine e non effettua
+fallback agentico. Agent conserva invece esplorazione read-only, evidence
+binding, choreography e stop rule.
 
-Il profilo iniziale usa Windows con WSL2/Ubuntu 24.04, 32 GB RAM nominali, RTX
-5070 12 GB, Ollama dentro WSL2 e workspace sul filesystem Linux sotto `/home`.
-Non viene eseguito un porting Windows nativo e sono esclusi workspace sotto
-`/mnt/*` o `drvfs`, perché la qualifica dipende da temporaneo, sync e rename
-atomico con semantiche Linux.
+La modalità chat introduce prompt e profilo modello separati, `num_ctx` e
+`thinking` configurabili e osservabili, telemetria di latenza/token e
+comportamento epistemico verificato quando il file manca. Il primo candidato è
+`qwen2.5-coder:7b`, già usato localmente con Continue ma non ancora qualificato
+da Maestro.
 
-La progressione verifica prima piattaforma/GPU e l'artifact v0.2.0 read-only,
-quindi prequalifica e congela un nuovo baseline read-only in due modalità:
-`direct/chat` su contesto esplicito e `verified agent` con strumenti. La prima
-misura domande circoscritte senza retrieval; la seconda deve superare gate
-sintetici agentici e B01 prima di qualsiasi ripresa mutativa. Ogni profilo
-registra `num_ctx` e `thinking` effettivi, binding dell'evidenza, RAM, VRAM,
-offload e latenza. Un solo modello resta residente per serie.
-
-Soltanto dopo il PASS del baseline read-only, un candidato mutativo distinto e
-congelato esegue Gate A `3/3`, Gate B `2/2` e Gate C `3/3` formali e fail-fast,
-seguiti dalla matrice negativa e di sicurezza. Gli esiti ammessi includono
-`readonly_baseline_rejected`, `mutation_qualified`, `model_rejected`,
-`platform_rejected`, `hardware_insufficient` e `mutation_deferred`.
-
-La milestone non produce una release. Un esito `mutation_qualified` dà GO alla
-Milestone 16 sul profilo esatto; prima del support claim deve essere deciso se
-productizzare WSL2 o ripetere il gate finale su Linux nativo con hardware
-equivalente.
-
-Il piano operativo è in
-`milestone-15-reference-hardware-mutation-qualification-plan.md`.
+La milestone implementa e misura il percorso single-file sul computer attuale.
+Non produce una release e non riapre Controlled Mutation. Il piano operativo è
+in `milestone-14-interaction-modes-direct-chat-plan.md`.
 
 ---
 
-# Milestone 16 — Productization v0.3.0
+# Milestone 15 — Reference Hardware & Read-only Baseline
+
+Stato: Pianificata — subordinata all'handoff della Milestone 14 e alla nuova
+piattaforma disponibile
+
+Obiettivo:
+
+Qualificare e productizzare un nuovo baseline read-only sulla piattaforma
+Windows/WSL2/Ubuntu 24.04, 32 GB RAM, RTX 5070 12 GB e filesystem Linux sotto
+`/home`.
+
+L'ordine è vincolante: provider/GPU realmente attivi, prestazioni direct/chat,
+verified agent sintetico, B01 Laravel multi-file 2/2, matrice operativa e di
+sicurezza. Se il baseline non supera la qualifica multi-file, Controlled
+Mutation non viene aperta.
+
+Un PASS completo produce v0.3.0 read-only con modalità chat/agent e profili
+separati. Controlled Mutation resta non supportata. Il piano operativo è in
+`milestone-15-reference-hardware-readonly-baseline-plan.md`.
+
+---
+
+# Milestone 16 — Controlled Mutation Recovery
+
+Stato: Rinviata — successiva al baseline read-only v0.3.0
+
+Obiettivo:
+
+Preservare il piano approvato di recovery mutativa come lavoro strettamente
+deterministico e development-only: analisi forense di
+`patch_tool_call_invalid`, edit proposal, validazione path/digest/occorrenza,
+patch e fingerprint deterministici e matrice negativa.
+
+Non esegue qualificazione live, non seleziona modelli e non produce support
+claim. Il piano operativo preservato è in
+`milestone-16-controlled-mutation-recovery-plan.md`.
+
+---
+
+# Milestone 17 — Controlled Mutation Qualification
+
+Stato: Condizionata — richiede v0.3.0 read-only qualificata e handoff M16
+
+Obiettivo:
+
+Eseguire Gate A `3/3`, Gate B `2/2`, Gate C `3/3` e la matrice negativa sulla
+tupla esatta già qualificata in read-only. Il primo failure è fail-fast; un
+baseline read-only multi-file non verde impedisce perfino l'apertura del Gate
+A.
+
+La milestone non produce una release. `mutation_qualified` abilita soltanto la
+Milestone 18. Il piano è in `milestone-17-mutation-qualification-plan.md`.
+
+---
+
+# Milestone 18 — Productization v0.4.0
 
 Stato: Condizionata — si apre soltanto con `mutation_qualified` dalla
-Milestone 15
+Milestone 17
 
 Obiettivo:
 
-Trasformare l'esatta combinazione Controlled Mutation qualificata in una
-release v0.3.0 installabile, documentata e pubblicata, senza ampliare il
-contratto tecnico durante la productization.
+Trasformare l'esatta combinazione mutativa qualificata in v0.4.0, mantenendo
+read-only e direct/chat come default e Controlled Mutation separata,
+esplicitamente opt-in e limitata al candidate record provato.
 
-La release mantiene il profilo read-only come default e introduce una
-configurazione mutativa separata ed esplicitamente opt-in. Compatibility
-matrix, requisito hardware, piattaforma, filesystem, provider, modello,
-quantizzazione e limiti coincidono con il candidate record della Milestone 15;
-un reference hardware qualificato non viene presentato come minimo teorico
-senza una prova di confine separata.
+Packaging candidate, RC e artifact finale ripetono installazione, Gate A/B/C,
+sicurezza e anti-leak. Il piano è in
+`milestone-18-productization-v0.4.0-plan.md`.
 
-La milestone produce packaging candidate, installazione pulita, gate
-deterministici e di sicurezza, Gate A/B/C live ripetuti, release candidate,
-documentazione pubblica, artifact finale, tag annotato e GitHub Release
-v0.3.0. Packaging candidate, RC e release sono artifact distinti e
-immutabili.
+## Associazione release
 
-Se un fix cambia protocollo, modello, hardware, filesystem, authority, limiti
-o criteri, il lavoro torna alla Milestone 15. Un failure non autorizza una
-v0.3.0 mutativa con gate ridotti né una v0.3.0 read-only silenziosamente
-ridefinita.
-
-Il piano operativo è in `milestone-16-productization-v0.3.0-plan.md`.
+| Versione | Obiettivo |
+|---|---|
+| v0.2.0 | artifact storico read-only; Field Validation con adoption NO-GO |
+| v0.3.0 | direct/chat, profili separati e nuovo baseline read-only |
+| v0.4.0 | Controlled Mutation, soltanto dopo qualificazione completa |
 
 ## Sequenza post-v0.2.0
 
 ```text
 Milestone 13 — chiusa con limitazioni / adoption NO-GO
-    -> Milestone 14 — recovery forense e progettazione development-only
-        -> Milestone 15 — nuova piattaforma e baseline read-only
-            -> qualificazione Controlled Mutation
-            ├── mutation_qualified -> Milestone 16 — Productization v0.3.0
-            └── altro esito        -> Controlled Mutation resta non supportata
+    -> Milestone 14 — Interaction Modes & Direct Chat
+        -> qualifica sul computer attuale
+            -> Milestone 15 — nuovo hardware, verified baseline e v0.3.0
+                -> Milestone 16 — Controlled Mutation Recovery
+                    -> Milestone 17 — Mutation Qualification
+                        ├── mutation_qualified -> Milestone 18 — v0.4.0
+                        └── altro esito        -> mutazione non supportata
 ```
 
-La sequenza conserva il NO-GO storico, progetta il protocollo senza gate live
-sulla macchina attuale, quindi qualifica sulla nuova piattaforma prima il
-baseline read-only e soltanto dopo la tupla mutativa. La release mutativa
-esiste nel piano soltanto come conseguenza dell'ultimo PASS.
+La sequenza privilegia utilità quotidiana e affidabilità read-only prima di
+ampliare l'autorità. Il nuovo hardware viene valutato prima sui compiti meno
+complessi; la mutazione resta una conseguenza eventuale di un baseline
+multi-file già dimostrato.
 
 ---
 
@@ -1071,9 +1073,11 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - milestone-12-development-plan.md
 - milestone-13-field-validation-plan.md
 - field-validation-task-matrix.md
-- milestone-14-controlled-mutation-recovery-plan.md
-- milestone-15-reference-hardware-mutation-qualification-plan.md
-- milestone-16-productization-v0.3.0-plan.md
+- milestone-14-interaction-modes-direct-chat-plan.md
+- milestone-15-reference-hardware-readonly-baseline-plan.md
+- milestone-16-controlled-mutation-recovery-plan.md
+- milestone-17-mutation-qualification-plan.md
+- milestone-18-productization-v0.4.0-plan.md
 - reports/v0.1.0-post-release-observation.md
 - configuration.md
 - cli.md

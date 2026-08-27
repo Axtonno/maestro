@@ -49,9 +49,9 @@ dell'artifact v0.2.0, ma impedisce di promuoverlo come baseline affidabile per
 quel carico. Il report completo è in
 `reports/milestone-13-field-validation.md`.
 
-Una modalità `direct/chat` senza tool è soltanto una direzione diagnostica
-emersa dal confronto conclusivo; non appartiene alla superficie supportata di
-v0.2.0 e non opera come fallback del reference agent.
+Una modalità `direct/chat` senza tool è un requisito di prodotto emerso dal
+confronto conclusivo e pianificato per la Milestone 14; non appartiene alla
+superficie supportata di v0.2.0 e non opera come fallback del reference agent.
 
 Dalla v0.1.1 i workspace Laravel reali sono indicizzati tramite la scan policy
 sorgente del plugin. Asset generati, storage runtime e dipendenze non entrano

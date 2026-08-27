@@ -33,8 +33,9 @@
 - Il confronto direct/chat della Milestone 13 mostra una risposta single-file
   corretta quando il file è allegato direttamente, ma latenze superiori a sei
   minuti e un timeout nel percorso Maestro pre-caricato. Il prodotto non offre
-  ancora una modalità `direct/chat` separata dal reference agent; il risultato
-  è diagnostico e non costituisce supporto.
+  ancora una modalità `direct/chat` separata dal reference agent; la Milestone
+  14 la tratta come nuova superficie distinta. Il risultato diagnostico non
+  costituisce supporto v0.2.0.
 
 ## Supporto ristretto
 

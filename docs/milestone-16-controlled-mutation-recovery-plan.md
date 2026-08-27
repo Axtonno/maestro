@@ -1,9 +1,9 @@
-# Milestone 14 — Controlled Mutation Recovery Plan
+# Milestone 16 — Controlled Mutation Recovery Plan
 
 Versione: 0.2.0
 
-Stato: Pronta — autorizzata dal report di Field Validation; solo analisi,
-progettazione e prototipi development-only
+Stato: Rinviata — successiva alla baseline read-only v0.3.0 della Milestone 15;
+solo analisi, progettazione e prototipi development-only
 
 Data: 2026-08-21; aggiornamento 2026-08-27
 
@@ -12,8 +12,9 @@ Documenti di riferimento:
 - `roadmap.md`;
 - `milestone-13-field-validation-plan.md`;
 - `reports/milestone-13-field-validation.md`;
-- `milestone-15-reference-hardware-mutation-qualification-plan.md`;
-- `milestone-16-productization-v0.3.0-plan.md`;
+- `milestone-15-reference-hardware-readonly-baseline-plan.md`;
+- `milestone-17-mutation-qualification-plan.md`;
+- `milestone-18-productization-v0.4.0-plan.md`;
 - `milestone-11-development-plan.md`;
 - `mutation-qualification.md`;
 - `mutation-qualification-profile.yaml`;
@@ -33,13 +34,14 @@ read-only osservati nella Milestone 13.
 La milestone separa diagnosi e progettazione del protocollo dalla
 qualificazione ufficiale. Può produrre un protocollo model-facing, fixture e
 matrici deterministiche e un compilatore candidato interno, quindi un handoff
-alla Milestone 15, ma non esegue gate live, non qualifica una combinazione
+alla Milestone 17, ma non esegue gate live, non qualifica una combinazione
 hardware–provider–modello e non produce archive, release candidate, release o
 support claim.
 
 ADR-0032 resta autorevole fino al verdetto finale: `workspace.patch`, il
 reference agent mutante, il modello Granite e la configurazione mutativa sono
-sperimentali e non supportati. La v0.2.x resta read-only.
+sperimentali e non supportati. L'artifact storico v0.2.0 e il baseline v0.3.0
+restano read-only.
 
 ---
 
@@ -134,7 +136,7 @@ deterministica, lossless e coperta da test.
 - matrice positiva e negativa deterministica senza provider o effetti;
 - definizione dei gate sintetici da eseguire sulla nuova piattaforma;
 - definizione dei requisiti di handoff per hardware e modelli superiori;
-- verdetto sul protocollo e handoff alla Milestone 15.
+- verdetto sul protocollo e handoff alla Milestone 17.
 
 ## Escluso
 
@@ -148,8 +150,8 @@ deterministica, lossless e coperta da test.
 - acquisto di hardware prima dell'evidenza diagnostica;
 - nuove run live, selezione di modelli o tuning sul ThinkPad corrente;
 - qualificazione ufficiale di WSL2, GPU, provider o modello;
-- Gate A/B/C diagnostici o formali, che appartengono alla Milestone 15;
-- release v0.3.0 o ampliamento della compatibility matrix.
+- Gate A/B/C diagnostici o formali, che appartengono alla Milestone 17;
+- release v0.4.0 o ampliamento della compatibility matrix.
 
 ---
 
@@ -176,13 +178,13 @@ deterministica, lossless e coperta da test.
   deterministici post-commit registrano esplicitamente stato applicato e contesto
   stale, senza rollback implicito;
 - ogni modifica a compiler, prompt o schema invalida il protocollo candidato e
-  richiede nuovo freeze prima dell'handoff alla Milestone 15.
+  richiede nuovo freeze prima dell'handoff alla Milestone 17.
 
 ---
 
 # Contratto dell'evidenza diagnostica development-only
 
-La Milestone 14 definisce i campi che un futuro harness live dovrà acquisire.
+La Milestone 16 definisce i campi che un futuro harness live dovrà acquisire.
 Non avvia nuove catture provider; può classificare raw locali preesistenti
 soltanto se conformi ai vincoli di retention e permesso. Il contratto comprende:
 
@@ -266,7 +268,7 @@ derivare dalla stessa patch concreta.
 | 3 | Compilatore deterministico e hardening | Non avviata | Fase 2 |
 | 4 | Audit del recovery e handoff hardware | Non avviata | Fasi 1–3 |
 
-Le quattro fasi sono ricerca e non contano come qualificazione. La Milestone 15
+Le quattro fasi sono ricerca e non contano come qualificazione. La Milestone 17
 riparte da una nuova baseline candidata e possiede piattaforma, hardware,
 modello e gate ufficiali. Ogni fase produce un report sotto `docs/reports/`.
 
@@ -308,7 +310,7 @@ prodotto o confondere diagnosi e qualificazione.
 
 - design del diagnostic harness interno;
 - tassonomia degli errori;
-- `docs/reports/milestone-14-phase-1.md`.
+- `docs/reports/milestone-16-phase-1.md`.
 
 ---
 
@@ -348,7 +350,7 @@ una modifica semplice e corretta senza trasferire authority al modello.
 - report comparativo redatto;
 - ADR del protocollo candidato oppure decisione di recovery rinviata da
   consegnare alla Fase 4;
-- `docs/reports/milestone-14-phase-2.md`.
+- `docs/reports/milestone-16-phase-2.md`.
 
 ---
 
@@ -368,7 +370,7 @@ intenzione o authority non presenti nell'input validato.
   Execute atomico e reindex della Milestone 10;
 - impedire retry, fallback alla patch completa e combinazione di proposte;
 - coprire la matrice negativa, fault injection e concorrenza;
-- provare che profilo, prompt e artifact read-only v0.2.x restino invariati;
+- provare che profilo, prompt e artifact read-only v0.3.x restino invariati;
 - eseguire suite completa, race detector, vet, audit API e anti-leak.
 
 ## Gate di uscita
@@ -384,7 +386,7 @@ intenzione o authority non presenti nell'input validato.
 
 - compilatore interno e test;
 - aggiornamento della specifica mutativa sperimentale;
-- `docs/reports/milestone-14-phase-3.md`.
+- `docs/reports/milestone-16-phase-3.md`.
 
 ---
 
@@ -392,7 +394,7 @@ intenzione o authority non presenti nell'input validato.
 
 ## Obiettivo
 
-Riconciliare diagnosi, protocollo e compilatore e consegnare alla Milestone 15
+Riconciliare diagnosi, protocollo e compilatore e consegnare alla Milestone 17
 un solo contratto mutativo da qualificare sul reference hardware.
 
 ## Attività
@@ -405,17 +407,18 @@ un solo contratto mutativo da qualificare sul reference hardware.
   contratto model-facing senza indebolire gli invarianti della Milestone 10;
 - dichiarare schema, canale model-facing, prompt, fixture, limiti e matrice
   esatti da trasferire;
-- consegnare alla Milestone 15 i requisiti espliciti di `num_ctx`, `thinking`
-  e binding dell'evidenza, i gate sintetici read-only, i criteri immutabili di
-  Gate A/B/C mutativi e la matrice negativa, senza eseguirli in questa
-  milestone.
+- consegnare alla Milestone 17 il protocollo e il compilatore candidati, i
+  criteri immutabili di Gate A/B/C mutativi e la matrice negativa, senza
+  eseguire qualificazione live in questa milestone. I requisiti read-only di
+  `num_ctx`, `thinking` e binding dell'evidenza restano quelli già qualificati
+  e congelati dalla Milestone 15.
 
 ## Esiti ammessi
 
 | Esito | Significato |
 |---|---|
-| `protocol_candidate_ready_for_qualification` | protocollo e compilatore deterministici sono pronti per i gate sulla piattaforma della Milestone 15 |
-| `protocol_unchanged` | nessun protocollo semplificato è migliore senza indebolire il confine; la Milestone 15 riceve il contratto ADR-0031 |
+| `protocol_candidate_ready_for_qualification` | protocollo e compilatore deterministici sono pronti per i gate sulla piattaforma della Milestone 17 |
+| `protocol_unchanged` | nessun protocollo semplificato è migliore senza indebolire il confine; la Milestone 17 riceve il contratto ADR-0031 |
 | `mutation_deferred_protocol` | nessun contratto sicuro e qualificabile può essere congelato |
 
 Uno skip, una singola fixture positiva o il solo compilatore deterministico
@@ -426,29 +429,29 @@ non autorizzano un esito `mutation_qualified`.
 - tutte le osservazioni hanno classificazione e destinazione;
 - verdetto unico coerente con la matrice diagnostica e lo stato fisico delle
   fixture;
-- compatibility v0.2.x e profilo read-only invariati;
+- compatibility v0.3.x e profilo read-only invariati;
 - nessuna release prodotta o capability presentata come supportata;
-- handoff completo alla Milestone 15 oppure rinvio motivato.
+- handoff completo alla Milestone 17 oppure rinvio motivato.
 
 ## Deliverable
 
-- `docs/reports/milestone-14-final.md`;
+- `docs/reports/milestone-16-final.md`;
 - ADR conclusivo;
-- profilo di handoff alla Milestone 15 oppure nuovo rinvio motivato.
+- profilo di handoff alla Milestone 17 oppure nuovo rinvio motivato.
 
 ---
 
 # Condizioni per l'handoff
 
-La Milestone 15 può dare GO alla productization soltanto quando sono presenti
+La Milestone 17 può dare GO alla productization soltanto quando sono presenti
 contemporaneamente:
 
 - protocollo model-facing affidabile e non euristico;
 - compilatore deterministico e matrice negativa verde;
-- protocollo di handoff congelato dalla Milestone 14;
+- protocollo di handoff congelato dalla Milestone 16;
 - modello qualificato sul reference hardware;
 - profilo piattaforma, hardware e topologia dichiarato;
-- Gate A/B/C ufficiali completi nella Milestone 15;
+- Gate A/B/C ufficiali completi nella Milestone 17.
 
 L'ingresso successivo in una release richiede inoltre:
 
@@ -456,5 +459,5 @@ L'ingresso successivo in una release richiede inoltre:
 - artifact distinto che ripete packaging, installazione, live, sicurezza e
   anti-leak.
 
-Questo ampliamento dell'autorità è destinabile alla Milestone 16 per v0.3.0 o
+Questo ampliamento dell'autorità è destinabile alla Milestone 18 per v0.4.0 o
 a una release successiva, mai a v0.2.1.

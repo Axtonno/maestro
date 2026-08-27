@@ -15,12 +15,20 @@ diagnostico conclusivo hanno prodotto evidenza sufficiente per una decisione
 di adozione. Non è necessario né corretto proseguire la selezione seriale di
 modelli sul reference hardware attuale.
 
+La milestone è conclusa, non fallita: le limitazioni osservate sono parte del
+risultato e non lavoro mancante da simulare.
+
 Il risultato è circoscritto alla combinazione osservata di artifact, profilo,
 provider, modelli, hardware e task:
 
 - gli invarianti read-only e l'immutabilità del workspace sono confermati;
 - l'affidabilità operativa del profilo di riferimento è insufficiente;
 - la qualità dell'analisi Laravel multi-file è insufficiente;
+- il retrieval sintetico osservato non è identificato come causa primaria;
+- il verified agent non converge stabilmente sui profili provati;
+- una modalità `direct/chat` separata è un requisito di prodotto emerso;
+- serve una piattaforma con maggiore margine per qualificare modelli più
+  capaci;
 - l'adozione sul profilo di riferimento riceve **NO-GO**;
 - Controlled Mutation resta invariata, sperimentale e non supportata;
 - non viene prodotto `v0.2.1` né un altro artifact;
@@ -160,24 +168,27 @@ Il percorso approvato è:
 
 ```text
 chiusura Milestone 13
-    -> Milestone 14: analisi forense e progettazione development-only
-    -> Milestone 15: nuova piattaforma e nuovo baseline read-only
-    -> qualificazione mutativa, soltanto dopo il baseline
+    -> Milestone 14: Interaction Modes & Direct Chat
+    -> qualifica direct/chat sul computer attuale
+    -> Milestone 15: nuova piattaforma, verified baseline e v0.3.0
+    -> Milestone 16: Controlled Mutation Recovery development-only
+    -> Milestone 17: Mutation Qualification
+    -> Milestone 18: productization mutativa v0.4.0
 ```
 
-La Milestone 14 non prosegue la selezione seriale di modelli sul ThinkPad e
-non tenta di compensare i limiti read-only. Conserva Controlled Mutation come
-oggetto forense: analisi del failure, contratto model-facing, compilazione
-deterministica e invarianti di sicurezza, senza support claim o release.
+La Milestone 14 è la priorità immediata e separa `maestro chat` da
+`maestro agent`. Il primo candidato è `qwen2.5-coder:7b`; non serve a testare
+tool calling, ma utilità single-file, comportamento epistemico, latenza e
+token con `num_ctx` e `thinking` osservabili.
 
-La Milestone 15 qualifica prima un nuovo baseline read-only sulla piattaforma
-più capace. Soltanto dopo può iniziare una qualificazione mutativa separata,
-con profilo e gate propri.
+La Milestone 15 qualifica prima direct/chat, poi verified agent sintetico e
+infine B01 sulla piattaforma più capace. Se il baseline multi-file non è verde,
+Controlled Mutation non viene aperta.
 
-Prima di una nuova selezione live viene progettata una modalità `direct/chat`
-esplicita, senza tool né fallback implicito nel verified agent. Il lavoro può
-procedere in parallelo alla sola analisi forense della Milestone 14, ma la sua
-misurazione appartiene al baseline read-only della Milestone 15.
+Il piano mutativo approvato non viene cancellato: è rinviato alla Milestone 16
+e limitato a analisi, compilazione deterministica e test development-only. Gate
+A/B/C appartengono alla Milestone 17; soltanto `mutation_qualified` può portare
+alla productization v0.4.0 della Milestone 18.
 
 ## Requisiti congelati per una futura qualificazione
 
@@ -195,6 +206,10 @@ Prima di qualificare un altro modello devono essere disponibili:
   profilo, contesto, thinking, timeout o hardware;
 - nuovo baseline read-only sulla piattaforma della Milestone 15 prima dei gate
   di Controlled Mutation.
+
+L'associazione di release diventa: v0.2.0 storico read-only con adoption
+NO-GO; v0.3.0 direct/chat e nuovo baseline read-only; v0.4.0 Controlled
+Mutation soltanto dopo qualificazione completa.
 
 Questi requisiti non correggono retroattivamente la campagna e non autorizzano
 `v0.2.1`.

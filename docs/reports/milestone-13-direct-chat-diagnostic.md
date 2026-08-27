@@ -137,3 +137,5 @@ Il verdetto finale della Milestone 13 resta
 `field_validation_completed_with_limitations` con
 `adoption_no_go_on_reference_profile`, ora con una distinzione causale più
 precisa e un requisito di prodotto concreto prima di nuova selezione modelli.
+Il requisito viene trasferito alla
+`docs/milestone-14-interaction-modes-direct-chat-plan.md`.

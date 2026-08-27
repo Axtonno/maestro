@@ -462,8 +462,9 @@ decisione sul prossimo contratto di prodotto.
   distinta la loro provenienza;
 - decidere fra Read-only Developer Experience, Controlled Mutation ed
   ecosistema/integrazioni usando i criteri sotto;
-- scrivere il contratto v0.3.0 soltanto dopo l'approvazione del report e, se
-  la direzione è mutativa, dopo i verdetti conclusivi delle Milestone 14 e 15;
+- scrivere il contratto v0.3.0 soltanto dopo l'approvazione del report; la
+  decisione conclusiva assegna v0.3.0 al percorso read-only direct/chat e
+  rinvia la direzione mutativa alle Milestone 16–18;
 - aggiornare roadmap, compatibility e known issues senza trasformare evidenza
   field in una promessa retroattiva di v0.2.0.
 
@@ -492,8 +493,8 @@ ma il contratto v0.3.0 deve dichiarare priorità e authority in modo univoco.
 ## Deliverable
 
 - `docs/reports/milestone-13-field-validation.md`;
-- decisione di prodotto e, per la direzione mutativa, handoff alle Milestone
-  14 e 15 prima del contratto v0.3.0;
+- decisione di prodotto e handoff a Milestone 14 per direct/chat e Milestone 15
+  per il nuovo baseline read-only;
 - aggiornamento conclusivo di roadmap e contesto.
 
 ---
@@ -501,8 +502,8 @@ ma il contratto v0.3.0 deve dichiarare priorità e authority in modo univoco.
 # Regola per avviare il recovery di Controlled Mutation
 
 La Milestone 13 non riapre Gate B o Gate C e non modifica ADR-0032. Una nuova
-ricerca diagnostica può iniziare nella Milestone 14 senza contare come
-qualificazione. La qualificazione ufficiale appartiene alla Milestone 15 ed è
+ricerca mutativa diagnostica può iniziare nella Milestone 16 senza contare come
+qualificazione. La qualificazione ufficiale appartiene alla Milestone 17 ed è
 ammessa soltanto quando la recovery produce almeno uno dei seguenti input
 nuovi e verificabili:
 

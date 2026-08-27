@@ -1,16 +1,16 @@
-# Milestone 16 — Productization v0.3.0 Plan
+# Milestone 18 — Productization v0.4.0 Plan
 
 Versione: 0.1.0
 
-Stato: Condizionata — non apribile senza `mutation_qualified` dalla Milestone 15
+Stato: Condizionata — non apribile senza `mutation_qualified` dalla Milestone 17
 
-Data: 2026-08-21
+Data: 2026-08-21; rinumerazione 2026-08-27
 
 Documenti di riferimento:
 
 - `roadmap.md`;
-- `milestone-14-controlled-mutation-recovery-plan.md`;
-- `milestone-15-reference-hardware-mutation-qualification-plan.md`;
+- `milestone-16-controlled-mutation-recovery-plan.md`;
+- `milestone-17-mutation-qualification-plan.md`;
 - `mutation-qualification.md`;
 - `adr/ADR-0031.md`;
 - `adr/ADR-0032.md`;
@@ -24,7 +24,7 @@ Documenti di riferimento:
 
 # Condizione di apertura
 
-La milestone può iniziare soltanto se il report finale della Milestone 15:
+La milestone può iniziare soltanto se il report finale della Milestone 17:
 
 - contiene il verdetto esatto `mutation_qualified`;
 - identifica senza ambiguità piattaforma, hardware, filesystem, provider,
@@ -38,14 +38,14 @@ La milestone può iniziare soltanto se il report finale della Milestone 15:
 
 Qualsiasi altro esito — `model_rejected`, `platform_rejected`,
 `hardware_insufficient` o `mutation_deferred` — mantiene questa milestone
-chiusa. L'esistenza del piano non costituisce un impegno a rilasciare v0.3.0.
+chiusa. L'esistenza del piano non costituisce un impegno a rilasciare v0.4.0.
 
 ---
 
 # Obiettivo operativo
 
 Trasformare l'esatta combinazione Controlled Mutation qualificata dalla
-Milestone 15 in una release v0.3.0 installabile, documentata e pubblicata,
+Milestone 17 in una release v0.4.0 installabile, documentata e pubblicata,
 senza ampliare il contratto tecnico già provato.
 
 La release conserva il profilo read-only come default e aggiunge un profilo
@@ -56,7 +56,7 @@ aggiungere nuove operazioni mutative durante i gate di release.
 
 ---
 
-# Contratto candidato v0.3.0
+# Contratto candidato v0.4.0
 
 ## Profilo read-only
 
@@ -122,12 +122,12 @@ normativi:
 - limiti e timeout del profilo.
 
 Una singola macchina qualificata dimostra un reference profile, non permette
-di inferire automaticamente il minimo teorico. Se la Milestone 15 non ha
-qualificato un lower bound, v0.3.0 pubblica il reference hardware esatto come
+di inferire automaticamente il minimo teorico. Se la Milestone 17 non ha
+qualificato un lower bound, v0.4.0 pubblica il reference hardware esatto come
 requisito conservativo. Un requisito più debole richiede una nuova prova di
 confine prima del freeze della compatibility matrix.
 
-Se la Milestone 15 qualifica WSL2, la Fase 1 deve decidere tramite ADR se v0.3.0
+Se la Milestone 17 qualifica WSL2, la Fase 1 deve decidere tramite ADR se v0.4.0
 supporta quel profilo direttamente oppure se la release richiede prima la
 replica su Linux nativo con hardware equivalente. Windows nativo e workspace
 sotto `/mnt/*` non vengono dedotti da un PASS WSL2.
@@ -137,7 +137,7 @@ sotto `/mnt/*` non vengono dedotti da un PASS WSL2.
 # Regole trasversali
 
 - modello, quantizzazione, protocollo, prompt, schema, hardware, topologia,
-  filesystem, limiti e criteri sono quelli qualificati dalla Milestone 15;
+  filesystem, limiti e criteri sono quelli qualificati dalla Milestone 17;
 - qualsiasi modifica a questi elementi invalida il candidate record e richiede
   una nuova qualificazione, non un hardening opportunistico nella milestone;
 - il profilo mutativo è separato, opt-in e mai selezionato automaticamente;
@@ -145,7 +145,7 @@ sotto `/mnt/*` non vengono dedotti da un PASS WSL2.
   l'utente non installa e seleziona esplicitamente il profilo mutativo;
 - non esistono `--yes`, auto-approval, policy mutativa `allow`, grant
   run-scoped o fallback non interattivi;
-- il diagnostic harness e i raw trace della Milestone 14 non entrano nel
+- il diagnostic harness e i raw trace della Milestone 16 non entrano nel
   binario, nell'archive, nei log o nei documenti pubblici;
 - ogni packaging candidate, release candidate e release finale è un artifact
   distinto, immutabile e identificato da versione, commit, stato e SHA-256;
@@ -158,7 +158,7 @@ sotto `/mnt/*` non vengono dedotti da un PASS WSL2.
   post-commit registrano stato applicato/stale senza rollback implicito;
 - report, log e archive non includono prompt, response, arguments, diff,
   contenuti fixture, secret, root fisiche o raw telemetry identificante;
-- la serie v0.2.x resta un ramo di manutenzione read-only e non riceve la nuova
+- la serie storica v0.2.x e la serie read-only v0.3.x non ricevono la nuova
   authority;
 - una fase è completata soltanto con deliverable, test e gate espliciti.
 
@@ -179,7 +179,7 @@ La release deve pubblicare e mantenere coerenti almeno:
   post-commit;
 - known issues e non-garanzie;
 - contratto CLI/configuration/API 0.x e note di upgrade;
-- release notes v0.3.0;
+- release notes v0.4.0;
 - licenza, attribution, manifest, checksum e istruzioni di installazione.
 
 Il quick start read-only viene presentato per primo. Il quick start mutativo
@@ -192,7 +192,7 @@ dedicato, scelga una fixture non sensibile e confermi la preview su TTY.
 
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | Entry gate e contratto di release | Condizionata | Milestone 15 `mutation_qualified` |
+| 1 | Entry gate e contratto di release | Condizionata | Milestone 17 `mutation_qualified` |
 | 2 | Superficie pubblica e profili supportati | Non avviata | Fase 1 |
 | 3 | Packaging candidate e installazione pulita | Non avviata | Fase 2 |
 | 4 | Gate deterministici, operativi e di sicurezza | Non avviata | Fase 3 |
@@ -203,7 +203,7 @@ dedicato, scelga una fixture non sensibile e confermi la preview su TTY.
 Le fasi sono sequenziali. Un failure live impedisce la promozione e richiede un
 nuovo candidate soltanto quando la correzione non cambia il contratto
 qualificato. Se il fix cambia modello, protocollo, schema, authority, hardware,
-filesystem, limiti o criterio, il lavoro torna alla Milestone 15.
+filesystem, limiti o criterio, il lavoro torna alla Milestone 17.
 
 ---
 
@@ -212,25 +212,25 @@ filesystem, limiti o criterio, il lavoro torna alla Milestone 15.
 ## Obiettivo
 
 Provare che la condizione di apertura è soddisfatta e congelare una sola
-promessa v0.3.0 prima di modificare configurazione o packaging pubblico.
+promessa v0.4.0 prima di modificare configurazione o packaging pubblico.
 
 ## Attività
 
-- verificare completezza e anti-leak del report finale della Milestone 15;
+- verificare completezza e anti-leak del report finale della Milestone 17;
 - verificare `mutation_qualified` e riconciliare profilo, ADR, report JSON,
   report Markdown, commit e digest binario;
 - decidere supporto WSL2 oppure replica obbligatoria su Linux nativo;
-- se viene richiesto Linux nativo, sospendere la Milestone 16 e riaprire la
-  Milestone 15 con un nuovo candidate record; la productization riprende
+- se viene richiesto Linux nativo, sospendere la Milestone 18 e riaprire la
+  Milestone 17 con un nuovo candidate record; la productization riprende
   soltanto dopo `mutation_qualified` sul profilo nativo;
 - congelare piattaforme, hardware, provider, modello, protocollo, filesystem,
   limiti e non-garanzie della release;
 - congelare il doppio profilo read-only/mutativo e la regola di opt-in;
 - censire superfici pubbliche, archive allowlist, compatibility, security,
   installation, CLI, config e release notes da aggiornare;
-- eseguire baseline repository-wide e packaging v0.2.0 senza cambi per
+- eseguire baseline repository-wide e packaging v0.3.0 senza cambi per
   dimostrare un punto di partenza verde;
-- approvare un ADR di productization v0.3.0.
+- approvare un ADR di productization v0.4.0.
 
 ## Gate di uscita
 
@@ -242,9 +242,9 @@ promessa v0.3.0 prima di modificare configurazione o packaging pubblico.
 
 ## Deliverable
 
-- ADR del contratto v0.3.0;
-- matrice di handoff dalla Milestone 15;
-- `docs/reports/milestone-16-phase-1.md`.
+- ADR del contratto v0.4.0;
+- matrice di handoff dalla Milestone 17;
+- `docs/reports/milestone-18-phase-1.md`.
 
 ---
 
@@ -269,7 +269,7 @@ aggiuntiva senza alterare il default read-only.
 - descrivere chiaramente pre-commit, commit, post-commit/stale e assenza di
   rollback generale;
 - aggiornare API compatibility e note di migrazione 0.x;
-- aggiungere release notes v0.3.0 inizialmente candidate;
+- aggiungere release notes v0.4.0 inizialmente candidate;
 - aggiornare allowlist del packaging per includere soltanto configurazione e
   documenti mutativi approvati;
 - aggiungere test che provino default deny, opt-in esplicito e rifiuto dei
@@ -280,14 +280,14 @@ aggiuntiva senza alterare il default read-only.
 - installazione/upgrade non abilita mutazioni implicitamente;
 - profilo read-only invariato e profilo mutativo esatto;
 - preflight fallisce chiuso fuori dal reference profile;
-- compatibility e requisito hardware coincidono con la Milestone 15;
+- compatibility e requisito hardware coincidono con la Milestone 17;
 - nessun diagnostic payload o materiale sperimentale entra nell'archive.
 
 ## Deliverable
 
-- configurazioni pubbliche v0.3.0;
+- configurazioni pubbliche v0.4.0;
 - superficie documentale candidate;
-- `docs/reports/milestone-16-phase-2.md`.
+- `docs/reports/milestone-18-phase-2.md`.
 
 ---
 
@@ -295,12 +295,12 @@ aggiuntiva senza alterare il default read-only.
 
 ## Obiettivo
 
-Produrre un `v0.3.0-pc.N` riproducibile e installarlo fuori dal checkout sulla
+Produrre un `v0.4.0-pc.N` riproducibile e installarlo fuori dal checkout sulla
 piattaforma di release qualificata.
 
 ## Attività
 
-- adeguare script, manifest, guide renderizzate e allowlist a v0.3.0;
+- adeguare script, manifest, guide renderizzate e allowlist a v0.4.0;
 - costruire due volte da worktree pulito con input normalizzati;
 - confrontare archive e checksum byte per byte;
 - verificare inventory, permessi, path, link, licenza e attribution;
@@ -324,9 +324,9 @@ piattaforma di release qualificata.
 
 ## Deliverable
 
-- `v0.3.0-pc.N` e checksum fuori dal repository;
+- `v0.4.0-pc.N` e checksum fuori dal repository;
 - evidenza di installazione pulita;
-- `docs/reports/milestone-16-phase-3.md`.
+- `docs/reports/milestone-18-phase-3.md`.
 
 ---
 
@@ -363,7 +363,7 @@ PASS generativo completo prima di concedere authority al Gate C live.
 ## Deliverable
 
 - matrice operativa e di sicurezza del candidate;
-- `docs/reports/milestone-16-phase-4.md`.
+- `docs/reports/milestone-18-phase-4.md`.
 
 ---
 
@@ -386,7 +386,7 @@ produrre un release candidate distinto soltanto dopo il PASS.
 - registrare RAM, VRAM/offload, latenza, turni, token, tool call, lifecycle,
   digest, freshness e cleanup in forma redatta;
 - arrestare la serie al primo failure e mantenere immutabile il candidate;
-- dopo il PASS completo, costruire un distinto `v0.3.0-rc.N` dallo stesso
+- dopo il PASS completo, costruire un distinto `v0.4.0-rc.N` dallo stesso
   source candidate congelato senza rinominare il packaging candidate.
 
 ## Gate di uscita
@@ -399,9 +399,9 @@ produrre un release candidate distinto soltanto dopo il PASS.
 
 ## Deliverable
 
-- `v0.3.0-rc.N` e checksum;
+- `v0.4.0-rc.N` e checksum;
 - report live del packaging candidate;
-- `docs/reports/milestone-16-phase-5.md`.
+- `docs/reports/milestone-18-phase-5.md`.
 
 ---
 
@@ -439,7 +439,7 @@ e congelare tutta la documentazione pubblica prima dell'artifact finale.
 
 - release candidate qualificato;
 - commit di freeze documentale;
-- `docs/reports/milestone-16-phase-6.md`.
+- `docs/reports/milestone-18-phase-6.md`.
 
 ---
 
@@ -447,13 +447,13 @@ e congelare tutta la documentazione pubblica prima dell'artifact finale.
 
 ## Obiettivo
 
-Costruire, verificare e distribuire v0.3.0 come artifact finale distinto dal
+Costruire, verificare e distribuire v0.4.0 come artifact finale distinto dal
 release candidate.
 
 ## Attività
 
 - creare un commit pulito, discendente e successivo al freeze documentale;
-- costruire due volte `maestro-v0.3.0-linux-amd64.tar.gz` con stato `release`;
+- costruire due volte `maestro-v0.4.0-linux-amd64.tar.gz` con stato `release`;
 - confrontare archive/checksum byte per byte e verificare inventory/manifest;
 - installare l'artifact finale in directory pulita sul filesystem supportato;
 - ripetere preflight e l'intera sequenza Gate A `3/3`, B `2/2`, C `3/3` sul
@@ -461,7 +461,7 @@ release candidate.
 - ripetere quick start read-only, deny, no-TTY, SIGINT, hard limit,
   immutabilità e anti-leak;
 - verificare che `maestro version`, manifest e nome archive concordino;
-- creare il tag annotato `v0.3.0` soltanto dopo tutti i PASS e verificare che
+- creare il tag annotato `v0.4.0` soltanto dopo tutti i PASS e verificare che
   punti al commit incorporato nel binario;
 - pubblicare commit finale e tag senza spostarli o ricrearli;
 - creare la GitHub Release con note, archive e checksum esatti;
@@ -480,10 +480,10 @@ release candidate.
 
 ## Deliverable
 
-- `maestro-v0.3.0-linux-amd64.tar.gz` e checksum;
-- tag annotato e GitHub Release `v0.3.0`;
-- `docs/releases/v0.3.0.md`;
-- `docs/reports/milestone-16-final.md`.
+- `maestro-v0.4.0-linux-amd64.tar.gz` e checksum;
+- tag annotato e GitHub Release `v0.4.0`;
+- `docs/releases/v0.4.0.md`;
+- `docs/reports/milestone-18-final.md`.
 
 ---
 
@@ -493,10 +493,10 @@ La milestone può concludere con:
 
 | Esito | Significato |
 |---|---|
-| `release_published` | v0.3.0 mutativa pubblicata sul profilo esatto |
+| `release_published` | v0.4.0 mutativa pubblicata sul profilo esatto |
 | `productization_blocked` | contratto qualificato ma gate di prodotto non superato |
-| `requalification_required` | una correzione necessaria cambia il candidate record e torna alla Milestone 15 |
+| `requalification_required` | una correzione necessaria cambia il candidate record e torna alla Milestone 17 |
 
-Un failure non autorizza una v0.3.0 read-only con lo stesso contratto nominale,
+Un failure non autorizza una v0.4.0 read-only con lo stesso contratto nominale,
 né l'indebolimento di Gate A/B/C o del security model. Una release read-only
 alternativa richiederebbe una decisione e un piano distinti.
