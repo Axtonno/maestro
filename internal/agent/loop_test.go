@@ -56,6 +56,33 @@ func TestAgentLoopExecutesCorrelatedToolCallAndCompletesPlan(t *testing.T) {
 	}
 }
 
+func TestAgentLoopPropagatesGenerationControlsToEveryTurn(t *testing.T) {
+	providers := &generationStub{responses: []provider.CompletionResponse{
+		{Message: provider.Message{Role: provider.RoleAssistant, ToolCalls: []provider.ToolCall{{ID: "call-1", Name: "fixture_read", Arguments: json.RawMessage(`{"path":"main.go"}`)}}}, FinishReason: provider.FinishReasonToolCalls},
+		{Message: provider.Message{Role: provider.RoleAssistant, Content: "Done."}, FinishReason: provider.FinishReasonStop},
+	}}
+	runtime := loopRuntime(t, providers, allowedToolRuntime(t, &loopTool{descriptor: loopToolDescriptor(t, "fixture.read", "fixture_read")}), pendingPlan(t, "inspect"))
+	source := runRequest(t, "run-generation", "agent.general", "workspace", 5)
+	request, err := pkgAgent.NewRunRequest(
+		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), source.Instruction(), source.Limits(),
+		pkgAgent.RunRequestOptions{
+			Context: source.Context(), Tools: []pkgTool.ID{"fixture.read"},
+			Generation: provider.GenerationOptions{ContextWindow: 8192, Thinking: provider.ThinkingDisabled},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runtime.Run(context.Background(), request); err != nil {
+		t.Fatalf("run with generation controls: %v", err)
+	}
+	for index, captured := range providers.Requests() {
+		if captured.Options.ContextWindow != 8192 || captured.Options.Thinking != provider.ThinkingDisabled {
+			t.Fatalf("turn %d lost generation controls: %#v", index, captured.Options)
+		}
+	}
+}
+
 func TestAgentLoopRecoversTextualPseudoToolCallThroughDeclaredInterface(t *testing.T) {
 	providers := &generationStub{responses: []provider.CompletionResponse{
 		{
@@ -921,7 +948,7 @@ func requestWithTools(t *testing.T, source pkgAgent.RunRequest, tools []pkgTool.
 	t.Helper()
 	request, err := pkgAgent.NewRunRequest(
 		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), source.Instruction(), source.Limits(),
-		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: tools, Approver: source.Approver(), Streaming: streaming},
+		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: tools, Approver: source.Approver(), Streaming: streaming, Generation: source.GenerationOptions()},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -949,7 +976,7 @@ func requestWithInstruction(t *testing.T, source pkgAgent.RunRequest, instructio
 	t.Helper()
 	request, err := pkgAgent.NewRunRequest(
 		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), instruction, source.Limits(),
-		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: source.Tools(), Approver: source.Approver(), Streaming: source.Streaming()},
+		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: source.Tools(), Approver: source.Approver(), Streaming: source.Streaming(), Generation: source.GenerationOptions()},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -961,7 +988,7 @@ func requestWithWorkspace(t *testing.T, source pkgAgent.RunRequest, workspace pk
 	t.Helper()
 	request, err := pkgAgent.NewRunRequest(
 		source.Run(), source.Agent(), source.Provider(), source.Model(), source.Workspace(), source.Policy(), source.Instruction(), source.Limits(),
-		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: source.Tools(), Approver: source.Approver(), Streaming: source.Streaming(), Workspace: &workspace},
+		pkgAgent.RunRequestOptions{Context: source.Context(), Tools: source.Tools(), Approver: source.Approver(), Streaming: source.Streaming(), Generation: source.GenerationOptions(), Workspace: &workspace},
 	)
 	if err != nil {
 		t.Fatal(err)

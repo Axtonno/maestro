@@ -84,6 +84,21 @@ func TestLlamaCPPAdvancedGenerationMapsOptionsToolsAndResults(t *testing.T) {
 	}
 }
 
+func TestLlamaCPPRejectsPerRequestContextAndThinkingBeforeIO(t *testing.T) {
+	provider := newTestProvider(t, "local", "", func(http.ResponseWriter, *http.Request) {
+		t.Fatal("unsupported generation controls performed remote I/O")
+	})
+	for _, options := range []pkgProvider.GenerationOptions{
+		{ContextWindow: 4096},
+		{Thinking: pkgProvider.ThinkingDefault},
+		{Thinking: pkgProvider.ThinkingDisabled},
+	} {
+		if _, err := provider.Complete(context.Background(), pkgProvider.CompletionRequest{Options: options}); !errors.Is(err, pkgProvider.ErrUnsupportedCapability) {
+			t.Fatalf("expected unsupported capability for %#v, got %v", options, err)
+		}
+	}
+}
+
 func TestLlamaCPPStructuredOutputMapsSchemaAndValidatesResponse(t *testing.T) {
 	schema := json.RawMessage(`{"type":"object","required":["name"]}`)
 	provider := newTestProvider(t, "local", "", func(

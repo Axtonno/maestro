@@ -99,6 +99,7 @@ func (loop *agentLoop) Run(
 			}
 			completionRequest := provider.CompletionRequest{
 				Model: request.Model(), Messages: messages,
+				Options:    request.GenerationOptions(),
 				Tools:      turnTools,
 				ToolChoice: provider.ToolChoice{Mode: provider.ToolChoiceAuto},
 			}

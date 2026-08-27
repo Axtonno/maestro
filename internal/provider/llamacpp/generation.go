@@ -14,6 +14,12 @@ func validateLlamaCPPCompletionRequest(
 	if err := request.Validate(); err != nil {
 		return err
 	}
+	if request.Options.ContextWindow != 0 || request.Options.Thinking != "" {
+		return fmt.Errorf(
+			"llama.cpp OpenAI-compatible chat cannot set context window or thinking per request: %w",
+			pkgProvider.ErrUnsupportedCapability,
+		)
+	}
 	for _, message := range request.Messages {
 		if message.Role == pkgProvider.RoleTool && message.ToolCallID == "" {
 			return fmt.Errorf(

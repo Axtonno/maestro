@@ -9,6 +9,7 @@ import (
 
 	agent "github.com/antonio-cafeo/maestro/pkg/agent"
 	contextengine "github.com/antonio-cafeo/maestro/pkg/contextengine"
+	"github.com/antonio-cafeo/maestro/pkg/provider"
 	"github.com/antonio-cafeo/maestro/pkg/runtime"
 	"github.com/antonio-cafeo/maestro/pkg/tool"
 )
@@ -55,7 +56,7 @@ func TestRunRequestRequiresExplicitTargetsLimitsContextAndTools(t *testing.T) {
 	request, err := agent.NewRunRequest(
 		"run-1", "agent.general", "ollama", "model", "workspace", "policy.default-deny",
 		"Update the workspace.", validLimits(),
-		agent.RunRequestOptions{Context: build, Tools: toolIDs},
+		agent.RunRequestOptions{Context: build, Tools: toolIDs, Generation: provider.GenerationOptions{ContextWindow: 4096, Thinking: provider.ThinkingDisabled}},
 	)
 	if err != nil {
 		t.Fatalf("construct run request: %v", err)
@@ -66,6 +67,10 @@ func TestRunRequestRequiresExplicitTargetsLimitsContextAndTools(t *testing.T) {
 	}
 	if request.Provider() != "ollama" || request.Model() != "model" || request.Workspace() != "workspace" {
 		t.Fatalf("explicit targets were not preserved: %#v", request)
+	}
+	generation := request.GenerationOptions()
+	if generation.ContextWindow != 4096 || generation.Thinking != provider.ThinkingDisabled {
+		t.Fatalf("generation controls were not preserved: %#v", generation)
 	}
 	workspace, err := contextengine.NewWorkspace("workspace", t.TempDir(), contextengine.WorkspaceOptions{Source: contextengine.SourceFilesystem, Policy: contextengine.DefaultScanPolicy()})
 	if err != nil {

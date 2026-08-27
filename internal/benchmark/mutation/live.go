@@ -83,13 +83,16 @@ func runDirectProtocol(ctx context.Context, options LiveOptions, _ int) (Attempt
 		return failedAttempt(result, "fixture_read_failed", "harness", "internal_failure"), nil
 	}
 	temperature := options.Profile.Protocol.Temperature
+	generation := config.AgentProfile().GenerationOptions()
+	generation.MaxTokens = options.Profile.Protocol.DirectMaxTokensPerTurn
+	generation.Temperature = &temperature
 	messages := []pkgProvider.Message{
 		{Role: pkgProvider.RoleSystem, Content: "Use the single declared tool through the native tool channel. Do not print a tool call as text."},
 		{Role: pkgProvider.RoleUser, Content: options.Profile.Protocol.GateAInstruction},
 	}
 	readResponse, err := configured.Runtime().Providers().Complete(ctx, pkgProvider.ID(config.Provider.ID), pkgProvider.CompletionRequest{
-		Model: config.Models.Chat, Messages: messages,
-		Options: pkgProvider.GenerationOptions{MaxTokens: options.Profile.Protocol.DirectMaxTokensPerTurn, Temperature: &temperature},
+		Model: config.AgentProfile().Model, Messages: messages,
+		Options: generation,
 		Tools:   []pkgProvider.Tool{readTool}, ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceAuto},
 	})
 	if err != nil {
@@ -114,8 +117,8 @@ func runDirectProtocol(ctx context.Context, options LiveOptions, _ int) (Attempt
 		Role: pkgProvider.RoleTool, ToolCallID: readCall.ID, ToolName: readTool.Name, Content: string(payload),
 	})
 	patchResponse, err := configured.Runtime().Providers().Complete(ctx, pkgProvider.ID(config.Provider.ID), pkgProvider.CompletionRequest{
-		Model: config.Models.Chat, Messages: messages,
-		Options: pkgProvider.GenerationOptions{MaxTokens: options.Profile.Protocol.DirectMaxTokensPerTurn, Temperature: &temperature},
+		Model: config.AgentProfile().Model, Messages: messages,
+		Options: generation,
 		Tools:   []pkgProvider.Tool{patchTool}, ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceAuto},
 	})
 	if err != nil {

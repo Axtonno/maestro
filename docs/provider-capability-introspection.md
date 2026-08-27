@@ -1,10 +1,10 @@
 # Maestro Provider Capability Introspection
 
-Versione: 0.1.0
+Versione: 0.2.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-08
+Ultimo aggiornamento: 2026-08-27
 
 ---
 
@@ -102,7 +102,10 @@ dal protocollo.
 8. `model_pull`;
 9. `model_remove`;
 10. `structured_output`;
-11. `tool_calling`.
+11. `tool_calling`;
+12. `context_window_control`;
+13. `thinking_control`;
+14. `thinking`.
 
 Ollama e llama.cpp implementano tutte le capability note nell'adapter. Per
 `structured_output` e `tool_calling`, il supporto strutturale non implica che
@@ -123,6 +126,12 @@ rispettivamente completion/streaming/structured output ed embedding nel report;
 `tools` determina tool calling. La
 documentazione ufficiale di [Show model details](https://docs.ollama.com/api-reference/show-model-details)
 definisce il campo `capabilities` model-specific.
+
+Per un modello con completion, il native endpoint rende disponibili
+`context_window_control` e `thinking_control`; `thinking` è disponibile
+soltanto quando `/api/show` espone l'omonima capability. Il consumer usa
+`ValidateGenerationCapabilities` per distinguere controllo esplicito false da
+richiesta di thinking attivo.
 
 Un modello assente non è un errore di protocollo: inference, load, unload e
 remove risultano non disponibili, mentre pull rimane disponibile sull'istanza.
@@ -149,6 +158,8 @@ Semantica:
 - una disabilitazione embedding esplicita produce la semantica inversa;
 - structured output segue la disponibilità completion;
 - tool calling è disponibile soltanto con completion e `--jinja` osservabile;
+- context window e thinking per-request sono `unsupported`, perché la
+  superficie OpenAI-compatible non può onorarli esattamente;
 - se la modalità può dipendere da environment ereditato e non è osservabile
   dagli argomenti, entrambe rimangono `unknown`.
 

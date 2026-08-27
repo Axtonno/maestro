@@ -1,10 +1,10 @@
 # Maestro Advanced Provider Generation
 
-Versione: 0.1.0
+Versione: 0.2.0
 
 Stato: Implementato
 
-Ultimo aggiornamento: 2026-08-08
+Ultimo aggiornamento: 2026-08-27
 
 ---
 
@@ -27,12 +27,27 @@ che conserva i default del provider.
 - `MaxTokens`: zero lascia il default, un valore positivo limita la risposta;
 - `Temperature`: puntatore per distinguere il valore valido zero dall'assenza;
 - `TopP`: puntatore per distinguere il valore dall'assenza;
-- `Stop`: sequenze di arresto ordinate.
+- `Stop`: sequenze di arresto ordinate;
+- `ContextWindow`: zero lascia il default, un valore positivo richiede una
+  context window esatta;
+- `Thinking`: zero lascia la semantica legacy, `default` omette il controllo,
+  `true` e `false` richiedono un valore esplicito.
 
 La validazione comune accetta temperature tra 0 e 2, `top_p` maggiore di zero e
 non superiore a 1, token non negativi e stop non vuoti. Ollama traduce i campi
 in `options.num_predict`, `temperature`, `top_p` e `stop`; llama.cpp usa i campi
 OpenAI-compatible `max_tokens`, `temperature`, `top_p` e `stop`.
+
+La Milestone 14 aggiunge `ContextWindow` e `Thinking` in modo additivo.
+Ollama traduce la context window in `options.num_ctx` e thinking nel campo
+top-level `think`; il puntatore nell'adapter distingue omissione e `false`.
+La native chat API non restituisce sempre un'attestazione del valore effettivo:
+il valore richiesto e il body mappato sono osservabili, mentre l'effettivo resta
+`unknown` quando il runner non lo espone.
+
+L'endpoint OpenAI-compatible di llama.cpp non consente a Maestro di impostare
+questi due controlli per singola request. L'adapter li rifiuta prima dell'I/O
+con `ErrUnsupportedCapability`, invece di ignorarli.
 
 ---
 
@@ -109,7 +124,9 @@ deve continuare a leggere fino a `io.EOF`.
 # Capability introspection
 
 Entrambi gli adapter dichiarano supporto strutturale per `structured_output` e
-`tool_calling`.
+`tool_calling`. Ollama dichiara inoltre `context_window_control` e
+`thinking_control`; la capability modello `thinking` deriva da `/api/show`.
+llama.cpp dichiara i tre controlli non supportati nella superficie per-request.
 
 - Ollama rende structured output disponibile per modelli con capability
   `completion` e tool calling disponibile quando `/api/show` espone `tools`.
@@ -132,8 +149,8 @@ in `provider-api-compatibility-audit.md`.
 Restano fuori scope:
 
 - multimodalità, audio e video;
-- reasoning/thinking;
 - prompt caching e speculative decoding;
+- livelli di thinking proprietari diversi dal controllo booleano tri-state;
 - parallel tool policy proprietarie;
 - validazione semantica JSON Schema nel client;
 - esecuzione automatica dei tool;

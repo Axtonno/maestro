@@ -144,6 +144,12 @@ func newLlamaCPPCapabilityReport(
 	for _, capability := range pkgProvider.KnownCapabilities() {
 		support := pkgProvider.CapabilitySupported
 		availability := pkgProvider.CapabilityAvailabilityUnknown
+		if capability == pkgProvider.CapabilityContextWindowControl ||
+			capability == pkgProvider.CapabilityThinkingControl ||
+			capability == pkgProvider.CapabilityThinking {
+			support = pkgProvider.CapabilityUnsupported
+			availability = pkgProvider.CapabilityAvailabilityUnavailable
+		}
 		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{
 			Capability: capability, Support: support, Availability: availability,
 		})

@@ -9,6 +9,7 @@ type chatRequest struct {
 	Model    string          `json:"model"`
 	Messages []chatMessage   `json:"messages"`
 	Stream   bool            `json:"stream"`
+	Think    *bool           `json:"think,omitempty"`
 	Format   json.RawMessage `json:"format,omitempty"`
 	Options  *chatOptions    `json:"options,omitempty"`
 	Tools    []chatTool      `json:"tools,omitempty"`
@@ -17,6 +18,7 @@ type chatRequest struct {
 type chatMessage struct {
 	Role       string     `json:"role"`
 	Content    string     `json:"content"`
+	Thinking   string     `json:"thinking,omitempty"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 	ToolName   string     `json:"tool_name,omitempty"`
 	ToolCalls  []toolCall `json:"tool_calls,omitempty"`
@@ -24,6 +26,7 @@ type chatMessage struct {
 
 type chatOptions struct {
 	NumPredict  int      `json:"num_predict,omitempty"`
+	NumCtx      int      `json:"num_ctx,omitempty"`
 	Temperature *float64 `json:"temperature,omitempty"`
 	TopP        *float64 `json:"top_p,omitempty"`
 	Stop        []string `json:"stop,omitempty"`

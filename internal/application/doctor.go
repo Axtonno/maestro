@@ -27,7 +27,7 @@ type Check struct {
 }
 
 func Doctor(ctx context.Context, config productconfig.Config, dependencies Dependencies) []Check {
-	checks := []Check{{Name: "config", Status: CheckPass, Detail: "schema_v1_valid"}}
+	checks := []Check{{Name: "config", Status: CheckPass, Detail: fmt.Sprintf("schema_v%d_valid", config.Version)}}
 	if info, err := os.Stat(config.Workspace.Root); err != nil || !info.IsDir() {
 		checks = append(checks, Check{Name: "workspace", Status: CheckFail, Detail: "root_unavailable"})
 	} else {
@@ -96,13 +96,20 @@ func Doctor(ctx context.Context, config productconfig.Config, dependencies Depen
 	} else {
 		checks = append(checks, Check{Name: "provider", Status: CheckPass, Detail: fmt.Sprintf("capabilities_%d", len(instance.Capabilities))})
 	}
-	model, modelErr := application.runtime.Providers().Capabilities(ctx, providerID, pkgProvider.CapabilityRequest{Target: pkgProvider.CapabilityTargetModel, Model: config.Models.Chat})
+	agentProfile := config.AgentProfile()
+	model, modelErr := application.runtime.Providers().Capabilities(ctx, providerID, pkgProvider.CapabilityRequest{Target: pkgProvider.CapabilityTargetModel, Model: agentProfile.Model})
 	if modelErr != nil {
 		checks = append(checks, Check{Name: "model", Status: CheckFail, Detail: "model_probe_failed"})
-	} else if !requiredModelCapabilities(model, config.Agent.Streaming) {
+	} else if !requiredModelCapabilities(model, agentProfile.Streaming) {
 		checks = append(checks, Check{Name: "model", Status: CheckFail, Detail: "required_capability_unavailable"})
+	} else if config.Version == productconfig.CandidateVersion &&
+		pkgProvider.ValidateGenerationCapabilities(model, agentProfile.GenerationOptions()) != nil {
+		checks = append(checks, Check{Name: "generation", Status: CheckFail, Detail: "generation_control_unavailable"})
 	} else {
 		checks = append(checks, Check{Name: "model", Status: CheckPass, Detail: "required_capabilities_available"})
+		if config.Version == productconfig.CandidateVersion {
+			checks = append(checks, Check{Name: "generation", Status: CheckPass, Detail: "generation_controls_available"})
+		}
 	}
 	if err := application.Start(ctx); err != nil {
 		checks = append(checks, Check{Name: "laravel", Status: CheckFail, Detail: "workspace_detection_failed"})

@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: In corso — Fase 1 completata, Fase 2 pronta
+Stato: In corso — Fase 2 completata, Fase 3 pronta
 
 Data: 2026-08-27
 
@@ -178,7 +178,7 @@ C0; non viene aperta una ricerca seriale indefinita.
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
 | 1 | ADR interaction modes e CLI | Completata | Milestone 13 |
-| 2 | Profili `num_ctx`/`thinking` osservabili | Non avviata | Fase 1 |
+| 2 | Profili `num_ctx`/`thinking` osservabili | Completata | Fase 1 |
 | 3 | Implementazione `maestro chat` single-file | Non avviata | Fase 2 |
 | 4 | Matrice deterministica, negativa e anti-leak | Non avviata | Fase 3 |
 | 5 | Qualificazione live sul computer attuale | Non avviata | Fase 4 |
@@ -281,6 +281,8 @@ Gate: **superato**.
 
 # Fase 2 — Profili `num_ctx`/`thinking` osservabili
 
+Stato: Completata.
+
 ## Obiettivo
 
 Introdurre profili generativi separati e opzioni provider-neutral che siano
@@ -319,6 +321,8 @@ validate, mappate e osservate senza essere ignorate silenziosamente.
 - contratti provider-neutral e mapping Ollama testati;
 - documentazione di configurazione e osservabilità;
 - `docs/reports/milestone-14-phase-2.md`.
+
+Gate: **superato**.
 
 ---
 

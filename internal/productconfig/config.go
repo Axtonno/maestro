@@ -20,7 +20,10 @@ import (
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
-const Version = 1
+const (
+	Version          = 1
+	CandidateVersion = 2
+)
 
 var (
 	ErrInvalid       = errors.New("invalid product configuration")
@@ -46,14 +49,15 @@ func (duration *Duration) UnmarshalYAML(unmarshal func(any) error) error {
 }
 
 type Config struct {
-	Version   int             `yaml:"version"`
-	Provider  ProviderConfig  `yaml:"provider"`
-	Models    ModelsConfig    `yaml:"models"`
-	Workspace WorkspaceConfig `yaml:"workspace"`
-	Agent     AgentConfig     `yaml:"agent"`
-	Policy    PolicyConfig    `yaml:"policy"`
-	Limits    LimitsConfig    `yaml:"limits"`
-	Context   ContextConfig   `yaml:"context"`
+	Version     int               `yaml:"version"`
+	Provider    ProviderConfig    `yaml:"provider"`
+	Models      ModelsConfig      `yaml:"models"`
+	Workspace   WorkspaceConfig   `yaml:"workspace"`
+	Interaction InteractionConfig `yaml:"interaction,omitempty"`
+	Agent       AgentConfig       `yaml:"agent"`
+	Policy      PolicyConfig      `yaml:"policy"`
+	Limits      LimitsConfig      `yaml:"limits"`
+	Context     ContextConfig     `yaml:"context"`
 
 	path string
 }
@@ -68,6 +72,37 @@ type ProviderConfig struct {
 type ModelsConfig struct {
 	Chat      string `yaml:"chat"`
 	Embedding string `yaml:"embedding"`
+}
+
+type ThinkingMode string
+
+const (
+	ThinkingDefault  ThinkingMode = "default"
+	ThinkingEnabled  ThinkingMode = "true"
+	ThinkingDisabled ThinkingMode = "false"
+)
+
+type InteractionConfig struct {
+	Chat  ChatProfileConfig  `yaml:"chat"`
+	Agent AgentProfileConfig `yaml:"agent"`
+}
+
+type ProfileConfig struct {
+	Model     string       `yaml:"model"`
+	Timeout   Duration     `yaml:"timeout"`
+	Streaming bool         `yaml:"streaming"`
+	NumCtx    int          `yaml:"num_ctx"`
+	Thinking  ThinkingMode `yaml:"thinking"`
+}
+
+type ChatProfileConfig struct {
+	ProfileConfig  `yaml:",inline"`
+	MaxFileBytes   int `yaml:"max_file_bytes"`
+	MaxOutputBytes int `yaml:"max_output_bytes"`
+}
+
+type AgentProfileConfig struct {
+	ProfileConfig `yaml:",inline"`
 }
 
 type WorkspaceConfig struct {
@@ -112,6 +147,32 @@ type ContextConfig struct {
 
 func (config Config) Path() string { return config.path }
 
+func (config Config) HasChatProfile() bool { return config.Version == CandidateVersion }
+
+func (config Config) ChatProfile() (ChatProfileConfig, bool) {
+	if !config.HasChatProfile() {
+		return ChatProfileConfig{}, false
+	}
+	return config.Interaction.Chat, true
+}
+
+func (config Config) AgentProfile() AgentProfileConfig {
+	if config.Version == CandidateVersion {
+		return config.Interaction.Agent
+	}
+	return AgentProfileConfig{ProfileConfig: ProfileConfig{
+		Model: config.Models.Chat, Timeout: config.Provider.Timeout,
+		Streaming: config.Agent.Streaming,
+	}}
+}
+
+func (config ProfileConfig) GenerationOptions() pkgProvider.GenerationOptions {
+	return pkgProvider.GenerationOptions{
+		ContextWindow: config.NumCtx,
+		Thinking:      pkgProvider.ThinkingMode(config.Thinking),
+	}
+}
+
 func (config Config) AgentLimits() pkgAgent.Limits {
 	return pkgAgent.Limits{
 		MaxDuration:         config.Limits.Duration.Duration,
@@ -145,14 +206,18 @@ func (config Config) ToolIDs() []pkgTool.ID {
 }
 
 func (config Config) Validate() error {
-	if config.Version != Version {
-		return fieldError("version", fmt.Sprintf("must equal %d", Version))
+	if config.Version != Version && config.Version != CandidateVersion {
+		return fieldError("version", fmt.Sprintf("must equal %d or %d", Version, CandidateVersion))
 	}
 	if err := validateProvider(config.Provider); err != nil {
 		return err
 	}
-	if !exact(config.Models.Chat, 512) {
-		return fieldError("models.chat", "must be explicit and exact")
+	if config.Version == Version {
+		if !exact(config.Models.Chat, 512) {
+			return fieldError("models.chat", "must be explicit and exact")
+		}
+	} else if err := validateInteraction(config.Interaction, config.Provider.Timeout.Duration); err != nil {
+		return err
 	}
 	if config.Models.Embedding != "" && !exact(config.Models.Embedding, 512) {
 		return fieldError("models.embedding", "must be exact when set")
@@ -202,6 +267,40 @@ func (config Config) Validate() error {
 	}
 	if err := config.ContextBudget().Validate(); err != nil {
 		return fieldWrap("context", err)
+	}
+	return nil
+}
+
+func validateInteraction(config InteractionConfig, transportTimeout time.Duration) error {
+	if err := validateProfile("interaction.chat", config.Chat.ProfileConfig, transportTimeout); err != nil {
+		return err
+	}
+	if err := validateProfile("interaction.agent", config.Agent.ProfileConfig, transportTimeout); err != nil {
+		return err
+	}
+	if config.Chat.MaxFileBytes < 1 || config.Chat.MaxFileBytes > 16<<20 {
+		return fieldError("interaction.chat.max_file_bytes", "must be between 1 and 16777216")
+	}
+	if config.Chat.MaxOutputBytes < 1 || config.Chat.MaxOutputBytes > 16<<20 {
+		return fieldError("interaction.chat.max_output_bytes", "must be between 1 and 16777216")
+	}
+	return nil
+}
+
+func validateProfile(field string, config ProfileConfig, transportTimeout time.Duration) error {
+	if !exact(config.Model, 512) {
+		return fieldError(field+".model", "must be explicit and exact")
+	}
+	if config.Timeout.Duration <= 0 || config.Timeout.Duration > transportTimeout {
+		return fieldError(field+".timeout", "must be positive and at most provider.timeout")
+	}
+	if config.NumCtx < 128 || config.NumCtx > 1<<20 {
+		return fieldError(field+".num_ctx", "must be between 128 and 1048576")
+	}
+	switch config.Thinking {
+	case ThinkingDefault, ThinkingEnabled, ThinkingDisabled:
+	default:
+		return fieldError(field+".thinking", "must be default, true, or false")
 	}
 	return nil
 }

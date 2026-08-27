@@ -31,11 +31,21 @@ type StructuredOutput struct {
 // GenerationOptions contains the provider-neutral sampling baseline. Nil
 // floating-point values preserve provider defaults; MaxTokens zero is unset.
 type GenerationOptions struct {
-	MaxTokens   int
-	Temperature *float64
-	TopP        *float64
-	Stop        []string
+	MaxTokens     int
+	Temperature   *float64
+	TopP          *float64
+	Stop          []string
+	ContextWindow int
+	Thinking      ThinkingMode
 }
+
+type ThinkingMode string
+
+const (
+	ThinkingDefault  ThinkingMode = "default"
+	ThinkingEnabled  ThinkingMode = "true"
+	ThinkingDisabled ThinkingMode = "false"
+)
 
 // Tool defines one function available to a completion. Parameters must be a
 // JSON Schema object.
@@ -79,24 +89,8 @@ type ToolCallDelta struct {
 }
 
 func (r CompletionRequest) Validate() error {
-	if r.Options.MaxTokens < 0 {
-		return invalidCompletionRequest("max tokens cannot be negative")
-	}
-	if r.Options.Temperature != nil &&
-		(math.IsNaN(*r.Options.Temperature) ||
-			math.IsInf(*r.Options.Temperature, 0) ||
-			*r.Options.Temperature < 0 || *r.Options.Temperature > 2) {
-		return invalidCompletionRequest("temperature must be between 0 and 2")
-	}
-	if r.Options.TopP != nil &&
-		(math.IsNaN(*r.Options.TopP) || math.IsInf(*r.Options.TopP, 0) ||
-			*r.Options.TopP <= 0 || *r.Options.TopP > 1) {
-		return invalidCompletionRequest("top_p must be greater than 0 and at most 1")
-	}
-	for _, stop := range r.Options.Stop {
-		if stop == "" {
-			return invalidCompletionRequest("stop sequences cannot be empty")
-		}
+	if err := r.Options.Validate(); err != nil {
+		return err
 	}
 
 	if r.Output != nil {
@@ -163,6 +157,37 @@ func (r CompletionRequest) Validate() error {
 		}
 	}
 
+	return nil
+}
+
+func (options GenerationOptions) Validate() error {
+	if options.MaxTokens < 0 {
+		return invalidCompletionRequest("max tokens cannot be negative")
+	}
+	if options.Temperature != nil &&
+		(math.IsNaN(*options.Temperature) ||
+			math.IsInf(*options.Temperature, 0) ||
+			*options.Temperature < 0 || *options.Temperature > 2) {
+		return invalidCompletionRequest("temperature must be between 0 and 2")
+	}
+	if options.TopP != nil &&
+		(math.IsNaN(*options.TopP) || math.IsInf(*options.TopP, 0) ||
+			*options.TopP <= 0 || *options.TopP > 1) {
+		return invalidCompletionRequest("top_p must be greater than 0 and at most 1")
+	}
+	for _, stop := range options.Stop {
+		if stop == "" {
+			return invalidCompletionRequest("stop sequences cannot be empty")
+		}
+	}
+	if options.ContextWindow < 0 || options.ContextWindow > 1<<20 {
+		return invalidCompletionRequest("context window must be unset or between 1 and 1048576")
+	}
+	switch options.Thinking {
+	case "", ThinkingDefault, ThinkingEnabled, ThinkingDisabled:
+	default:
+		return invalidCompletionRequest("thinking must be unset, default, true, or false")
+	}
 	return nil
 }
 

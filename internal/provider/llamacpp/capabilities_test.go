@@ -57,6 +57,17 @@ func TestLlamaCPPAdapterCapabilitiesRequireNoIO(t *testing.T) {
 		structured.Availability != pkgProvider.CapabilityAvailabilityUnknown {
 		t.Fatalf("unexpected structured output descriptor %#v", structured)
 	}
+	for _, capability := range []pkgProvider.Capability{
+		pkgProvider.CapabilityContextWindowControl,
+		pkgProvider.CapabilityThinkingControl,
+		pkgProvider.CapabilityThinking,
+	} {
+		descriptor := llamaCPPDescriptor(t, report, capability)
+		if descriptor.Support != pkgProvider.CapabilityUnsupported ||
+			descriptor.Availability != pkgProvider.CapabilityAvailabilityUnavailable {
+			t.Fatalf("unexpected unsupported control %q descriptor %#v", capability, descriptor)
+		}
+	}
 }
 
 func TestLlamaCPPInstanceCapabilitiesDistinguishRouterMode(t *testing.T) {

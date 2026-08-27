@@ -155,6 +155,12 @@ func (application *Application) ExecuteWithOptions(ctx context.Context, instruct
 	if err := application.Start(ctx); err != nil {
 		return pkgAgent.RunResult{}, err
 	}
+	agentProfile := application.config.AgentProfile()
+	if application.config.Version == productconfig.CandidateVersion {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, agentProfile.Timeout.Duration)
+		defer cancel()
+	}
 	if _, err := application.runtime.ContextEngine().Index(ctx, application.workspace); err != nil {
 		return pkgAgent.RunResult{}, fmt.Errorf("index configured workspace: %w", err)
 	}
@@ -176,7 +182,7 @@ func (application *Application) ExecuteWithOptions(ctx context.Context, instruct
 		runID,
 		pkgAgent.ID(application.config.Agent.ID),
 		pkgProvider.ID(application.config.Provider.ID),
-		application.config.Models.Chat,
+		agentProfile.Model,
 		application.workspace.ID(),
 		pkgTool.PolicyID(application.config.Policy.ID),
 		instruction,
@@ -187,10 +193,11 @@ func (application *Application) ExecuteWithOptions(ctx context.Context, instruct
 				Budget:    application.config.ContextBudget(),
 				Estimator: "context.utf8-estimator",
 			},
-			Tools:     application.config.ToolIDs(),
-			Approver:  options.Approver,
-			Streaming: application.config.Agent.Streaming,
-			Workspace: &application.workspace,
+			Tools:      application.config.ToolIDs(),
+			Approver:   options.Approver,
+			Streaming:  agentProfile.Streaming,
+			Generation: agentProfile.GenerationOptions(),
+			Workspace:  &application.workspace,
 		},
 	)
 	if err != nil {
@@ -214,18 +221,19 @@ func normalizeDependencies(dependencies Dependencies) Dependencies {
 }
 
 func defaultProvider(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
+	agentProfile := config.AgentProfile()
 	switch config.Provider.ID {
 	case "ollama":
 		return pkgOllama.New(pkgOllama.Config{
 			BaseURL:      config.Provider.BaseURL,
 			Timeout:      config.Provider.Timeout.Duration,
-			DefaultModel: config.Models.Chat,
+			DefaultModel: agentProfile.Model,
 		})
 	case "llama.cpp":
 		return pkgLlamaCPP.New(pkgLlamaCPP.Config{
 			BaseURL:      config.Provider.BaseURL,
 			Timeout:      config.Provider.Timeout.Duration,
-			DefaultModel: config.Models.Chat,
+			DefaultModel: agentProfile.Model,
 			APIKey:       secret,
 		})
 	default:
@@ -245,11 +253,12 @@ func randomRunID() (pkgAgent.RunID, error) {
 // tests while preserving the production adapter constructors.
 func HTTPClientProviderFactory(client *http.Client) ProviderFactory {
 	return func(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
+		agentProfile := config.AgentProfile()
 		switch config.Provider.ID {
 		case "ollama":
-			return pkgOllama.New(pkgOllama.Config{BaseURL: config.Provider.BaseURL, DefaultModel: config.Models.Chat, HTTPClient: client})
+			return pkgOllama.New(pkgOllama.Config{BaseURL: config.Provider.BaseURL, DefaultModel: agentProfile.Model, HTTPClient: client})
 		case "llama.cpp":
-			return pkgLlamaCPP.New(pkgLlamaCPP.Config{BaseURL: config.Provider.BaseURL, DefaultModel: config.Models.Chat, APIKey: secret, HTTPClient: client})
+			return pkgLlamaCPP.New(pkgLlamaCPP.Config{BaseURL: config.Provider.BaseURL, DefaultModel: agentProfile.Model, APIKey: secret, HTTPClient: client})
 		default:
 			return nil, fmt.Errorf("provider %q is not implemented", config.Provider.ID)
 		}

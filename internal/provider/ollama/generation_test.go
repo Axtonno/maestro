@@ -24,6 +24,7 @@ func TestOllamaAdvancedGenerationMapsOptionsToolsAndResults(t *testing.T) {
 			t.Fatalf("decode request: %v", err)
 		}
 		if decoded.Options == nil || decoded.Options.NumPredict != 96 ||
+			decoded.Options.NumCtx != 4096 || decoded.Think == nil || *decoded.Think ||
 			decoded.Options.Temperature == nil || *decoded.Options.Temperature != 0.1 ||
 			decoded.Options.TopP == nil || *decoded.Options.TopP != 0.8 ||
 			len(decoded.Options.Stop) != 1 || decoded.Options.Stop[0] != "END" {
@@ -55,7 +56,8 @@ func TestOllamaAdvancedGenerationMapsOptionsToolsAndResults(t *testing.T) {
 		Model: "qwen",
 		Options: pkgProvider.GenerationOptions{
 			MaxTokens: 96, Temperature: &temperature, TopP: &topP,
-			Stop: []string{"END"},
+			Stop: []string{"END"}, ContextWindow: 4096,
+			Thinking: pkgProvider.ThinkingDisabled,
 		},
 		Tools: []pkgProvider.Tool{{
 			Name: "weather", Description: "Current weather",
@@ -77,6 +79,21 @@ func TestOllamaAdvancedGenerationMapsOptionsToolsAndResults(t *testing.T) {
 		response.Message.ToolCalls[0].Name != "weather" ||
 		string(response.Message.ToolCalls[0].Arguments) != `{"city":"Rome"}` {
 		t.Fatalf("unexpected translated tool call: %#v", response.Message.ToolCalls)
+	}
+}
+
+func TestOllamaThinkingTriStatePreservesDefaultAndExplicitValues(t *testing.T) {
+	defaultRequest := newChatRequest("qwen", pkgProvider.CompletionRequest{
+		Options: pkgProvider.GenerationOptions{Thinking: pkgProvider.ThinkingDefault},
+	}, false)
+	if defaultRequest.Think != nil {
+		t.Fatalf("default thinking must be omitted: %#v", defaultRequest.Think)
+	}
+	enabledRequest := newChatRequest("qwen", pkgProvider.CompletionRequest{
+		Options: pkgProvider.GenerationOptions{Thinking: pkgProvider.ThinkingEnabled},
+	}, true)
+	if enabledRequest.Think == nil || !*enabledRequest.Think {
+		t.Fatalf("enabled thinking was not mapped: %#v", enabledRequest.Think)
 	}
 }
 

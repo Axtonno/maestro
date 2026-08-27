@@ -48,17 +48,20 @@ func TestRuntimeCapabilityMappingIsComplete(t *testing.T) {
 
 func TestProviderCapabilityMappingIsComplete(t *testing.T) {
 	want := map[pkgProvider.Capability]pkgGestor.CapabilityID{
-		pkgProvider.CapabilityCompletion:       pkgGestor.CapabilityProviderCompletion,
-		pkgProvider.CapabilityStreaming:        pkgGestor.CapabilityProviderStreaming,
-		pkgProvider.CapabilityEmbedding:        pkgGestor.CapabilityProviderEmbedding,
-		pkgProvider.CapabilityModelListing:     pkgGestor.CapabilityProviderModelListing,
-		pkgProvider.CapabilityModelDiscovery:   pkgGestor.CapabilityProviderModelDiscovery,
-		pkgProvider.CapabilityModelLoad:        pkgGestor.CapabilityProviderModelLoad,
-		pkgProvider.CapabilityModelUnload:      pkgGestor.CapabilityProviderModelUnload,
-		pkgProvider.CapabilityModelPull:        pkgGestor.CapabilityProviderModelPull,
-		pkgProvider.CapabilityModelRemove:      pkgGestor.CapabilityProviderModelRemove,
-		pkgProvider.CapabilityStructuredOutput: pkgGestor.CapabilityProviderStructuredOutput,
-		pkgProvider.CapabilityToolCalling:      pkgGestor.CapabilityProviderToolCalling,
+		pkgProvider.CapabilityCompletion:           pkgGestor.CapabilityProviderCompletion,
+		pkgProvider.CapabilityContextWindowControl: pkgGestor.CapabilityProviderContextWindowControl,
+		pkgProvider.CapabilityStreaming:            pkgGestor.CapabilityProviderStreaming,
+		pkgProvider.CapabilityEmbedding:            pkgGestor.CapabilityProviderEmbedding,
+		pkgProvider.CapabilityModelListing:         pkgGestor.CapabilityProviderModelListing,
+		pkgProvider.CapabilityModelDiscovery:       pkgGestor.CapabilityProviderModelDiscovery,
+		pkgProvider.CapabilityModelLoad:            pkgGestor.CapabilityProviderModelLoad,
+		pkgProvider.CapabilityModelUnload:          pkgGestor.CapabilityProviderModelUnload,
+		pkgProvider.CapabilityModelPull:            pkgGestor.CapabilityProviderModelPull,
+		pkgProvider.CapabilityModelRemove:          pkgGestor.CapabilityProviderModelRemove,
+		pkgProvider.CapabilityStructuredOutput:     pkgGestor.CapabilityProviderStructuredOutput,
+		pkgProvider.CapabilityToolCalling:          pkgGestor.CapabilityProviderToolCalling,
+		pkgProvider.CapabilityThinking:             pkgGestor.CapabilityProviderThinking,
+		pkgProvider.CapabilityThinkingControl:      pkgGestor.CapabilityProviderThinkingControl,
 	}
 
 	known := pkgProvider.KnownCapabilities()

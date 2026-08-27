@@ -2411,7 +2411,9 @@ Mutation resta non supportata e non viene prodotto `v0.2.1`.
 
 La Milestone 14 — Interaction Modes & Direct Chat è in corso. La Fase 1 ha
 approvato ADR-0033 e congelato interaction modes, contratto CLI e schema v2;
-la Fase 2 può iniziare dai profili generativi osservabili.
+la Fase 2 ha consegnato schema strict v2, profili separati, context window e
+thinking tri-state provider-neutral, mapping Ollama, preflight capability e
+propagazione nel verified agent. La Fase 3 può implementare direct chat.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con

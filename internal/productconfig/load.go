@@ -26,18 +26,28 @@ func Load(path string) (Config, error) {
 	if err := rejectAliases(encoded); err != nil {
 		return Config{}, err
 	}
-	decoder := yaml.NewDecoder(bytes.NewReader(encoded))
-	decoder.KnownFields(true)
-	var config Config
-	if err := decoder.Decode(&config); err != nil {
-		return Config{}, fmt.Errorf("decode configuration: %v: %w", err, ErrInvalid)
+	var header struct {
+		Version int `yaml:"version"`
 	}
-	var trailing yaml.Node
-	if err := decoder.Decode(&trailing); err != io.EOF {
-		if err == nil {
-			return Config{}, fmt.Errorf("configuration contains multiple YAML documents: %w", ErrInvalid)
+	if err := yaml.Unmarshal(encoded, &header); err != nil {
+		return Config{}, fmt.Errorf("decode configuration version: %v: %w", err, ErrInvalid)
+	}
+	var config Config
+	switch header.Version {
+	case Version:
+		var decoded configV1
+		if err := decodeStrict(encoded, &decoded); err != nil {
+			return Config{}, err
 		}
-		return Config{}, fmt.Errorf("decode trailing configuration: %v: %w", err, ErrInvalid)
+		config = decoded.config()
+	case CandidateVersion:
+		var decoded configV2
+		if err := decodeStrict(encoded, &decoded); err != nil {
+			return Config{}, err
+		}
+		config = decoded.config()
+	default:
+		return Config{}, fieldError("version", fmt.Sprintf("must equal %d or %d", Version, CandidateVersion))
 	}
 	absolute, err := filepath.Abs(path)
 	if err != nil {
@@ -51,6 +61,78 @@ func Load(path string) (Config, error) {
 		return Config{}, err
 	}
 	return config, nil
+}
+
+type configV1 struct {
+	Version   int             `yaml:"version"`
+	Provider  ProviderConfig  `yaml:"provider"`
+	Models    ModelsConfig    `yaml:"models"`
+	Workspace WorkspaceConfig `yaml:"workspace"`
+	Agent     AgentConfig     `yaml:"agent"`
+	Policy    PolicyConfig    `yaml:"policy"`
+	Limits    LimitsConfig    `yaml:"limits"`
+	Context   ContextConfig   `yaml:"context"`
+}
+
+func (decoded configV1) config() Config {
+	return Config{
+		Version: decoded.Version, Provider: decoded.Provider,
+		Models: decoded.Models, Workspace: decoded.Workspace,
+		Agent: decoded.Agent, Policy: decoded.Policy,
+		Limits: decoded.Limits, Context: decoded.Context,
+	}
+}
+
+type modelsV2 struct {
+	Embedding string `yaml:"embedding"`
+}
+
+type agentV2 struct {
+	ID    string   `yaml:"id"`
+	Tools []string `yaml:"tools"`
+}
+
+type configV2 struct {
+	Version     int               `yaml:"version"`
+	Provider    ProviderConfig    `yaml:"provider"`
+	Models      modelsV2          `yaml:"models"`
+	Workspace   WorkspaceConfig   `yaml:"workspace"`
+	Interaction InteractionConfig `yaml:"interaction"`
+	Agent       agentV2           `yaml:"agent"`
+	Policy      PolicyConfig      `yaml:"policy"`
+	Limits      LimitsConfig      `yaml:"limits"`
+	Context     ContextConfig     `yaml:"context"`
+}
+
+func (decoded configV2) config() Config {
+	return Config{
+		Version: decoded.Version, Provider: decoded.Provider,
+		Models: ModelsConfig{
+			Chat: decoded.Interaction.Agent.Model, Embedding: decoded.Models.Embedding,
+		},
+		Workspace: decoded.Workspace, Interaction: decoded.Interaction,
+		Agent: AgentConfig{
+			ID: decoded.Agent.ID, Streaming: decoded.Interaction.Agent.Streaming,
+			Tools: decoded.Agent.Tools,
+		},
+		Policy: decoded.Policy, Limits: decoded.Limits, Context: decoded.Context,
+	}
+}
+
+func decodeStrict(encoded []byte, destination any) error {
+	decoder := yaml.NewDecoder(bytes.NewReader(encoded))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(destination); err != nil {
+		return fmt.Errorf("decode configuration: %v: %w", err, ErrInvalid)
+	}
+	var trailing yaml.Node
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return fmt.Errorf("configuration contains multiple YAML documents: %w", ErrInvalid)
+		}
+		return fmt.Errorf("decode trailing configuration: %v: %w", err, ErrInvalid)
+	}
+	return nil
 }
 
 func rejectAliases(encoded []byte) error {

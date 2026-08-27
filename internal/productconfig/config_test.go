@@ -53,6 +53,64 @@ func TestPublishedExampleMatchesCurrentSchema(t *testing.T) {
 	}
 }
 
+func TestInteractionExampleLoadsStrictProfiles(t *testing.T) {
+	config, err := Load("../../configs/maestro.interaction.example.yaml")
+	if err != nil {
+		t.Fatalf("interaction example is invalid: %v", err)
+	}
+	chat, ok := config.ChatProfile()
+	agent := config.AgentProfile()
+	if !ok || config.Version != CandidateVersion || chat.Model != "qwen2.5-coder:7b" ||
+		chat.NumCtx != 4096 || chat.Thinking != ThinkingDisabled || chat.Streaming ||
+		chat.MaxFileBytes != 1<<20 || chat.MaxOutputBytes != 1<<20 {
+		t.Fatalf("unexpected chat profile: %#v %#v", chat, config)
+	}
+	if agent.Model != "qwen3.5:9b" || agent.NumCtx != 8192 ||
+		agent.Thinking != ThinkingDefault || !agent.Streaming ||
+		config.Models.Chat != agent.Model || !config.Agent.Streaming {
+		t.Fatalf("unexpected normalized agent profile: %#v %#v", agent, config)
+	}
+	options := chat.GenerationOptions()
+	if options.ContextWindow != 4096 || options.Thinking != "false" {
+		t.Fatalf("unexpected generation options: %#v", options)
+	}
+}
+
+func TestV2RejectsLegacyAndInvalidProfileFields(t *testing.T) {
+	encoded, err := os.ReadFile("../../configs/maestro.interaction.example.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, testCase := range []struct {
+		name   string
+		mutate func(string) string
+	}{
+		{name: "legacy models chat", mutate: func(value string) string {
+			return strings.Replace(value, "models:\n", "models:\n  chat: legacy\n", 1)
+		}},
+		{name: "legacy agent streaming", mutate: func(value string) string {
+			return strings.Replace(value, "agent:\n  id:", "agent:\n  streaming: false\n  id:", 1)
+		}},
+		{name: "invalid thinking", mutate: func(value string) string {
+			return strings.Replace(value, "thinking: \"false\"", "thinking: sometimes", 1)
+		}},
+		{name: "timeout above transport", mutate: func(value string) string {
+			return strings.Replace(value, "timeout: 5m", "timeout: 11m", 1)
+		}},
+		{name: "small num ctx", mutate: func(value string) string {
+			return strings.Replace(value, "num_ctx: 4096", "num_ctx: 64", 1)
+		}},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "config.yaml")
+			writeConfig(t, path, testCase.mutate(string(encoded)))
+			if _, err := Load(path); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("invalid v2 config accepted: %v", err)
+			}
+		})
+	}
+}
+
 func TestPublishedMutatingExampleIsSeparateExplicitAndPrompted(t *testing.T) {
 	config, err := Load("../../configs/maestro.mutating.example.yaml")
 	if err != nil {
@@ -122,7 +180,7 @@ func TestValidationRejectsUnsafeOrImplicitTargets(t *testing.T) {
 		mutate func(*Config)
 		field  string
 	}{
-		{name: "version", mutate: func(c *Config) { c.Version = 2 }, field: "version"},
+		{name: "version", mutate: func(c *Config) { c.Version = 3 }, field: "version"},
 		{name: "provider", mutate: func(c *Config) { c.Provider.ID = "auto" }, field: "provider.id"},
 		{name: "URL path", mutate: func(c *Config) { c.Provider.BaseURL = "http://localhost:11434/api" }, field: "provider.base_url"},
 		{name: "workspace ID", mutate: func(c *Config) { c.Workspace.ID = "project" }, field: "workspace.id"},

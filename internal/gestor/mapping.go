@@ -36,6 +36,8 @@ func providerCapabilityID(capability pkgProvider.Capability) (pkgGestor.Capabili
 	switch capability {
 	case pkgProvider.CapabilityCompletion:
 		return pkgGestor.CapabilityProviderCompletion, nil
+	case pkgProvider.CapabilityContextWindowControl:
+		return pkgGestor.CapabilityProviderContextWindowControl, nil
 	case pkgProvider.CapabilityStreaming:
 		return pkgGestor.CapabilityProviderStreaming, nil
 	case pkgProvider.CapabilityEmbedding:
@@ -56,6 +58,10 @@ func providerCapabilityID(capability pkgProvider.Capability) (pkgGestor.Capabili
 		return pkgGestor.CapabilityProviderStructuredOutput, nil
 	case pkgProvider.CapabilityToolCalling:
 		return pkgGestor.CapabilityProviderToolCalling, nil
+	case pkgProvider.CapabilityThinking:
+		return pkgGestor.CapabilityProviderThinking, nil
+	case pkgProvider.CapabilityThinkingControl:
+		return pkgGestor.CapabilityProviderThinkingControl, nil
 	default:
 		return "", fmt.Errorf("provider capability %q has no Gestor mapping: %w", capability, pkgGestor.ErrInvalidCapabilityID)
 	}

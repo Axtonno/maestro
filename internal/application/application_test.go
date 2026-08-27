@@ -256,6 +256,51 @@ func TestDoctorChecksProviderModelAndLaravelWithoutModelInvocation(t *testing.T)
 	}
 }
 
+func TestV2AgentProfilePropagatesModelStreamingAndGenerationControls(t *testing.T) {
+	provider := &fixtureProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
+		Message:      pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Profile applied."},
+		FinishReason: pkgProvider.FinishReasonStop,
+	}}}
+	config := testConfig(newLaravelWorkspace(t))
+	config.Version = productconfig.CandidateVersion
+	config.Agent.Tools = []string{"workspace.read"}
+	config.Policy.WorkspaceMutation = "deny"
+	config.Interaction = productconfig.InteractionConfig{
+		Chat: productconfig.ChatProfileConfig{
+			ProfileConfig: productconfig.ProfileConfig{
+				Model: "chat-model", Timeout: productconfig.Duration{Duration: time.Minute},
+				NumCtx: 4096, Thinking: productconfig.ThinkingDisabled,
+			},
+			MaxFileBytes: 1 << 20, MaxOutputBytes: 1 << 20,
+		},
+		Agent: productconfig.AgentProfileConfig{ProfileConfig: productconfig.ProfileConfig{
+			Model: "agent-model", Timeout: productconfig.Duration{Duration: time.Minute},
+			NumCtx: 8192, Thinking: productconfig.ThinkingDisabled,
+		}},
+	}
+	configured, err := Build(config, testDependencies(provider))
+	if err != nil {
+		t.Fatalf("build v2 application: %v", err)
+	}
+	defer configured.Close(context.Background())
+	result, err := configured.Execute(t.Context(), "Explain Order")
+	if err != nil || result.Content() != "Profile applied." {
+		t.Fatalf("execute v2 agent profile: result=%#v err=%v", result, err)
+	}
+	provider.mu.Lock()
+	requests := append([]pkgProvider.CompletionRequest(nil), provider.requests...)
+	provider.mu.Unlock()
+	if len(requests) != 1 || requests[0].Model != "agent-model" ||
+		requests[0].Options.ContextWindow != 8192 ||
+		requests[0].Options.Thinking != pkgProvider.ThinkingDisabled {
+		t.Fatalf("agent profile was not propagated: %#v", requests)
+	}
+	checks := Doctor(t.Context(), config, testDependencies(&fixtureProvider{id: "ollama"}))
+	if len(checks) != 10 {
+		t.Fatalf("v2 doctor did not expose generation preflight: %#v", checks)
+	}
+}
+
 func TestDoctorContinuesLocalLaravelCheckAfterProviderProbeFailure(t *testing.T) {
 	provider := &fixtureProvider{id: "ollama", inspectError: fmt.Errorf("offline")}
 	checks := Doctor(t.Context(), testConfig(newLaravelWorkspace(t)), testDependencies(provider))
@@ -273,6 +318,7 @@ type fixtureProvider struct {
 	id              pkgProvider.ID
 	responses       []pkgProvider.CompletionResponse
 	completionCalls int
+	requests        []pkgProvider.CompletionRequest
 	inspectError    error
 }
 
@@ -280,10 +326,11 @@ const maxTestAssetBytes = 3 << 20
 
 func (provider *fixtureProvider) ID() pkgProvider.ID { return provider.id }
 
-func (provider *fixtureProvider) Complete(_ context.Context, _ pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+func (provider *fixtureProvider) Complete(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
 	provider.mu.Lock()
 	defer provider.mu.Unlock()
 	provider.completionCalls++
+	provider.requests = append(provider.requests, request)
 	if len(provider.responses) == 0 {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf("no fixture response")
 	}

@@ -13,11 +13,12 @@ import (
 )
 
 type RunRequestOptions struct {
-	Context   contextengine.BuildRequest
-	Tools     []tool.ID
-	Approver  tool.Approver
-	Streaming bool
-	Workspace *contextengine.Workspace
+	Context    contextengine.BuildRequest
+	Tools      []tool.ID
+	Approver   tool.Approver
+	Streaming  bool
+	Generation provider.GenerationOptions
+	Workspace  *contextengine.Workspace
 }
 
 type RunRequest struct {
@@ -33,6 +34,7 @@ type RunRequest struct {
 	tools           []tool.ID
 	approver        tool.Approver
 	streaming       bool
+	generation      provider.GenerationOptions
 	workspaceTarget *contextengine.Workspace
 }
 
@@ -70,6 +72,9 @@ func NewRunRequest(
 	if err := limits.Validate(); err != nil {
 		return RunRequest{}, fmt.Errorf("agent limits: %w: %w", err, ErrInvalidRequest)
 	}
+	if err := options.Generation.Validate(); err != nil {
+		return RunRequest{}, fmt.Errorf("agent generation options: %w: %w", err, ErrInvalidRequest)
+	}
 	if err := options.Context.Validate(); err != nil || options.Context.Query.Workspace() != workspace {
 		return RunRequest{}, fmt.Errorf("agent context request is invalid or references another workspace: %w", ErrInvalidRequest)
 	}
@@ -103,7 +108,8 @@ func NewRunRequest(
 		run: run, agent: agent, provider: providerID, model: model,
 		workspace: workspace, policy: policy, instruction: instruction, limits: limits,
 		context: options.Context, tools: tools, approver: options.Approver,
-		streaming: options.Streaming, workspaceTarget: workspaceTarget,
+		streaming: options.Streaming, generation: cloneGenerationOptions(options.Generation),
+		workspaceTarget: workspaceTarget,
 	}, nil
 }
 
@@ -119,6 +125,9 @@ func (request RunRequest) Context() contextengine.BuildRequest  { return request
 func (request RunRequest) Tools() []tool.ID                     { return slices.Clone(request.tools) }
 func (request RunRequest) Approver() tool.Approver              { return request.approver }
 func (request RunRequest) Streaming() bool                      { return request.streaming }
+func (request RunRequest) GenerationOptions() provider.GenerationOptions {
+	return cloneGenerationOptions(request.generation)
+}
 func (request RunRequest) WorkspaceTarget() (contextengine.Workspace, bool) {
 	if request.workspaceTarget == nil {
 		return contextengine.Workspace{}, false
@@ -130,9 +139,23 @@ func (request RunRequest) Validate() error {
 	_, err := NewRunRequest(
 		request.run, request.agent, request.provider, request.model,
 		request.workspace, request.policy, request.instruction, request.limits,
-		RunRequestOptions{Context: request.context, Tools: request.tools, Approver: request.approver, Streaming: request.streaming, Workspace: request.workspaceTarget},
+		RunRequestOptions{Context: request.context, Tools: request.tools, Approver: request.approver, Streaming: request.streaming, Generation: request.generation, Workspace: request.workspaceTarget},
 	)
 	return err
+}
+
+func cloneGenerationOptions(options provider.GenerationOptions) provider.GenerationOptions {
+	cloned := options
+	cloned.Stop = slices.Clone(options.Stop)
+	if options.Temperature != nil {
+		value := *options.Temperature
+		cloned.Temperature = &value
+	}
+	if options.TopP != nil {
+		value := *options.TopP
+		cloned.TopP = &value
+	}
+	return cloned
 }
 
 func nilInterface(value any) bool {

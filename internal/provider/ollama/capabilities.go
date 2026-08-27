@@ -126,6 +126,21 @@ func (p *Provider) InspectCapabilities(
 	)
 	setOllamaAvailability(
 		&report,
+		pkgProvider.CapabilityContextWindowControl,
+		completionAvailability,
+	)
+	setOllamaAvailability(
+		&report,
+		pkgProvider.CapabilityThinkingControl,
+		completionAvailability,
+	)
+	setOllamaAvailability(
+		&report,
+		pkgProvider.CapabilityThinking,
+		availabilityFromOllamaCapability(observed, "thinking"),
+	)
+	setOllamaAvailability(
+		&report,
 		pkgProvider.CapabilityModelLoad,
 		pkgProvider.CapabilityAvailabilityAvailable,
 	)
@@ -189,6 +204,9 @@ func markMissingOllamaModel(report *pkgProvider.CapabilityReport) {
 		pkgProvider.CapabilityEmbedding,
 		pkgProvider.CapabilityStructuredOutput,
 		pkgProvider.CapabilityToolCalling,
+		pkgProvider.CapabilityContextWindowControl,
+		pkgProvider.CapabilityThinkingControl,
+		pkgProvider.CapabilityThinking,
 		pkgProvider.CapabilityModelLoad,
 		pkgProvider.CapabilityModelUnload,
 		pkgProvider.CapabilityModelRemove,

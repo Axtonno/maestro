@@ -10,17 +10,20 @@ import (
 type Capability string
 
 const (
-	CapabilityCompletion       Capability = "completion"
-	CapabilityStreaming        Capability = "streaming"
-	CapabilityEmbedding        Capability = "embedding"
-	CapabilityModelListing     Capability = "model_listing"
-	CapabilityModelDiscovery   Capability = "model_discovery"
-	CapabilityModelLoad        Capability = "model_load"
-	CapabilityModelUnload      Capability = "model_unload"
-	CapabilityModelPull        Capability = "model_pull"
-	CapabilityModelRemove      Capability = "model_remove"
-	CapabilityStructuredOutput Capability = "structured_output"
-	CapabilityToolCalling      Capability = "tool_calling"
+	CapabilityCompletion           Capability = "completion"
+	CapabilityStreaming            Capability = "streaming"
+	CapabilityEmbedding            Capability = "embedding"
+	CapabilityModelListing         Capability = "model_listing"
+	CapabilityModelDiscovery       Capability = "model_discovery"
+	CapabilityModelLoad            Capability = "model_load"
+	CapabilityModelUnload          Capability = "model_unload"
+	CapabilityModelPull            Capability = "model_pull"
+	CapabilityModelRemove          Capability = "model_remove"
+	CapabilityStructuredOutput     Capability = "structured_output"
+	CapabilityToolCalling          Capability = "tool_calling"
+	CapabilityContextWindowControl Capability = "context_window_control"
+	CapabilityThinkingControl      Capability = "thinking_control"
+	CapabilityThinking             Capability = "thinking"
 )
 
 var knownCapabilities = [...]Capability{
@@ -35,6 +38,9 @@ var knownCapabilities = [...]Capability{
 	CapabilityModelRemove,
 	CapabilityStructuredOutput,
 	CapabilityToolCalling,
+	CapabilityContextWindowControl,
+	CapabilityThinkingControl,
+	CapabilityThinking,
 }
 
 func KnownCapabilities() []Capability {
@@ -115,4 +121,42 @@ type CapabilityReport struct {
 	Target       CapabilityTarget
 	Model        string
 	Capabilities []CapabilityDescriptor
+}
+
+// ValidateGenerationCapabilities verifies that one exact model report can
+// honor all explicit provider-neutral generation controls. Defaults and unset
+// values preserve provider behavior and do not require a control capability.
+func ValidateGenerationCapabilities(report CapabilityReport, options GenerationOptions) error {
+	if report.Target != CapabilityTargetModel {
+		return fmt.Errorf("generation capability validation requires a model report: %w", ErrInvalidRequest)
+	}
+	if err := options.Validate(); err != nil {
+		return err
+	}
+	required := make([]Capability, 0, 3)
+	if options.ContextWindow != 0 {
+		required = append(required, CapabilityContextWindowControl)
+	}
+	switch options.Thinking {
+	case ThinkingEnabled:
+		required = append(required, CapabilityThinkingControl, CapabilityThinking)
+	case ThinkingDisabled:
+		required = append(required, CapabilityThinkingControl)
+	}
+	for _, capability := range required {
+		if !capabilityAvailable(report, capability) {
+			return fmt.Errorf("generation capability %q is unavailable for model %q: %w", capability, report.Model, ErrUnsupportedCapability)
+		}
+	}
+	return nil
+}
+
+func capabilityAvailable(report CapabilityReport, capability Capability) bool {
+	for _, descriptor := range report.Capabilities {
+		if descriptor.Capability == capability {
+			return descriptor.Support == CapabilitySupported &&
+				descriptor.Availability == CapabilityAvailabilityAvailable
+		}
+	}
+	return false
 }

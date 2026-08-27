@@ -58,10 +58,20 @@ func newChatRequest(
 	result := chatRequest{
 		Model: model, Messages: translatedMessages, Stream: stream,
 	}
+	switch request.Options.Thinking {
+	case pkgProvider.ThinkingEnabled:
+		enabled := true
+		result.Think = &enabled
+	case pkgProvider.ThinkingDisabled:
+		enabled := false
+		result.Think = &enabled
+	}
 	if request.Options.MaxTokens != 0 || request.Options.Temperature != nil ||
-		request.Options.TopP != nil || len(request.Options.Stop) != 0 {
+		request.Options.TopP != nil || len(request.Options.Stop) != 0 ||
+		request.Options.ContextWindow != 0 {
 		result.Options = &chatOptions{
 			NumPredict:  request.Options.MaxTokens,
+			NumCtx:      request.Options.ContextWindow,
 			Temperature: request.Options.Temperature,
 			TopP:        request.Options.TopP,
 			Stop:        request.Options.Stop,

@@ -15,7 +15,8 @@ func TestCompletionRequestValidationAcceptsBaselineAndAdvancedRequests(t *testin
 		{
 			Options: GenerationOptions{
 				MaxTokens: 128, Temperature: &temperature, TopP: &topP,
-				Stop: []string{"END"},
+				Stop: []string{"END"}, ContextWindow: 4096,
+				Thinking: ThinkingDisabled,
 			},
 			Tools: []Tool{{
 				Name: "weather", Parameters: json.RawMessage(`{"type":"object"}`),
@@ -47,6 +48,9 @@ func TestCompletionRequestValidationRejectsInvalidAdvancedContracts(t *testing.T
 	nan := math.NaN()
 	tests := []CompletionRequest{
 		{Options: GenerationOptions{MaxTokens: -1}},
+		{Options: GenerationOptions{ContextWindow: -1}},
+		{Options: GenerationOptions{ContextWindow: 1<<20 + 1}},
+		{Options: GenerationOptions{Thinking: "sometimes"}},
 		{Options: GenerationOptions{Temperature: &nan}},
 		{Options: GenerationOptions{Stop: []string{""}}},
 		{Output: &StructuredOutput{Mode: StructuredOutputJSONSchema, Schema: json.RawMessage(`[]`)}},

@@ -135,6 +135,18 @@ func TestOllamaModelCapabilitiesUseShowMetadata(t *testing.T) {
 		descriptor.Availability != pkgProvider.CapabilityAvailabilityAvailable {
 		t.Fatalf("unexpected structured output descriptor %#v", descriptor)
 	}
+	for _, capability := range []pkgProvider.Capability{
+		pkgProvider.CapabilityContextWindowControl,
+		pkgProvider.CapabilityThinkingControl,
+	} {
+		if descriptor := ollamaDescriptor(t, report, capability); descriptor.Support != pkgProvider.CapabilitySupported ||
+			descriptor.Availability != pkgProvider.CapabilityAvailabilityAvailable {
+			t.Fatalf("unexpected generation control %q descriptor %#v", capability, descriptor)
+		}
+	}
+	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityThinking); descriptor.Availability != pkgProvider.CapabilityAvailabilityUnavailable {
+		t.Fatalf("unexpected thinking descriptor %#v", descriptor)
+	}
 }
 
 func TestOllamaMissingModelCapabilitiesDoNotCallShow(t *testing.T) {
@@ -162,6 +174,29 @@ func TestOllamaMissingModelCapabilitiesDoNotCallShow(t *testing.T) {
 	}
 	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityModelPull); descriptor.Availability != pkgProvider.CapabilityAvailabilityAvailable {
 		t.Fatalf("unexpected pull descriptor %#v", descriptor)
+	}
+}
+
+func TestOllamaThinkingCapabilityFollowsShowMetadata(t *testing.T) {
+	provider := newTestProvider(t, "", func(writer http.ResponseWriter, request *http.Request) {
+		switch request.URL.Path {
+		case "/api/tags":
+			writeJSON(t, writer, tagsResponse{Models: []modelResponse{{Name: "qwen3"}}})
+		case "/api/show":
+			writeJSON(t, writer, modelShowResponse{Capabilities: []string{"completion", "thinking"}})
+		default:
+			t.Fatalf("unexpected path %q", request.URL.Path)
+		}
+	})
+	report, err := provider.InspectCapabilities(context.Background(), pkgProvider.CapabilityRequest{Target: pkgProvider.CapabilityTargetModel, Model: "qwen3"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if descriptor := ollamaDescriptor(t, report, pkgProvider.CapabilityThinking); descriptor.Availability != pkgProvider.CapabilityAvailabilityAvailable {
+		t.Fatalf("thinking metadata was not mapped: %#v", descriptor)
+	}
+	if err := pkgProvider.ValidateGenerationCapabilities(report, pkgProvider.GenerationOptions{Thinking: pkgProvider.ThinkingEnabled}); err != nil {
+		t.Fatalf("thinking preflight failed: %v", err)
 	}
 }
 

@@ -5,11 +5,11 @@ Ultimo aggiornamento: 2026-08-27
 ## Stato corrente
 
 - milestone: in corso;
-- fase attiva: Fase 1 completata, commit da creare;
+- fase attiva: Fase 2 completata, commit da creare;
+- ultimo commit di fase: `a93c0e7` — Fase 1 completata;
 - ultimo commit verde della baseline:
-  `3dd5e62bbce77a75519e784e749c338cc9685b75`;
-- worktree atteso: modifiche documentali complete della Fase 1 non ancora
-  committate.
+  `a93c0e7`;
+- worktree atteso: modifiche complete della Fase 2 non ancora committate.
 
 ## Evidenze verdi
 
@@ -30,7 +30,6 @@ Le suite Go richiedono `GOCACHE` sotto `/tmp` nell'ambiente Codex corrente.
 
 ## Prossimo passo riproducibile
 
-Verificare diff e suite, quindi creare il commit della Fase 1. Dopo il commit,
-aggiornare questo checkpoint con il nuovo hash e avviare la Fase 2 dai
-contratti `productconfig.Config`, `provider.GenerationOptions` e dal mapping
-Ollama.
+Creare il commit della Fase 2. Dopo il commit, aggiornare il checkpoint con il
+nuovo hash e avviare la Fase 3 con un application service chat separato,
+loader single-file confinato e comando CLI non-streaming.

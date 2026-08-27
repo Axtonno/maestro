@@ -9,7 +9,7 @@ import (
 func TestKnownCapabilitiesReturnsCanonicalCopy(t *testing.T) {
 	first := KnownCapabilities()
 	second := KnownCapabilities()
-	if len(first) != 11 || !reflect.DeepEqual(first, second) {
+	if len(first) != 14 || !reflect.DeepEqual(first, second) {
 		t.Fatalf("unexpected known capabilities %#v", first)
 	}
 
@@ -17,6 +17,26 @@ func TestKnownCapabilitiesReturnsCanonicalCopy(t *testing.T) {
 	if second[0] != CapabilityCompletion ||
 		KnownCapabilities()[0] != CapabilityCompletion {
 		t.Fatal("known capability storage was mutated")
+	}
+}
+
+func TestValidateGenerationCapabilitiesRequiresExplicitControls(t *testing.T) {
+	report := CapabilityReport{
+		Target: CapabilityTargetModel, Model: "qwen",
+		Capabilities: []CapabilityDescriptor{
+			{Capability: CapabilityContextWindowControl, Support: CapabilitySupported, Availability: CapabilityAvailabilityAvailable},
+			{Capability: CapabilityThinkingControl, Support: CapabilitySupported, Availability: CapabilityAvailabilityAvailable},
+			{Capability: CapabilityThinking, Support: CapabilitySupported, Availability: CapabilityAvailabilityUnavailable},
+		},
+	}
+	if err := ValidateGenerationCapabilities(report, GenerationOptions{ContextWindow: 4096, Thinking: ThinkingDisabled}); err != nil {
+		t.Fatalf("explicit disabled thinking should be supported: %v", err)
+	}
+	if err := ValidateGenerationCapabilities(report, GenerationOptions{Thinking: ThinkingEnabled}); !errors.Is(err, ErrUnsupportedCapability) {
+		t.Fatalf("enabled thinking should require model support: %v", err)
+	}
+	if err := ValidateGenerationCapabilities(CapabilityReport{Target: CapabilityTargetAdapter}, GenerationOptions{}); !errors.Is(err, ErrInvalidRequest) {
+		t.Fatalf("adapter report should be rejected: %v", err)
 	}
 }
 

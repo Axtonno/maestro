@@ -30,7 +30,7 @@ func NewProductPolicy(config productconfig.Config) (*ProductPolicy, error) {
 	return &ProductPolicy{
 		id:        pkgTool.PolicyID(config.Policy.ID),
 		provider:  pkgProvider.ID(config.Provider.ID),
-		model:     config.Models.Chat,
+		model:     config.AgentProfile().Model,
 		workspace: pkgContext.WorkspaceID(config.Workspace.ID),
 		tools:     tools,
 		modes: map[pkgTool.Effect]string{

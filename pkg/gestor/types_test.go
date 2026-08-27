@@ -84,8 +84,8 @@ func TestIdentifiersValidateAndCompare(t *testing.T) {
 
 func TestKnownCapabilitiesAreValidOrderedAndDefensive(t *testing.T) {
 	capabilities := gestor.KnownCapabilities()
-	if len(capabilities) != 21 {
-		t.Fatalf("expected 21 known capabilities, got %d", len(capabilities))
+	if len(capabilities) != 24 {
+		t.Fatalf("expected 24 known capabilities, got %d", len(capabilities))
 	}
 	for index, capability := range capabilities {
 		if err := capability.Validate(); err != nil {
