@@ -34,16 +34,33 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 		}
 		return 2
 	}
+	if chatFlagPresent(arguments, "--file") && *logical == "" {
+		fmt.Fprintln(stderr, "chat failed: invalid_request")
+		return 2
+	}
 	ctx, cancel := commandContext(dependencies)
 	defer cancel()
+	interactive := dependencies.isTerminal != nil && dependencies.isTerminal(stdin)
 	question := strings.TrimSpace(strings.Join(flags.Args(), " "))
-	if question == "" {
-		encoded, err := readInstruction(ctx, bufio.NewReader(stdin), dependencies.isTerminal != nil && dependencies.isTerminal(stdin), stderr)
-		if err != nil {
-			fmt.Fprintln(stderr, "chat failed: invalid_request")
+	if question != "" && !interactive {
+		concurrent, err := readInstruction(ctx, bufio.NewReader(stdin), false, stderr)
+		if err != nil || strings.TrimSpace(concurrent) != "" {
 			if ctx.Err() != nil {
-				return 130
+				fmt.Fprintf(stderr, "chat failed: %s\n", chatFailureCode(ctx, ctx.Err()))
+				return exitCodeForChatError(ctx, ctx.Err())
 			}
+			fmt.Fprintln(stderr, "chat failed: invalid_request")
+			return 2
+		}
+	}
+	if question == "" {
+		encoded, err := readInstruction(ctx, bufio.NewReader(stdin), interactive, stderr)
+		if err != nil {
+			if ctx.Err() != nil {
+				fmt.Fprintf(stderr, "chat failed: %s\n", chatFailureCode(ctx, ctx.Err()))
+				return exitCodeForChatError(ctx, ctx.Err())
+			}
+			fmt.Fprintln(stderr, "chat failed: invalid_request")
 			return 2
 		}
 		question = strings.TrimSpace(encoded)
@@ -116,17 +133,28 @@ func duplicateChatFlag(arguments []string) bool {
 	return false
 }
 
+func chatFlagPresent(arguments []string, name string) bool {
+	for _, argument := range arguments {
+		if argument == name || strings.HasPrefix(argument, name+"=") {
+			return true
+		}
+	}
+	return false
+}
+
 func exitCodeForChatError(ctx context.Context, err error) int {
 	switch {
-	case ctx.Err() != nil || errors.Is(err, context.Canceled):
+	case errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled):
 		return 130
+	case errors.Is(err, context.DeadlineExceeded), errors.Is(ctx.Err(), context.DeadlineExceeded):
+		return 4
 	case errors.Is(err, directchat.ErrInvalidRequest),
 		errors.Is(err, directchat.ErrProfileRequired),
 		errors.Is(err, directchat.ErrFileNotAllowed),
-		errors.Is(err, productconfig.ErrInvalid):
+		errors.Is(err, productconfig.ErrInvalid),
+		errors.Is(err, productconfig.ErrSecretMissing):
 		return 2
-	case errors.Is(err, context.DeadlineExceeded),
-		errors.Is(err, directchat.ErrProviderUnavailable),
+	case errors.Is(err, directchat.ErrProviderUnavailable),
 		errors.Is(err, directchat.ErrCapabilityUnsupported):
 		return 4
 	default:
@@ -136,10 +164,10 @@ func exitCodeForChatError(ctx context.Context, err error) int {
 
 func chatFailureCode(ctx context.Context, err error) string {
 	switch {
-	case ctx.Err() != nil || errors.Is(err, context.Canceled):
-		return "canceled"
-	case errors.Is(err, context.DeadlineExceeded):
+	case errors.Is(err, context.DeadlineExceeded), errors.Is(ctx.Err(), context.DeadlineExceeded):
 		return "deadline_exceeded"
+	case errors.Is(err, context.Canceled), errors.Is(ctx.Err(), context.Canceled):
+		return "canceled"
 	case errors.Is(err, directchat.ErrProfileRequired):
 		return "chat_profile_required"
 	case errors.Is(err, directchat.ErrFileNotAllowed):
@@ -152,7 +180,8 @@ func chatFailureCode(ctx context.Context, err error) string {
 		return "response_invalid"
 	case errors.Is(err, directchat.ErrLimitExceeded):
 		return "limit_exceeded"
-	case errors.Is(err, directchat.ErrInvalidRequest), errors.Is(err, productconfig.ErrInvalid):
+	case errors.Is(err, directchat.ErrInvalidRequest), errors.Is(err, productconfig.ErrInvalid),
+		errors.Is(err, productconfig.ErrSecretMissing):
 		return "invalid_request"
 	default:
 		return "execution_failed"

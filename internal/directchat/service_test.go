@@ -3,6 +3,8 @@ package directchat
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -152,23 +154,244 @@ func TestDirectChatRequiresV2ProfileAndGenerationCapabilities(t *testing.T) {
 	}
 }
 
+func TestDirectChatRejectsInvalidQuestionsAndTypedNilProvider(t *testing.T) {
+	for _, question := range []string{"", " \n", string([]byte{0xff}), "nul\x00", strings.Repeat("q", maxQuestionBytes+1)} {
+		provider := validProvider()
+		service := buildService(t, directConfig(t.TempDir()), provider)
+		if _, err := service.Execute(t.Context(), Request{Question: question}); !errors.Is(err, ErrInvalidRequest) {
+			t.Fatalf("invalid question accepted: %v", err)
+		}
+		if len(provider.requests) != 0 || provider.inspectCalls != 0 {
+			t.Fatal("invalid question reached provider")
+		}
+	}
+	var provider *chatProviderStub
+	if _, err := Build(directConfig(t.TempDir()), Dependencies{ProviderFactory: fixtureFactory(provider)}); !errors.Is(err, ErrCapabilityUnsupported) {
+		t.Fatalf("typed nil provider accepted: %v", err)
+	}
+}
+
+func TestDirectChatStreamingRequiresProfileAndCapability(t *testing.T) {
+	provider := validProvider()
+	service := buildService(t, directConfig(t.TempDir()), provider)
+	if _, err := service.Execute(t.Context(), Request{Question: "Answer", Stream: true}); !errors.Is(err, ErrCapabilityUnsupported) {
+		t.Fatalf("disabled profile enabled streaming: %v", err)
+	}
+	config := directConfig(t.TempDir())
+	config.Interaction.Chat.Streaming = true
+	provider = validProvider()
+	provider.capabilities = append(provider.capabilities[:1], provider.capabilities[2:]...)
+	service = buildService(t, config, provider)
+	if _, err := service.Execute(t.Context(), Request{Question: "Answer", Stream: true}); !errors.Is(err, ErrCapabilityUnsupported) {
+		t.Fatalf("missing streaming capability was ignored: %v", err)
+	}
+	if len(provider.streamRequests) != 0 || len(provider.requests) != 0 {
+		t.Fatal("capability failure reached generation")
+	}
+}
+
+func TestDirectChatStreamingAndCompletionAreEquivalent(t *testing.T) {
+	provider := validProvider()
+	provider.stream = &chatStreamStub{results: []streamResult{
+		{chunk: pkgProvider.StreamChunk{Model: "chat-model", Content: "One orders "}},
+		{chunk: pkgProvider.StreamChunk{Model: "chat-model", Content: "endpoint.", FinishReason: pkgProvider.FinishReasonStop, Usage: pkgProvider.Usage{InputTokens: 12, OutputTokens: 4}}},
+		{err: io.EOF},
+	}}
+	config := directConfig(t.TempDir())
+	config.Interaction.Chat.Streaming = true
+	service := buildService(t, config, provider)
+	completion, err := service.Execute(t.Context(), Request{Question: "Answer"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	streaming, err := service.Execute(t.Context(), Request{Question: "Answer", Stream: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completion.Content != streaming.Content || completion.Usage != streaming.Usage ||
+		completion.FinishReason != streaming.FinishReason || completion.Model != streaming.Model {
+		t.Fatalf("completion=%#v streaming=%#v", completion, streaming)
+	}
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
+	if len(provider.requests) != 1 || len(provider.streamRequests) != 1 ||
+		len(provider.streamRequests[0].Tools) != 0 ||
+		provider.streamRequests[0].ToolChoice.Mode != pkgProvider.ToolChoiceNone {
+		t.Fatalf("unexpected requests: complete=%#v stream=%#v", provider.requests, provider.streamRequests)
+	}
+}
+
+func TestDirectChatStreamingFailsClosed(t *testing.T) {
+	invalidUTF8 := string([]byte{0xff})
+	for _, testCase := range []struct {
+		name    string
+		stream  pkgProvider.Stream
+		want    error
+		maximum int
+	}{
+		{name: "nil stream", want: ErrResponseInvalid},
+		{name: "missing terminal", stream: newChatStream(pkgProvider.StreamChunk{Content: "partial"}), want: ErrResponseInvalid},
+		{name: "length terminal", stream: newChatStream(pkgProvider.StreamChunk{Content: "partial", FinishReason: pkgProvider.FinishReasonLength}), want: ErrResponseInvalid},
+		{name: "tool call", stream: newChatStream(pkgProvider.StreamChunk{ToolCalls: []pkgProvider.ToolCallDelta{{Name: "workspace_read"}}}), want: ErrResponseInvalid},
+		{name: "invalid utf8", stream: newChatStream(pkgProvider.StreamChunk{Content: invalidUTF8}), want: ErrResponseInvalid},
+		{name: "over limit", stream: newChatStream(pkgProvider.StreamChunk{Content: "too large"}), want: ErrLimitExceeded, maximum: 4},
+		{name: "receive failure", stream: &chatStreamStub{results: []streamResult{{err: errors.New("broken")}}}, want: ErrProviderUnavailable},
+		{name: "chunk after terminal", stream: &chatStreamStub{results: []streamResult{{chunk: pkgProvider.StreamChunk{Content: "done", FinishReason: pkgProvider.FinishReasonStop}}, {chunk: pkgProvider.StreamChunk{Content: "extra"}}}}, want: ErrResponseInvalid},
+		{name: "close failure", stream: &chatStreamStub{results: []streamResult{{chunk: pkgProvider.StreamChunk{Content: "done", FinishReason: pkgProvider.FinishReasonStop}}, {err: io.EOF}}, closeErr: errors.New("close")}, want: ErrProviderUnavailable},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			provider := validProvider()
+			provider.stream = testCase.stream
+			config := directConfig(t.TempDir())
+			config.Interaction.Chat.Streaming = true
+			if testCase.maximum > 0 {
+				config.Interaction.Chat.MaxOutputBytes = testCase.maximum
+			}
+			service := buildService(t, config, provider)
+			_, err := service.Execute(t.Context(), Request{Question: "Answer", Stream: true})
+			if !errors.Is(err, testCase.want) {
+				t.Fatalf("want %v, got %v", testCase.want, err)
+			}
+			provider.mu.Lock()
+			completeCalls, streamCalls := len(provider.requests), len(provider.streamRequests)
+			provider.mu.Unlock()
+			if completeCalls != 0 || streamCalls != 1 {
+				t.Fatalf("fallback detected: complete=%d stream=%d", completeCalls, streamCalls)
+			}
+		})
+	}
+}
+
+func TestDirectChatDeadlineAndCancellationRemainDistinct(t *testing.T) {
+	for _, testCase := range []struct {
+		name    string
+		context func() (context.Context, context.CancelFunc)
+		want    error
+	}{
+		{name: "deadline", context: func() (context.Context, context.CancelFunc) {
+			return context.WithTimeout(context.Background(), time.Millisecond)
+		}, want: context.DeadlineExceeded},
+		{name: "cancel", context: func() (context.Context, context.CancelFunc) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			return ctx, func() {}
+		}, want: context.Canceled},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			provider := validProvider()
+			provider.complete = func(ctx context.Context, _ pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+				<-ctx.Done()
+				return pkgProvider.CompletionResponse{}, ctx.Err()
+			}
+			service := buildService(t, directConfig(t.TempDir()), provider)
+			ctx, cancel := testCase.context()
+			defer cancel()
+			_, err := service.Execute(ctx, Request{Question: "Answer"})
+			if !errors.Is(err, testCase.want) {
+				t.Fatalf("want %v, got %v", testCase.want, err)
+			}
+		})
+	}
+}
+
+func TestDirectChatProfileTimeoutIsFailClosed(t *testing.T) {
+	provider := validProvider()
+	provider.complete = func(ctx context.Context, _ pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+		<-ctx.Done()
+		return pkgProvider.CompletionResponse{}, ctx.Err()
+	}
+	config := directConfig(t.TempDir())
+	config.Interaction.Chat.Timeout.Duration = time.Millisecond
+	service := buildService(t, config, provider)
+	if _, err := service.Execute(context.Background(), Request{Question: "Answer"}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("profile timeout was not preserved: %v", err)
+	}
+	if len(provider.requests) != 1 {
+		t.Fatalf("timeout triggered fallback: %d completions", len(provider.requests))
+	}
+}
+
+func TestDirectChatNeverMutatesWorkspace(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "routes"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "routes", "api.php"), []byte("<?php Route::get('/orders');\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	before := workspaceSnapshot(t, root)
+	provider := validProvider()
+	service := buildService(t, directConfig(root), provider)
+	requests := []Request{
+		{Question: "Answer", File: "routes/api.php"},
+		{Question: "Answer"},
+		{Question: "Answer", File: "../outside"},
+	}
+	for _, request := range requests {
+		_, _ = service.Execute(t.Context(), request)
+	}
+	if after := workspaceSnapshot(t, root); before != after {
+		t.Fatalf("workspace changed\nbefore=%s\nafter=%s", before, after)
+	}
+}
+
+func TestDirectChatRejectsInvalidResponsesAndOutputLimit(t *testing.T) {
+	for _, testCase := range []struct {
+		name     string
+		response pkgProvider.CompletionResponse
+		want     error
+		maximum  int
+	}{
+		{name: "wrong role", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleUser, Content: "x"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
+		{name: "nul", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "x\x00"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
+		{name: "invalid utf8", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: string([]byte{0xff})}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
+		{name: "over limit", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "too large"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrLimitExceeded, maximum: 4},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			config := directConfig(t.TempDir())
+			if testCase.maximum > 0 {
+				config.Interaction.Chat.MaxOutputBytes = testCase.maximum
+			}
+			service := buildService(t, config, providerWithResponse(testCase.response))
+			_, err := service.Execute(t.Context(), Request{Question: "Answer"})
+			if !errors.Is(err, testCase.want) {
+				t.Fatalf("want %v, got %v", testCase.want, err)
+			}
+		})
+	}
+}
+
 type chatProviderStub struct {
-	mu           sync.Mutex
-	id           pkgProvider.ID
-	response     pkgProvider.CompletionResponse
-	completeErr  error
-	capabilities []pkgProvider.CapabilityDescriptor
-	requests     []pkgProvider.CompletionRequest
-	inspectCalls int
+	mu             sync.Mutex
+	id             pkgProvider.ID
+	response       pkgProvider.CompletionResponse
+	complete       func(context.Context, pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error)
+	completeErr    error
+	stream         pkgProvider.Stream
+	streamErr      error
+	capabilities   []pkgProvider.CapabilityDescriptor
+	requests       []pkgProvider.CompletionRequest
+	streamRequests []pkgProvider.CompletionRequest
+	inspectCalls   int
 }
 
 func (provider *chatProviderStub) ID() pkgProvider.ID { return provider.id }
 
-func (provider *chatProviderStub) Complete(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+func (provider *chatProviderStub) Complete(ctx context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
 	provider.mu.Lock()
 	defer provider.mu.Unlock()
 	provider.requests = append(provider.requests, request)
+	if provider.complete != nil {
+		return provider.complete(ctx, request)
+	}
 	return provider.response, provider.completeErr
+}
+
+func (provider *chatProviderStub) Stream(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.Stream, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
+	provider.streamRequests = append(provider.streamRequests, request)
+	return provider.stream, provider.streamErr
 }
 
 func (provider *chatProviderStub) InspectCapabilities(_ context.Context, request pkgProvider.CapabilityRequest) (pkgProvider.CapabilityReport, error) {
@@ -192,9 +415,44 @@ func providerWithResponse(response pkgProvider.CompletionResponse) *chatProvider
 func validCapabilities() []pkgProvider.CapabilityDescriptor {
 	return []pkgProvider.CapabilityDescriptor{
 		{Capability: pkgProvider.CapabilityCompletion, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable},
+		{Capability: pkgProvider.CapabilityStreaming, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable},
 		{Capability: pkgProvider.CapabilityContextWindowControl, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable},
 		{Capability: pkgProvider.CapabilityThinkingControl, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable},
 	}
+}
+
+type streamResult struct {
+	chunk pkgProvider.StreamChunk
+	err   error
+}
+
+type chatStreamStub struct {
+	results  []streamResult
+	closeErr error
+	closed   int
+}
+
+func newChatStream(chunks ...pkgProvider.StreamChunk) *chatStreamStub {
+	results := make([]streamResult, 0, len(chunks)+1)
+	for _, chunk := range chunks {
+		results = append(results, streamResult{chunk: chunk})
+	}
+	results = append(results, streamResult{err: io.EOF})
+	return &chatStreamStub{results: results}
+}
+
+func (stream *chatStreamStub) Recv() (pkgProvider.StreamChunk, error) {
+	if len(stream.results) == 0 {
+		return pkgProvider.StreamChunk{}, io.EOF
+	}
+	result := stream.results[0]
+	stream.results = stream.results[1:]
+	return result.chunk, result.err
+}
+
+func (stream *chatStreamStub) Close() error {
+	stream.closed++
+	return stream.closeErr
 }
 
 func directConfig(root string) productconfig.Config {
@@ -238,4 +496,35 @@ func messagesText(messages []pkgProvider.Message) string {
 		result.WriteByte('\n')
 	}
 	return result.String()
+}
+
+func workspaceSnapshot(t *testing.T, root string) string {
+	t.Helper()
+	var snapshot strings.Builder
+	err := filepath.WalkDir(root, func(candidate string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		relative, err := filepath.Rel(root, candidate)
+		if err != nil {
+			return err
+		}
+		info, err := os.Lstat(candidate)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(&snapshot, "%s:%s:%o\n", filepath.ToSlash(relative), info.Mode().Type(), info.Mode().Perm())
+		if info.Mode().IsRegular() {
+			content, err := os.ReadFile(candidate)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(&snapshot, "%x\n", content)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return snapshot.String()
 }

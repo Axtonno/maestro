@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: In corso — Fase 4 avviata
+Stato: In corso — Fase 5 pronta
 
 Data: 2026-08-27
 
@@ -180,8 +180,8 @@ C0; non viene aperta una ricerca seriale indefinita.
 | 1 | ADR interaction modes e CLI | Completata | Milestone 13 |
 | 2 | Profili `num_ctx`/`thinking` osservabili | Completata | Fase 1 |
 | 3 | Implementazione `maestro chat` single-file | Completata | Fase 2 |
-| 4 | Matrice deterministica, negativa e anti-leak | In corso | Fase 3 |
-| 5 | Qualificazione live sul computer attuale | Non avviata | Fase 4 |
+| 4 | Matrice deterministica, negativa e anti-leak | Completata | Fase 3 |
+| 5 | Qualificazione live sul computer attuale | Pronta | Fase 4 |
 | 6 | Audit e handoff read-only | Non avviata | Fase 5 |
 
 Le fasi sono sequenziali rispetto ai gate. Codice preparatorio per una fase
@@ -376,6 +376,8 @@ Gate: **superato**.
 
 # Fase 4 — Matrice deterministica, negativa e anti-leak
 
+Stato: Completata.
+
 ## Obiettivo
 
 Dimostrare in modo ripetibile che il nuovo percorso conserva i confini di
@@ -414,6 +416,8 @@ autorità, fallisce chiuso e non regredisce il verified agent.
 - matrice deterministica e negativa versionata;
 - harness di equivalenza e anti-leak;
 - `docs/reports/milestone-14-phase-4.md`.
+
+Gate: **superato**.
 
 ---
 

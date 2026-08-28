@@ -231,6 +231,10 @@ semantica v1. In v2 `agent.streaming` si sposta in
 `provider.timeout` resta il ceiling di trasporto comune, mentre i timeout dei
 profili delimitano la singola modalità e non possono superarlo.
 
+`interaction.chat.streaming` autorizza il flag esplicito `maestro chat
+--stream`; non forza tutte le richieste chat a usare streaming. Il valore false
+mantiene il trasporto disabilitato anche quando il provider lo supporta.
+
 `num_ctx` è obbligatorio e positivo. `thinking` è una stringa enum obbligatoria
 con valori `default`, `true` o `false`, così il default del provider resta
 distinto da un'esplicita disabilitazione. Valori non supportati dall'adapter o

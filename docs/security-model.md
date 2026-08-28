@@ -101,6 +101,11 @@ limite o capability non supportata falliscono chiusi e non avviano
 rifiutati; un valore non attestabile resta `unknown` e non viene presentato
 come confermato.
 
+Lo streaming chat è aggregato e validato prima di scrivere stdout. Terminale
+mancante o duplicato, tool delta, chunk successivo al terminale, errore di
+receive/close e superamento del limite scartano l'intera risposta; nessun chunk
+parziale viene trasformato in risultato applicativo.
+
 Il risultato finale resta intenzionalmente visibile su stdout. Metadati, log e
 report escludono domanda, prompt, response completa, contenuto del file, root
 fisica e secret. Questa riduzione di autorità non rende sicuro inviare file

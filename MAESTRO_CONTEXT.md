@@ -2415,8 +2415,9 @@ la Fase 2 ha consegnato schema strict v2, profili separati, context window e
 thinking tri-state provider-neutral, mapping Ollama, preflight capability e
 propagazione nel verified agent. La Fase 3 ha consegnato `maestro chat`, il
 servizio completion separato e il loader single-file confinato, bounded e
-fail-closed. La Fase 4 deve completare matrice negativa, equivalenza streaming
-e scansione anti-leak.
+fail-closed. La Fase 4 ha chiuso la matrice negativa, equivalenza streaming,
+immutabilità e scansione anti-leak. La Fase 5 può eseguire C0-C4 sul candidato
+congelato e deve arrestarsi al primo gate fallito.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con

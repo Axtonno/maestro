@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -349,7 +350,7 @@ func TestProductCommandsUseStrictConfigAndStableOutputs(t *testing.T) {
 }
 
 func TestChatCommandUsesV2ProfileAndStableRedactedEnvelope(t *testing.T) {
-	configPath, root := newCLIInteractionConfig(t)
+	configPath, root := newCLIInteractionConfig(t, false)
 	provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
 		Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "GET /orders."},
 		FinishReason: pkgProvider.FinishReasonStop, Usage: pkgProvider.Usage{InputTokens: 10, OutputTokens: 3},
@@ -384,7 +385,7 @@ func TestChatCommandUsesV2ProfileAndStableRedactedEnvelope(t *testing.T) {
 
 func TestChatCommandFailsClosedWithSyntheticReasons(t *testing.T) {
 	v1 := newCLIConfig(t, "allow")
-	v2, _ := newCLIInteractionConfig(t)
+	v2, _ := newCLIInteractionConfig(t, false)
 	for _, testCase := range []struct {
 		name     string
 		args     []string
@@ -394,6 +395,7 @@ func TestChatCommandFailsClosedWithSyntheticReasons(t *testing.T) {
 		{name: "v1", args: []string{"chat", "--config", v1, "Question"}, wantCode: 2, want: "chat_profile_required"},
 		{name: "absolute", args: []string{"chat", "--config", v2, "--file", "/secret", "Question"}, wantCode: 2, want: "file_not_allowed"},
 		{name: "duplicate", args: []string{"chat", "--config", v2, "--file", "a", "--file", "b", "Question"}, wantCode: 2, want: "invalid_request"},
+		{name: "empty file", args: []string{"chat", "--config", v2, "--file=", "Question"}, wantCode: 2, want: "invalid_request"},
 		{name: "stream disabled", args: []string{"chat", "--config", v2, "--stream", "Question"}, wantCode: 4, want: "capability_unsupported"},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -405,6 +407,82 @@ func TestChatCommandFailsClosedWithSyntheticReasons(t *testing.T) {
 			}
 			if strings.Contains(stderr.String(), "/secret") {
 				t.Fatalf("rejected path leaked: %q", stderr.String())
+			}
+		})
+	}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	if code := runWithIO([]string{"chat", "--config", v2, "Question"}, strings.NewReader("Concurrent stdin"), &stdout, &stderr, cliTestDependencies(&cliProvider{id: "ollama"})); code != 2 || stdout.Len() != 0 || stderr.String() != "chat failed: invalid_request\n" {
+		t.Fatalf("positional/stdin conflict: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestChatCommandStreamingUsesAtomicEquivalentEnvelope(t *testing.T) {
+	configPath, _ := newCLIInteractionConfig(t, true)
+	provider := &cliProvider{id: "ollama", stream: &cliStream{results: []cliStreamResult{
+		{chunk: pkgProvider.StreamChunk{Content: "GET /"}},
+		{chunk: pkgProvider.StreamChunk{Content: "orders.", FinishReason: pkgProvider.FinishReasonStop, Usage: pkgProvider.Usage{InputTokens: 10, OutputTokens: 3}}},
+		{err: io.EOF},
+	}}}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "--stream", "Which routes exist?"},
+		strings.NewReader(""), &stdout, &stderr, cliTestDependencies(provider),
+	)
+	if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "result\nGET /orders.") ||
+		len(provider.requests) != 0 || len(provider.streamRequests) != 1 {
+		t.Fatalf("code=%d stdout=%q stderr=%q complete=%d stream=%d", code, stdout.String(), stderr.String(), len(provider.requests), len(provider.streamRequests))
+	}
+}
+
+func TestChatCommandFailureDoesNotLeakInputsOrPartialResponse(t *testing.T) {
+	configPath, root := newCLIInteractionConfig(t, true)
+	provider := &cliProvider{id: "ollama", stream: &cliStream{results: []cliStreamResult{
+		{chunk: pkgProvider.StreamChunk{Content: "RESPONSE-SENTINEL"}},
+		{err: errors.New("provider broke")},
+	}}}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "--file", "routes/api.php", "--stream", "QUESTION-SENTINEL"},
+		strings.NewReader(""), &stdout, &stderr, cliTestDependencies(provider),
+	)
+	if code != 4 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "chat failed: provider_unavailable") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	for _, forbidden := range []string{"QUESTION-SENTINEL", "RESPONSE-SENTINEL", "Route::get", "routes/api.php", root} {
+		if strings.Contains(stdout.String(), forbidden) || strings.Contains(stderr.String(), forbidden) {
+			t.Fatalf("operational output leaked %q: stdout=%q stderr=%q", forbidden, stdout.String(), stderr.String())
+		}
+	}
+}
+
+func TestChatCommandMapsCanceledContextWithoutProviderIO(t *testing.T) {
+	for _, testCase := range []struct {
+		name     string
+		ctx      func() context.Context
+		code     int
+		codeName string
+	}{
+		{name: "cancel", ctx: func() context.Context { ctx, cancel := context.WithCancel(context.Background()); cancel(); return ctx }, code: 130, codeName: "canceled"},
+		{name: "deadline", ctx: func() context.Context {
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+			defer cancel()
+			return ctx
+		}, code: 4, codeName: "deadline_exceeded"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			configPath, _ := newCLIInteractionConfig(t, false)
+			provider := &cliProvider{id: "ollama"}
+			dependencies := cliTestDependencies(provider)
+			dependencies.context = func() (context.Context, context.CancelFunc) { return testCase.ctx(), func() {} }
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO([]string{"chat", "--config", configPath, "Question"}, strings.NewReader(""), &stdout, &stderr, dependencies)
+			if code != testCase.code || stdout.Len() != 0 || stderr.String() != "chat failed: "+testCase.codeName+"\n" ||
+				len(provider.requests) != 0 || len(provider.streamRequests) != 0 {
+				t.Fatalf("code=%d stdout=%q stderr=%q complete=%d stream=%d", code, stdout.String(), stderr.String(), len(provider.requests), len(provider.streamRequests))
 			}
 		})
 	}
@@ -581,9 +659,17 @@ func TestRunBoundsInteractiveInstruction(t *testing.T) {
 }
 
 type cliProvider struct {
-	id        pkgProvider.ID
-	responses []pkgProvider.CompletionResponse
-	requests  []pkgProvider.CompletionRequest
+	id             pkgProvider.ID
+	responses      []pkgProvider.CompletionResponse
+	requests       []pkgProvider.CompletionRequest
+	stream         pkgProvider.Stream
+	streamErr      error
+	streamRequests []pkgProvider.CompletionRequest
+}
+
+func (provider *cliProvider) Stream(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.Stream, error) {
+	provider.streamRequests = append(provider.streamRequests, request)
+	return provider.stream, provider.streamErr
 }
 
 func (provider *cliProvider) ID() pkgProvider.ID { return provider.id }
@@ -690,7 +776,7 @@ context:
 	return path
 }
 
-func newCLIInteractionConfig(t *testing.T) (string, string) {
+func newCLIInteractionConfig(t *testing.T, streaming bool) (string, string) {
 	t.Helper()
 	root := t.TempDir()
 	if err := os.Mkdir(filepath.Join(root, "routes"), 0o700); err != nil {
@@ -715,7 +801,7 @@ interaction:
   chat:
     model: chat-model
     timeout: 1m
-    streaming: false
+    streaming: %t
     num_ctx: 4096
     thinking: "false"
     max_file_bytes: 1048576
@@ -752,10 +838,30 @@ context:
   max_tokens: 1024
   reserved_tokens: 128
   safety_tokens: 64
-`, root)
+`, root, streaming)
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	return path, root
 }
+
+type cliStreamResult struct {
+	chunk pkgProvider.StreamChunk
+	err   error
+}
+
+type cliStream struct {
+	results []cliStreamResult
+}
+
+func (stream *cliStream) Recv() (pkgProvider.StreamChunk, error) {
+	if len(stream.results) == 0 {
+		return pkgProvider.StreamChunk{}, io.EOF
+	}
+	result := stream.results[0]
+	stream.results = stream.results[1:]
+	return result.chunk, result.err
+}
+
+func (*cliStream) Close() error { return nil }

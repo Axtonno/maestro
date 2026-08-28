@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"reflect"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -43,6 +45,10 @@ type chatProvider interface {
 	pkgProvider.CapabilityInspector
 }
 
+type streamingProvider interface {
+	pkgProvider.Streamer
+}
+
 type Service struct {
 	config   productconfig.Config
 	profile  productconfig.ChatProfileConfig
@@ -70,7 +76,7 @@ func Build(config productconfig.Config, dependencies Dependencies) (*Service, er
 		return nil, fmt.Errorf("compose direct chat provider: %w", ErrProviderUnavailable)
 	}
 	provider, ok := candidate.(chatProvider)
-	if !ok || provider == nil || provider.ID() != pkgProvider.ID(config.Provider.ID) {
+	if !ok || nilValue(provider) || provider.ID() != pkgProvider.ID(config.Provider.ID) {
 		return nil, ErrCapabilityUnsupported
 	}
 	now := dependencies.Now
@@ -84,7 +90,10 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 	if service == nil || service.provider == nil || ctx == nil || !validQuestion(request.Question) {
 		return Result{}, ErrInvalidRequest
 	}
-	if request.Stream || service.profile.Streaming {
+	if err := ctx.Err(); err != nil {
+		return Result{}, err
+	}
+	if request.Stream && !service.profile.Streaming {
 		return Result{}, ErrCapabilityUnsupported
 	}
 	var content string
@@ -97,7 +106,7 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 	}
 	runContext, cancel := context.WithTimeout(ctx, service.profile.Timeout.Duration)
 	defer cancel()
-	if err := service.preflight(runContext); err != nil {
+	if err := service.preflight(runContext, request.Stream); err != nil {
 		return Result{}, err
 	}
 	completionRequest := pkgProvider.CompletionRequest{
@@ -106,20 +115,21 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 		Options:    service.profile.GenerationOptions(),
 		ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceNone},
 	}
+	if request.Stream {
+		return service.executeStreaming(runContext, completionRequest)
+	}
+	return service.executeCompletion(runContext, completionRequest)
+}
+
+func (service *Service) executeCompletion(ctx context.Context, request pkgProvider.CompletionRequest) (Result, error) {
 	started := service.now()
-	response, err := service.provider.Complete(runContext, completionRequest)
+	response, err := service.provider.Complete(ctx, request)
 	duration := service.now().Sub(started)
 	if err != nil {
-		if errors.Is(err, context.Canceled) || errors.Is(runContext.Err(), context.Canceled) {
-			return Result{}, context.Canceled
-		}
-		if errors.Is(err, context.DeadlineExceeded) || errors.Is(runContext.Err(), context.DeadlineExceeded) {
-			return Result{}, context.DeadlineExceeded
-		}
-		if errors.Is(err, pkgProvider.ErrUnsupportedCapability) {
-			return Result{}, ErrCapabilityUnsupported
-		}
-		return Result{}, ErrProviderUnavailable
+		return Result{}, executionError(ctx, err)
+	}
+	if err := ctx.Err(); err != nil {
+		return Result{}, executionError(ctx, err)
 	}
 	if duration < 0 || response.Message.Role != pkgProvider.RoleAssistant ||
 		len(response.Message.ToolCalls) != 0 || response.FinishReason != pkgProvider.FinishReasonStop ||
@@ -138,20 +148,120 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 	}, nil
 }
 
-func (service *Service) preflight(ctx context.Context) error {
+func (service *Service) executeStreaming(ctx context.Context, request pkgProvider.CompletionRequest) (Result, error) {
+	provider, ok := service.provider.(streamingProvider)
+	if !ok || nilValue(provider) {
+		return Result{}, ErrCapabilityUnsupported
+	}
+	started := service.now()
+	stream, err := provider.Stream(ctx, request)
+	if err != nil {
+		return Result{}, executionError(ctx, err)
+	}
+	if err := ctx.Err(); err != nil {
+		return Result{}, executionError(ctx, err)
+	}
+	if nilValue(stream) {
+		return Result{}, ErrResponseInvalid
+	}
+	defer stream.Close()
+
+	var content strings.Builder
+	var usage pkgProvider.Usage
+	finishReason := ""
+	terminal := false
+	for {
+		if err := ctx.Err(); err != nil {
+			return Result{}, executionError(ctx, err)
+		}
+		chunk, receiveErr := stream.Recv()
+		if errors.Is(receiveErr, io.EOF) {
+			if !terminal {
+				return Result{}, ErrResponseInvalid
+			}
+			break
+		}
+		if receiveErr != nil {
+			return Result{}, executionError(ctx, receiveErr)
+		}
+		if err := ctx.Err(); err != nil {
+			return Result{}, executionError(ctx, err)
+		}
+		if terminal || len(chunk.ToolCalls) != 0 || !utf8.ValidString(chunk.Content) || strings.ContainsRune(chunk.Content, 0) {
+			return Result{}, ErrResponseInvalid
+		}
+		if content.Len()+len(chunk.Content) > service.profile.MaxOutputBytes {
+			return Result{}, ErrLimitExceeded
+		}
+		content.WriteString(chunk.Content)
+		if chunk.FinishReason != "" {
+			terminal = true
+			finishReason = chunk.FinishReason
+			usage = chunk.Usage
+		}
+	}
+	duration := service.now().Sub(started)
+	if duration < 0 || finishReason != pkgProvider.FinishReasonStop || strings.TrimSpace(content.String()) == "" {
+		return Result{}, ErrResponseInvalid
+	}
+	if err := stream.Close(); err != nil {
+		return Result{}, executionError(ctx, err)
+	}
+	return service.result(content.String(), duration, usage, finishReason), nil
+}
+
+func (service *Service) result(content string, duration time.Duration, usage pkgProvider.Usage, finishReason string) Result {
+	return Result{
+		Model: service.profile.Model, Content: content,
+		Duration: duration, Usage: usage, FinishReason: finishReason,
+		RequestedNumCtx:   service.profile.NumCtx,
+		RequestedThinking: service.profile.GenerationOptions().Thinking,
+	}
+}
+
+func (service *Service) preflight(ctx context.Context, streaming bool) error {
 	report, err := service.provider.InspectCapabilities(ctx, pkgProvider.CapabilityRequest{
 		Target: pkgProvider.CapabilityTargetModel, Model: service.profile.Model,
 	})
 	if err != nil {
-		return ErrProviderUnavailable
+		return executionError(ctx, err)
+	}
+	if err := ctx.Err(); err != nil {
+		return executionError(ctx, err)
 	}
 	if !available(report, pkgProvider.CapabilityCompletion) {
+		return ErrCapabilityUnsupported
+	}
+	if streaming && !available(report, pkgProvider.CapabilityStreaming) {
 		return ErrCapabilityUnsupported
 	}
 	if err := pkgProvider.ValidateGenerationCapabilities(report, service.profile.GenerationOptions()); err != nil {
 		return ErrCapabilityUnsupported
 	}
 	return nil
+}
+
+func executionError(ctx context.Context, err error) error {
+	if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+		return context.Canceled
+	}
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return context.DeadlineExceeded
+	}
+	if errors.Is(err, pkgProvider.ErrUnsupportedCapability) {
+		return ErrCapabilityUnsupported
+	}
+	return ErrProviderUnavailable
+}
+
+func nilValue(value any) bool {
+	if value == nil {
+		return true
+	}
+	kind := reflect.ValueOf(value).Kind()
+	return (kind == reflect.Chan || kind == reflect.Func || kind == reflect.Interface ||
+		kind == reflect.Map || kind == reflect.Pointer || kind == reflect.Slice) &&
+		reflect.ValueOf(value).IsNil()
 }
 
 func available(report pkgProvider.CapabilityReport, capability pkgProvider.Capability) bool {

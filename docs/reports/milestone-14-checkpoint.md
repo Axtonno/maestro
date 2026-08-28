@@ -1,16 +1,16 @@
 # Milestone 14 — Checkpoint interno
 
-Ultimo aggiornamento: 2026-08-27
+Ultimo aggiornamento: 2026-08-28
 
 ## Stato corrente
 
 - milestone: in corso;
-- fase attiva: transizione Fase 3 -> Fase 4;
-- ultimo commit di fase: `6e5639a` — Fase 2 completata; il commit Fase 3 è il
+- fase attiva: transizione Fase 4 -> Fase 5;
+- ultimo commit di fase: `818209d` — Fase 3 completata; il commit Fase 4 è il
   prossimo passo;
 - ultimo commit verde della baseline:
-  `6e5639a`;
-- worktree atteso: Fase 3 completa e verificata, non ancora committata.
+  `818209d`;
+- worktree atteso: Fase 4 completa, in attesa della suite finale e del commit.
 
 ## Evidenze verdi
 
@@ -31,6 +31,6 @@ Le suite Go richiedono `GOCACHE` sotto `/tmp` nell'ambiente Codex corrente.
 
 ## Prossimo passo riproducibile
 
-Creare il commit della Fase 3. Quindi implementare la Fase 4: matrice negativa
-completa, streaming esplicito con equivalenza deterministica, terminali
-deadline/cancel, immutabilità e harness anti-leak.
+Rieseguire suite, race, vet e diff check e creare il commit della Fase 4.
+Quindi congelare il candidate record e avviare il solo preflight read-only
+della Fase 5, senza avviare Ollama o scaricare modelli.

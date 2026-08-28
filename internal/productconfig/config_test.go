@@ -100,6 +100,12 @@ func TestV2RejectsLegacyAndInvalidProfileFields(t *testing.T) {
 		{name: "small num ctx", mutate: func(value string) string {
 			return strings.Replace(value, "num_ctx: 4096", "num_ctx: 64", 1)
 		}},
+		{name: "unknown field", mutate: func(value string) string {
+			return strings.Replace(value, "version: 2", "version: 2\nunknown: true", 1)
+		}},
+		{name: "duplicate field", mutate: func(value string) string {
+			return strings.Replace(value, "version: 2", "version: 2\nversion: 2", 1)
+		}},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "config.yaml")

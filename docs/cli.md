@@ -154,13 +154,19 @@ maestro chat \
 La domanda può essere posizionale oppure letta da stdin quando il positional è
 assente, entro 1 MiB. `--file` è opzionale ma singolo e accetta soltanto un
 path logico relativo sotto il workspace. Non accetta glob, directory o path
-assoluti. `--stream` è opt-in e viene abilitato soltanto dopo il gate di
-equivalenza della Milestone 14.
+assoluti. `--stream` è opt-in e richiede anche
+`interaction.chat.streaming: true`; un profilo disabilitato o una capability
+provider assente falliscono prima della generation.
 
 Chat esegue una sola completion con zero tool e non costruisce retrieval,
 index, state machine, sessione o approver. Senza `--file` comunica al modello
 che non è disponibile contesto workspace; non seleziona file e non effettua
 fallback agentico.
+
+Lo streaming usa il trasporto incrementale del provider ma conserva output
+atomico: i chunk vengono assemblati entro il limite e stdout viene scritto
+soltanto dopo un terminale `stop` valido seguito da EOF. Un flusso troncato non
+lascia output parziale.
 
 stdout usa l'envelope candidato:
 

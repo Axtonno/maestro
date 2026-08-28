@@ -15,6 +15,14 @@ import (
 )
 
 func loadFile(ctx context.Context, workspaceRoot, logical string, maximum int) (string, error) {
+	return loadFileWithHooks(ctx, workspaceRoot, logical, maximum, fileLoadHooks{})
+}
+
+type fileLoadHooks struct {
+	afterFirstRead func()
+}
+
+func loadFileWithHooks(ctx context.Context, workspaceRoot, logical string, maximum int, hooks fileLoadHooks) (string, error) {
 	if ctx == nil || maximum < 1 || pkgContext.DocumentPath(logical).Validate() != nil ||
 		strings.ContainsRune(logical, '\x00') || strings.Contains(logical, `\`) {
 		return "", ErrFileNotAllowed
@@ -54,6 +62,9 @@ func loadFile(ctx context.Context, workspaceRoot, logical string, maximum int) (
 	if err != nil {
 		return "", err
 	}
+	if hooks.afterFirstRead != nil {
+		hooks.afterFirstRead()
+	}
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
 		return "", ErrFileNotAllowed
 	}
@@ -63,7 +74,9 @@ func loadFile(ctx context.Context, workspaceRoot, logical string, maximum int) (
 	}
 	openedAfter, err := file.Stat()
 	pathAfter, pathErr := root.Lstat(logical)
+	rootAfter, rootErr := os.Lstat(workspaceRoot)
 	if err != nil || pathErr != nil || pathAfter.Mode()&os.ModeSymlink != 0 ||
+		rootErr != nil || rootAfter.Mode()&os.ModeSymlink != 0 || !os.SameFile(rootInfo, rootAfter) ||
 		!stableFile(openedBefore, openedAfter) || !os.SameFile(openedAfter, pathAfter) ||
 		!bytes.Equal(first, second) || !utf8.Valid(first) || bytes.IndexByte(first, 0) >= 0 {
 		return "", ErrFileNotAllowed
