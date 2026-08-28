@@ -55,6 +55,35 @@ func TestDirectChatDisclosesOneExplicitFileInOneToolFreeCompletion(t *testing.T)
 	}
 }
 
+func TestDirectChatComposesOnlyOneProviderAndNeverFallsBack(t *testing.T) {
+	provider := validProvider()
+	factoryCalls := 0
+	service, err := Build(directConfig(t.TempDir()), Dependencies{
+		ProviderFactory: func(productconfig.Config, string) (pkgProvider.Provider, error) {
+			factoryCalls++
+			return provider, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if factoryCalls != 1 {
+		t.Fatalf("provider factory calls=%d, want 1", factoryCalls)
+	}
+	if _, err := service.Execute(t.Context(), Request{Question: "Answer"}); err != nil {
+		t.Fatal(err)
+	}
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
+	if provider.inspectCalls != 1 || len(provider.requests) != 1 || len(provider.streamRequests) != 0 {
+		t.Fatalf("unexpected provider path: inspect=%d complete=%d stream=%d", provider.inspectCalls, len(provider.requests), len(provider.streamRequests))
+	}
+	request := provider.requests[0]
+	if len(request.Tools) != 0 || request.ToolChoice.Mode != pkgProvider.ToolChoiceNone {
+		t.Fatalf("request gained tool authority: %#v", request)
+	}
+}
+
 func TestDirectChatWithoutFileDoesNotDiscoverContext(t *testing.T) {
 	provider := validProvider()
 	service := buildService(t, directConfig(t.TempDir()), provider)

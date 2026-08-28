@@ -9,7 +9,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/antonio-cafeo/maestro/internal/application"
 	"github.com/antonio-cafeo/maestro/internal/directchat"
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
@@ -103,19 +102,13 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 
 func directChatDependencies(dependencies commandDependencies) directchat.Dependencies {
 	configured := dependencies.application
-	defaults := application.DefaultDependencies()
-	if configured.Getenv == nil {
-		configured.Getenv = defaults.Getenv
-	}
-	if configured.ProviderFactory == nil {
-		configured.ProviderFactory = defaults.ProviderFactory
-	}
-	return directchat.Dependencies{
-		Getenv: configured.Getenv,
-		ProviderFactory: func(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
+	result := directchat.Dependencies{Getenv: configured.Getenv}
+	if configured.ProviderFactory != nil {
+		result.ProviderFactory = func(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
 			return configured.ProviderFactory(config, secret)
-		},
+		}
 	}
+	return result
 }
 
 func duplicateChatFlag(arguments []string) bool {

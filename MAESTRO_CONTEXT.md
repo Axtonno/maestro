@@ -2483,3 +2483,13 @@ il binario development-only costruito con `-trimpath` ha SHA-256
 L'audit ha congelato contratto, evidenza M15, fixture e backlog: la Fase 2 deve
 ora provare e irrigidire il confine tool-free del servizio Direct Chat. Nessun
 artifact v0.3.0, tag o support claim è stato prodotto.
+
+Checkpoint successivo: la Fase 2 — Confine del servizio Direct Chat è
+completata sulla baseline `b1c85e4`. La factory provider predefinita appartiene
+ora a `internal/directchat`, usa il modello del profilo chat e non passa più dal
+composition root `internal/application`. Test architetturali vietano import di
+Agent Runtime, application composition, Context Engine runtime e Tool Runtime;
+spy di composizione provano una factory, un preflight, una completion, zero
+stream inattesi, zero tool e nessun fallback. Suite completa, vet e race mirata
+ripetuta tre volte sono verdi. La Fase 3 deve ora chiudere la matrice del loader
+single-file; nessun artifact o support claim è stato prodotto.

@@ -2,7 +2,7 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — Fase 1 completata; autorizzata dal verdetto
+Stato: In corso — Fasi 1–2 completate; autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -218,7 +218,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
 | 1 | Freeze del contratto e audit del candidato | Completata | M14 completata + M15 `direct/chat` PASS |
-| 2 | Confine del servizio Direct Chat | Non avviata | Fase 1 |
+| 2 | Confine del servizio Direct Chat | Completata | Fase 1 |
 | 3 | Contesto esplicito single-file | Non avviata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Non avviata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Non avviata | Fase 4 |
@@ -315,7 +315,7 @@ Gate: **superato** sul commit baseline `2759c332c8edcc66f12aa12fd219e32dff3e1dba
 
 # Fase 2 — Confine del servizio Direct Chat
 
-Stato: Non avviata.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -352,6 +352,8 @@ mutazione.
 - test del confine applicativo e del composition graph;
 - inventario delle dipendenze ammesse e vietate;
 - `docs/reports/milestone-17-phase-2.md`.
+
+Gate: **superato** sulla baseline di Fase 1 `b1c85e4`.
 
 ---
 

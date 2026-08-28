@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
+	pkgLlamaCPP "github.com/antonio-cafeo/maestro/pkg/provider/llamacpp"
+	pkgOllama "github.com/antonio-cafeo/maestro/pkg/provider/ollama"
 )
 
 const maxQuestionBytes = 1 << 20
@@ -64,9 +67,7 @@ func Build(config productconfig.Config, dependencies Dependencies) (*Service, er
 	if !exists {
 		return nil, ErrProfileRequired
 	}
-	if dependencies.ProviderFactory == nil {
-		return nil, fmt.Errorf("direct chat provider factory is missing: %w", ErrInvalidRequest)
-	}
+	dependencies = normalizeDependencies(dependencies)
 	secret, err := config.Secret(dependencies.Getenv)
 	if err != nil {
 		return nil, err
@@ -84,6 +85,40 @@ func Build(config productconfig.Config, dependencies Dependencies) (*Service, er
 		now = time.Now
 	}
 	return &Service{config: config, profile: profile, provider: provider, now: now}, nil
+}
+
+func normalizeDependencies(dependencies Dependencies) Dependencies {
+	if dependencies.Getenv == nil {
+		dependencies.Getenv = os.Getenv
+	}
+	if dependencies.ProviderFactory == nil {
+		dependencies.ProviderFactory = defaultProvider
+	}
+	return dependencies
+}
+
+func defaultProvider(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
+	profile, exists := config.ChatProfile()
+	if !exists {
+		return nil, ErrProfileRequired
+	}
+	switch config.Provider.ID {
+	case "ollama":
+		return pkgOllama.New(pkgOllama.Config{
+			BaseURL:      config.Provider.BaseURL,
+			Timeout:      config.Provider.Timeout.Duration,
+			DefaultModel: profile.Model,
+		})
+	case "llama.cpp":
+		return pkgLlamaCPP.New(pkgLlamaCPP.Config{
+			BaseURL:      config.Provider.BaseURL,
+			Timeout:      config.Provider.Timeout.Duration,
+			DefaultModel: profile.Model,
+			APIKey:       secret,
+		})
+	default:
+		return nil, fmt.Errorf("direct chat provider %q is not implemented", config.Provider.ID)
+	}
 }
 
 func (service *Service) Execute(ctx context.Context, request Request) (Result, error) {
