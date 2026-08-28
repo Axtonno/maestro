@@ -212,88 +212,369 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 
 ---
 
-# Fasi di sviluppo
+# Sequenza delle fasi
 
-## Fase 1 — Freeze del contratto e audit del candidato
+| Fase | Titolo | Stato corrente | Dipende da |
+|---|---|---|---|
+| 1 | Freeze del contratto e audit del candidato | Non avviata | M14 completata + M15 `direct/chat` PASS |
+| 2 | Confine del servizio Direct Chat | Non avviata | Fase 1 |
+| 3 | Contesto esplicito single-file | Non avviata | Fase 2 |
+| 4 | Profilo dedicato e preflight | Non avviata | Fase 3 |
+| 5 | Streaming, terminali e osservabilità | Non avviata | Fase 4 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | Non avviata | Fase 5 |
+| 7 | Packaging candidate e qualifica finale | Non avviata | Fase 6 |
 
-- confrontare implementazione M14, ADR-0033, CLI e configurazione;
-- congelare sintassi, reason code, exit code, envelope e limiti;
-- eliminare divergenze documentali senza cambiare semantica durante i gate;
-- registrare commit, binario, schema, prompt e fixture del candidate.
+Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
+fixture della successiva, ma questi non costituiscono evidenza e non vengono
+eseguiti come serie ufficiale prima del PASS precedente. Ogni fase produce un
+report autonomo sotto `docs/reports/`; la Fase 7 produce anche il report finale
+della milestone.
 
-Gate: contratto unico e testabile; nessuna ambiguità fra chat e agent.
+## Regole di avanzamento
 
-## Fase 2 — Confine del servizio Direct Chat
+- la Fase 1 registra la baseline e il delta esatto ancora necessario; non
+  presume che il codice consegnato da M14 sia già una superficie di prodotto;
+- ogni modifica a codice, schema, prompt o criteri dopo il gate della fase che
+  li possiede invalida quel gate e tutti i successivi;
+- il freeze della Fase 6 identifica il candidate di qualificazione sul
+  ThinkPad; il packaging candidate della Fase 7 è un nuovo record legato al
+  commit che incorpora esclusivamente correzioni già validate;
+- il ThinkPad è l'ambiente di sviluppo e prequalifica per le Fasi 1–6; la
+  piattaforma WSL2/Ubuntu 24.04/RTX 5070 riceve soltanto l'archive immutabile
+  della Fase 7;
+- provider e catalogo modelli non vengono avviati, installati o modificati
+  implicitamente dai test o da Maestro;
+- un failure di sicurezza arresta la milestone; un failure funzionale richiede
+  causa dimostrata, correzione e nuovo candidate record dalla fase owner;
+- `skipped`, `unsupported`, `not_run`, `unknown` e risultati ottenuti con un
+  candidato diverso non valgono come PASS;
+- tag e pubblicazione sono vietati finché il report finale non emette
+  `direct_chat_product_baseline`.
 
-- verificare o isolare il servizio di completion diretta;
-- provare l'assenza di Tool Runtime, Context Engine e Agent Runtime;
-- rendere impossibile il fallback implicito;
-- aggiungere test architetturali e di composizione per il confine.
+## Mappa delle responsabilità
 
-Gate: una richiesta chat genera una sola completion provider tool-free.
+| Area | Fase owner | Superficie principale |
+|---|---:|---|
+| contratto pubblico e delta M14/M15 | 1 | ADR, CLI, configurazione, baseline |
+| isolamento tool-free | 2 | `internal/directchat`, composition e test architetturali |
+| disclosure single-file | 3 | loader, workspace containment e prompt builder |
+| profilo e capability | 4 | `internal/productconfig`, provider e doctor |
+| streaming e telemetria redatta | 5 | servizio chat, CLI ed event sink |
+| regressione e qualità pre-release | 6 | suite, harness live e candidate record |
+| artifact e support claim v0.3.0 | 7 | packaging, installazione, compatibility e release audit |
 
-## Fase 3 — Contesto esplicito single-file
+---
 
-- consolidare containment e risoluzione del path logico;
-- verificare symlink, traversal, directory, file speciali, race e dimensione;
-- fissare encoding e comportamento per file vuoto o illeggibile;
-- provare digest pre/post e assenza di effetti.
+# Fase 1 — Freeze del contratto e audit del candidato
 
-Gate: soltanto il file esplicitamente autorizzato può entrare nel prompt.
+Stato: Non avviata.
 
-## Fase 4 — Profilo e preflight
+## Obiettivo
 
-- promuovere il profilo v2 candidato a contratto v0.3.0;
-- verificare modello, timeout, streaming, `num_ctx`, thinking e limiti;
-- distinguere valori richiesti, osservati e non osservabili;
-- aggiornare example config, doctor, installazione e troubleshooting.
+Riconciliare il codice development-only consegnato dalla Milestone 14 con
+l'evidenza live della Milestone 15 e trasformare il piano in un backlog chiuso,
+senza modificare ancora il support claim v0.2.0.
 
-Gate: configurazioni incomplete o non onorabili falliscono prima della
-completion.
+## Attività
 
-## Fase 5 — Streaming e osservabilità
+- confrontare ADR-0033, `maestro chat`, schema v2, documentazione e
+  comportamento effettivo di CLI e servizio;
+- importare da M15 soltanto il PASS direct/chat, il modello
+  `qwen2.5-coder:7b`, i parametri osservati, le fixture e gli oracoli pertinenti;
+- congelare sintassi, provenienza della domanda, cardinalità di `--file`,
+  `--stream`, stdout/stderr, reason code, exit code e limiti;
+- inventariare le dipendenze runtime del percorso chat e assegnare ogni delta
+  alle Fasi 2–5;
+- registrare baseline Git, suite, race detector, vet e comportamento CLI prima
+  delle modifiche;
+- creare il candidate record iniziale con commit, schema, prompt template,
+  fixture, piattaforma e non-garanzie;
+- correggere solo contraddizioni del piano e della documentazione interna;
+  ogni modifica di comportamento viene rinviata alla fase owner.
 
-- mantenere equivalenza semantica fra complete e stream;
-- validare finish reason, risposta non vuota e limiti di output;
-- registrare modello, token, durata, context e terminazione;
-- provare anti-leak per prompt, sorgente, risposta, path e secret;
-- mantenere output atomico sui failure di stream.
+## Gate di uscita
 
-Gate: equivalenza 2/2 e nessun leak nei sink pubblicabili.
+- esiste un solo contratto testabile per domanda, file, streaming, output ed
+  errori;
+- chat e agent hanno autorità, profili e application graph non ambigui;
+- ogni requisito della milestone ha una fase owner e un criterio osservabile;
+- baseline repository-wide verde o failure preesistenti esplicitamente
+  registrati senza reinterpretazione;
+- nessun artifact v0.3.0, tag o support claim è stato prodotto.
 
-## Fase 6 — Matrice operativa e qualità reale
+## Deliverable
 
-Eseguire prima test deterministici, poi smoke live sul ThinkPad. Congelare il
-candidate prima della serie e non modificare prompt o profilo fra i tentativi.
+- candidate record iniziale e matrice requisito–fase–test;
+- checklist di apertura della milestone;
+- `docs/reports/milestone-17-phase-1.md`.
 
-Task rappresentativi minimi:
+---
+
+# Fase 2 — Confine del servizio Direct Chat
+
+Stato: Non avviata.
+
+## Obiettivo
+
+Provare strutturalmente che `maestro chat` esegue una sola generazione
+provider tool-free e non può entrare nel percorso agentico, di retrieval o di
+mutazione.
+
+## Attività
+
+- auditare `internal/directchat`, il composition root e il comando CLI per
+  dipendenze dirette e transitive non ammesse;
+- isolare le interfacce minime per provider, file loader ed eventi redatti;
+- inviare sempre `Tools: []` e `ToolChoice: none` e rifiutare risposte con tool
+  call o terminali incompatibili;
+- impedire la costruzione di Agent Runtime, Context Engine, Tool Runtime,
+  sessione, index e approver nel graph chat;
+- eliminare fallback impliciti dopo timeout, risposta vuota, stream fallito o
+  capability assente;
+- aggiungere spy e test di composizione che contino request, factory e servizi
+  istanziati;
+- verificare che i percorsi `maestro agent`/`run` esistenti non cambino come
+  effetto collaterale.
+
+## Gate di uscita
+
+- ogni richiesta valida produce esattamente una request provider e zero tool;
+- nessun servizio agentico, di retrieval o mutativo è costruito o invocato;
+- ogni failure termina nello stesso percorso con reason code tipizzato;
+- test architetturali, di composizione e regressione agent sono verdi;
+- workspace byte-identico per success e failure.
+
+## Deliverable
+
+- test del confine applicativo e del composition graph;
+- inventario delle dipendenze ammesse e vietate;
+- `docs/reports/milestone-17-phase-2.md`.
+
+---
+
+# Fase 3 — Contesto esplicito single-file
+
+Stato: Non avviata.
+
+## Obiettivo
+
+Garantire che soltanto il singolo file nominato dall'utente, verificato entro
+il workspace autorizzato, possa essere divulgato al provider.
+
+## Attività
+
+- consolidare normalizzazione del path logico, containment e apertura relativa
+  alla root già verificata;
+- coprire path assoluti, traversal, segmenti ambigui, directory, file assente,
+  FIFO/device e file non regolari;
+- definire e provare la policy per symlink interni ed evasivi e per root o file
+  sostituiti durante la lettura;
+- imporre limite byte prima della costruzione del prompt e definire encoding,
+  BOM, file vuoto e contenuto illeggibile;
+- delimitare domanda, path logico e contenuto non fidato senza interpretare il
+  file come istruzione di sistema;
+- attestare digest e identità pre/post e verificare l'assenza di scritture,
+  file temporanei e metadata changes;
+- aggiungere test che provino zero I/O provider per ogni input respinto.
+
+## Gate di uscita
+
+- un solo file regolare, esplicitamente autorizzato e bounded entra nel prompt;
+- ogni evasione o race coperta fallisce prima della disclosure;
+- senza `--file` non avvengono discovery, scan, retrieval o letture workspace;
+- fixture e workspace sono byte-identici in tutti gli scenari;
+- matrice positiva e negativa del loader interamente verde.
+
+## Deliverable
+
+- matrice versionata di path, symlink, tipo, encoding, size e race;
+- test del prompt boundary e dell'assenza di provider I/O sui rifiuti;
+- `docs/reports/milestone-17-phase-3.md`.
+
+---
+
+# Fase 4 — Profilo dedicato e preflight
+
+Stato: Non avviata.
+
+## Obiettivo
+
+Promuovere il profilo chat dello schema v2 a contratto v0.3.0 strict e
+fallire prima della completion quando provider o modello non possono onorarlo.
+
+## Attività
+
+- congelare modello, timeout, streaming, `num_ctx`, thinking,
+  `max_file_bytes` e `max_output_bytes`, inclusi range e default;
+- verificare strict parsing, campi sconosciuti, duplicati, valori zero e
+  combinazioni incompatibili;
+- mantenere provider e trasporto nel blocco comune senza duplicare o selezionare
+  implicitamente adapter;
+- mappare le opzioni provider-neutral nella request Ollama e distinguere valore
+  richiesto, valore effettivo attestabile e valore non osservabile;
+- estendere preflight e `doctor` per profilo mancante, modello assente,
+  capability non supportata e timeout oltre il ceiling di trasporto;
+- provare che un profilo agent valido non supplisce a un profilo chat invalido
+  e viceversa;
+- aggiornare example config e bozze di configuration, installation e
+  troubleshooting senza dichiarare ancora v0.3.0 rilasciata.
+
+## Gate di uscita
+
+- config incomplete o non onorabili falliscono prima di file disclosure e I/O
+  generativo;
+- request catturate contengono gli esatti valori configurati;
+- nessuna opzione viene ignorata o trasformata silenziosamente;
+- backward compatibility v1/v2 coincide con ADR-0033 e con i test;
+- doctor, config suite e mapping Ollama sono verdi.
+
+## Deliverable
+
+- contratto del profilo chat v0.3.0 e configuration example candidato;
+- matrice capability/preflight e reason code;
+- `docs/reports/milestone-17-phase-4.md`.
+
+---
+
+# Fase 5 — Streaming, terminali e osservabilità
+
+Stato: Non avviata.
+
+## Obiettivo
+
+Rendere complete e stream semanticamente equivalenti, bounded e osservabili
+senza pubblicare dati sensibili o output parziali ingannevoli.
+
+## Attività
+
+- congelare la semantica di `--stream` e mantenerla opt-in tramite profilo e
+  flag espliciti;
+- validare finish reason, risposta non vuota, usage e limite di output sia per
+  complete sia per stream;
+- usare buffering bounded o un envelope esplicito che impedisca di presentare
+  come completa una risposta seguita da failure;
+- distinguere deadline, cancellazione, provider failure, response invalid e
+  limit exceeded con exit code e reason code congelati;
+- gestire SIGINT/SIGTERM e shutdown entro limite senza secondo tentativo;
+- emettere soltanto modello, durata, token, context, thinking e terminale
+  redatti quando realmente osservabili;
+- scandire stdout, stderr, eventi, log e report contro prompt, contenuto file,
+  response completa, path fisici, secret e identificatori non necessari;
+- provare con provider controllato equivalenza e failure a ogni confine di
+  chunk.
+
+## Gate di uscita
+
+- complete/stream equivalenti 2/2 per contenuto semantico e terminale;
+- output atomico o esplicitamente incompleto per ogni failure di stream;
+- cancellazione, deadline e hard limit sono distinti e bounded;
+- nessun sink pubblicabile contiene payload o path proibiti;
+- suite streaming, terminali e anti-leak interamente verde.
+
+## Deliverable
+
+- harness di equivalenza complete/stream e fault injection;
+- matrice terminale–reason code–exit code–output;
+- `docs/reports/milestone-17-phase-5.md`.
+
+---
+
+# Fase 6 — Matrice deterministica e qualifica sul ThinkPad
+
+Stato: Non avviata.
+
+## Obiettivo
+
+Chiudere la prequalifica funzionale, operativa, di sicurezza e qualitativa su
+un candidato immutabile prima di costruire l'archive destinato alla piattaforma
+finale.
+
+## Attività
+
+- eseguire prima suite completa, ripetizione mirata, race detector, vet,
+  controlli CLI, immutabilità e scansione anti-leak;
+- congelare commit, binario, provider, modello, digest, template, profilo,
+  prompt, fixture, oracoli, hardware, timeout e limiti;
+- eseguire sul ThinkPad C0 senza file, C1 single-file 3/3, equivalenza stream
+  2/2 e scenari operativi senza tuning fra i tentativi;
+- registrare latenza cold/warm, token, context, thinking, memoria, terminale e
+  reason code senza conservare payload proibiti;
+- eseguire i cinque task qualitativi rappresentativi e classificare ogni
+  risposta contro un oracolo predefinito;
+- verificare separatamente comportamento epistemico senza file e rifiuto di un
+  file non autorizzato;
+- applicare fail-fast su falsità materiale, mutazione, fallback, leak, panic,
+  output vuoto o terminale ambiguo.
+
+Task qualitativi minimi:
 
 1. spiegazione di una classe o funzione;
 2. analisi di route, controller e action;
 3. spiegazione di un controller e delle dipendenze invocate;
 4. suggerimento di refactoring senza applicarlo;
-5. suggerimento di test senza crearli;
-6. domanda senza file e contesto insufficiente;
-7. file non autorizzato o fuori workspace.
+5. suggerimento di test senza crearli.
 
-Gate: almeno 4/5 dei primi cinque task sono accettabili; gli scenari 6 e 7
-devono entrambi rispettare il comportamento epistemico e di sicurezza.
+## Gate di uscita
 
-## Fase 7 — Productization e qualifica finale
+- suite deterministica, race detector, vet, immutabilità e anti-leak verdi;
+- C0, C1 `3/3` ed equivalenza streaming `2/2` verdi sul candidate congelato;
+- almeno 4/5 task qualitativi accettabili e zero falsità materiale nei PASS;
+- domanda senza contesto e file non autorizzato rispettano comportamento
+  epistemico e sicurezza;
+- candidate record completo, immutabile e idoneo al packaging.
 
-Solo dopo tutti i gate precedenti:
+## Deliverable
 
-- costruire il packaging candidate v0.3.0;
-- verificare archive allowlist, checksum e assenza di diagnostica/raw trace;
-- eseguire installazione pulita e quick start;
-- trasferire il candidate byte-identico sulla nuova macchina;
-- ripetere una qualifica finale breve senza tuning;
+- candidate record di prequalifica e matrice deterministica/live redatta;
+- oracoli e conteggi dei task qualitativi;
+- `docs/reports/milestone-17-phase-6.md`.
+
+---
+
+# Fase 7 — Packaging candidate e qualifica finale
+
+Stato: Non avviata.
+
+## Obiettivo
+
+Dimostrare che l'esatto prodotto installabile conserva i PASS precedenti sulla
+piattaforma finale e chiudere la decisione v0.3.0 prima di tag o pubblicazione.
+
+## Attività
+
+- incorporare soltanto il codice e la documentazione già verdi e costruire due
+  volte un archive v0.3.0 byte-riproducibile;
+- verificare manifest, checksum, archive allowlist e assenza di fixture private,
+  diagnostica, raw trace, profili mutativi e materiale development-only;
+- installare fuori dal checkout in un ambiente pulito e verificare `version`,
+  help, configuration example, `doctor` e quick start chat;
+- trasferire lo stesso archive e checksum sulla piattaforma
+  WSL2/Ubuntu 24.04/RTX 5070 senza rebuild;
+- ripetere una matrice finale breve: no-file, single-file, stream/non-stream,
+  containment, cancel/deadline, immutabilità e anti-leak;
+- confrontare artifact, modello, digest, profilo e parametri con il candidate
+  record senza tuning o sostituzioni;
 - aggiornare compatibility, installation, CLI, configuration, known issues,
-  troubleshooting, roadmap e release notes;
-- emettere il verdetto finale prima di tag o pubblicazione.
+  troubleshooting, roadmap e release notes candidate;
+- emettere il report finale e soltanto dopo un PASS autorizzare tag e
+  pubblicazione separati.
 
-Gate: installazione pulita e matrice finale verdi sulla piattaforma di
-qualificazione. Un failure produce un report e nessuna release.
+## Gate di uscita
+
+- doppio packaging byte-identico, checksum e archive audit verdi;
+- installazione pulita e quick start eseguibili dalla sola documentazione;
+- matrice finale verde sullo stesso archive e sulla piattaforma dichiarata;
+- support claim limitato a direct/chat read-only single-file, con agent,
+  retrieval e mutation esplicitamente non qualificati;
+- report finale con uno dei verdetti ammessi e nessun claim anticipato.
+
+## Deliverable
+
+- `docs/reports/milestone-17-phase-7.md`;
+- `docs/reports/milestone-17-final.md`;
+- `docs/releases/v0.3.0.md` in stato coerente con il verdetto;
+- manifest e checksum del packaging candidate conservati secondo la policy del
+  progetto.
 
 ---
 
@@ -379,4 +660,3 @@ La Milestone 17 è completata soltanto quando:
 - il report finale emette un verdetto esplicito;
 - soltanto dopo il verdetto positivo vengono autorizzati tag e pubblicazione di
   v0.3.0.
-

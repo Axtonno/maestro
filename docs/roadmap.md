@@ -1006,6 +1006,23 @@ Il precedente `milestone-17-mutation-qualification-plan.md` è conservato come
 piano storico non aperto. Un eventuale futuro percorso mutativo dovrà ricevere
 una nuova numerazione tramite una decisione separata.
 
+La milestone è divisa in sette fasi sequenziali:
+
+| Fase | Obiettivo | Gate principale |
+|---:|---|---|
+| 1 | freeze contratto e audit M14/M15 | backlog chiuso e baseline registrata |
+| 2 | confine Direct Chat | una completion, zero tool/runtime agentici |
+| 3 | contesto single-file | sola disclosure esplicita e contained |
+| 4 | profilo e preflight | config strict e capability onorabili |
+| 5 | streaming e osservabilità | equivalenza 2/2, terminali e anti-leak |
+| 6 | prequalifica sul ThinkPad | C0/C1, qualità 4/5 e regressione verdi |
+| 7 | packaging e qualifica finale | archive immutabile verde sulla piattaforma finale |
+
+Ogni fase produce un report autonomo. Il candidate viene congelato prima delle
+prove live della Fase 6 e l'archive della Fase 7 viene trasferito byte-identico
+senza rebuild. Il tag resta vietato fino al verdetto finale
+`direct_chat_product_baseline`.
+
 ---
 
 # Milestone 18 — Productization v0.4.0

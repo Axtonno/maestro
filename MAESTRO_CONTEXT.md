@@ -2450,22 +2450,27 @@ Doctor è 10/10 e suite normale/development, race e vet sono verdi. Il verified
 agent `qwen3.5:9b`, context 8192 e thinking default copre la route bootstrap ma
 la prima progressione termina `tool_failure` dopo un turno e due call; fixture
 invariata, nessun OOM o fallback CPU. La stop rule rende B01 `not_run` e
-impedisce productization, tag e release v0.3.0. Milestone 16 resta chiusa.
+impedisce la productization con verified agent prevista dalla Milestone 15.
+Milestone 16 resta chiusa; la successiva decisione di roadmap isola il solo
+percorso direct/chat nella nuova Milestone 17.
 
-La Milestone 16 — Controlled Mutation Recovery conserva il piano approvato ma
-rinviato. È strettamente forense e development-only: analizza
-`patch_tool_call_invalid`, progetta edit proposal e compilatore deterministico,
-valida path, digest e occorrenza e copre la matrice negativa. Non esegue gate
-live, non seleziona modelli e non produce support claim.
+La decisione di roadmap del 2026-08-28 ha chiuso la Milestone 16 — Controlled
+Mutation Recovery perché il prerequisito verified agent non è stato
+qualificato. Il relativo piano resta una traccia storica development-only e
+non viene eseguito. Controlled Mutation, tool mutativi e v0.4.0 restano non
+autorizzati.
 
-La Milestone 17 — Controlled Mutation Qualification è condizionata agli
-handoff M15 e M16. Soltanto una tupla già qualificata in read-only esegue Gate
-A `3/3`, B `2/2`, C `3/3` e matrice negativa. Un esito
-`mutation_qualified` abilita la sola Milestone 18; ogni altro esito mantiene la
-mutazione non supportata.
+La Milestone 17 è stata riassegnata al Direct/Chat Product Baseline. Consolida
+esclusivamente `maestro chat` read-only, tool-free, senza retrieval o fallback,
+con zero o un file esplicito contained. La milestone è pianificata in sette
+fasi sequenziali: freeze e audit; confine Direct Chat; contesto single-file;
+profilo e preflight; streaming e osservabilità; matrice deterministica e
+prequalifica sul ThinkPad; packaging candidate e qualifica finale sulla
+piattaforma WSL2/Ubuntu 24.04/RTX 5070. Ogni fase produce un report e nessun
+tag è ammesso prima del verdetto `direct_chat_product_baseline`.
 
-La Milestone 18 — Productization v0.4.0 è condizionata a
-`mutation_qualified`. Conserva read-only e direct/chat come default e pubblica
-Controlled Mutation soltanto tramite profilo separato opt-in e candidate
-record esatto. Packaging candidate, RC e artifact finale ripetono gate,
-installazione e anti-leak prima di tag e GitHub Release v0.4.0.
+Il piano autorevole è `docs/milestone-17-direct-chat-development-plan.md`. Il
+precedente `docs/milestone-17-mutation-qualification-plan.md` è superato e non
+eseguibile. La Milestone 18 — Productization v0.4.0 resta storica e non aperta;
+un futuro programma mutativo richiede una nuova decisione e una nuova
+numerazione.
