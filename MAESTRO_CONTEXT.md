@@ -2442,6 +2442,16 @@ multi-file non è verde, nessuna milestone mutativa si apre. Un PASS completo
 productizza v0.3.0 read-only con modalità chat/agent e profili separati;
 Controlled Mutation resta non supportata.
 
+L'esecuzione della Milestone 15 è conclusa con esito
+`verified_agent_rejected`. La piattaforma WSL2/Ubuntu 24.04/RTX 5070, Ollama
+0.33.1 e l'offload GPU sono verdi. Direct/chat con `qwen2.5-coder:7b` supera
+C0 3/3, C1 3/3 e due coppie streaming/non-streaming, con fixture invariata.
+Doctor è 10/10 e suite normale/development, race e vet sono verdi. Il verified
+agent `qwen3.5:9b`, context 8192 e thinking default copre la route bootstrap ma
+la prima progressione termina `tool_failure` dopo un turno e due call; fixture
+invariata, nessun OOM o fallback CPU. La stop rule rende B01 `not_run` e
+impedisce productization, tag e release v0.3.0. Milestone 16 resta chiusa.
+
 La Milestone 16 — Controlled Mutation Recovery conserva il piano approvato ma
 rinviato. È strettamente forense e development-only: analizza
 `patch_tool_call_invalid`, progetta edit proposal e compilatore deterministico,
