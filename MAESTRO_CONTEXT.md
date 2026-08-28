@@ -2474,3 +2474,12 @@ precedente `docs/milestone-17-mutation-qualification-plan.md` è superato e non
 eseguibile. La Milestone 18 — Productization v0.4.0 resta storica e non aperta;
 un futuro programma mutativo richiede una nuova decisione e una nuova
 numerazione.
+
+Checkpoint Milestone 17: la Fase 1 — Freeze del contratto e audit del candidato
+è completata sulla baseline `2759c332c8edcc66f12aa12fd219e32dff3e1dba`.
+Suite completa, race detector, vet e test mirati ripetuti tre volte sono verdi;
+il binario development-only costruito con `-trimpath` ha SHA-256
+`d6aa37122a50525c28f3f61549213377507611ae598ee8d7e17a95e2e85eab3b`.
+L'audit ha congelato contratto, evidenza M15, fixture e backlog: la Fase 2 deve
+ora provare e irrigidire il confine tool-free del servizio Direct Chat. Nessun
+artifact v0.3.0, tag o support claim è stato prodotto.
