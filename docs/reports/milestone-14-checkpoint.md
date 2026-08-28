@@ -4,13 +4,13 @@ Ultimo aggiornamento: 2026-08-28
 
 ## Stato corrente
 
-- milestone: in corso;
-- fase attiva: transizione Fase 5 -> Fase 6;
-- ultimo commit di fase: `72de866` — Fase 4 completata; il commit Fase 5 è il
-  prossimo passo;
-- ultimo commit verde della baseline:
-  `72de866`;
-- worktree atteso: Fase 5 documentata, in attesa di validazione e commit.
+- milestone: completata con esito `direct_chat_deferred`;
+- fase attiva: nessuna; Fase 6 completata;
+- ultimo commit di fase: `8a35add` — Fase 5 completata;
+- ultimo commit di base della suite finale: `8a35add`; il worktree Fase 6 ha
+  superato suite completa, race, vet, diff check e scan anti-leak;
+- worktree atteso: Fase 6 documentata, in attesa della suite finale e del
+  commit conclusivo.
 
 ## Evidenze verdi
 
@@ -31,6 +31,7 @@ Le suite Go richiedono `GOCACHE` sotto `/tmp` nell'ambiente Codex corrente.
 
 ## Prossimo passo riproducibile
 
-Validare il profilo candidato e creare il commit della Fase 5. Quindi eseguire
-l'audit Fase 6 e chiudere la milestone con esito `direct_chat_deferred` e
-handoff ripetibile, senza trasformare C0-C4 `not_run` in PASS.
+Eseguire suite finale, race, vet, diff check e scan anti-leak, quindi creare il
+commit conclusivo della Fase 6. Per riprendere la qualifica live, aprire
+Milestone 15 e creare un nuovo candidate ID soltanto dopo provider/GPU e
+digest/template osservati; C0-C4 M14 restano definitivamente `not_run`.

@@ -32,10 +32,11 @@
   supportato o produce `v0.2.1`.
 - Il confronto direct/chat della Milestone 13 mostra una risposta single-file
   corretta quando il file è allegato direttamente, ma latenze superiori a sei
-  minuti e un timeout nel percorso Maestro pre-caricato. Il prodotto non offre
-  ancora una modalità `direct/chat` separata dal reference agent; la Milestone
-  14 la tratta come nuova superficie distinta. Il risultato diagnostico non
-  costituisce supporto v0.2.0.
+  minuti e un timeout nel percorso Maestro pre-caricato. La Milestone 14 ha
+  implementato `maestro chat` come superficie development-only separata e ha
+  superato la matrice deterministica; il preflight live ha però trovato Ollama
+  non attivo, quindi C0-C4 sono `not_run` e l'esito è
+  `direct_chat_deferred`. Non costituisce supporto v0.2.0.
 
 ## Supporto ristretto
 

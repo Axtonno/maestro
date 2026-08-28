@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: In corso — Fase 5 chiusa per stop rule
+Stato: Completata — `direct_chat_deferred`
 
 Data: 2026-08-27
 
@@ -182,7 +182,7 @@ C0; non viene aperta una ricerca seriale indefinita.
 | 3 | Implementazione `maestro chat` single-file | Completata | Fase 2 |
 | 4 | Matrice deterministica, negativa e anti-leak | Completata | Fase 3 |
 | 5 | Qualificazione live sul computer attuale | Completata con stop rule | Fase 4 |
-| 6 | Audit e handoff read-only | Pronta | Fase 5 |
+| 6 | Audit e handoff read-only | Completata | Fase 5 |
 
 Le fasi sono sequenziali rispetto ai gate. Codice preparatorio per una fase
 successiva può essere sviluppato nello stesso branch, ma non viene promosso né
@@ -468,6 +468,8 @@ Gate: **chiuso**; C0-C4 `not_run`, esito candidato `direct_chat_deferred`.
 
 # Fase 6 — Audit e handoff read-only
 
+Stato: Completata.
+
 ## Obiettivo
 
 Chiudere la milestone con un verdetto unico, documentazione coerente e input
@@ -499,6 +501,8 @@ riproducibili per la qualificazione sul nuovo hardware della Milestone 15.
 - `docs/reports/milestone-14-phase-6.md`;
 - `docs/reports/milestone-14-final.md`;
 - candidate record o rinvio motivato per la Milestone 15.
+
+Gate: **superato**; milestone chiusa con esito `direct_chat_deferred`.
 
 ---
 

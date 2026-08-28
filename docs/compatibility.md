@@ -53,11 +53,13 @@ Una modalità `direct/chat` senza tool è un requisito di prodotto emerso dal
 confronto conclusivo e pianificato per la Milestone 14; non appartiene alla
 superficie supportata di v0.2.0 e non opera come fallback del reference agent.
 
-La Milestone 14 è in sviluppo secondo ADR-0033. Il candidato introduce
-`maestro chat`, `maestro agent`, l'alias deprecato `maestro run` e lo schema v2
-con profili separati. Fino alla chiusura dei gate C0–C4 e alla qualificazione
-della Milestone 15, codice e configurazioni candidate restano development-only
-e non costituiscono una nuova compatibility promise.
+La Milestone 14 è completata secondo ADR-0033 con esito
+`direct_chat_deferred`. Ha introdotto come candidati `maestro chat`,
+`maestro agent`, l'alias deprecato `maestro run` e lo schema v2 con profili
+separati. La matrice deterministica è verde, ma C0-C4 live sono `not_run`
+perché il provider non era attivo al preflight. Fino alla qualificazione della
+Milestone 15, codice e configurazioni candidate restano development-only e non
+costituiscono una nuova compatibility promise.
 
 Dalla v0.1.1 i workspace Laravel reali sono indicizzati tramite la scan policy
 sorgente del plugin. Asset generati, storage runtime e dipendenze non entrano

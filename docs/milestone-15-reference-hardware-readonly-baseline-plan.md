@@ -97,9 +97,11 @@ Deliverable: `docs/reports/milestone-15-phase-1.md`.
 
 # Fase 2 — Prestazioni `direct/chat`
 
-La fase ripete il candidate record della Milestone 14 sulla nuova piattaforma.
-Se M14 non ha prodotto `direct_chat_candidate`, M15 può iniziare soltanto dopo
-un nuovo candidate record approvato; non inventa un profilo durante le run.
+La Milestone 14 ha prodotto `direct_chat_deferred`: il suo record congela
+profilo, fixture e oracoli, ma non digest/template né PASS C0-C4. Sulla nuova
+piattaforma la fase usa quel record come seed e crea un nuovo candidate ID
+soltanto dopo aver osservato provider, GPU, modello, digest, template e
+capability. Non inventa o ritocca un profilo durante le run.
 
 ## Gate
 

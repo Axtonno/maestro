@@ -2409,7 +2409,8 @@ stabilmente sul profilo corrente e manca una modalità `direct/chat` distinta.
 `v0.2.0` resta storicamente valido nel perimetro della Milestone 12, Controlled
 Mutation resta non supportata e non viene prodotto `v0.2.1`.
 
-La Milestone 14 — Interaction Modes & Direct Chat è in corso. La Fase 1 ha
+La Milestone 14 — Interaction Modes & Direct Chat è completata con esito
+`direct_chat_deferred`. La Fase 1 ha
 approvato ADR-0033 e congelato interaction modes, contratto CLI e schema v2;
 la Fase 2 ha consegnato schema strict v2, profili separati, context window e
 thinking tri-state provider-neutral, mapping Ollama, preflight capability e
@@ -2420,8 +2421,10 @@ immutabilità e scansione anti-leak. La Fase 5 ha congelato candidato, binario,
 profilo, hardware, fixture e oracoli, ma il preflight si è arrestato prima di
 C0 perché Ollama non era attivo e l'API loopback rifiutava la connessione.
 C0-C4 sono `not_run` e l'esito candidato è `direct_chat_deferred`; provider e
-catalogo non sono stati avviati o mutati. La Fase 6 deve auditare e consegnare
-l'handoff ripetibile alla Milestone 15.
+catalogo non sono stati avviati o mutati. La Fase 6 ha auditato dipendenze,
+autorità, documentazione, compatibility e support claim e ha consegnato
+l'handoff ripetibile alla Milestone 15. La superficie resta development-only;
+non è stata prodotta alcuna release.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con

@@ -920,7 +920,7 @@ minimi sono in `field-validation-task-matrix.md`; il verdetto conclusivo è in
 
 # Milestone 14 — Interaction Modes & Direct Chat
 
-Stato: In corso — Fase 6, audit finale pronto
+Stato: Completata — `direct_chat_deferred`
 
 Obiettivo:
 
@@ -935,12 +935,11 @@ comportamento epistemico verificato quando il file manca. Il primo candidato è
 `qwen2.5-coder:7b`, già usato localmente con Continue ma non ancora qualificato
 da Maestro.
 
-La milestone implementa e misura il percorso single-file sul computer attuale.
-Non produce una release e non riapre Controlled Mutation. È suddivisa in sei
-fasi sequenziali: ADR e CLI, profili generativi osservabili, chat single-file,
-matrice deterministica e anti-leak, qualificazione live, audit e handoff. La
-Fase 1 ha approvato ADR-0033; il piano operativo è in
-`milestone-14-interaction-modes-direct-chat-plan.md`.
+La milestone ha implementato il percorso single-file e superato la matrice
+deterministica e anti-leak. Il preflight live ha trovato Ollama non attivo:
+C0-C4 sono `not_run` e il verdetto è `direct_chat_deferred`. Non produce una
+release e non riapre Controlled Mutation. Le sei fasi, ADR-0033, candidate
+record e handoff sono chiusi nel report `reports/milestone-14-final.md`.
 
 ---
 
