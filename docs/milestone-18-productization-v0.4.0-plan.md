@@ -1,10 +1,10 @@
 # Milestone 18 — Productization v0.4.0 Plan
 
-Versione: 0.1.0
+Versione: 0.2.0
 
 Stato: Condizionata — non apribile senza `mutation_qualified` dalla Milestone 17
 
-Data: 2026-08-21; rinumerazione 2026-08-27
+Data: 2026-08-21; rinumerazione 2026-08-27; aggiornamento 2026-08-28
 
 Documenti di riferimento:
 
@@ -39,6 +39,18 @@ La milestone può iniziare soltanto se il report finale della Milestone 17:
 Qualsiasi altro esito — `model_rejected`, `platform_rejected`,
 `hardware_insufficient` o `mutation_deferred` — mantiene questa milestone
 chiusa. L'esistenza del piano non costituisce un impegno a rilasciare v0.4.0.
+
+## Preparazione mentre le milestone precedenti sono in esecuzione
+
+Prima di `mutation_qualified` sono ammessi soltanto revisione documentale,
+inventario read-only delle superfici di release e preparazione di checklist.
+Non si cambia versione del prodotto, non si crea un packaging candidate, non
+si modifica la configurazione pubblica e non si anticipano claim di supporto.
+
+La pianificazione svolta durante M15/M16/M17 resta quindi priva di effetti sul
+prodotto. La Fase 1 riapre e riconcilia tutte le assunzioni con il candidate
+record effettivamente qualificato; qualsiasi differenza viene risolta tornando
+alla Milestone 17, non adattando implicitamente la release.
 
 ---
 

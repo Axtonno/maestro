@@ -1,11 +1,11 @@
 # Milestone 16 — Controlled Mutation Recovery Plan
 
-Versione: 0.2.0
+Versione: 0.3.0
 
 Stato: Rinviata — successiva alla baseline read-only v0.3.0 della Milestone 15;
 solo analisi, progettazione e prototipi development-only
 
-Data: 2026-08-21; aggiornamento 2026-08-27
+Data: 2026-08-21; aggiornamento 2026-08-28
 
 Documenti di riferimento:
 
@@ -42,6 +42,26 @@ ADR-0032 resta autorevole fino al verdetto finale: `workspace.patch`, il
 reference agent mutante, il modello Granite e la configurazione mutativa sono
 sperimentali e non supportati. L'artifact storico v0.2.0 e il baseline v0.3.0
 restano read-only.
+
+## Preparazione mentre la Milestone 15 è in esecuzione
+
+Durante l'esecuzione della Milestone 15 su un'altra macchina questo documento
+può essere revisionato, ma nessuna fase della Milestone 16 viene considerata
+aperta. Sono ammessi soltanto lavoro documentale, inventario read-only del
+codice esistente e preparazione di backlog non eseguibili. In particolare non
+si modificano runtime, schema, prompt, fixture, profili o artifact coinvolti
+nella qualificazione M15 e non si avviano provider o prove mutative.
+
+L'esecuzione della Fase 1 richiede un handoff M15 congelato che contenga almeno:
+
+- verdetto `readonly_baseline_qualified` e release v0.3.0 verde;
+- commit, tag, archive e checksum della baseline read-only;
+- candidate record di piattaforma, hardware, provider e modello;
+- report finali direct/chat, verified agent, B01, sicurezza e anti-leak;
+- elenco esplicito di limitazioni, failure residui e dati non trasferibili.
+
+Se l'handoff manca o contiene un esito diverso, M16 resta `Rinviata` e la sola
+attività consentita rimane la manutenzione del piano.
 
 ---
 
@@ -263,7 +283,7 @@ derivare dalla stessa patch concreta.
 
 | Fase | Titolo | Stato corrente | Dipende da |
 |---|---|---|---|
-| 1 | Contratto di recovery e analisi forense | Non avviata | Milestone 13, ADR-0032 |
+| 1 | Contratto di recovery e analisi forense | Bloccata | Handoff M15, Milestone 13, ADR-0032 |
 | 2 | Progettazione del protocollo model-facing | Non avviata | Fase 1 |
 | 3 | Compilatore deterministico e hardening | Non avviata | Fase 2 |
 | 4 | Audit del recovery e handoff hardware | Non avviata | Fasi 1–3 |
