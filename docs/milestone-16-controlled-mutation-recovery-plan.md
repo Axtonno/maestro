@@ -2,10 +2,15 @@
 
 Versione: 0.3.0
 
-Stato: Rinviata — successiva alla baseline read-only v0.3.0 della Milestone 15;
-solo analisi, progettazione e prototipi development-only
+Stato: Chiusa — non autorizzata dal verdetto `verified_agent_rejected` della
+Milestone 15; il piano seguente è conservato come riferimento storico e non è
+eseguibile senza una nuova decisione di roadmap
 
 Data: 2026-08-21; aggiornamento 2026-08-28
+
+Nota storica: i riferimenti alla Milestone 17 contenuti nel piano seguente
+indicano il precedente piano mutativo, mai aperto e ora superato. Non indicano
+la Milestone 17 Direct/Chat Product Baseline corrente.
 
 Documenti di riferimento:
 
@@ -60,8 +65,9 @@ L'esecuzione della Fase 1 richiede un handoff M15 congelato che contenga almeno:
 - report finali direct/chat, verified agent, B01, sicurezza e anti-leak;
 - elenco esplicito di limitazioni, failure residui e dati non trasferibili.
 
-Se l'handoff manca o contiene un esito diverso, M16 resta `Rinviata` e la sola
-attività consentita rimane la manutenzione del piano.
+Poiché l'handoff contiene `verified_agent_rejected`, M16 è `Chiusa` e la sola
+attività consentita rimane la conservazione del piano storico. Qualsiasi
+riapertura richiede una nuova decisione di roadmap.
 
 ---
 

@@ -945,8 +945,8 @@ record e handoff sono chiusi nel report `reports/milestone-14-final.md`.
 
 # Milestone 15 — Reference Hardware & Read-only Baseline
 
-Stato: Pianificata — subordinata all'handoff della Milestone 14 e alla nuova
-piattaforma disponibile
+Stato: Completata — `verified_agent_rejected`; piattaforma e direct/chat
+qualificati, B01 `NOT_RUN`
 
 Obiettivo:
 
@@ -959,85 +959,90 @@ verified agent sintetico, B01 Laravel multi-file 2/2, matrice operativa e di
 sicurezza. Se il baseline non supera la qualifica multi-file, Controlled
 Mutation non viene aperta.
 
-Un PASS completo produce v0.3.0 read-only con modalità chat/agent e profili
-separati. Controlled Mutation resta non supportata. Il piano operativo è in
-`milestone-15-reference-hardware-readonly-baseline-plan.md`.
+La piattaforma, l'offload GPU e `direct/chat` con `qwen2.5-coder:7b` sono
+verdi. Il verified agent `qwen3.5:9b` termina con `tool_failure` alla prima
+progressione live; la stop rule impedisce B01 e non autorizza la release. Il
+piano operativo è in `milestone-15-reference-hardware-readonly-baseline-plan.md`
+e il verdetto in `reports/milestone-15-final.md`.
 
 ---
 
 # Milestone 16 — Controlled Mutation Recovery
 
-Stato: Rinviata — successiva al baseline read-only v0.3.0
+Stato: Chiusa — non autorizzata da Milestone 15
 
 Obiettivo:
 
-Preservare il piano approvato di recovery mutativa come lavoro strettamente
-deterministico e development-only: analisi forense di
-`patch_tool_call_invalid`, edit proposal, validazione path/digest/occorrenza,
-patch e fingerprint deterministici e matrice negativa.
-
-Non esegue qualificazione live, non seleziona modelli e non produce support
-claim. Il piano operativo preservato è in
+Il piano di recovery mutativa è conservato senza rinomina retroattiva, ma non
+viene aperto: richiedeva una baseline verified agent e B01 qualificata che la
+Milestone 15 non ha prodotto. Controlled Mutation resta rinviata e non
+supportata. Il piano storico è in
 `milestone-16-controlled-mutation-recovery-plan.md`.
 
 ---
 
-# Milestone 17 — Controlled Mutation Qualification
+# Milestone 17 — Direct/Chat Product Baseline
 
-Stato: Condizionata — richiede v0.3.0 read-only qualificata e handoff M16
+Stato: Pianificata — nuova priorità di prodotto read-only
 
 Obiettivo:
 
-Eseguire Gate A `3/3`, Gate B `2/2`, Gate C `3/3` e la matrice negativa sulla
-tupla esatta già qualificata in read-only. Il primo failure è fail-fast; un
-baseline read-only multi-file non verde impedisce perfino l'apertura del Gate
-A.
+Consolidare e productizzare il comando single-file già implementato e
+qualificato:
 
-La milestone non produce una release. `mutation_qualified` abilita soltanto la
-Milestone 18. Il piano è in `milestone-17-mutation-qualification-plan.md`.
+```text
+file esplicito -> controllo workspace -> completion diretta -> risposta
+```
+
+Il percorso non usa tool, retrieval, state machine, fallback agentico o
+capacità mutative. I gate coprono comportamento senza file, correttezza 3/3,
+equivalenza streaming, containment, stabilità, anti-leak e qualità reale
+almeno 4/5. Dopo i gate produce packaging candidate, installazione pulita e
+qualifica finale sulla nuova piattaforma. Un PASS rende v0.3.0 candidata come
+release read-only. Il piano è in
+`milestone-17-direct-chat-development-plan.md`.
+
+Il precedente `milestone-17-mutation-qualification-plan.md` è conservato come
+piano storico non aperto. Un eventuale futuro percorso mutativo dovrà ricevere
+una nuova numerazione tramite una decisione separata.
 
 ---
 
 # Milestone 18 — Productization v0.4.0
 
-Stato: Condizionata — si apre soltanto con `mutation_qualified` dalla
-Milestone 17
+Stato: Non aperta — dipendenza mutativa non soddisfatta; numerazione futura da
+ridefinire prima di qualsiasi riapertura
 
 Obiettivo:
 
-Trasformare l'esatta combinazione mutativa qualificata in v0.4.0, mantenendo
-read-only e direct/chat come default e Controlled Mutation separata,
-esplicitamente opt-in e limitata al candidate record provato.
-
-Packaging candidate, RC e artifact finale ripetono installazione, Gate A/B/C,
-sicurezza e anti-leak. Il piano è in
-`milestone-18-productization-v0.4.0-plan.md`.
+Il piano mutativo v0.4.0 non è autorizzato. Il documento
+`milestone-18-productization-v0.4.0-plan.md` resta storico; una futura
+riapertura richiede prima un nuovo programma di qualificazione del verified
+agent e di Controlled Mutation.
 
 ## Associazione release
 
 | Versione | Obiettivo |
 |---|---|
 | v0.2.0 | artifact storico read-only; Field Validation con adoption NO-GO |
-| v0.3.0 | direct/chat, profili separati e nuovo baseline read-only |
-| v0.4.0 | Controlled Mutation, soltanto dopo qualificazione completa |
+| v0.3.0 | candidata read-only: direct/chat single-file e profilo dedicato, subordinata a Milestone 17 |
+| v0.4.0 | non pianificata attivamente; nessun support mutativo senza nuova qualifica |
 
 ## Sequenza post-v0.2.0
 
 ```text
 Milestone 13 — chiusa con limitazioni / adoption NO-GO
     -> Milestone 14 — Interaction Modes & Direct Chat
-        -> qualifica sul computer attuale
-            -> Milestone 15 — nuovo hardware, verified baseline e v0.3.0
-                -> Milestone 16 — Controlled Mutation Recovery
-                    -> Milestone 17 — Mutation Qualification
-                        ├── mutation_qualified -> Milestone 18 — v0.4.0
-                        └── altro esito        -> mutazione non supportata
+        -> Milestone 15 — hardware e direct/chat PASS; verified agent FAIL
+            ├── Milestone 16 — CLOSED; mutazione non autorizzata
+            └── Milestone 17 — Direct/Chat Product Baseline
+                ├── PASS -> v0.3.0 candidata read-only
+                └── FAIL -> nessuna release
 ```
 
-La sequenza privilegia utilità quotidiana e affidabilità read-only prima di
-ampliare l'autorità. Il nuovo hardware viene valutato prima sui compiti meno
-complessi; la mutazione resta una conseguenza eventuale di un baseline
-multi-file già dimostrato.
+La sequenza privilegia l'utilità quotidiana già dimostrata senza ampliare
+l'autorità. Verified agent e Controlled Mutation restano sperimentali e non
+sono fallback del percorso chat.
 
 ---
 
@@ -1078,6 +1083,7 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - milestone-14-interaction-modes-direct-chat-plan.md
 - milestone-15-reference-hardware-readonly-baseline-plan.md
 - milestone-16-controlled-mutation-recovery-plan.md
+- milestone-17-direct-chat-development-plan.md
 - milestone-17-mutation-qualification-plan.md
 - milestone-18-productization-v0.4.0-plan.md
 - reports/v0.1.0-post-release-observation.md

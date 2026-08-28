@@ -2,9 +2,15 @@
 
 Versione: 0.2.0
 
-Stato: Condizionata — non apribile senza `mutation_qualified` dalla Milestone 17
+Stato: Non aperta — piano mutativo storico; la dipendenza
+`mutation_qualified` non è stata soddisfatta e la numerazione futura deve
+essere ridefinita prima di qualsiasi riapertura
 
 Data: 2026-08-21; rinumerazione 2026-08-27; aggiornamento 2026-08-28
+
+Nota storica: i riferimenti alla Milestone 17 contenuti nel piano seguente
+indicano il precedente piano di Controlled Mutation Qualification, mai aperto
+e ora superato. Non indicano la Milestone 17 Direct/Chat Product Baseline.
 
 Documenti di riferimento:
 

@@ -2,8 +2,9 @@
 
 Versione: 0.2.0
 
-Stato: Rinviata — non apribile senza `readonly_baseline_qualified` dalla
-Milestone 15, v0.3.0 verde e handoff di protocollo dalla Milestone 16
+Stato: Superata — piano mutativo storico non aperto; il numero Milestone 17 è
+riassegnato al Direct/Chat Product Baseline dalla decisione di roadmap del
+2026-08-28
 
 Data: 2026-08-27; aggiornamento 2026-08-28
 
