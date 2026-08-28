@@ -2,8 +2,8 @@
 
 Versione: 0.1.0
 
-Stato: Pianificata — subordinata all'handoff della Milestone 14 e alla nuova
-piattaforma disponibile
+Stato: Completata — `verified_agent_rejected`; direct/chat qualificato, B01
+non eseguito per stop rule e nessuna release v0.3.0
 
 Data: 2026-08-27
 
