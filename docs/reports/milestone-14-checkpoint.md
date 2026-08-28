@@ -5,12 +5,12 @@ Ultimo aggiornamento: 2026-08-28
 ## Stato corrente
 
 - milestone: in corso;
-- fase attiva: transizione Fase 4 -> Fase 5;
-- ultimo commit di fase: `818209d` — Fase 3 completata; il commit Fase 4 è il
+- fase attiva: transizione Fase 5 -> Fase 6;
+- ultimo commit di fase: `72de866` — Fase 4 completata; il commit Fase 5 è il
   prossimo passo;
 - ultimo commit verde della baseline:
-  `818209d`;
-- worktree atteso: Fase 4 completa, in attesa della suite finale e del commit.
+  `72de866`;
+- worktree atteso: Fase 5 documentata, in attesa di validazione e commit.
 
 ## Evidenze verdi
 
@@ -31,6 +31,6 @@ Le suite Go richiedono `GOCACHE` sotto `/tmp` nell'ambiente Codex corrente.
 
 ## Prossimo passo riproducibile
 
-Rieseguire suite, race, vet e diff check e creare il commit della Fase 4.
-Quindi congelare il candidate record e avviare il solo preflight read-only
-della Fase 5, senza avviare Ollama o scaricare modelli.
+Validare il profilo candidato e creare il commit della Fase 5. Quindi eseguire
+l'audit Fase 6 e chiudere la milestone con esito `direct_chat_deferred` e
+handoff ripetibile, senza trasformare C0-C4 `not_run` in PASS.

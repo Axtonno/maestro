@@ -76,6 +76,21 @@ func TestInteractionExampleLoadsStrictProfiles(t *testing.T) {
 	}
 }
 
+func TestMilestone14CandidateProfileIsFrozenAndValid(t *testing.T) {
+	config, err := Load("../../configs/maestro.milestone-14-candidate.yaml")
+	if err != nil {
+		t.Fatalf("candidate profile is invalid: %v", err)
+	}
+	chat, ok := config.ChatProfile()
+	if !ok || chat.Model != "qwen2.5-coder:7b" || !chat.Streaming ||
+		chat.NumCtx != 4096 || chat.Thinking != ThinkingDisabled ||
+		chat.Timeout.Duration != 5*time.Minute || chat.MaxFileBytes != 1<<20 ||
+		chat.MaxOutputBytes != 1<<20 ||
+		filepath.Base(config.Workspace.Root) != "laravel-v1" {
+		t.Fatalf("candidate profile drifted: %#v %#v", chat, config.Workspace)
+	}
+}
+
 func TestV2RejectsLegacyAndInvalidProfileFields(t *testing.T) {
 	encoded, err := os.ReadFile("../../configs/maestro.interaction.example.yaml")
 	if err != nil {

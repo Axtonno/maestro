@@ -2416,8 +2416,12 @@ thinking tri-state provider-neutral, mapping Ollama, preflight capability e
 propagazione nel verified agent. La Fase 3 ha consegnato `maestro chat`, il
 servizio completion separato e il loader single-file confinato, bounded e
 fail-closed. La Fase 4 ha chiuso la matrice negativa, equivalenza streaming,
-immutabilità e scansione anti-leak. La Fase 5 può eseguire C0-C4 sul candidato
-congelato e deve arrestarsi al primo gate fallito.
+immutabilità e scansione anti-leak. La Fase 5 ha congelato candidato, binario,
+profilo, hardware, fixture e oracoli, ma il preflight si è arrestato prima di
+C0 perché Ollama non era attivo e l'API loopback rifiutava la connessione.
+C0-C4 sono `not_run` e l'esito candidato è `direct_chat_deferred`; provider e
+catalogo non sono stati avviati o mutati. La Fase 6 deve auditare e consegnare
+l'handoff ripetibile alla Milestone 15.
 Separa `maestro chat`, con contesto single-file esplicito e nessun tool,
 retrieval, state machine o fallback, da `maestro agent`, che conserva
 esplorazione verificata e choreography. Introduce profili distinti con

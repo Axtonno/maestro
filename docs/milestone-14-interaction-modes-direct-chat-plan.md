@@ -2,7 +2,7 @@
 
 Versione: 0.2.0
 
-Stato: In corso — Fase 5 pronta
+Stato: In corso — Fase 5 chiusa per stop rule
 
 Data: 2026-08-27
 
@@ -181,8 +181,8 @@ C0; non viene aperta una ricerca seriale indefinita.
 | 2 | Profili `num_ctx`/`thinking` osservabili | Completata | Fase 1 |
 | 3 | Implementazione `maestro chat` single-file | Completata | Fase 2 |
 | 4 | Matrice deterministica, negativa e anti-leak | Completata | Fase 3 |
-| 5 | Qualificazione live sul computer attuale | Pronta | Fase 4 |
-| 6 | Audit e handoff read-only | Non avviata | Fase 5 |
+| 5 | Qualificazione live sul computer attuale | Completata con stop rule | Fase 4 |
+| 6 | Audit e handoff read-only | Pronta | Fase 5 |
 
 Le fasi sono sequenziali rispetto ai gate. Codice preparatorio per una fase
 successiva può essere sviluppato nello stesso branch, ma non viene promosso né
@@ -423,6 +423,8 @@ Gate: **superato**.
 
 # Fase 5 — Qualificazione live sul computer attuale
 
+Stato: Completata con stop rule al preflight.
+
 ## Obiettivo
 
 Stabilire se l'esatto candidato `qwen2.5-coder:7b` e il profilo direct/chat
@@ -459,6 +461,8 @@ superficie e qualità del modello.
 - candidate record redatto;
 - report delle prove C0–C4;
 - `docs/reports/milestone-14-phase-5.md`.
+
+Gate: **chiuso**; C0-C4 `not_run`, esito candidato `direct_chat_deferred`.
 
 ---
 
