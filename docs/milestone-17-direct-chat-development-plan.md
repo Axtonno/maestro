@@ -2,8 +2,8 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — candidate F6.1, F6.2 e F6.3 respinti con
-`direct_chat_candidate_failed`; F6.4 congelato, live pending; Fase 7 `NOT_RUN`.
+Stato: In corso — candidate F6.1, F6.2 e F6.3 respinti; F6.4 qualificato con
+PASS di Fase 6; Fase 7 autorizzata e `NOT_RUN`.
 Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
@@ -224,8 +224,8 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1/F6.2/F6.3 respinti; F6.4 live pending | Fase 5 |
-| 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | PASS — F6.4 qualificato | Fase 5 |
+| 7 | Packaging candidate e qualifica finale | `NOT_RUN` — autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
 fixture della successiva, ma questi non costituiscono evidenza e non vengono
@@ -494,7 +494,7 @@ Gate: **superato** sulla baseline di Fase 4 `9505e16`.
 
 # Fase 6 — Matrice deterministica e qualifica sul ThinkPad
 
-Stato: Conclusa con stop rule — `direct_chat_candidate_failed`.
+Stato: **Completata — PASS sul candidate F6.4**.
 
 ## Obiettivo
 
@@ -615,19 +615,19 @@ precedenti. Se fallisce, il passo successivo richiede una decisione separata su
 output strutturato con evidenza validabile. Nessun quinto prompt tuning è
 autorizzato implicitamente.
 
-Candidate F6.4 congelato: commit
+Candidate F6.4 qualificato: commit
 `03986c73199c6f854552f623d14f826fb9594ef2`, versione
 `v0.3.0-m17-p6.4`, SHA-256
 `079bbcbdaa09e6c5b73c5aaf7c71658daade4ee46ce08306ad6285f7bfd2a8f0`.
-I gate deterministici sono verdi e il record autorevole è
-`docs/reports/milestone-17-phase-6-candidate-4.md`; la qualifica live è
-pending.
+I gate deterministici, doctor 5/5, C0 3/3, C1 3/3, complete/stream 2/2,
+qualità 4/5, containment e immutabilità sono verdi. Il record autorevole è
+`docs/reports/milestone-17-phase-6-candidate-4.md`; la Fase 7 è autorizzata.
 
 ---
 
 # Fase 7 — Packaging candidate e qualifica finale
 
-Stato: `NOT_RUN` — dipendenza Fase 6 non soddisfatta.
+Stato: `NOT_RUN` — autorizzata dal PASS F6.4.
 
 ## Obiettivo
 
