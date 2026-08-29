@@ -75,6 +75,7 @@ Completati:
 * milestone-17-mutation-qualification-plan.md
 * milestone-18-productization-release-v0.3.0-plan.md
 * milestone-18-productization-v0.4.0-plan.md
+* milestone-19-post-release-adoption-lower-bound-validation-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
 * reports/milestone-11-final.md
@@ -87,6 +88,7 @@ Completati:
 * reports/milestone-18-phase-3.md
 * reports/milestone-18-phase-4.md
 * reports/milestone-18-phase-5.md
+* reports/milestone-19-thinkpad-adoption.md
 
 ---
 
@@ -2771,3 +2773,15 @@ checksum, manifest, versione/stato/commit, binario, profilo, modello/digest,
 help e installazione separata sono PASS. Il verdetto finale è
 `v0.3.0_released_and_verified`; Milestone 18 completata senza ampliare il
 perimetro Direct Chat read-only.
+
+Chiusura Milestone 19: l'asset pubblico v0.3.0 è stato scaricato nuovamente e
+installato fuori checkout sul ThinkPad T490s CPU-only. Checksum, manifest,
+binario, Ollama `0.32.14`, modello/digest qualificato e doctor chat 5/5 sono
+PASS. Su `project-a` reale e Git-clean, C0 no-file e 3/5 casi single-file
+completano con qualità 3/3 `correct`; due casi single-file terminano
+`deadline_exceeded` a 300,1 secondi. Le completion single-file hanno mediana
+91,4 secondi e lo stream atomico non produce output visibile durante l'attesa.
+Stato e digest aggregato del workspace coincidono pre/post. Il verdetto
+post-release è `operationally_impractical`: non qualifica il ThinkPad, non
+modifica v0.3.0 e mantiene fermi verified agent, multi-file, Controlled
+Mutation, nuovi provider e altri modelli ufficialmente supportati.

@@ -1049,6 +1049,31 @@ configurazione, modello/digest, multi-file, sessioni, agent, retrieval, tool e
 mutation. Ogni delta funzionale invalida il candidate e torna ai gate owner
 della Milestone 17.
 
+---
+
+# Milestone 19 — Post-Release Adoption & Lower-Bound Validation
+
+Stato: Completata — `operationally_impractical`
+
+Obiettivo:
+
+Installare sul ThinkPad l'esatto asset scaricato dalla GitHub Release v0.3.0
+e provarlo su un progetto Laravel reale, senza usare il checkout e senza
+ampliare il support claim. La matrice comprende doctor chat, una domanda senza
+file, cinque domande single-file, streaming, latenza, qualità, immutabilità e
+problemi d'uso.
+
+Il piano è in
+`milestone-19-post-release-adoption-lower-bound-validation-plan.md`; le
+evidenze redatte sono in `reports/milestone-19-thinkpad-adoption.md`.
+
+L'asset, il doctor e l'immutabilità sono verdi; le risposte disponibili sono
+corrette, ma la matrice single-file completa soltanto 3/5 casi, con due
+deadline da 300 secondi e mediana delle completion di 91,4 secondi. Il
+ThinkPad resta hardware osservato e non qualificato. Verified agent,
+multi-file, Controlled Mutation, nuovi provider e altri modelli supportati
+restano fermi.
+
 ## Associazione release
 
 | Versione | Obiettivo |
@@ -1067,6 +1092,7 @@ Milestone 13 — chiusa con limitazioni / adoption NO-GO
             └── Milestone 17 — Direct/Chat Product Baseline
                 ├── PASS -> Milestone 18 — Productization & Release v0.3.0
                 │   ├── PASS -> v0.3.0 pubblicata e asset verificati
+                │   │   └── Milestone 19 -> adoption ThinkPad operationally impractical
                 │   └── FAIL -> nessuna pubblicazione o release incident esplicito
                 └── FAIL -> nessuna release
 ```
