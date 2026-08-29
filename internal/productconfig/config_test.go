@@ -82,8 +82,8 @@ func TestChatExampleLoadsWithoutAgentConfiguration(t *testing.T) {
 		t.Fatalf("chat example is invalid: %v", err)
 	}
 	chat, ok := config.ChatProfile()
-	if !ok || chat.Model != "qwen2.5-coder:7b" || chat.NumCtx != 4096 ||
-		chat.Thinking != ThinkingDisabled || chat.Streaming ||
+	if !ok || chat.Model != "qwen3.5:9b" || chat.NumCtx != 4096 ||
+		chat.Thinking != ThinkingDisabled || !chat.Streaming ||
 		chat.MaxFileBytes != 1<<20 || chat.MaxOutputBytes != 1<<20 {
 		t.Fatalf("unexpected chat profile: %#v", chat)
 	}

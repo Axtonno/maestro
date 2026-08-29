@@ -1,131 +1,83 @@
-# Maestro v0.2.0 Troubleshooting
+# Maestro v0.3.0 Troubleshooting
 
 ## Il checksum fallisce
 
-Non estrarre né eseguire l'archive. Scaricare nuovamente sia `.tar.gz` sia
-`.sha256` dalla stessa release e ripetere `sha256sum -c`.
+Non estrarre né eseguire l’archive. Recuperare nuovamente `.tar.gz` e
+`.sha256` dallo stesso candidate e ripetere `sha256sum -c`.
 
-## `maestro version` non mostra la versione v0.2.0 attesa
+## Versione, commit o stato non coincidono
 
-Si sta usando un altro binario o un build locale. Eseguire `./maestro version`
-dalla directory estratta e confrontare il commit con
-`ARTIFACT-MANIFEST.txt`.
+Eseguire `./maestro version` dalla directory estratta e confrontare nome
+archive e `ARTIFACT-MANIFEST.txt`. Non rinominare un packaging candidate come
+release candidate o release.
 
-## `doctor` segnala `instance_probe_failed`
+## `doctor` non completa cinque PASS
 
-Verificare che Ollama sia avviato e che `provider.base_url` punti all'istanza
-corretta:
-
-```sh
-ollama list
-./maestro doctor --config ./configs/maestro.example.yaml
-```
-
-Il percorso supportato usa loopback `127.0.0.1:11434`.
-
-## Il modello non compare
-
-Maestro non scarica modelli automaticamente:
-
-```sh
-ollama pull llama3.1:8b
-./maestro models --config ./configs/maestro.example.yaml
-```
-
-## Il workspace Laravel non viene rilevato
-
-`workspace.root` deve indicare la directory con `artisan` e un
-`composer.json` valido che dichiara `laravel/framework` in `require`. I path
-relativi sono risolti rispetto al file di configurazione.
-
-## `configuration invalid`
-
-Nel percorso v0.2.0 lo schema è strict: campi sconosciuti o duplicati, alias
-YAML, documenti multipli e versioni diverse da `1` sono rifiutati. Confrontare
-il file con `configs/maestro.example.yaml` e consultare `configuration.md`.
-
-Per il candidato Direct Chat v0.3.0 usare lo schema v2 chat-only e il preflight
-dedicato:
+Usare il modo chat esplicito:
 
 ```sh
 ./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
 ```
 
-Questo comando non richiede i blocchi agent, limits o context. Richiede invece
-un profilo chat completo e `policy.workspace_mutate: deny`. Il doctor senza
-`--mode chat` valida il profilo agentico e respinge correttamente una
-configurazione chat-only.
+- `config`: verificare schema v2 strict e campi duplicati/sconosciuti;
+- `workspace`: verificare che `workspace.root` sia una directory reale e non
+  un symlink;
+- `composition`: verificare provider e nome della variabile secret;
+- `model`: verificare Ollama, identità e disponibilità del modello;
+- `generation`: verificare streaming, context e thinking richiesti.
 
-## `capability_unsupported` in Direct Chat
+Doctor non invoca completion, non avvia Ollama e non installa modelli.
 
-Il modello o l'adapter non attesta completion, streaming richiesto, controllo
-di `num_ctx` o thinking. Il preflight fallisce prima della completion e non
-applica fallback. Verificare il modello esatto e il profilo; non rimuovere i
-controlli o cambiare modello durante una serie congelata.
+## Il modello non coincide
 
-## `provider_unavailable` o exit code 4
+Il percorso qualificato richiede `qwen3.5:9b` con digest
+`6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
+Confrontare il catalogo Ollama con `ARTIFACT-MANIFEST.txt`. Non sostituire o
+aggiornare il modello durante una serie di qualificazione.
 
-Provider, modello o capability richiesta non è disponibile. Eseguire `doctor`
-e `models`; non cambiare modello casualmente se si vuole restare nel percorso
-qualificato v0.2.0.
+## `configuration invalid` o `chat_profile_required`
 
-## Un progetto reale termina prima della prima tool call
+Direct Chat richiede un profilo strict `version: 2` con provider, workspace,
+`interaction.chat` e `policy.workspace_mutate: deny`. Un profilo agentico v1
+non viene convertito e il doctor senza `--mode chat` segue il percorso agentico.
 
-Dalla v0.1.1 il plugin Laravel esclude asset generati e dati runtime dalla scan
-policy. Se la v0.1.0 termina `execution_failed` su un progetto che supera i
-limiti generici, aggiornare alla v0.1.1 e ripetere `doctor` e la stessa run
-read-only. Non aumentare i limiti rimuovendo i bound del Context Engine.
+## `file_not_allowed`
 
-## `tool_failure` o `execution_failed`
+`--file` accetta un solo path logico relativo. Sono rifiutati path assoluti,
+traversal, backslash, directory, symlink, file non regolari, caratteri di
+controllo, UTF-8 invalido e file oltre `max_file_bytes`. Risolvere il problema
+nel path o nella root; non allargare il workspace per aggirare il controllo.
 
-Una tool call generata dal modello può essere invalida o fallire. Il runtime non
-esegue retry impliciti degli effetti e mantiene l'output redatto. Ripetere una
-sola volta il task identico dopo aver verificato `doctor`; se il problema è
-riproducibile, conservare versione, commit, terminale e contatori senza
-allegare workspace sensibili.
+## `provider_unavailable` o `capability_unsupported`
 
-Nella v0.2.0 gli arguments invalidi di un tool read-only possono essere
-corretti dal modello entro gli stessi hard limit. Una richiesta stretta
-`Read <logical-path> ...` esegue la read tramite Tool Runtime prima della prima
-inferenza. Queste protezioni non si applicano ai tool mutanti o ai failure di
-esecuzione, che restano terminali.
+Verificare endpoint Ollama, modello e controlli generativi con doctor. Maestro
+non applica fallback ad agent, altro modello o altro provider.
 
-## `limit_exceeded`
+## `response_invalid` o `limit_exceeded`
 
-È stato raggiunto un hard limit configurato. Lo stderr indica il terminale e i
-contatori. Non aumentare i bound senza considerare memoria, latenza e quantità
-di contenuto disclosed al modello.
+Response vuota, ruolo/finish non validi, tool call inattesa, stream malformato,
+UTF-8 invalido o output oltre limite vengono scartati interamente. stdout resta
+vuoto; conservare soltanto versione, commit, reason code e durata redatti.
 
-## Run lenta su CPU
+## Risposta qualitativamente dubbia
 
-`llama3.1:8b` può richiedere minuti su CPU-only. Verificare memoria e swap,
-evitare più modelli residenti e controllare:
+Il modello può proporre inferenze non sostenute. Ripetere la domanda chiedendo
+di distinguere fatti, assenze e proposte, poi verificare direttamente il file.
+Non trattare la risposta come autorizzazione a modificare il workspace.
 
-```sh
-ollama ps
-```
+## Cancellazione e deadline
 
-Per liberare la fixture dopo la prova:
+SIGINT/SIGTERM producono exit 130 e `canceled`. Una deadline provider produce
+exit 4 e `deadline_exceeded`. Nessun output parziale deve apparire su stdout.
 
-```sh
-ollama stop llama3.1:8b
-```
-
-## Cancellazione
-
-SIGINT/SIGTERM producono exit code 130. Se il processo non termina entro il
-budget documentato di 30 secondi, registrare versione, commit e ultime righe
-redatte di stderr come bug.
-
-## Exit code
+## Exit code Direct Chat
 
 | Codice | Significato |
 |---:|---|
-| 0 | completato |
-| 1 | failure operativa o limite |
-| 2 | uso/configurazione non valida |
-| 3 | permission negata/non disponibile |
-| 4 | provider/modello/capability non disponibile |
-| 130 | cancellato da interrupt |
+| 0 | risposta valida completata |
+| 1 | response invalida, hard limit o failure interna |
+| 2 | uso, configurazione o file non ammesso |
+| 4 | provider, modello, capability o deadline non disponibile |
+| 130 | cancellazione tramite interrupt |
 
-Consultare anche `known-issues.md` e `security-model.md`.
+Consultare anche `known-issues.md`, `security-model.md` e `compatibility.md`.

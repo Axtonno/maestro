@@ -1,152 +1,96 @@
-# Maestro v0.2.0 Security Model
+# Maestro v0.3.0 Security Model
 
-Data: 2026-08-21
+Data: 2026-08-29
 
 ## Sintesi
 
-Maestro v0.2.0 è un'applicazione locale trusted in-process, non una sandbox. Il
-percorso supportato è read-only e usa soltanto Ollama locale,
-`llama3.1:8b` e i tool list/read/search su un workspace Laravel scelto
-esplicitamente dall'utente.
+Maestro è un’applicazione locale trusted in-process, non una sandbox. Il
+percorso v0.3.0 qualificabile è Direct Chat read-only: zero o un file scelto
+esplicitamente, una completion/stream, zero tool e nessun fallback.
 
 ## Confini di fiducia
 
 | Elemento | Trattamento |
 |---|---|
-| Utente e configurazione | Attendibili; scelgono provider, workspace, agent, policy e limiti |
-| Workspace | Dati non attendibili; possono contenere prompt injection o contenuti sensibili |
-| Modello | Non autorevole; propone output e tool call, mai permessi |
-| Provider configurato | Riceve istruzione e contesto esplicitamente disclosed |
-| Tool/plugin built-in | Codice trusted eseguito nello stesso processo e con i privilegi dell'utente |
-| Estensioni terze | Fuori dal supporto v0.2.0 |
+| Utente e configurazione | Attendibili; scelgono provider, workspace e file |
+| Workspace | Non attendibile; può contenere prompt injection o dati sensibili |
+| Modello | Non autorevole; genera testo ma non riceve authority |
+| Provider | Riceve domanda e file selezionato; deve essere considerato attendibile |
+| Processo Maestro | Trusted, con gli stessi privilegi dell’utente |
 
-Cambiare `provider.base_url` può inviare istruzioni e sezioni selezionate del
-workspace a quel servizio. La promessa v0.2.0 copre soltanto Ollama locale su
-loopback; l'utente deve considerare attendibile ogni endpoint alternativo.
+La qualifica copre Ollama locale su loopback. Cambiare `provider.base_url` può
+inviare dati a un servizio diverso e non qualificato.
 
 ## Garanzie implementate
 
-- configurazione YAML strict, senza fallback impliciti;
-- provider, modello, workspace, agent, policy, tool e limiti espliciti;
-- configurazione distribuita con soli tool read-only e
-  `workspace_mutate: deny`;
-- path logici confinati alla root con `os.Root`, rifiuto dei symlink e limiti di
-  dimensione;
-- authorization su action concrete; una risposta del modello non concede
-  authority;
-- le istruzioni strette `Read <logical-path> ...` del reference agent
-  eseguono una `workspace.read` verificata tramite Tool Runtime prima della
-  prima inferenza, senza interpretare testo del modello come invocazione;
-- hard limit su durata, turni, tool call, piano, token e byte;
-- SIGINT/SIGTERM cooperativi e shutdown applicativo bounded a 30 secondi;
-- eventi e diagnostiche con allowlist redatte;
-- secret referenziati soltanto per nome di variabile d'ambiente;
-- artifact versionato, manifest, SHA-256, Apache-2.0 e attribution incluse.
+- configurazione YAML strict v2 senza fallback impliciti;
+- profilo chat, modello, timeout, streaming e generation controls espliciti;
+- `workspace_mutate: deny` obbligatorio;
+- zero tool e `tool_choice: none` in ogni request;
+- nessuna costruzione di retrieval, index, Agent Runtime, sessione o approver;
+- un solo file logico relativo alla root configurata;
+- path normalizzato, containment con `os.Root`, rifiuto di symlink e race
+  fail-closed durante la lettura;
+- regular-file check, UTF-8/NUL validation e limiti byte inclusivi;
+- domanda, path logico e contenuto separati in messaggi provider; il file è
+  dichiarato evidenza non attendibile e la domanda resta l’ultimo turno;
+- temperatura zero uniforme fra complete e stream;
+- risposta, ruolo, finish, tool call inattese, usage, modello e limiti validati;
+- stream aggregato e pubblicato soltanto dopo terminale `stop` seguito da EOF;
+- errori sintetici senza prompt, response, contenuto, root fisica o secret;
+- artifact riproducibile, manifest, SHA-256, licenza e attribution.
 
 ## Non garanzie
 
-La v0.2.0 non fornisce:
+v0.3.0 non fornisce:
 
-- sandbox, container, seccomp, namespace o separazione di processo;
-- riduzione automatica dei privilegi del sistema operativo;
-- isolamento di rete o prevenzione dell'esfiltrazione verso il provider scelto;
-- secret manager, cifratura della configurazione o attestazione del modello;
-- difesa completa dalla prompt injection;
-- rollback generale, transazioni filesystem o recovery dopo crash;
-- validazione di sicurezza di plugin/tool di terze parti;
-- supporto operativo ai tool mutanti presenti nel codice sperimentale.
+- sandbox, container, seccomp, namespace o separazione di privilegi;
+- isolamento di rete o prevenzione dell’esfiltrazione al provider configurato;
+- secret manager, cifratura del profilo o attestazione per-run del modello;
+- difesa completa contro prompt injection o affermazioni semanticamente errate;
+- retrieval, tool, agent, mutation, rollback o recovery;
+- validazione di plugin o servizi di terze parti.
 
-## Profilo Controlled Mutation candidato
+## Disclosure single-file
 
-La Milestone 10 ha consegnato un profilo separato e opt-in, ma la v0.2.0 non lo
-promuove al supporto. Il profilo accetta soltanto `workspace.patch` su
-un file PHP esistente sotto `app/`, dopo read verificata, preview concreta,
-TTY e approval one-shot. Il fingerprint lega la proposta all'esecuzione; il
-commit Linux usa temporaneo, sync, recheck e rename atomico. Ogni run ammette
-un solo tentativo e può completare soltanto dopo reindex e bundle fresh.
+Senza `--file`, Maestro comunica che non è disponibile contesto workspace e
+non seleziona contenuti. Con `--file`, legge soltanto il path esplicito entro la
+root. Path fisico e altri file non vengono inviati al provider.
 
-La Milestone 11 ha concluso i gate con `mutation_deferred`: Gate A è fallito al
-primo tentativo e la stop rule ha impedito Gate B e Gate C. Il profilo resta
-quindi non supportato; la matrice deterministica e il preflight superati non
-concedono autorità operativa né ampliano il threat boundary.
-Non offre sandbox, rollback generale, recovery da crash, modifiche multi-file,
-creazione file, shell o Git. Un failure dopo il rename può lasciare la patch
-applicata con durability o refresh incompleti; gli stati redatti lo dichiarano
-e non tentano rollback implicito.
+Il path logico è JSON-quoted; caratteri di controllo, formattatori invisibili e
+separatori di linea sono rifiutati. Il contenuto non può cambiare tool set,
+policy o destinazione perché il percorso non possiede tali componenti. Una
+tool call restituita dal modello è un protocol failure, non un’azione.
 
-Il profilo ufficiale read-only riduce l'autorità disponibile al modello, ma il
-processo Maestro conserva i normali permessi dell'utente. Eseguire Maestro su
-workspace o endpoint non attendibili richiede quindi la stessa prudenza di
-qualsiasi altro processo locale.
+## Streaming e terminali
 
-## Candidato Direct Chat della Milestone 14
-
-La Milestone 14 introduce una superficie development-only separata, non
-supportata dalla v0.2.0. `maestro chat` riceve al massimo un file esplicitamente
-selezionato e costruisce soltanto provider completion/streaming. Non riceve
-Tool Runtime, Context Engine, index, Agent Runtime, sessione, policy mutativa o
-approver e non può usarli come fallback.
-
-Il loader applica confinement rispetto alla root configurata, rifiuta path
-assoluti, traversal, backslash, symlink in qualsiasi componente, file non
-regolari, dimensioni oltre limite, UTF-8 invalido, NUL e cambi durante la
-lettura. I caratteri di controllo, formattazione invisibile e separazione di
-linea sono vietati nel path logico, che entra nel prompt soltanto in forma
-quotata. File vuoti e UTF-8 con BOM sono ammessi e preservati; il limite byte è
-inclusivo. Il path fisico non viene disclosed. Domanda, path logico e contenuto
-sono separati da confini di messaggio provider, non da sentinelle testuali
-collidibili; il contenuto workspace resta non attendibile e non può concedere
-tool o autorità. Con un file, i messaggi system iniziali dichiarano in anticipo
-il confine e l'ordine; seguono il messaggio user del file e quello separato con
-domanda e contratto di risposta. Non esistono messaggi system intermedi dopo
-il payload non attendibile. La domanda resta l'ultimo turno: istruzioni
-apparenti nel sorgente sono dati e non sostituiscono la richiesta
-dell'operatore.
-
-La request dichiara zero tool e `tool_choice: none`. Una tool call inattesa
-nella response è un protocol failure. Timeout, risposta vuota, output oltre
-limite o capability non supportata falliscono chiusi e non avviano
-`maestro agent`. `num_ctx` e `thinking` espliciti devono essere onorati o
-rifiutati; un valore non attestabile resta `unknown` e non viene presentato
-come confermato.
-
-Complete e stream ricevono le stesse opzioni e una temperatura interna fissata
-a zero. Questo riduce la divergenza da sampling, ma non trasforma equivalenza o
-correttezza semantica in garanzie deterministiche: entrambe restano gate live.
-
-Lo streaming chat è aggregato e validato prima di scrivere stdout. Terminale
-mancante o duplicato, tool delta, chunk successivo al terminale, errore di
-receive/close e superamento del limite scartano l'intera risposta; nessun chunk
-parziale viene trasformato in risultato applicativo.
-
-Il risultato finale resta intenzionalmente visibile su stdout. Metadati, log e
-report escludono domanda, prompt, response completa, contenuto del file, root
-fisica e secret. Questa riduzione di autorità non rende sicuro inviare file
-sensibili a un endpoint provider non attendibile.
+Lo streaming è un trasporto opt-in, non una pubblicazione incrementale. Chunk
+successivi al terminale, terminali mancanti/duplicati, tool delta, errore di
+receive/close, cancellazione, deadline o superamento limite scartano l’intera
+risposta. Un failure non avvia una seconda completion.
 
 ## Dati e output
 
-Il Context Engine indicizza localmente il workspace e seleziona sezioni entro i
-budget configurati. I contenuti selezionati e l'istruzione vengono inviati al
-provider esplicito. Il risultato finale del modello viene stampato
-intenzionalmente su stdout; progress, contatori e failure sintetici vanno su
-stderr. Prompt, contenuti, argomenti tool, output tool, root fisica, fingerprint
-e secret non fanno parte degli eventi operativi.
+La risposta finale viene mostrata intenzionalmente su stdout all’utente locale.
+stderr e le evidenze operative contengono soltanto reason code e metadati
+redatti. Questa distinzione non rende sicuro inviare file sensibili a un
+provider non attendibile.
 
-I report di release usano canary e scansioni per verificare l'assenza di
-leakage nei percorsi falliti. Questo non rende l'output finale del modello un
-canale sicuro per dati sensibili: il risultato è contenuto applicativo richiesto
-dall'utente.
+## Capacità presenti ma non supportate
+
+Il repository contiene codice storico o sperimentale per agent, Context
+Engine, tool e Controlled Mutation. L’archive v0.3.0 non include i relativi
+profili e il percorso Direct Chat non li costruisce. La loro presenza nel
+binario non amplia la compatibility promise né costituisce fallback.
 
 ## Raccomandazioni operative
 
 - usare un account senza privilegi amministrativi;
-- mantenere Ollama su loopback e non esporlo senza autenticazione/rete fidata;
-- verificare archive e checksum prima dell'estrazione;
-- esaminare la configurazione e la root prima di ogni run;
-- non aggiungere `workspace.write` o `workspace.patch` al profilo v0.2.0;
-- interrompere run inattese con SIGINT e controllare il terminale redatto;
-- non inserire credenziali nel file YAML o nel workspace della fixture.
+- mantenere Ollama su loopback;
+- verificare archive, checksum, manifest, modello e digest;
+- controllare `workspace.root` e il path prima di inviare un file;
+- non inserire credenziali nella configurazione o nella fixture;
+- interrompere output inattesi e verificare sempre il sorgente originale.
 
 ## Segnalazione vulnerabilità
 

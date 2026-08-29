@@ -1,61 +1,72 @@
 # Maestro Packaging and Release Artifacts
 
-Stato: Contratto di packaging v0.2.0
+Stato: contratto di packaging v0.3.0 Direct Chat
 
-Lo stesso percorso riproducibile produce packaging candidate, release
-candidate e release finale. Lo stato è sempre esplicito nel manifest e nella
-guida d'installazione inclusa; un artifact non viene rinominato o sovrascritto
-per cambiarne lo stato.
+Lo stesso percorso normalizzato produce packaging candidate, release candidate
+e release finale. Lo stato è incorporato nel manifest e nella guida inclusa;
+un artifact non viene rinominato o sovrascritto per cambiarne stato.
 
-# Identità
-
-Il nome è:
+## Identità
 
 ```text
 maestro-<version>-linux-amd64.tar.gz
+maestro-<version>-linux-amd64.tar.gz.sha256
 ```
 
-La Milestone 12 usa candidate `v0.2.0-pc.N`; ogni iterazione conserva lo stesso
-formato e incorpora gli hardening emersi prima del nuovo congelamento.
-`ARTIFACT-MANIFEST.txt` registra versione, commit, piattaforma,
-versione Go e fixture. La guida d'installazione inclusa viene renderizzata con
-la versione esatta dell'archive e `maestro version` deve restituire la stessa
-versione e lo stesso commit.
+`ARTIFACT-MANIFEST.txt` registra versione, commit, piattaforma, toolchain,
+fixture, stato e baseline Direct Chat. Nome archive, manifest e
+`maestro version` devono coincidere.
 
-Lo script usa `status=packaging-candidate` per default. Soltanto dopo un gate
-live positivo della Fase 5 può essere invocato esplicitamente con
-`--status release-candidate`; il manifest deve riportare lo stesso stato. Un
-artifact `pc.N` fallito non viene rinominato o sovrascritto.
-
-La release finale usa `--status release` e una versione senza prerelease:
+Il candidate di Milestone 17 usa un prerelease `v0.3.0-pc.N` con stato
+`packaging-candidate`. Soltanto dopo la matrice finale live sul medesimo
+archive può essere costruito un artifact distinto con stato
+`release-candidate`. Tag e pubblicazione richiedono il verdetto finale
+`direct_chat_product_baseline` e una build separata con stato `release`.
 
 ```sh
-./scripts/verify-package-candidate.sh --version v0.2.0 --status release
-./scripts/package-candidate.sh --version v0.2.0 --status release --output dist
+./scripts/verify-package-candidate.sh \
+  --version v0.3.0-pc.1 --status packaging-candidate
+./scripts/package-candidate.sh \
+  --version v0.3.0-pc.1 --status packaging-candidate --output dist
 ```
 
-Deve essere prodotta da un worktree pulito successivo alla documentazione
-pubblica e superare nuovamente installazione e quick start. Una release
-candidate non viene rinominata come release.
+## Riproducibilità
 
-# Contenuto
+Il packaging richiede worktree pulito, Go 1.24.5 e GNU tar. Usa commit time
+come `SOURCE_DATE_EPOCH`, path rimossi, build ID vuoto, ownership e permessi
+normalizzati e gzip senza timestamp. Il gate costruisce due archive e richiede
+uguaglianza byte-per-byte prima di verificare checksum e contenuto.
+
+## Contenuto v0.3.0
 
 - binario `maestro` Linux `amd64`;
-- `LICENSE` Apache-2.0, `NOTICE` e licenze delle dipendenze distribuite;
-- README, changelog, security policy e documentazione pubblica per
-  installazione, quick start, configurazione, CLI, reference agent, sicurezza,
-  compatibilità, troubleshooting e release notes;
-- configurazione strict `version: 1` senza secret;
-- profilo ufficiale read-only senza tool mutanti e con
-  `workspace_mutate: deny`; il profilo mutante del repository è escluso;
-- fixture `maestro-laravel-mini@1.0.0`, priva di dipendenze installate;
-- manifest dell'artifact.
+- licenza, attribution, README, changelog e security policy;
+- documentazione pubblica Direct Chat e note della versione;
+- `configs/maestro.chat.example.yaml`, strict v2 e chat-only;
+- fixture `maestro-laravel-mini@1.0.0` senza dipendenze installate;
+- manifest dell’artifact.
 
-# Non garanzie
+L’archive non include profili agentici o mutativi, benchmark, raw trace,
+report di sviluppo, prompt/response di qualificazione, secret, symlink,
+directory VCS, `vendor` o `node_modules`.
 
-Lo stato `packaging-candidate` non certifica provider o modelli live; lo stato
-`release-candidate` registra che il gate live è superato ma non rappresenta la
-pubblicazione finale. Anche lo stato `release` resta limitato dalla matrice in
-`compatibility.md`: llama.cpp e il reference agent mutante sono sperimentali e
-non supportati. Nessun artifact include sandbox, installer privilegiato,
-aggiornamento automatico o dependency download.
+## Baseline qualificata
+
+Il manifest congela:
+
+- modello `qwen3.5:9b`;
+- digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`;
+- context 4096, thinking `false`, temperatura zero;
+- streaming abilitato ma opt-in;
+- file/output massimi 1 MiB;
+- `workspace_mutate: deny`.
+
+Una divergenza richiede un nuovo candidate e non può essere corretta sulla
+macchina di qualifica.
+
+## Non garanzie
+
+Lo stato `packaging-candidate` prova riproducibilità e installabilità locale,
+non il provider live. `release-candidate` registra un gate live positivo ma
+non equivale a pubblicazione. Nessuno stato qualifica agent, retrieval,
+tool calling, mutation, llama.cpp, sandbox o endpoint remoti.

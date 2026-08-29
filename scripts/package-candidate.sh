@@ -112,13 +112,12 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=local GOENV=off GOFLAGS='' \
 
 cp LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGELOG.md SECURITY.md "$root/"
 cp docs/installation.md docs/configuration.md docs/cli.md \
-    docs/operational-experience.md docs/packaging-candidate.md \
-    docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
+    docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
-    docs/v0.2.0-api-compatibility.md docs/laravel-plugin.md "$root/docs/"
+    "$root/docs/"
 mkdir -p "$root/docs/releases"
 cp "$release_notes" "$root/docs/releases/"
-cp configs/maestro.example.yaml "$root/configs/"
+cp configs/maestro.chat.example.yaml "$root/configs/"
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
 sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"
 sed -i "s/@MAESTRO_STATUS@/${status}/g" "$root/docs/installation.md"
@@ -138,6 +137,12 @@ platform=linux/amd64
 go=${go_version}
 license=Apache-2.0
 fixture=maestro-laravel-mini@1.0.0
+profile=configs/maestro.chat.example.yaml
+chat_model=qwen3.5:9b
+chat_model_digest=6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+chat_num_ctx=4096
+chat_thinking=false
+chat_temperature=0
 status=${status}
 EOF
 

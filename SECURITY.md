@@ -2,10 +2,12 @@
 
 ## Supported version
 
-La release supportata corrente è `0.2.0`. Le capacità dichiarate sperimentali o
-non supportate nella compatibility matrix non ricevono una promessa operativa,
-ma i problemi che compromettono il confine read-only o la sicurezza del core
-sono comunque rilevanti.
+La release pubblicata corrente è `0.2.0`. Il packaging candidate `0.3.0`
+riceve copertura per il confine Direct Chat durante la qualificazione, ma non
+diventa release supportata prima del verdetto finale. Le capacità dichiarate
+non supportate nella compatibility matrix non ricevono una promessa operativa;
+i problemi che compromettono containment, redazione o read-only restano
+comunque rilevanti.
 
 ## Reporting a vulnerability
 
@@ -19,13 +21,13 @@ commit, piattaforma, impatto, prerequisiti e una riproduzione minima redatta.
 
 ## Scope notes
 
-Maestro v0.2.0 è trusted in-process e non dichiara una sandbox. L'esecuzione di
+Maestro è trusted in-process e non dichiara una sandbox. L'esecuzione di
 estensioni non attendibili con i privilegi dell'utente non è una vulnerabilità
 rispetto al modello dichiarato. Sono invece in scope, tra gli altri:
 
-- evasione del containment dei workspace tool built-in;
-- mutazioni possibili dal profilo ufficiale read-only;
-- bypass del permission model o dei hard limit;
+- evasione del containment del file Direct Chat o dei workspace tool storici;
+- mutazioni possibili dal profilo Direct Chat o da un profilo ufficiale read-only;
+- bypass dei limiti, del confine tool-free o dell'output atomico;
 - esposizione involontaria di secret in eventi o diagnostiche;
 - archive ufficiali non corrispondenti a manifest o checksum.
 

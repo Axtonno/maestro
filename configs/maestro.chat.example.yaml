@@ -13,9 +13,9 @@ workspace:
 
 interaction:
   chat:
-    model: qwen2.5-coder:7b
+    model: qwen3.5:9b
     timeout: 5m
-    streaming: false
+    streaming: true
     num_ctx: 4096
     thinking: "false"
     max_file_bytes: 1048576

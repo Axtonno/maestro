@@ -2,42 +2,32 @@
 
 > The intelligence is in the orchestration.
 
-Maestro è un runtime locale per agenti di sviluppo controllati. La v0.2.0
-mantiene un percorso installabile per analizzare e interrogare un progetto
-Laravel con un modello locale, senza consentire modifiche al workspace nel
-profilo ufficiale.
+Maestro v0.3.0 introduce una chat locale diretta per interrogare zero o un file
+esplicitamente scelto dentro un workspace. Il percorso supportato è read-only,
+non usa tool, retrieval, Agent Runtime o fallback agentici.
 
-## v0.2.0 in breve
+## v0.3.0 in breve
 
 | Dimensione | Supporto ufficiale |
 |---|---|
-| Piattaforma | Linux `amd64` |
-| Provider | Ollama locale |
-| Modello chat | `llama3.1:8b` |
-| Modello embedding | `embeddinggemma:latest` |
-| Agent | `agent.reference` Laravel read-only |
-| Tool | list, read, search |
-| Mutazioni | Sperimentali/non supportate |
-| llama.cpp | Sperimentale/non supportato |
+| Piattaforma | Linux `amd64`, qualificazione WSL2/Ubuntu 24.04/RTX 5070 |
+| Provider | Ollama locale 0.33.1 su endpoint loopback |
+| Modello | `qwen3.5:9b`, digest qualificato nel manifest |
+| Modalità | `maestro chat`, zero o un file esplicito |
+| Streaming | Opt-in con output atomico |
+| Tool/retrieval/agent | Non qualificati per v0.3.0 |
+| Mutazioni | Non supportate |
 | Isolamento | Trusted in-process, nessuna sandbox |
 
-La [compatibility matrix](docs/compatibility.md) è la fonte autorevole. La
-presenza di altre capability nel codice non costituisce una promessa di
-supporto v0.2.0.
+La [compatibility matrix](docs/compatibility.md) è la fonte autorevole. Codice
+agentico o mutativo presente nel repository non amplia la promessa di prodotto.
 
 ## Installazione dall’artifact
 
-Scaricare dalla stessa release:
-
-```text
-maestro-v0.2.0-linux-amd64.tar.gz
-maestro-v0.2.0-linux-amd64.tar.gz.sha256
-```
-
-Poi eseguire:
+Scaricare insieme archive e checksum del candidate o della release:
 
 ```sh
-version=v0.2.0
+version=v0.3.0
 artifact="maestro-${version}-linux-amd64"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
@@ -45,136 +35,77 @@ cd "$artifact"
 ./maestro version
 ```
 
-Non proseguire se il checksum, la versione o il commit non coincidono con
-`ARTIFACT-MANIFEST.txt`.
+Versione, commit e stato devono coincidere con `ARTIFACT-MANIFEST.txt`.
 
 ## Quick start
 
-Prerequisiti: Ollama attivo su `127.0.0.1:11434` e `llama3.1:8b` disponibile.
-Maestro non installa il provider e non scarica modelli implicitamente.
+Prerequisiti: Ollama già attivo su `127.0.0.1:11434` e `qwen3.5:9b` con il
+digest qualificato già disponibile. Maestro non avvia il provider e non
+scarica o sostituisce modelli.
 
 ```sh
-ollama pull llama3.1:8b
+./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
 
-./maestro doctor --config ./configs/maestro.example.yaml
-./maestro models --config ./configs/maestro.example.yaml
-./maestro agents --config ./configs/maestro.example.yaml
-
-./maestro run --config ./configs/maestro.example.yaml \
-  "Read app/Http/Controllers/OrderController.php and explain which service its store method calls. Do not modify any file."
+./maestro chat --config ./configs/maestro.chat.example.yaml \
+  --file routes/api.php \
+  "Quali endpoint, controller e action sono dichiarati?"
 ```
 
-La configurazione inclusa punta alla fixture Laravel dell’archive. `doctor`
-deve completare nove check; il run deve identificare `OrderService::create`.
-L’output esatto e la latenza possono variare perché il modello è generativo.
+La configurazione inclusa punta alla fixture dell’archive. Il doctor chat deve
+completare cinque check; la risposta deve riportare `POST /orders` e
+`OrderController::store` senza aggiungere endpoint. Per il trasporto streaming
+aggiungere `--stream`.
 
-Il percorso dettagliato, inclusa la configurazione di un progetto reale, è in
-[Quick Start](docs/quick-start.md).
-
-## CLI
+## Contratto Direct Chat
 
 ```text
-maestro doctor
-maestro models
-maestro agents
-maestro run
+maestro chat [--config path] [--file logical-path] [--stream] [question]
+maestro doctor --mode chat [--config path]
 maestro version
 ```
 
-- `doctor` valida configurazione, provider, modello, agent, tool e workspace
-  senza invocare il modello;
-- `models` elenca i modelli del provider esplicitamente configurato;
-- `agents` elenca gli agenti registrati;
-- `run` esegue il reference agent con policy e hard limit espliciti;
-- `version` stampa versione e commit incorporati nella build.
+- la domanda è posizionale oppure arriva da stdin bounded, mai da entrambi;
+- `--file` accetta un solo path logico relativo e contained;
+- file assente significa nessun contesto workspace implicito;
+- complete e stream usano temperatura zero, context 4096 e thinking disabilitato;
+- stdout viene pubblicato soltanto dopo una response valida e terminale;
+- i failure non avviano retrieval, tool o agent come percorso alternativo.
 
-SIGINT/SIGTERM cancellano una run con exit code 130. stdout è riservato al
-risultato; progresso e failure sintetici vanno su stderr. La reference completa
-è in [CLI](docs/cli.md).
-
-## Configurazione
-
-Maestro usa un singolo documento YAML strict `version: 1`. Provider, modello,
-workspace, agent, policy, tool e limiti sono sempre espliciti. Un typo o campo
-sconosciuto è un errore, non un fallback.
-
-Il profilo distribuito registra soltanto:
-
-```yaml
-agent:
-  id: agent.reference
-  streaming: true
-  tools:
-    - workspace.list
-    - workspace.read
-    - workspace.search
-
-policy:
-  id: policy.local-review
-  model: allow
-  workspace_inspect: allow
-  workspace_mutate: deny
-```
-
-Non aggiungere `workspace.write` o `workspace.patch` al percorso v0.2.0. La
-guida campo per campo è in [Configurazione](docs/configuration.md).
+La reference completa è in [CLI](docs/cli.md) e
+[Configurazione](docs/configuration.md).
 
 ## Sicurezza
 
-Maestro v0.2.0 è trusted in-process e usa i privilegi dell’utente locale. Non
-offre sandbox, isolamento di rete, rollback generale o secret manager. Il
-provider configurato riceve l’istruzione e le sezioni di workspace selezionate
-dal Context Engine.
+Il file selezionato viene inviato al provider esplicitamente configurato. Il
+loader rifiuta path assoluti, traversal, symlink, file non regolari, UTF-8
+invalido e input oltre limite. Il contenuto è trattato come evidenza non
+attendibile e non può concedere autorità.
 
-Il profilo read-only, il containment dei path, il permission model, la
-redazione e i hard limit riducono l’autorità disponibile, ma non trasformano il
-processo in un confine di sicurezza. Leggere il [Security Model](docs/security-model.md)
-e la [Security Policy](SECURITY.md) prima di usare workspace sensibili.
+Maestro resta un processo locale con i privilegi dell’utente: non offre
+sandbox, isolamento di rete o secret manager. Consultare il
+[Security Model](docs/security-model.md) prima di usare workspace sensibili.
 
 ## Limiti noti
 
-- solo Linux `amd64` e Ollama/`llama3.1:8b` sono qualificati;
-- una run CPU-only può richiedere diversi minuti;
-- il modello può sbagliare o generare una tool call invalida;
-- llama.cpp e il reference agent mutante non sono supportati;
-- nessun multi-agent, persistence, recovery, shell, Git, Docker o remote
-  execution completi;
-- CLI, config e package Go sono sperimentali durante la serie 0.x.
+- il modello è generativo: il gate di Milestone 17 ha ottenuto qualità 4/5;
+- soltanto la combinazione riportata nella compatibility matrix è qualificata;
+- agent, retrieval multi-file, tool calling e mutazioni non sono supportati;
+- non esistono installer privilegiato, auto-update o download automatici;
+- CLI e schema restano sperimentali durante la serie 0.x.
 
 Vedere [Known Issues](docs/known-issues.md) e
 [Troubleshooting](docs/troubleshooting.md).
 
-La Milestone 11 ha confermato deterministicamente gli invarianti della
-Controlled Mutation, ma il candidato live ha fallito Gate A. ADR-0032 rinvia
-quindi la mutazione: v0.2.0 resta read-only e non modifica la matrice di
-supporto sopra dichiarata.
-
 ## Documentazione
-
-Per iniziare:
 
 - [Installazione](docs/installation.md)
 - [Quick Start](docs/quick-start.md)
 - [Configurazione](docs/configuration.md)
 - [CLI](docs/cli.md)
-- [Reference Agent Laravel](docs/reference-agent-laravel.md)
 - [Security Model](docs/security-model.md)
 - [Compatibility Matrix](docs/compatibility.md)
-- [API Compatibility](docs/v0.2.0-api-compatibility.md)
-- [Release Notes v0.2.0](docs/releases/v0.2.0.md)
-- [Release Notes v0.1.1](docs/releases/v0.1.1.md)
-- [Release Notes v0.1.0](docs/releases/v0.1.0.md)
+- [Release Notes v0.3.0](docs/releases/v0.3.0.md)
 - [Changelog](CHANGELOG.md)
-
-Per contribuire o studiare l’architettura:
-
-- [Architecture](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/architecture.md)
-- [Runtime Internals](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/runtime-internals.md)
-- [Provider Runtime](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/provider-runtime.md)
-- [Plugin Runtime](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/plugin-runtime.md)
-- [Context Engine](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/context-engine-runtime.md)
-- [Agent Runtime](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/agent-runtime.md)
-- [Roadmap](https://github.com/Axtonno/maestro/blob/v0.2.0/docs/roadmap.md)
 
 ## Sviluppo
 
@@ -186,12 +117,10 @@ go test -race ./...
 go vet ./...
 ```
 
-I test live sono opt-in e non vengono sostituiti da PASS sintetici quando il
-provider è assente. Le modifiche ai contratti pubblici devono aggiornare
-documentazione, test e changelog.
+I test live sono opt-in e `not_run` non equivale a PASS. Maestro e i test non
+avviano provider, non installano modelli e non modificano il catalogo.
 
 ## Licenza
 
-Maestro è distribuito sotto [Apache License 2.0](LICENSE). Le attribution delle
-dipendenze sono in [NOTICE](NOTICE) e
-[THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).
+Maestro è distribuito sotto [Apache License 2.0](LICENSE). Le attribution sono
+in [NOTICE](NOTICE) e [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).

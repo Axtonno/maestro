@@ -4,6 +4,34 @@ Le modifiche rilevanti di Maestro sono registrate in questo file. Durante la
 serie `0.x` i contratti pubblici restano sperimentali e ogni breaking change
 deve essere dichiarato nelle note di release.
 
+## [0.3.0] - 2026-08-29
+
+### Added
+
+- Direct Chat tool-free con zero o un file esplicito contained;
+- schema v2 con profilo chat separato e doctor dedicato;
+- streaming opt-in con aggregazione e pubblicazione atomica;
+- envelope, reason code, limiti file/output e generation controls osservabili;
+- packaging candidate Linux `amd64` dedicato alla baseline Direct Chat.
+
+### Security
+
+- path assoluti, traversal, symlink, file non regolari e race di lettura
+  falliscono chiusi prima della disclosure;
+- file non attendibile e domanda restano messaggi distinti, con domanda finale;
+- ogni request dichiara zero tool e non costruisce agent/retrieval come fallback;
+- errori e telemetria escludono prompt, response, contenuto, root e secret;
+- il profilo distribuito imposta `workspace_mutate: deny` e non include agent o
+  superfici mutative.
+
+### Compatibility
+
+- baseline candidata: Ollama 0.33.1, `qwen3.5:9b` con digest congelato,
+  context 4096, thinking false e temperatura zero;
+- solo Direct Chat single-file read-only è qualificabile per v0.3.0;
+- reference/verified agent, retrieval, tool e mutation restano non supportati;
+- schema e CLI restano sperimentali durante la serie 0.x.
+
 ## [0.2.0] - 2026-08-21
 
 ### Added
@@ -99,3 +127,4 @@ Nessun tool, permesso o support claim mutativo viene aggiunto.
 [0.1.0]: https://github.com/Axtonno/maestro/releases/tag/v0.1.0
 [0.1.1]: https://github.com/Axtonno/maestro/releases/tag/v0.1.1
 [0.2.0]: https://github.com/Axtonno/maestro/releases/tag/v0.2.0
+[0.3.0]: https://github.com/Axtonno/maestro/releases/tag/v0.3.0

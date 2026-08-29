@@ -66,12 +66,10 @@ root="$working/extracted/$artifact"
 
 for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGELOG.md SECURITY.md ARTIFACT-MANIFEST.txt \
     docs/installation.md docs/configuration.md docs/cli.md \
-    docs/operational-experience.md docs/packaging-candidate.md \
-    docs/quick-start.md docs/reference-agent-laravel.md docs/security-model.md \
+    docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
-    docs/v0.2.0-api-compatibility.md docs/laravel-plugin.md \
     "$release_notes" \
-    configs/maestro.example.yaml fixtures/laravel-v1/dataset.json \
+    configs/maestro.chat.example.yaml fixtures/laravel-v1/dataset.json \
     fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
     [[ -e "$root/$required" ]] || {
         printf 'archive is missing %s\n' "$required" >&2
@@ -88,6 +86,12 @@ grep -Fxq "artifact=${artifact}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "commit=${commit}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "status=${status}" "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq 'profile=configs/maestro.chat.example.yaml' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq 'chat_model=qwen3.5:9b' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq 'chat_model_digest=6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq 'chat_num_ctx=4096' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq 'chat_thinking=false' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq 'chat_temperature=0' "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/docs/installation.md"
 grep -Fxq "Stato: ${status}" "$root/docs/installation.md"
 grep -Fq 'artifact="maestro-${version}-linux-amd64"' "$root/docs/installation.md"
@@ -97,17 +101,24 @@ if grep -R -Fq '@MAESTRO_' "$root"; then
 fi
 grep -Fq '"id": "maestro-laravel-mini"' "$root/fixtures/laravel-v1/dataset.json"
 grep -Fq '"version": "1.0.0"' "$root/fixtures/laravel-v1/dataset.json"
-for read_only_tool in workspace.list workspace.read workspace.search; do
-    grep -Fq -- "- $read_only_tool" "$root/configs/maestro.example.yaml"
-done
-if grep -Eq 'workspace\.(write|patch)' "$root/configs/maestro.example.yaml"; then
-    printf 'published configuration exposes an unsupported mutating tool\n' >&2
+profile="$root/configs/maestro.chat.example.yaml"
+grep -Eq '^[[:space:]]*version:[[:space:]]*2[[:space:]]*$' "$profile"
+grep -Eq '^[[:space:]]*model:[[:space:]]*qwen3\.5:9b[[:space:]]*$' "$profile"
+grep -Eq '^[[:space:]]*streaming:[[:space:]]*true[[:space:]]*$' "$profile"
+grep -Eq '^[[:space:]]*num_ctx:[[:space:]]*4096[[:space:]]*$' "$profile"
+grep -Eq '^[[:space:]]*thinking:[[:space:]]*"false"[[:space:]]*$' "$profile"
+grep -Eq '^[[:space:]]*max_file_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
+grep -Eq '^[[:space:]]*max_output_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
+if grep -Eq 'workspace\.(write|patch)|^[[:space:]]*(agent|limits|context):' "$profile"; then
+    printf 'published configuration exposes an unsupported agent or mutation surface\n' >&2
     exit 1
 fi
 grep -Eq '^[[:space:]]*workspace_mutate:[[:space:]]*deny[[:space:]]*$' \
-    "$root/configs/maestro.example.yaml"
+    "$profile"
 for unsupported in configs/maestro.mutating.example.yaml \
-    docs/mutation-qualification.md docs/mutation-benchmark.md; do
+    configs/maestro.example.yaml configs/maestro.interaction.example.yaml \
+    docs/mutation-qualification.md docs/mutation-benchmark.md \
+    docs/reference-agent-laravel.md docs/operational-experience.md; do
     [[ ! -e "$root/$unsupported" ]] || {
         printf 'archive publishes unsupported mutation surface: %s\n' "$unsupported" >&2
         exit 1
@@ -120,17 +131,25 @@ grep -Fxq "commit ${commit}" <<<"$version_output"
 "$root/maestro" --help | grep -Fq 'usage: maestro <command>'
 
 doctor_config="$root/configs/doctor-test.yaml"
-cp "$root/configs/maestro.example.yaml" "$doctor_config"
+cp "$profile" "$doctor_config"
 sed -i 's#http://127.0.0.1:11434#http://127.0.0.1:1#' "$doctor_config"
 set +e
-doctor_output="$($root/maestro doctor --config "$doctor_config" 2>&1)"
+doctor_output="$($root/maestro doctor --mode chat --config "$doctor_config" 2>&1)"
 doctor_status=$?
 set -e
 [[ $doctor_status -eq 1 ]]
-grep -Fq $'pass\tconfig\tschema_v1_valid' <<<"$doctor_output"
+grep -Fq $'pass\tconfig\tschema_v2_chat_valid' <<<"$doctor_output"
 grep -Fq $'pass\tworkspace\troot_available' <<<"$doctor_output"
-grep -Fq $'pass\tlaravel\tworkspace_detected' <<<"$doctor_output"
-grep -Fq $'fail\tprovider\tinstance_probe_failed' <<<"$doctor_output"
+grep -Fq $'pass\tcomposition\tdirect_chat_provider' <<<"$doctor_output"
+grep -Fq $'fail\tmodel\trequired_capability_unavailable' <<<"$doctor_output"
+grep -Fq $'skip\tgeneration\tmodel_unavailable' <<<"$doctor_output"
+
+set +e
+containment_output="$($root/maestro chat --config "$profile" --file ../outside.php Question 2>&1)"
+containment_status=$?
+set -e
+[[ $containment_status -eq 2 ]]
+[[ "$containment_output" == 'chat failed: file_not_allowed' ]]
 
 install -m 0755 "$root/maestro" "$working/install/bin/maestro"
 (

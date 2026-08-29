@@ -2628,3 +2628,18 @@ service e fixture restano invariati. Suite normale/development `-count=3`,
 race, vet, test mirati `-count=10`, script e doppia build sono verdi. Il record
 è `docs/reports/milestone-17-phase-6-candidate-4.md`. Ripetere integralmente la
 serie live sulla WSL2/RTX; Fase 7 resta `NOT_RUN` fino al PASS.
+
+Risultato F6.4: la serie live sulla WSL2/Ubuntu 24.04/RTX 5070 è PASS. Doctor
+5/5, C0 3/3, C1 3/3, equivalenza complete/stream 2/2, qualità 4/5,
+containment, terminali, immutabilità e anti-leak sono verdi con modello e
+digest esatti. La Fase 7 è autorizzata.
+
+Checkpoint Fase 7 (pre-freeze): mantenere F6.4 immutato. Il packaging v0.3.0
+viene ristretto al solo profilo Direct Chat v2 con `qwen3.5:9b`, digest
+qualificato, context 4096, thinking false, temperatura zero, streaming opt-in e
+deny mutativo. L'archive non deve includere profili agentici/mutativi, report o
+materiale development-only. Prima del freeze completare suite normale e
+development, race, vet e audit documentale; poi commit pulito, doppio packaging
+`v0.3.0-pc.1`, installazione fuori checkout e record SHA-256. La matrice sulla
+WSL2/RTX deve usare byte-identico archive/checksum senza rebuild. Fino a quel
+PASS il report finale, tag e pubblicazione restano `NOT_RUN`.

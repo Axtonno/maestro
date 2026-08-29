@@ -1,21 +1,20 @@
-# Maestro v0.2.0 Quick Start
+# Maestro @MAESTRO_VERSION@ Quick Start
 
-Questo percorso parte esclusivamente dall'archive Linux `amd64` e dal checksum
-pubblicati. Non richiede il checkout del repository.
+Questo percorso usa soltanto archive e checksum Linux `amd64`. Non richiede il
+checkout del repository.
 
 ## Prerequisiti
 
 - Linux `amd64`;
-- Ollama raggiungibile su `http://127.0.0.1:11434`;
-- `llama3.1:8b` disponibile;
-- spazio e memoria sufficienti per il modello.
+- Ollama 0.33.1 raggiungibile su `http://127.0.0.1:11434`;
+- `qwen3.5:9b`, digest
+  `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`,
+  già disponibile;
+- memoria sufficiente per il modello.
 
-Il modello embedding non è usato dal quick start lessicale. Per gli scenari che
-lo richiedono, la fixture qualificata è `embeddinggemma:latest`.
+Maestro non avvia Ollama e non esegue pull, update o sostituzioni implicite.
 
 ## 1. Verifica ed estrazione
-
-Eseguire nella directory che contiene i due file scaricati:
 
 ```sh
 version=@MAESTRO_VERSION@
@@ -26,84 +25,78 @@ cd "$artifact"
 ./maestro version
 ```
 
-`maestro version`, `ARTIFACT-MANIFEST.txt`, nome archive e release devono
-riportare la stessa versione. Non proseguire se il checksum fallisce.
+Nome archive, checksum, `maestro version` e `ARTIFACT-MANIFEST.txt` devono
+riportare la stessa identità. Non proseguire in caso di divergenza.
 
-## 2. Modello locale
+## 2. Verifica del modello
 
-Se il modello non è già presente:
-
-```sh
-ollama pull llama3.1:8b
-```
-
-Maestro non installa Ollama e non esegue pull impliciti.
+Usare gli strumenti amministrativi di Ollama per verificare che modello e
+digest coincidano con il manifest. Se il modello non è presente, interrompere
+il quick start: l’acquisizione non fa parte della procedura supportata.
 
 ## 3. Diagnostica
 
-La configurazione inclusa punta alla fixture Laravel inclusa nello stesso
-archive:
+La configurazione inclusa punta alla fixture Laravel nello stesso archive:
 
 ```sh
-./maestro doctor --config ./configs/maestro.example.yaml
-./maestro models --config ./configs/maestro.example.yaml
-./maestro agents --config ./configs/maestro.example.yaml
+./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
 ```
 
-`doctor` deve riportare nove righe `pass`. `models` deve includere
-`llama3.1:8b`; `agents` deve includere `agent.reference`.
+Il doctor esegue cinque controlli read-only: config, workspace, composition,
+model e generation. Tutti devono essere `pass`; non effettua completion.
 
-## 4. Prima run read-only
+## 4. Chat single-file
 
 ```sh
-./maestro run --config ./configs/maestro.example.yaml \
-  "Read app/Http/Controllers/OrderController.php and explain which service its store method calls. Do not modify any file."
+./maestro chat --config ./configs/maestro.chat.example.yaml \
+  --file routes/api.php \
+  "Quali endpoint, controller e action sono dichiarati?"
 ```
 
-Il risultato deve terminare `completed` e identificare
-`OrderService::create`. Tempi e formulazione possono variare: il modello è
-generativo e su CPU una run può richiedere diversi minuti.
+Il terminale deve essere `completed`, il finish reason `stop` e la risposta
+deve identificare `POST /orders` e `OrderController::store` senza inventare
+altri endpoint. L’output esatto e la latenza possono variare.
 
-Il profilo incluso registra soltanto:
+Per verificare il trasporto streaming mantenendo lo stesso contratto:
 
-```text
-workspace.list
-workspace.read
-workspace.search
+```sh
+./maestro chat --stream \
+  --config ./configs/maestro.chat.example.yaml \
+  --file routes/api.php \
+  "Quali endpoint, controller e action sono dichiarati?"
 ```
 
-e imposta `workspace_mutate: deny`. Non aggiungere tool mutanti al quick start.
+I chunk non vengono esposti progressivamente: Maestro pubblica stdout soltanto
+dopo aver validato terminale, limiti e risposta completa.
 
-## 5. Progetto Laravel reale
+## 5. Nessun file
 
-Copiare la configurazione e sostituire `workspace.root` con la root del
-progetto, cioè la directory contenente `artisan` e `composer.json`:
+```sh
+./maestro chat --config ./configs/maestro.chat.example.yaml \
+  "Quali endpoint dichiara questo progetto?"
+```
+
+La risposta deve dichiarare che il contesto di progetto non è disponibile.
+Maestro non seleziona file, non indicizza il workspace e non usa fallback.
+
+## 6. Progetto reale
 
 ```sh
 install -d "$HOME/.config/maestro"
-install -m 0600 ./configs/maestro.example.yaml \
-  "$HOME/.config/maestro/config.yaml"
+install -m 0600 ./configs/maestro.chat.example.yaml \
+  "$HOME/.config/maestro/chat.yaml"
 ```
 
-Modificare il file, quindi verificare prima di eseguire:
+Modificare soltanto `workspace.root` verso la directory autorizzata, poi
+ripetere il doctor. Un path relativo è risolto rispetto al file YAML.
 
-```sh
-./maestro doctor --config "$HOME/.config/maestro/config.yaml"
-./maestro run --config "$HOME/.config/maestro/config.yaml" \
-  "Explain the request flow for this Laravel project. Do not modify any file."
-```
-
-Un path relativo è risolto rispetto alla directory del file YAML. Per ridurre
-ambiguità è consigliato un path assoluto per un progetto reale.
-
-Il plugin indicizza le aree sorgente Laravel bounded (`app`, `bootstrap`,
-`config`, `database`, `lang`, sorgenti `resources`, `routes` e `tests`) e i
-manifest/documenti root principali. Asset generati in `public`, dati runtime in `storage`,
-dipendenze e directory nascoste non entrano nello snapshot.
+Il comando legge esclusivamente il file indicato da `--file`. Path assoluti,
+traversal, directory, symlink, file non regolari o oltre limite vengono
+rifiutati prima della disclosure.
 
 ## Arresto e problemi
 
-SIGINT o SIGTERM cancellano una run e producono exit code 130. Per errori di
-provider, modello, configurazione o tool consultare `troubleshooting.md`. Il
-security model e i limiti di supporto sono in `security-model.md` e
-`compatibility.md`.
+SIGINT/SIGTERM producono exit code 130; una deadline provider usa exit code 4.
+I failure stampano su stderr soltanto `chat failed: <reason_code>` e non
+pubblicano response parziali. Consultare `troubleshooting.md`,
+`security-model.md` e `compatibility.md`.
