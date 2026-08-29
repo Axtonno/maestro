@@ -2,7 +2,8 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — Fasi 1–5 completate; autorizzata dal verdetto
+Stato: In corso — Fasi 1–5 completate; Fase 6 conclusa con stop rule
+`environment_blocked`; Fase 7 `NOT_RUN`. Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -222,8 +223,8 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | Non avviata | Fase 5 |
-| 7 | Packaging candidate e qualifica finale | Non avviata | Fase 6 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | Conclusa — `environment_blocked` | Fase 5 |
+| 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
 fixture della successiva, ma questi non costituiscono evidenza e non vengono
@@ -492,7 +493,7 @@ Gate: **superato** sulla baseline di Fase 4 `9505e16`.
 
 # Fase 6 — Matrice deterministica e qualifica sul ThinkPad
 
-Stato: Non avviata.
+Stato: Conclusa con stop rule — `environment_blocked`.
 
 ## Obiettivo
 
@@ -540,11 +541,17 @@ Task qualitativi minimi:
 - oracoli e conteggi dei task qualitativi;
 - `docs/reports/milestone-17-phase-6.md`.
 
+Gate: **non superato** sul candidate
+`88c4fcbca00a0dbf77d7b7a0d7607dd19c6d8bbe`. Suite deterministica e build
+riproducibile sono verdi; il provider configurato non era disponibile al
+preflight. C0, C1, streaming e qualità restano `NOT_RUN` e non autorizzano il
+packaging.
+
 ---
 
 # Fase 7 — Packaging candidate e qualifica finale
 
-Stato: Non avviata.
+Stato: `NOT_RUN` — dipendenza Fase 6 non soddisfatta.
 
 ## Obiettivo
 
