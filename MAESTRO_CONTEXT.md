@@ -2748,3 +2748,15 @@ completa sul medesimo RC SHA-256 `b034828a07f33a2643556123c00917ff563d83f1976dab
 complete/stream, traversal, symlink, SIGINT, deadline, immutabilità e
 anti-leak sono verdi. Nessun rebuild, pull o tuning è stato eseguito. Il
 blocco ambientale è risolto e la Fase 6 è autorizzata.
+
+Checkpoint Milestone 18 Fase 6: il commit release
+`3f4c7d4b4fd2e380644cf250ce9e8fec2311af53` produce due archive finali
+`maestro-v0.3.0-linux-amd64.tar.gz` byte-identici, 3775317 byte, SHA-256
+`6c8f0e883ec8f8c05571fc2e7bc1f4ecac608c2bd7e338395ae0a4253fff1aaf`.
+Il binario interno ha SHA-256
+`378a0533083b9a00be6c0212ca52001cebc5f77b476a20038bc8e08d1fc3d42d`;
+manifest e `maestro version` incorporano versione v0.3.0, stato release e il
+medesimo commit. Suite normale/development, race, vet, audit, installazione,
+profilo e fixture sono verdi. Il tag annotato locale `v0.3.0` punta allo
+stesso commit. Nessun push o asset remoto è stato ancora scritto; la Fase 7 è
+autorizzata.

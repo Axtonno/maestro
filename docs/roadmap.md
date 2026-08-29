@@ -1028,7 +1028,7 @@ senza rebuild. Il tag resta vietato fino al verdetto finale
 
 # Milestone 18 — Productization & Release v0.3.0
 
-Stato: In esecuzione — Fasi 1–5 `PASS`; artifact finale in preparazione
+Stato: In esecuzione — Fasi 1–6 `PASS`; pubblicazione e verifica in corso
 
 Obiettivo:
 

@@ -2,7 +2,7 @@
 
 Versione target: 0.3.0
 
-Stato: In esecuzione — Fasi 1–5 `PASS`; Fase 6 in esecuzione
+Stato: In esecuzione — Fasi 1–6 `PASS`; Fase 7 in esecuzione
 
 Data: 2026-08-29
 
@@ -109,8 +109,8 @@ packaging candidate e riapre i gate owner della Milestone 17.
 | 3 | Release candidate riproducibile | `PASS` | Fase 2 |
 | 4 | Installazione pulita e audit RC | `PASS` | Fase 3 |
 | 5 | Gate live RC sulla RTX 5070 | `PASS` | Fase 4 |
-| 6 | Artifact finale e tag annotato | `IN_PROGRESS` | Fase 5 PASS |
-| 7 | GitHub Release e verifica post-download | `NOT_RUN` | Fase 6 PASS |
+| 6 | Artifact finale e tag annotato | `PASS` | Fase 5 PASS |
+| 7 | GitHub Release e verifica post-download | `IN_PROGRESS` | Fase 6 PASS |
 
 Le fasi sono sequenziali e fail-fast. Ogni fase produce un report autonomo
 sotto `docs/reports/`; la Fase 7 produce anche
