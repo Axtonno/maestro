@@ -85,6 +85,7 @@ Completati:
 * reports/milestone-18-phase-1.md
 * reports/milestone-18-phase-2.md
 * reports/milestone-18-phase-3.md
+* reports/milestone-18-phase-4.md
 
 ---
 
@@ -2718,3 +2719,13 @@ l'archive persistente misura 3775354 byte e ha SHA-256
 Checksum, manifest, allowlist, token, profilo, fixture, assenza di superfici
 escluse, path checkout e credential-shaped data sono verdi. L'RC è conservato
 sotto `dist/` senza overwrite e autorizza la Fase 4.
+
+Checkpoint Milestone 18 Fase 4: archive e checksum RC sono stati copiati ed
+estratti in una directory nuova fuori checkout senza rebuild. Checksum,
+manifest, version/help, installazione in prefix separato, doctor offline
+fail-closed, traversal pre-provider, fixture immutabile e anti-leak sono
+verdi. Il digest ricorsivo fixture resta
+`ae8483e599d7495b10333d00980951680800632ea7b437425d022cd841841fe7`.
+La macchina corrente è il ThinkPad Ubuntu senza NVIDIA/Ollama loopback: il
+quick start live non è assorbito nel PASS offline e resta proprietario della
+Fase 5 sul medesimo RC trasferito byte-identico alla WSL2/RTX 5070.
