@@ -1,0 +1,63 @@
+version: 2
+
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 5m
+  api_key_env: ""
+
+models:
+  embedding: ""
+
+workspace:
+  id: laravel
+  root: ../internal/benchmark/developer/testdata/laravel-v1
+  framework: laravel
+
+interaction:
+  chat:
+    model: qwen3.5:9b
+    timeout: 5m
+    streaming: true
+    num_ctx: 4096
+    thinking: "false"
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+  agent:
+    model: qwen3.5:9b
+    timeout: 5m
+    streaming: true
+    num_ctx: 8192
+    thinking: default
+
+agent:
+  id: agent.progressive-reference
+  tools:
+    - workspace.list
+    - workspace.read
+    - workspace.search
+
+policy:
+  id: policy.read-only
+  model: allow
+  workspace_inspect: allow
+  workspace_mutate: deny
+
+limits:
+  duration: 5m
+  model_turns: 10
+  tool_calls: 24
+  tool_calls_per_turn: 4
+  plan_steps: 8
+  plan_revisions: 3
+  tool_result_bytes: 65536
+  session_bytes: 1048576
+  input_tokens: 32768
+  output_tokens: 8192
+
+context:
+  retrieval: lexical
+  top_k: 8
+  max_tokens: 4096
+  reserved_tokens: 512
+  safety_tokens: 256

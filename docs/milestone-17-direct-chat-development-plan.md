@@ -3,7 +3,8 @@
 Versione candidata: 0.3.0
 
 Stato: In corso — candidate F6.1, F6.2 e F6.3 respinti con
-`direct_chat_candidate_failed`; Fase 7 `NOT_RUN`.
+`direct_chat_candidate_failed`; F6.4 autorizzato con nuovo modello; Fase 7
+`NOT_RUN`.
 Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
@@ -224,7 +225,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1/F6.2/F6.3 respinti | Fase 5 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1/F6.2/F6.3 respinti; F6.4 in corso | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
@@ -595,6 +596,25 @@ Candidate F6.3 respinto: commit
 I gate deterministici, C1 e complete/stream sono verdi; C0 è 2/3 e la qualità
 è 2/5. Il record autorevole è
 `docs/reports/milestone-17-phase-6-candidate-3.md`.
+
+## Decisione di modello F6.4
+
+Dopo il failure F6.3 è autorizzato un quarto candidate prima di modificare il
+contratto di output. F6.4 conserva codice, prompt/layout F6.3, temperatura zero,
+context 4096, thinking disabilitato, timeout, fixture, domande e oracoli; cambia
+soltanto il modello Direct Chat in `qwen3.5:9b`, digest
+`6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
+
+La scelta è motivata da evidenza storica M13 di risposta direct file-attached
+corretta sulla stessa fixture. Il failure verified-agent M15 non viene
+reinterpretato: F6.4 qualifica esclusivamente una completion single-file senza
+tool. Il profilo separato è
+`configs/maestro.milestone-17-candidate-4.yaml`.
+
+F6.4 ripete integralmente i gate; non eredita PASS live dai candidate
+precedenti. Se fallisce, il passo successivo richiede una decisione separata su
+output strutturato con evidenza validabile. Nessun quinto prompt tuning è
+autorizzato implicitamente.
 
 ---
 

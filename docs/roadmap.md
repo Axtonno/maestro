@@ -983,7 +983,7 @@ supportata. Il piano storico è in
 
 # Milestone 17 — Direct/Chat Product Baseline
 
-Stato: In corso — candidate F6.1/F6.2/F6.3 respinti; Fase 7 `NOT_RUN`
+Stato: In corso — F6.1/F6.2/F6.3 respinti; F6.4 model candidate in corso, Fase 7 `NOT_RUN`
 
 Obiettivo:
 

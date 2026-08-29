@@ -2606,3 +2606,14 @@ validabile — che riapre profilo, capability, renderer e compatibilità — opp
 una nuova decisione sul modello e una serie completa. Il lineage è registrato
 in `docs/reports/milestone-17-phase-6.md`; nessun archive o tag v0.3.0 è
 autorizzato.
+
+Decisione F6.4: prima di valutare output strutturato è autorizzato un quarto e
+ultimo candidate cambiando soltanto il modello Direct Chat in `qwen3.5:9b`,
+digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
+Restano invariati codice/layout F6.3, temperatura zero, context 4096, thinking
+false, timeout, fixture, domande e oracoli. Il profilo è
+`configs/maestro.milestone-17-candidate-4.yaml`. La scelta usa soltanto
+l'evidenza storica direct-chat M13 e non riqualifica il verified agent. Ripetere
+tutti i gate deterministici e live; se F6.4 fallisce, fermarsi per una decisione
+esplicita sul contratto di output strutturato. Fase 7 resta `NOT_RUN` fino al
+PASS.
