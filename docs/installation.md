@@ -70,6 +70,23 @@ quick start non deve essere esteso aggiungendo `workspace.write` o
 sperimentali e non supportate nella v0.2.0. llama.cpp è anch'esso sperimentale;
 il percorso ufficiale richiede Ollama e `llama3.1:8b`.
 
+## Candidato Direct Chat v0.3.0
+
+Durante la Milestone 17, `configs/maestro.chat.example.yaml` è il profilo
+chat-only candidato e non modifica il supporto dell'artifact v0.2.0. Dopo aver
+impostato `workspace.root` sul progetto autorizzato, per un build di sviluppo:
+
+```sh
+./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
+./maestro chat --config ./configs/maestro.chat.example.yaml \
+  --file routes/api.php "Quali route sono dichiarate?"
+```
+
+Il file non richiede un agent o un modello agentico. Maestro non avvia Ollama e
+non scarica `qwen2.5-coder:7b`; provider e modello devono essere già presenti.
+Il profilo diventa installabile come supportato soltanto dopo il verdetto finale
+della Milestone 17.
+
 # Upgrade
 
 Verificare il checksum del nuovo archive, estrarlo in una directory nuova,

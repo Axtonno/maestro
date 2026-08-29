@@ -142,7 +142,7 @@ Il comando ha la stessa sintassi e semantica di `maestro run`. È l'unica
 modalità che può costruire Context Engine, retrieval, Agent Runtime, sessione,
 tool registry e approver. Un failure non avvia `maestro chat`.
 
-## `chat` candidato
+## `chat` candidato Milestone 17
 
 ```text
 maestro chat \
@@ -162,6 +162,17 @@ Chat esegue una sola completion con zero tool e non costruisce retrieval,
 index, state machine, sessione o approver. Senza `--file` comunica al modello
 che non è disponibile contesto workspace; non seleziona file e non effettua
 fallback agentico.
+
+Una configurazione v2 chat-only è valida per `maestro chat` ma non per
+`maestro agent`/`run`. Prima della prima completion può essere verificata con:
+
+```text
+maestro doctor --mode chat --config config-v2.yaml
+```
+
+Il doctor chat compone soltanto il provider Direct Chat, verifica completion,
+streaming quando richiesto, `num_ctx` e thinking e non invoca il modello. Il
+doctor senza `--mode` conserva il comportamento agentico storico.
 
 Lo streaming usa il trasporto incrementale del provider ma conserva output
 atomico: i chunk vengono assemblati entro il limite e stdout viene scritto

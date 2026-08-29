@@ -222,18 +222,8 @@ func (config Config) Validate() error {
 	if config.Models.Embedding != "" && !exact(config.Models.Embedding, 512) {
 		return fieldError("models.embedding", "must be exact when set")
 	}
-	workspaceID := pkgContext.WorkspaceID(config.Workspace.ID)
-	if err := workspaceID.Validate(); err != nil {
-		return fieldWrap("workspace.id", err)
-	}
-	if config.Workspace.Framework != "laravel" {
-		return fieldError("workspace.framework", "v0.1.0 requires laravel")
-	}
-	if workspaceID != "laravel" {
-		return fieldError("workspace.id", "must equal the authoritative Laravel workspace ID \"laravel\"")
-	}
-	if config.Workspace.Root == "" || strings.ContainsAny(config.Workspace.Root, "\r\n\x00") || !filepath.IsAbs(config.Workspace.Root) || filepath.Clean(config.Workspace.Root) != config.Workspace.Root {
-		return fieldError("workspace.root", "must be absolute and normalized")
+	if err := validateWorkspace(config.Workspace); err != nil {
+		return err
 	}
 	if err := pkgAgent.ID(config.Agent.ID).Validate(); err != nil {
 		return fieldWrap("agent.id", err)
@@ -267,6 +257,56 @@ func (config Config) Validate() error {
 	}
 	if err := config.ContextBudget().Validate(); err != nil {
 		return fieldWrap("context", err)
+	}
+	return nil
+}
+
+// ValidateChatExecutionProfile validates the authority and inputs used by the
+// direct-chat composition root. Agent identity, tools, limits and retrieval
+// are intentionally outside this mode and remain subject to Validate and
+// ValidateExecutionProfile when an agent command is requested.
+func (config Config) ValidateChatExecutionProfile() error {
+	if config.Version != CandidateVersion {
+		return fieldError("version", fmt.Sprintf("direct chat requires %d", CandidateVersion))
+	}
+	if err := validateProvider(config.Provider); err != nil {
+		return err
+	}
+	if config.Models.Embedding != "" && !exact(config.Models.Embedding, 512) {
+		return fieldError("models.embedding", "must be exact when set")
+	}
+	if err := validateProfile("interaction.chat", config.Interaction.Chat.ProfileConfig, config.Provider.Timeout.Duration); err != nil {
+		return err
+	}
+	if config.Interaction.Chat.MaxFileBytes < 1 || config.Interaction.Chat.MaxFileBytes > 16<<20 {
+		return fieldError("interaction.chat.max_file_bytes", "must be between 1 and 16777216")
+	}
+	if config.Interaction.Chat.MaxOutputBytes < 1 || config.Interaction.Chat.MaxOutputBytes > 16<<20 {
+		return fieldError("interaction.chat.max_output_bytes", "must be between 1 and 16777216")
+	}
+	if err := validateWorkspace(config.Workspace); err != nil {
+		return err
+	}
+	if config.Policy.WorkspaceMutation != "deny" {
+		return fieldError("policy.workspace_mutate", "direct chat requires deny")
+	}
+	return nil
+}
+
+func validateWorkspace(config WorkspaceConfig) error {
+	workspaceID := pkgContext.WorkspaceID(config.ID)
+	if err := workspaceID.Validate(); err != nil {
+		return fieldWrap("workspace.id", err)
+	}
+	if config.Framework != "laravel" {
+		return fieldError("workspace.framework", "requires laravel")
+	}
+	if workspaceID != "laravel" {
+		return fieldError("workspace.id", "must equal the authoritative Laravel workspace ID \"laravel\"")
+	}
+	if config.Root == "" || strings.ContainsAny(config.Root, "\r\n\x00") ||
+		!filepath.IsAbs(config.Root) || filepath.Clean(config.Root) != config.Root {
+		return fieldError("workspace.root", "must be absolute and normalized")
 	}
 	return nil
 }

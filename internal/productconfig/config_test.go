@@ -76,6 +76,60 @@ func TestInteractionExampleLoadsStrictProfiles(t *testing.T) {
 	}
 }
 
+func TestChatExampleLoadsWithoutAgentConfiguration(t *testing.T) {
+	config, err := LoadChat("../../configs/maestro.chat.example.yaml")
+	if err != nil {
+		t.Fatalf("chat example is invalid: %v", err)
+	}
+	chat, ok := config.ChatProfile()
+	if !ok || chat.Model != "qwen2.5-coder:7b" || chat.NumCtx != 4096 ||
+		chat.Thinking != ThinkingDisabled || chat.Streaming ||
+		chat.MaxFileBytes != 1<<20 || chat.MaxOutputBytes != 1<<20 {
+		t.Fatalf("unexpected chat profile: %#v", chat)
+	}
+	if config.Agent.ID != "" || len(config.Agent.Tools) != 0 || config.Context.Retrieval != "" {
+		t.Fatalf("chat-only example acquired agent configuration: %#v", config)
+	}
+	if config.Policy.WorkspaceMutation != "deny" {
+		t.Fatalf("chat-only example does not deny mutation: %#v", config.Policy)
+	}
+	if _, err := Load("../../configs/maestro.chat.example.yaml"); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("agent loader accepted chat-only configuration: %v", err)
+	}
+}
+
+func TestLoadChatValidatesOnlyChatAuthorityAndStrictSyntax(t *testing.T) {
+	valid := validChatYAML("workspace")
+	directory := t.TempDir()
+	for _, testCase := range []struct {
+		name    string
+		encoded string
+		wantErr bool
+	}{
+		{name: "chat only", encoded: valid},
+		{name: "irrelevant invalid agent", encoded: valid + "agent:\n  id: agent.unsupported\n  tools: [shell.run]\n"},
+		{name: "mutation prompt", encoded: strings.Replace(valid, "workspace_mutate: deny", "workspace_mutate: prompt", 1), wantErr: true},
+		{name: "missing model", encoded: strings.Replace(valid, "model: chat-model", "model: \"\"", 1), wantErr: true},
+		{name: "unknown", encoded: strings.Replace(valid, "version: 2", "version: 2\nunknown: true", 1), wantErr: true},
+		{name: "duplicate", encoded: strings.Replace(valid, "version: 2", "version: 2\nversion: 2", 1), wantErr: true},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := filepath.Join(directory, strings.ReplaceAll(testCase.name, " ", "-")+".yaml")
+			writeConfig(t, path, testCase.encoded)
+			config, err := LoadChat(path)
+			if testCase.wantErr {
+				if !errors.Is(err, ErrInvalid) {
+					t.Fatalf("invalid chat config accepted: %#v %v", config, err)
+				}
+				return
+			}
+			if err != nil || filepath.Base(config.Workspace.Root) != "workspace" {
+				t.Fatalf("load chat config: %#v %v", config, err)
+			}
+		})
+	}
+}
+
 func TestMilestone14CandidateProfileIsFrozenAndValid(t *testing.T) {
 	config, err := Load("../../configs/maestro.milestone-14-candidate.yaml")
 	if err != nil {
@@ -312,6 +366,31 @@ context:
   max_tokens: 1024
   reserved_tokens: 128
   safety_tokens: 64
+`, root)
+}
+
+func validChatYAML(root string) string {
+	return fmt.Sprintf(`version: 2
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 2m
+  api_key_env: ""
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+interaction:
+  chat:
+    model: chat-model
+    timeout: 1m
+    streaming: false
+    num_ctx: 4096
+    thinking: "false"
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+policy:
+  workspace_mutate: deny
 `, root)
 }
 

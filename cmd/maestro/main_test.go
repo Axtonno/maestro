@@ -383,6 +383,36 @@ func TestChatCommandUsesV2ProfileAndStableRedactedEnvelope(t *testing.T) {
 	}
 }
 
+func TestChatCommandAndDoctorAcceptChatOnlyProfile(t *testing.T) {
+	configPath, _ := newCLIChatOnlyConfig(t, false)
+	provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
+		Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "No project context supplied."},
+		FinishReason: pkgProvider.FinishReasonStop,
+	}}}
+	dependencies := cliTestDependencies(provider)
+	for _, testCase := range []struct {
+		name string
+		args []string
+	}{
+		{name: "chat", args: []string{"chat", "--config", configPath, "What is known?"}},
+		{name: "doctor", args: []string{"doctor", "--mode", "chat", "--config", configPath}},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			if code := runWithIO(testCase.args, strings.NewReader(""), &stdout, &stderr, dependencies); code != 0 || stderr.Len() != 0 {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+		})
+	}
+	if provider.inspectCalls != 2 || len(provider.requests) != 1 || len(provider.streamRequests) != 0 {
+		t.Fatalf("unexpected direct path: inspect=%d complete=%d stream=%d", provider.inspectCalls, len(provider.requests), len(provider.streamRequests))
+	}
+	if _, err := productconfig.Load(configPath); !errors.Is(err, productconfig.ErrInvalid) {
+		t.Fatalf("agent loader accepted chat-only profile: %v", err)
+	}
+}
+
 func TestChatCommandFailsClosedWithSyntheticReasons(t *testing.T) {
 	v1 := newCLIConfig(t, "allow")
 	v2, _ := newCLIInteractionConfig(t, false)
@@ -665,6 +695,7 @@ type cliProvider struct {
 	stream         pkgProvider.Stream
 	streamErr      error
 	streamRequests []pkgProvider.CompletionRequest
+	inspectCalls   int
 }
 
 func (provider *cliProvider) Stream(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.Stream, error) {
@@ -693,6 +724,7 @@ func (provider *cliProvider) Models(context.Context) ([]pkgProvider.Model, error
 }
 
 func (provider *cliProvider) InspectCapabilities(_ context.Context, request pkgProvider.CapabilityRequest) (pkgProvider.CapabilityReport, error) {
+	provider.inspectCalls++
 	descriptors := make([]pkgProvider.CapabilityDescriptor, 0, len(pkgProvider.KnownCapabilities()))
 	for _, capability := range pkgProvider.KnownCapabilities() {
 		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{Capability: capability, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable})
@@ -840,6 +872,38 @@ context:
   safety_tokens: 64
 `, root, streaming)
 	path := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path, root
+}
+
+func newCLIChatOnlyConfig(t *testing.T, streaming bool) (string, string) {
+	t.Helper()
+	root := t.TempDir()
+	content := fmt.Sprintf(`version: 2
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 1m
+  api_key_env: ""
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+interaction:
+  chat:
+    model: chat-model
+    timeout: 1m
+    streaming: %t
+    num_ctx: 4096
+    thinking: "false"
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+policy:
+  workspace_mutate: deny
+`, root, streaming)
+	path := filepath.Join(t.TempDir(), "chat.yaml")
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}

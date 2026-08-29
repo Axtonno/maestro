@@ -40,9 +40,28 @@ relativi sono risolti rispetto al file di configurazione.
 
 ## `configuration invalid`
 
-Lo schema è strict: campi sconosciuti o duplicati, alias YAML, documenti
-multipli e versioni diverse da `1` sono rifiutati. Confrontare il file con
-`configs/maestro.example.yaml` e consultare `configuration.md`.
+Nel percorso v0.2.0 lo schema è strict: campi sconosciuti o duplicati, alias
+YAML, documenti multipli e versioni diverse da `1` sono rifiutati. Confrontare
+il file con `configs/maestro.example.yaml` e consultare `configuration.md`.
+
+Per il candidato Direct Chat v0.3.0 usare lo schema v2 chat-only e il preflight
+dedicato:
+
+```sh
+./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
+```
+
+Questo comando non richiede i blocchi agent, limits o context. Richiede invece
+un profilo chat completo e `policy.workspace_mutate: deny`. Il doctor senza
+`--mode chat` valida il profilo agentico e respinge correttamente una
+configurazione chat-only.
+
+## `capability_unsupported` in Direct Chat
+
+Il modello o l'adapter non attesta completion, streaming richiesto, controllo
+di `num_ctx` o thinking. Il preflight fallisce prima della completion e non
+applica fallback. Verificare il modello esatto e il profilo; non rimuovere i
+controlli o cambiare modello durante una serie congelata.
 
 ## `provider_unavailable` o exit code 4
 

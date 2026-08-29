@@ -61,12 +61,12 @@ type Service struct {
 }
 
 func Build(config productconfig.Config, dependencies Dependencies) (*Service, error) {
-	if err := config.ValidateExecutionProfile(); err != nil {
-		return nil, err
-	}
 	profile, exists := config.ChatProfile()
 	if !exists {
 		return nil, ErrProfileRequired
+	}
+	if err := config.ValidateChatExecutionProfile(); err != nil {
+		return nil, err
 	}
 	dependencies = normalizeDependencies(dependencies)
 	secret, err := config.Secret(dependencies.Getenv)

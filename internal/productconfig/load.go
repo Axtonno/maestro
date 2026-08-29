@@ -13,6 +13,22 @@ import (
 const maxConfigBytes = 1 << 20
 
 func Load(path string) (Config, error) {
+	return load(path, func(config Config) error { return config.Validate() })
+}
+
+// LoadChat decodes the same strict versioned document as Load, but validates
+// only the common provider/workspace fields and the direct-chat profile. This
+// keeps a tool-free chat command independent from optional agent settings.
+func LoadChat(path string) (Config, error) {
+	return load(path, func(config Config) error {
+		if config.Version == Version {
+			return config.Validate()
+		}
+		return config.ValidateChatExecutionProfile()
+	})
+}
+
+func load(path string, validate func(Config) error) (Config, error) {
 	encoded, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -57,7 +73,10 @@ func Load(path string) (Config, error) {
 	if !filepath.IsAbs(config.Workspace.Root) && config.Workspace.Root != "" {
 		config.Workspace.Root = filepath.Clean(filepath.Join(filepath.Dir(config.path), config.Workspace.Root))
 	}
-	if err := config.Validate(); err != nil {
+	if validate == nil {
+		return Config{}, fmt.Errorf("configuration validator is missing: %w", ErrInvalid)
+	}
+	if err := validate(config); err != nil {
 		return Config{}, err
 	}
 	return config, nil

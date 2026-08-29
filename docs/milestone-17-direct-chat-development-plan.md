@@ -2,7 +2,7 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — Fasi 1–3 completate; autorizzata dal verdetto
+Stato: In corso — Fasi 1–4 completate; autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -220,7 +220,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 1 | Freeze del contratto e audit del candidato | Completata | M14 completata + M15 `direct/chat` PASS |
 | 2 | Confine del servizio Direct Chat | Completata | Fase 1 |
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
-| 4 | Profilo dedicato e preflight | Non avviata | Fase 3 |
+| 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Non avviata | Fase 4 |
 | 6 | Matrice deterministica e qualifica sul ThinkPad | Non avviata | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | Non avviata | Fase 6 |
@@ -402,7 +402,7 @@ Gate: **superato** sulla baseline di Fase 2 `7251326`.
 
 # Fase 4 — Profilo dedicato e preflight
 
-Stato: Non avviata.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -440,6 +440,8 @@ fallire prima della completion quando provider o modello non possono onorarlo.
 - contratto del profilo chat v0.3.0 e configuration example candidato;
 - matrice capability/preflight e reason code;
 - `docs/reports/milestone-17-phase-4.md`.
+
+Gate: **superato** sulla baseline di Fase 3 `03d3f62`.
 
 ---
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/antonio-cafeo/maestro/internal/application"
 	"github.com/antonio-cafeo/maestro/internal/buildinfo"
+	"github.com/antonio-cafeo/maestro/internal/directchat"
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
 	pkgAgent "github.com/antonio-cafeo/maestro/pkg/agent"
 )
@@ -19,12 +20,53 @@ import (
 const maxInstructionBytes = 1 << 20
 
 func runDoctor(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
-	config, help, code := loadConfigForCommand("maestro doctor", arguments, stdout, stderr, dependencies, false)
-	if code != 0 || help {
-		return code
+	flags := flag.NewFlagSet("maestro doctor", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro doctor [--config path] [--mode agent|chat]") }
+	configPath := flags.String("config", "", "path to Maestro configuration")
+	mode := flags.String("mode", "agent", "execution mode to validate")
+	if err := flags.Parse(arguments); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
+		return 2
+	}
+	if flags.NArg() != 0 || (*mode != "agent" && *mode != "chat") {
+		fmt.Fprintln(stderr, "doctor failed: invalid_request")
+		return 2
+	}
+	var config productconfig.Config
+	var err error
+	if *mode == "chat" {
+		config, err = resolveAndLoadChat(*configPath, dependencies)
+	} else {
+		config, err = resolveAndLoad(*configPath, dependencies)
+	}
+	if err != nil {
+		if *mode == "chat" {
+			fmt.Fprintln(stderr, "doctor failed: invalid_request")
+		} else {
+			fmt.Fprintf(stderr, "configuration invalid: %v\n", err)
+		}
+		return 2
 	}
 	ctx, cancel := commandContext(dependencies)
 	defer cancel()
+	if *mode == "chat" {
+		checks := directchat.Doctor(ctx, config, directChatDependencies(dependencies))
+		failed := false
+		for _, check := range checks {
+			fmt.Fprintf(stdout, "%s\t%s\t%s\n", check.Status, check.Name, check.Detail)
+			failed = failed || check.Status == directchat.CheckFail
+		}
+		if ctx.Err() != nil {
+			return 130
+		}
+		if failed {
+			return 1
+		}
+		return 0
+	}
 	checks := application.Doctor(ctx, config, dependencies.application)
 	failed := false
 	for _, check := range checks {
@@ -269,6 +311,15 @@ func resolveAndLoad(explicit string, dependencies commandDependencies) (productc
 		return productconfig.Config{}, err
 	}
 	return productconfig.Load(path)
+}
+
+func resolveAndLoadChat(explicit string, dependencies commandDependencies) (productconfig.Config, error) {
+	getenv := dependencies.application.Getenv
+	path, err := productconfig.ResolvePath(explicit, getenv)
+	if err != nil {
+		return productconfig.Config{}, err
+	}
+	return productconfig.LoadChat(path)
 }
 
 func commandContext(dependencies commandDependencies) (context.Context, context.CancelFunc) {

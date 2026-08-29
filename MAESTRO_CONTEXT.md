@@ -2505,3 +2505,16 @@ collidibili. Race su file, mode, symlink, directory padre e root sono fail-close
 fixture e workspace restano invariati. Poiché il prompt è cambiato per
 hardening, i PASS live M15 restano evidenza storica ma la nuova serie deve
 essere eseguita integralmente in Fase 6. La Fase 4 è il prossimo gate.
+
+Checkpoint Fase 4: Profilo dedicato e preflight è completata sulla baseline
+`03d3f62`. `productconfig.LoadChat` e
+`ValidateChatExecutionProfile` permettono un documento v2 chat-only strict che
+richiede soltanto provider, workspace, profilo chat e mutation deny; l'agent
+loader completo continua a respingerlo e conserva tutti i propri invarianti.
+`maestro doctor --mode chat` esegue cinque check su config, workspace,
+composition, modello e generation controls senza completion né graph agentico.
+Il nuovo `configs/maestro.chat.example.yaml` congela
+`qwen2.5-coder:7b`, context 4096, thinking false e limiti da 1 MiB; il suo
+SHA-256 è `7186188ac769787afd9521a0815e58abb18952526757aa878675bdefd19ce7b1`.
+Suite normale/development, vet e race mirata `-count=3` sono verdi. La Fase 5
+deve chiudere streaming, terminali e osservabilità.

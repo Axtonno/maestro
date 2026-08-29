@@ -68,7 +68,7 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 		fmt.Fprintln(stderr, "chat failed: invalid_request")
 		return 2
 	}
-	config, err := resolveAndLoad(*configPath, dependencies)
+	config, err := resolveAndLoadChat(*configPath, dependencies)
 	if err != nil {
 		fmt.Fprintln(stderr, "chat failed: invalid_request")
 		return 2
