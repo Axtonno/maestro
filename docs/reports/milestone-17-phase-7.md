@@ -2,7 +2,7 @@
 
 Data: 2026-08-29
 
-Stato: **IN CORSO — PACKAGING LOCALE PASS, MATRICE FINALE LIVE NOT_RUN**
+Stato: **COMPLETATA — PASS, MATRICE FINALE LIVE VERDE**
 
 ## Candidate congelato
 
@@ -94,22 +94,50 @@ modifica l’archive. Ogni failure materiale arresta la serie. `not_run`, `skip`
 
 | Gate | Esito | Evidenza redatta |
 |---|---|---|
-| identità archive/manifest/binario | NOT_RUN | — |
-| modello e digest | NOT_RUN | — |
-| installazione pulita | NOT_RUN | — |
-| doctor chat | NOT_RUN | — |
-| no-file | NOT_RUN | — |
-| single-file complete | NOT_RUN | — |
-| single-file stream ed equivalenza | NOT_RUN | — |
-| traversal e symlink | NOT_RUN | — |
-| cancellazione | NOT_RUN | — |
-| deadline | NOT_RUN | — |
-| immutabilità | NOT_RUN | — |
-| anti-leak | NOT_RUN | — |
+| identità archive/manifest/binario | PASS | archive `82bfb33f…`, binario `dee9d511…`, versione e commit esatti |
+| modello e digest | PASS | `qwen3.5:9b`, digest `6488c96f…`, Ollama 0.33.1 |
+| installazione pulita | PASS | estrazione nuova sotto `/tmp`, fuori dal checkout, nessun rebuild |
+| version e help | PASS | versione/commit, root help e chat help, exit 0 |
+| doctor chat | PASS 5/5 | config, workspace, composition, model e generation |
+| no-file | PASS | assenza di evidenza dichiarata, zero fatti di progetto inventati |
+| single-file complete | PASS | `POST /orders`, `OrderController::store`, terminale `completed`, finish `stop` |
+| single-file stream ed equivalenza | PASS | risposta semanticamente identica a complete, terminale e usage coerenti |
+| traversal e symlink | PASS 2/2 | exit 2, `file_not_allowed`, stdout vuoto |
+| cancellazione | PASS | SIGINT, exit 130, `canceled`, stdout vuoto |
+| deadline | PASS | timeout temporaneo, exit 4, `deadline_exceeded`, stdout vuoto |
+| immutabilità | PASS | digest ricorsivo pre/post identico |
+| anti-leak | PASS | canary, secret e root fisica assenti dai failure sink |
+
+## Evidenza operativa finale
+
+La serie autorevole è stata eseguita sulla WSL2/Ubuntu 24.04/RTX 5070 usando
+soltanto i file estratti dall'archive. SHA-256 verificati prima della prima
+generation:
+
+- archive: `82bfb33f3fd9af911e3b2b1e89f9920177b281046da21b186512e577e114fb61`;
+- binario: `dee9d5113ccf2db0573b03e8a3851f600d7bc789964793ebae14376f9c849a66`;
+- profilo: `1c5bbe79edf125485d14518e58ff18c48156eaa0fb91faf82fcf3cd97375d0ee`.
+
+Le tre generation positive hanno exit 0, stderr vuoto, terminale `completed`,
+finish `stop` e `truncated=false`. Latenze end-to-end osservate: no-file
+6.588 ms, complete 627 ms, stream 552 ms. Il digest ricorsivo locale della
+fixture è `42642ed5ec5f814fcd82e4c60adb17a03ccbb8346500b0357265c4ecd60112de`
+prima e dopo la matrice.
+
+Il primo tentativo del solo test deadline non ha raggiunto il provider perché
+la copia temporanea del profilo era stata collocata fuori da `configs/`,
+alterando la risoluzione relativa della workspace root. Ha terminato
+`file_not_allowed` prima della generation e non costituisce un failure del
+candidate. L'harness è stato corretto esclusivamente nella posizione della
+copia e l'intera matrice, non il solo gate, è stata ripetuta sul medesimo
+archive senza tuning; la seconda serie completa è quella autorevole sopra.
+
+Gli output raw locali sono stati eliminati dopo valutazione e scansione.
 
 ## Gate
 
-Il packaging locale è **PASS**. La Fase 7 e la Milestone 17 restano aperte:
-il verdetto finale non può essere emesso prima del PASS della matrice sullo
-stesso archive. Tag, release candidate, release finale e pubblicazione restano
-vietati.
+Il packaging locale e la matrice finale sullo stesso archive sono **PASS**.
+La Fase 7 è completata e autorizza il verdetto
+`direct_chat_product_baseline`, limitato al perimetro qualificato. La creazione
+di tag, release candidate/release artifact e pubblicazione sono azioni
+separate: non sono state eseguite durante questa qualifica.
