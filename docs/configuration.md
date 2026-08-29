@@ -233,6 +233,11 @@ con valori `default`, `true` o `false`, così il default del provider resta
 distinto da un'esplicita disabilitazione. Valori non supportati dall'adapter o
 dal modello falliscono il preflight invece di essere ignorati.
 
+La temperatura non è configurabile nel profilo chat candidato: Direct Chat la
+fissa a zero nella request provider-neutral per ridurre variazioni di sampling
+fra complete e stream. Questa regola non modifica il profilo agent e non viene
+delegata al default del provider.
+
 I limiti chat sono indipendenti dai budget della sessione agentica:
 
 - `max_file_bytes` limita il solo file disclosed;

@@ -174,6 +174,12 @@ Il doctor chat compone soltanto il provider Direct Chat, verifica completion,
 streaming quando richiesto, `num_ctx` e thinking e non invoca il modello. Il
 doctor senza `--mode` conserva il comportamento agentico storico.
 
+Direct Chat applica una baseline di sampling deterministica con temperatura
+zero sia a complete sia a stream. Non è un'opzione CLI e non eredita il
+default di sampling del provider. Quando è presente un file, il suo contenuto
+non attendibile precede la domanda finale: il modello riceve quindi la richiesta
+da soddisfare come ultimo turno, senza attribuire autorità al sorgente.
+
 Lo streaming usa il trasporto incrementale del provider ma conserva output
 atomico: i chunk vengono assemblati entro il limite e stdout viene scritto
 soltanto dopo un terminale `stop` valido seguito da EOF. Un flusso troncato non

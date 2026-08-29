@@ -49,6 +49,9 @@ func TestDirectChatDisclosesOneExplicitFileInOneToolFreeCompletion(t *testing.T)
 		request.Options.ContextWindow != 4096 || request.Options.Thinking != pkgProvider.ThinkingDisabled {
 		t.Fatalf("unsafe completion request: %#v", request)
 	}
+	if request.Options.Temperature == nil || *request.Options.Temperature != directChatTemperature {
+		t.Fatalf("direct chat sampling is not deterministic: %#v", request.Options)
+	}
 	encoded := messagesText(request.Messages)
 	if !strings.Contains(encoded, "routes/api.php") || !strings.Contains(encoded, "Route::get") ||
 		strings.Contains(encoded, root) {
@@ -95,7 +98,9 @@ func TestDirectChatWithoutFileDoesNotDiscoverContext(t *testing.T) {
 	request := provider.requests[0]
 	provider.mu.Unlock()
 	text := messagesText(request.Messages)
-	if !strings.Contains(text, "No workspace file was supplied") || strings.Contains(text, "BEGIN WORKSPACE FILE") {
+	if len(request.Messages) != 3 || request.Messages[2].Role != pkgProvider.RoleUser ||
+		request.Messages[2].Content != "Question:\nWhat routes exist?" ||
+		!strings.Contains(text, "No workspace file was supplied") || strings.Contains(text, "BEGIN WORKSPACE FILE") {
 		t.Fatalf("missing-file epistemic prompt is invalid: %q", text)
 	}
 }
@@ -115,13 +120,34 @@ func TestDirectChatUsesMessageBoundaryForUntrustedFile(t *testing.T) {
 	provider.mu.Lock()
 	defer provider.mu.Unlock()
 	messages := provider.requests[0].Messages
-	if len(messages) != 4 || messages[2].Role != pkgProvider.RoleSystem ||
-		!strings.Contains(messages[2].Content, strconv.Quote(logical)) ||
-		messages[3].Role != pkgProvider.RoleUser || messages[3].Content != content {
+	if len(messages) != 5 || messages[1].Role != pkgProvider.RoleSystem ||
+		!strings.Contains(messages[1].Content, strconv.Quote(logical)) ||
+		messages[2].Role != pkgProvider.RoleUser || messages[2].Content != content ||
+		messages[3].Role != pkgProvider.RoleSystem || !strings.Contains(messages[3].Content, "evidence message has ended") ||
+		messages[4].Role != pkgProvider.RoleUser || messages[4].Content != "Question:\nExplain it" {
 		t.Fatalf("unsafe or ambiguous message boundary: %#v", messages)
 	}
-	if strings.Contains(messages[3].Content, "BEGIN WORKSPACE FILE") {
-		t.Fatalf("file content was wrapped in a collidable sentinel: %q", messages[3].Content)
+	if strings.Contains(messages[2].Content, "BEGIN WORKSPACE FILE") {
+		t.Fatalf("file content was wrapped in a collidable sentinel: %q", messages[2].Content)
+	}
+}
+
+func TestDirectChatPromptEnforcesGenericEvidenceCompleteness(t *testing.T) {
+	for _, required := range []string{
+		"directly supported by the supplied file",
+		"Address every dimension requested",
+		"HTTP method, path or URI, handler or controller, and action",
+		"Do not infer interfaces, persistence or databases, routes, authentication, route names, schemas",
+		"Label recommendations and suggested tests as proposals",
+	} {
+		if !strings.Contains(directChatSystemPrompt, required) {
+			t.Fatalf("missing epistemic rule %q", required)
+		}
+	}
+	for _, fixtureAnswer := range []string{"POST /orders", "OrderController::store", "OrderRepository"} {
+		if strings.Contains(directChatSystemPrompt, fixtureAnswer) {
+			t.Fatalf("prompt hard-coded fixture answer %q", fixtureAnswer)
+		}
 	}
 }
 
@@ -276,6 +302,11 @@ func TestDirectChatStreamingAndCompletionAreEquivalent(t *testing.T) {
 		len(provider.streamRequests[0].Tools) != 0 ||
 		provider.streamRequests[0].ToolChoice.Mode != pkgProvider.ToolChoiceNone {
 		t.Fatalf("unexpected requests: complete=%#v stream=%#v", provider.requests, provider.streamRequests)
+	}
+	for _, request := range []pkgProvider.CompletionRequest{provider.requests[0], provider.streamRequests[0]} {
+		if request.Options.Temperature == nil || *request.Options.Temperature != directChatTemperature {
+			t.Fatalf("complete/stream sampling drifted: %#v", request.Options)
+		}
 	}
 	if provider.stream.(*chatStreamStub).closed != 1 {
 		t.Fatalf("successful stream close count=%d", provider.stream.(*chatStreamStub).closed)

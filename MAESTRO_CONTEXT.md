@@ -2532,17 +2532,21 @@ successo `stop` espone `truncated=false`; effettivi non attestabili restano
 `-count=10` e anti-leak sono verdi. La Fase 6 può congelare ed eseguire la
 matrice deterministica/live.
 
-Checkpoint Fase 6 (2026-08-29): il candidate congelato
+Checkpoint Fase 6.1 (2026-08-29): il candidate congelato
 `88c4fcbca00a0dbf77d7b7a0d7607dd19c6d8bbe`, versione
-`v0.3.0-m17-p6.1`, produce due binari byte-identici con SHA-256
-`03b9dde248880953a1e44fe5cfceeb6e1eeb82ada187f93e4d1df8dcb12b6591`.
-Suite normale e development `-count=3`, race, vet, sintassi script,
-containment, immutabilità e failure anti-leak sono verdi. Il doctor chat passa
-config, workspace e composition ma fallisce il check modello con
-`required_capability_unavailable`: Ollama su loopback rifiuta la connessione.
-Maestro non ha avviato il provider né mutato il catalogo. C0, C1 3/3,
-streaming 2/2 e i cinque task qualitativi sono `NOT_RUN`, quindi il verdetto è
-`environment_blocked`, non PASS. La Fase 7 resta `NOT_RUN` e non è autorizzato
-alcun packaging o tag. Riprendere dal report
-`docs/reports/milestone-17-phase-6.md` sullo stesso candidate dopo il ripristino
-esterno di Ollama e del digest modello M15 `dae161e27b0e`.
+`v0.3.0-m17-p6.1`, è stato ripetuto sulla piattaforma WSL2/RTX 5070 con Ollama
+0.33.1 e il digest modello atteso. Preflight e C0 sono verdi, ma C1 è 0/3,
+equivalenza complete/stream 0/2 e qualità 2/5: il verdetto è
+`direct_chat_candidate_failed`. La deviazione dal ThinkPad prescritto non viene
+reinterpretata; fixture e terminali restano verdi. Il report canonico è
+`docs/reports/milestone-17-phase-6.md`.
+
+È autorizzato un nuovo ciclo F6.2, non la Fase 7. La diagnosi attribuisce
+l'omissione di campi richiesti alla domanda collocata prima del file e la
+divergenza complete/stream al sampling lasciato al default provider. Il ciclo
+sposta la domanda nell'ultimo turno dopo un confine system dell'evidenza,
+rafforza regole generiche di completezza/epistemica e fissa temperatura zero
+per entrambi i trasporti. Il prompt non contiene risposte della fixture. Prima
+del nuovo freeze devono tornare verdi suite normale/development `-count=3`,
+race, vet, test mirati e anti-leak; poi la matrice live va ripetuta integralmente
+su un nuovo candidate. Packaging e tag restano vietati fino al PASS F6.2.

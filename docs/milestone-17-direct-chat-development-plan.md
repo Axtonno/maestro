@@ -548,6 +548,17 @@ l'equivalenza streaming è 0/2 come gate e la qualità è 2/5. La serie è stata
 eseguita sulla piattaforma WSL2/RTX 5070 anziché sul ThinkPad prescritto. Il
 verdetto `direct_chat_candidate_failed` non autorizza il packaging.
 
+## Ciclo di hardening F6.2
+
+Il failure F6.1 autorizza una correzione causale, non il tuning durante la
+serie. Il nuovo candidate deve collocare la domanda dopo il messaggio non
+attendibile del file, imporre un protocollo epistemico generico senza risposte
+della fixture e usare temperatura zero identica per complete e stream. Queste
+modifiche riaprono i gate posseduti dal prompt e dal trasporto; suite,
+containment, anti-leak e matrice live devono essere ripetuti integralmente su
+un nuovo commit congelato. Modello, digest, profilo, fixture e oracoli restano
+invariati.
+
 ---
 
 # Fase 7 — Packaging candidate e qualifica finale

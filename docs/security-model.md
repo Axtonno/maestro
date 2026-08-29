@@ -96,7 +96,9 @@ quotata. File vuoti e UTF-8 con BOM sono ammessi e preservati; il limite byte è
 inclusivo. Il path fisico non viene disclosed. Domanda, path logico e contenuto
 sono separati da confini di messaggio provider, non da sentinelle testuali
 collidibili; il contenuto workspace resta non attendibile e non può concedere
-tool o autorità.
+tool o autorità. Con un file, un messaggio system chiude esplicitamente il
+confine dell'evidenza e la domanda è l'ultimo turno user: istruzioni apparenti
+nel sorgente restano dati e non sostituiscono la richiesta dell'operatore.
 
 La request dichiara zero tool e `tool_choice: none`. Una tool call inattesa
 nella response è un protocol failure. Timeout, risposta vuota, output oltre
@@ -104,6 +106,10 @@ limite o capability non supportata falliscono chiusi e non avviano
 `maestro agent`. `num_ctx` e `thinking` espliciti devono essere onorati o
 rifiutati; un valore non attestabile resta `unknown` e non viene presentato
 come confermato.
+
+Complete e stream ricevono le stesse opzioni e una temperatura interna fissata
+a zero. Questo riduce la divergenza da sampling, ma non trasforma equivalenza o
+correttezza semantica in garanzie deterministiche: entrambe restano gate live.
 
 Lo streaming chat è aggregato e validato prima di scrivere stdout. Terminale
 mancante o duplicato, tool delta, chunk successivo al terminale, errore di
