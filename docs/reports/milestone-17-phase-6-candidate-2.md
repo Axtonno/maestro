@@ -2,7 +2,7 @@
 
 Data: 2026-08-29
 
-Stato: **CONGELATO — LIVE QUALIFICATION PENDING**
+Stato: **RESPINTO — `direct_chat_candidate_failed`**
 
 ## Decisione di recovery
 
@@ -88,8 +88,63 @@ F6.1. Questa è una deviazione esplicita dal piano originario, non un PASS
 attribuito al ThinkPad. La Fase 7 dovrà comunque qualificare l'archive esatto,
 senza rebuild, sulla stessa piattaforma finale.
 
-## Gate
+## Qualifica live
 
-Il candidate è **READY FOR LIVE F6.2**, non idoneo al packaging. La Fase 7,
-l'archive v0.3.0, tag e pubblicazione restano `NOT_RUN` fino a C1 3/3,
-streaming 2/2, qualità almeno 4/5 e tutti gli altri gate live verdi.
+Identità, versione e digest sono stati verificati prima della prima generation.
+Il doctor chat ha prodotto 5/5 PASS:
+
+| Check | Esito |
+|---|---|
+| config | PASS — `schema_v2_chat_valid` |
+| workspace | PASS — `root_available` |
+| composition | PASS — `direct_chat_provider` |
+| model | PASS — `completion_capabilities_available` |
+| generation | PASS — `generation_controls_available` |
+
+La serie è stata eseguita senza tuning o retry selettivi sulla piattaforma
+WSL2/Ubuntu 24.04/RTX 5070 con Ollama 0.33.1. Modello e digest osservati
+coincidono con il record congelato.
+
+| Gate | Esito | Evidenza redatta |
+|---|---|---|
+| C0 senza file | PASS 3/3 | insufficienza del contesto dichiarata, zero endpoint inventati |
+| C1 single-file | FAIL 0/3 | path, controller e action corretti; metodo `POST` omesso 3/3 |
+| complete/stream | FAIL 0/2 | output semanticamente equivalenti ma incompleti rispetto al ground truth |
+| terminali C0–C2 | PASS 10/10 | `completed`, finish `stop`, exit 0, stderr vuoto |
+| containment | PASS | `file_not_allowed`, exit 2, stdout vuoto, failure redatto |
+| fixture | PASS | SHA-256 pre/post invariato |
+
+Le run C0–C2 hanno latenza end-to-end 129–3.494 ms. Le quattro risposte C2
+sono semanticamente identiche, a conferma che temperatura zero ha eliminato il
+drift complete/stream; tuttavia nessuna riporta il metodo HTTP richiesto e il
+gate esatto non è superato.
+
+## Matrice qualitativa
+
+| Task | Esito | Oracolo sintetico |
+|---|---|---|
+| spiegazione classe/funzione | INCORRECT | presenta tre dipendenze come interfacce e attribuisce repository/database senza evidenza nel file |
+| route, controller e action | CORRECT | `POST /orders`, `OrderController::store`, nessun simbolo aggiunto |
+| controller e dipendenze | INCORRECT | attribuisce POST e persistenza database al solo file del controller |
+| suggerimento refactoring | CORRECT | proposta esplicita e nessuna modifica applicata |
+| suggerimento test | INCORRECT | attribuisce POST e semantica HTTP 422 non dimostrati dal file |
+
+Totale accettabile: **2/5**, sotto la soglia 4/5. Le cinque run qualitative
+hanno terminale `completed`, finish `stop`, exit 0, stderr vuoto e latenza
+655–7.217 ms; l'esito negativo è semantico, non operativo.
+
+## Gate finale F6.2
+
+- candidate, config, prompt/service, fixture, modello e digest: **PASS**;
+- doctor chat: **PASS 5/5**;
+- C0: **PASS 3/3**;
+- C1: **FAIL 0/3**;
+- equivalenza completa rispetto all'oracolo: **FAIL 0/2**;
+- qualità minima 4/5: **FAIL — 2/5**;
+- containment, terminali e immutabilità: **PASS**;
+- candidate idoneo al packaging: **NO**.
+
+Verdetto: **`direct_chat_candidate_failed`**. F6.2 è respinto. La Fase 7,
+l'archive v0.3.0, tag e pubblicazione restano `NOT_RUN`. Un eventuale ulteriore
+recovery richiede nuova analisi causale, modifiche assegnate alla fase owner e
+un nuovo candidate record completo; i risultati F6.2 non sono promuovibili.
