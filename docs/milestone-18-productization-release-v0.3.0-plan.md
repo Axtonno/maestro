@@ -2,7 +2,7 @@
 
 Versione target: 0.3.0
 
-Stato: In esecuzione — Fasi 1–2 `PASS`; Fase 3 `NOT_RUN`
+Stato: In esecuzione — Fasi 1–3 `PASS`; Fase 4 `NOT_RUN`
 
 Data: 2026-08-29
 
@@ -106,7 +106,7 @@ packaging candidate e riapre i gate owner della Milestone 17.
 |---:|---|---|---|
 | 1 | Freeze release e audit del delta | `PASS` | M17 PASS |
 | 2 | Documentazione pubblica e metadata | `PASS` | Fase 1 |
-| 3 | Release candidate riproducibile | `NOT_RUN` | Fase 2 |
+| 3 | Release candidate riproducibile | `PASS` | Fase 2 |
 | 4 | Installazione pulita e audit RC | `NOT_RUN` | Fase 3 |
 | 5 | Gate live RC sulla RTX 5070 | `NOT_RUN` | Fase 4 |
 | 6 | Artifact finale e tag annotato | `NOT_RUN` | Fase 5 PASS |

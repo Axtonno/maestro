@@ -84,6 +84,7 @@ Completati:
 * reports/milestone-12-phase-4.md
 * reports/milestone-18-phase-1.md
 * reports/milestone-18-phase-2.md
+* reports/milestone-18-phase-3.md
 
 ---
 
@@ -2708,3 +2709,12 @@ credential-shaped scan e doppio packaging RC sono verdi. La prova temporanea
 RC ha SHA-256
 `b034828a07f33a2643556123c00917ff563d83f1976dab968542712f0df7be3a`;
 non è stata persistita. La Fase 3 è autorizzata.
+
+Checkpoint Milestone 18 Fase 3: l'artifact distinto
+`v0.3.0-rc.1`, stato `release-candidate`, è congelato dal commit sorgente
+`f33ce456cd65c24abcd5561d7140438ff08e64f1`. Le build sono byte-identiche;
+l'archive persistente misura 3775354 byte e ha SHA-256
+`b034828a07f33a2643556123c00917ff563d83f1976dab968542712f0df7be3a`.
+Checksum, manifest, allowlist, token, profilo, fixture, assenza di superfici
+escluse, path checkout e credential-shaped data sono verdi. L'RC è conservato
+sotto `dist/` senza overwrite e autorizza la Fase 4.
