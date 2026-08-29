@@ -20,17 +20,20 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 		return 2
 	}
 	flags := flag.NewFlagSet("maestro chat", flag.ContinueOnError)
-	flags.SetOutput(stderr)
-	flags.Usage = func() {
+	flags.SetOutput(io.Discard)
+	usage := func() {
 		fmt.Fprintln(stdout, "usage: maestro chat [--config path] [--file logical-path] [--stream] [question]")
 	}
+	flags.Usage = func() {}
 	configPath := flags.String("config", "", "path to Maestro configuration")
 	logical := flags.String("file", "", "single logical workspace file")
 	stream := flags.Bool("stream", false, "stream the direct response")
 	if err := flags.Parse(arguments); err != nil {
 		if err == flag.ErrHelp {
+			usage()
 			return 0
 		}
+		fmt.Fprintln(stderr, "chat failed: invalid_request")
 		return 2
 	}
 	if chatFlagPresent(arguments, "--file") && *logical == "" {
@@ -68,6 +71,10 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 		fmt.Fprintln(stderr, "chat failed: invalid_request")
 		return 2
 	}
+	if err := directchat.ValidateQuestion(question); err != nil {
+		fmt.Fprintln(stderr, "chat failed: invalid_request")
+		return 2
+	}
 	config, err := resolveAndLoadChat(*configPath, dependencies)
 	if err != nil {
 		fmt.Fprintln(stderr, "chat failed: invalid_request")
@@ -93,7 +100,7 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 	fmt.Fprintln(stdout, "num_ctx_effective\tunknown")
 	fmt.Fprintf(stdout, "thinking_requested\t%s\n", result.RequestedThinking)
 	fmt.Fprintln(stdout, "thinking_effective\tunknown")
-	fmt.Fprintln(stdout, "truncated\tunknown")
+	fmt.Fprintln(stdout, "truncated\tfalse")
 	fmt.Fprintf(stdout, "finish_reason\t%s\n", result.FinishReason)
 	fmt.Fprintln(stdout, "result")
 	fmt.Fprintln(stdout, result.Content)
@@ -157,10 +164,10 @@ func exitCodeForChatError(ctx context.Context, err error) int {
 
 func chatFailureCode(ctx context.Context, err error) string {
 	switch {
-	case errors.Is(err, context.DeadlineExceeded), errors.Is(ctx.Err(), context.DeadlineExceeded):
-		return "deadline_exceeded"
 	case errors.Is(err, context.Canceled), errors.Is(ctx.Err(), context.Canceled):
 		return "canceled"
+	case errors.Is(err, context.DeadlineExceeded), errors.Is(ctx.Err(), context.DeadlineExceeded):
+		return "deadline_exceeded"
 	case errors.Is(err, directchat.ErrProfileRequired):
 		return "chat_profile_required"
 	case errors.Is(err, directchat.ErrFileNotAllowed):

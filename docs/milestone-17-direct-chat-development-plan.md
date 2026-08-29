@@ -2,7 +2,7 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — Fasi 1–4 completate; autorizzata dal verdetto
+Stato: In corso — Fasi 1–5 completate; autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -221,7 +221,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 2 | Confine del servizio Direct Chat | Completata | Fase 1 |
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
-| 5 | Streaming, terminali e osservabilità | Non avviata | Fase 4 |
+| 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
 | 6 | Matrice deterministica e qualifica sul ThinkPad | Non avviata | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | Non avviata | Fase 6 |
 
@@ -447,7 +447,7 @@ Gate: **superato** sulla baseline di Fase 3 `03d3f62`.
 
 # Fase 5 — Streaming, terminali e osservabilità
 
-Stato: Non avviata.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -485,6 +485,8 @@ senza pubblicare dati sensibili o output parziali ingannevoli.
 - harness di equivalenza complete/stream e fault injection;
 - matrice terminale–reason code–exit code–output;
 - `docs/reports/milestone-17-phase-5.md`.
+
+Gate: **superato** sulla baseline di Fase 4 `9505e16`.
 
 ---
 

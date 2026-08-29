@@ -192,7 +192,7 @@ num_ctx_requested\t4096
 num_ctx_effective\t4096|unknown
 thinking_requested\tfalse
 thinking_effective\tfalse|unknown
-truncated\tfalse|unknown
+truncated\tfalse
 finish_reason\tstop
 result
 <contenuto finale>

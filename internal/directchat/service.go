@@ -170,7 +170,8 @@ func (service *Service) executeCompletion(ctx context.Context, request pkgProvid
 	if duration < 0 || response.Message.Role != pkgProvider.RoleAssistant ||
 		len(response.Message.ToolCalls) != 0 || response.FinishReason != pkgProvider.FinishReasonStop ||
 		strings.TrimSpace(response.Message.Content) == "" ||
-		!utf8.ValidString(response.Message.Content) || strings.ContainsRune(response.Message.Content, 0) {
+		!utf8.ValidString(response.Message.Content) || strings.ContainsRune(response.Message.Content, 0) ||
+		!validObservedModel(response.Model, request.Model) || !validUsage(response.Usage) {
 		return Result{}, ErrResponseInvalid
 	}
 	if len(response.Message.Content) > service.profile.MaxOutputBytes {
@@ -192,18 +193,30 @@ func (service *Service) executeStreaming(ctx context.Context, request pkgProvide
 	started := service.now()
 	stream, err := provider.Stream(ctx, request)
 	if err != nil {
-		return Result{}, executionError(ctx, err)
-	}
-	if err := ctx.Err(); err != nil {
+		if !nilValue(stream) {
+			_ = stream.Close()
+		}
 		return Result{}, executionError(ctx, err)
 	}
 	if nilValue(stream) {
+		if err := ctx.Err(); err != nil {
+			return Result{}, executionError(ctx, err)
+		}
 		return Result{}, ErrResponseInvalid
 	}
-	defer stream.Close()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = stream.Close()
+		}
+	}()
+	if err := ctx.Err(); err != nil {
+		return Result{}, executionError(ctx, err)
+	}
 
 	var content strings.Builder
 	var usage pkgProvider.Usage
+	observedModel := ""
 	finishReason := ""
 	terminal := false
 	for {
@@ -223,14 +236,22 @@ func (service *Service) executeStreaming(ctx context.Context, request pkgProvide
 		if err := ctx.Err(); err != nil {
 			return Result{}, executionError(ctx, err)
 		}
-		if terminal || len(chunk.ToolCalls) != 0 || !utf8.ValidString(chunk.Content) || strings.ContainsRune(chunk.Content, 0) {
+		if terminal || len(chunk.ToolCalls) != 0 || !utf8.ValidString(chunk.Content) ||
+			strings.ContainsRune(chunk.Content, 0) || !validObservedModel(chunk.Model, request.Model) ||
+			(observedModel != "" && chunk.Model != "" && chunk.Model != observedModel) {
 			return Result{}, ErrResponseInvalid
+		}
+		if chunk.Model != "" {
+			observedModel = chunk.Model
 		}
 		if content.Len()+len(chunk.Content) > service.profile.MaxOutputBytes {
 			return Result{}, ErrLimitExceeded
 		}
 		content.WriteString(chunk.Content)
 		if chunk.FinishReason != "" {
+			if !validUsage(chunk.Usage) {
+				return Result{}, ErrResponseInvalid
+			}
 			terminal = true
 			finishReason = chunk.FinishReason
 			usage = chunk.Usage
@@ -240,8 +261,10 @@ func (service *Service) executeStreaming(ctx context.Context, request pkgProvide
 	if duration < 0 || finishReason != pkgProvider.FinishReasonStop || strings.TrimSpace(content.String()) == "" {
 		return Result{}, ErrResponseInvalid
 	}
-	if err := stream.Close(); err != nil {
-		return Result{}, executionError(ctx, err)
+	closeErr := stream.Close()
+	closed = true
+	if closeErr != nil {
+		return Result{}, executionError(ctx, closeErr)
 	}
 	return service.result(content.String(), duration, usage, finishReason), nil
 }
@@ -313,6 +336,23 @@ func available(report pkgProvider.CapabilityReport, capability pkgProvider.Capab
 func validQuestion(question string) bool {
 	return strings.TrimSpace(question) != "" && len(question) <= maxQuestionBytes &&
 		utf8.ValidString(question) && !strings.ContainsRune(question, 0)
+}
+
+// ValidateQuestion allows the CLI to reject invalid user input before loading
+// configuration or composing a provider.
+func ValidateQuestion(question string) error {
+	if !validQuestion(question) {
+		return ErrInvalidRequest
+	}
+	return nil
+}
+
+func validObservedModel(observed, requested string) bool {
+	return observed == "" || observed == requested
+}
+
+func validUsage(usage pkgProvider.Usage) bool {
+	return usage.InputTokens >= 0 && usage.OutputTokens >= 0
 }
 
 func chatMessages(question, logical, content string) []pkgProvider.Message {

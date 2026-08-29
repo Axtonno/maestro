@@ -21,14 +21,17 @@ const maxInstructionBytes = 1 << 20
 
 func runDoctor(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
 	flags := flag.NewFlagSet("maestro doctor", flag.ContinueOnError)
-	flags.SetOutput(stderr)
-	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro doctor [--config path] [--mode agent|chat]") }
+	flags.SetOutput(io.Discard)
+	usage := func() { fmt.Fprintln(stdout, "usage: maestro doctor [--config path] [--mode agent|chat]") }
+	flags.Usage = func() {}
 	configPath := flags.String("config", "", "path to Maestro configuration")
 	mode := flags.String("mode", "agent", "execution mode to validate")
 	if err := flags.Parse(arguments); err != nil {
 		if err == flag.ErrHelp {
+			usage()
 			return 0
 		}
+		fmt.Fprintln(stderr, "doctor failed: invalid_request")
 		return 2
 	}
 	if flags.NArg() != 0 || (*mode != "agent" && *mode != "chat") {

@@ -277,6 +277,9 @@ func TestDirectChatStreamingAndCompletionAreEquivalent(t *testing.T) {
 		provider.streamRequests[0].ToolChoice.Mode != pkgProvider.ToolChoiceNone {
 		t.Fatalf("unexpected requests: complete=%#v stream=%#v", provider.requests, provider.streamRequests)
 	}
+	if provider.stream.(*chatStreamStub).closed != 1 {
+		t.Fatalf("successful stream close count=%d", provider.stream.(*chatStreamStub).closed)
+	}
 }
 
 func TestDirectChatStreamingFailsClosed(t *testing.T) {
@@ -284,6 +287,7 @@ func TestDirectChatStreamingFailsClosed(t *testing.T) {
 	for _, testCase := range []struct {
 		name    string
 		stream  pkgProvider.Stream
+		openErr error
 		want    error
 		maximum int
 	}{
@@ -292,7 +296,11 @@ func TestDirectChatStreamingFailsClosed(t *testing.T) {
 		{name: "length terminal", stream: newChatStream(pkgProvider.StreamChunk{Content: "partial", FinishReason: pkgProvider.FinishReasonLength}), want: ErrResponseInvalid},
 		{name: "tool call", stream: newChatStream(pkgProvider.StreamChunk{ToolCalls: []pkgProvider.ToolCallDelta{{Name: "workspace_read"}}}), want: ErrResponseInvalid},
 		{name: "invalid utf8", stream: newChatStream(pkgProvider.StreamChunk{Content: invalidUTF8}), want: ErrResponseInvalid},
+		{name: "model mismatch", stream: newChatStream(pkgProvider.StreamChunk{Model: "other-model", Content: "x", FinishReason: pkgProvider.FinishReasonStop}), want: ErrResponseInvalid},
+		{name: "model drift", stream: newChatStream(pkgProvider.StreamChunk{Model: "chat-model", Content: "x"}, pkgProvider.StreamChunk{Model: "other-model", Content: "y", FinishReason: pkgProvider.FinishReasonStop}), want: ErrResponseInvalid},
+		{name: "negative usage", stream: newChatStream(pkgProvider.StreamChunk{Content: "x", FinishReason: pkgProvider.FinishReasonStop, Usage: pkgProvider.Usage{InputTokens: -1}}), want: ErrResponseInvalid},
 		{name: "over limit", stream: newChatStream(pkgProvider.StreamChunk{Content: "too large"}), want: ErrLimitExceeded, maximum: 4},
+		{name: "open failure with stream", stream: newChatStream(pkgProvider.StreamChunk{Content: "unused"}), openErr: errors.New("open broke"), want: ErrProviderUnavailable},
 		{name: "receive failure", stream: &chatStreamStub{results: []streamResult{{err: errors.New("broken")}}}, want: ErrProviderUnavailable},
 		{name: "chunk after terminal", stream: &chatStreamStub{results: []streamResult{{chunk: pkgProvider.StreamChunk{Content: "done", FinishReason: pkgProvider.FinishReasonStop}}, {chunk: pkgProvider.StreamChunk{Content: "extra"}}}}, want: ErrResponseInvalid},
 		{name: "close failure", stream: &chatStreamStub{results: []streamResult{{chunk: pkgProvider.StreamChunk{Content: "done", FinishReason: pkgProvider.FinishReasonStop}}, {err: io.EOF}}, closeErr: errors.New("close")}, want: ErrProviderUnavailable},
@@ -300,6 +308,7 @@ func TestDirectChatStreamingFailsClosed(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			provider := validProvider()
 			provider.stream = testCase.stream
+			provider.streamErr = testCase.openErr
 			config := directConfig(t.TempDir())
 			config.Interaction.Chat.Streaming = true
 			if testCase.maximum > 0 {
@@ -315,6 +324,9 @@ func TestDirectChatStreamingFailsClosed(t *testing.T) {
 			provider.mu.Unlock()
 			if completeCalls != 0 || streamCalls != 1 {
 				t.Fatalf("fallback detected: complete=%d stream=%d", completeCalls, streamCalls)
+			}
+			if stream, ok := testCase.stream.(*chatStreamStub); ok && stream.closed != 1 {
+				t.Fatalf("stream close count=%d, want 1", stream.closed)
 			}
 		})
 	}
@@ -403,6 +415,8 @@ func TestDirectChatRejectsInvalidResponsesAndOutputLimit(t *testing.T) {
 		{name: "wrong role", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleUser, Content: "x"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
 		{name: "nul", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "x\x00"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
 		{name: "invalid utf8", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: string([]byte{0xff})}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
+		{name: "model mismatch", response: pkgProvider.CompletionResponse{Model: "other-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "x"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrResponseInvalid},
+		{name: "negative usage", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "x"}, FinishReason: pkgProvider.FinishReasonStop, Usage: pkgProvider.Usage{OutputTokens: -1}}, want: ErrResponseInvalid},
 		{name: "over limit", response: pkgProvider.CompletionResponse{Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "too large"}, FinishReason: pkgProvider.FinishReasonStop}, want: ErrLimitExceeded, maximum: 4},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {

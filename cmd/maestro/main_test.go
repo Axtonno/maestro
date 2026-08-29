@@ -447,6 +447,87 @@ func TestChatCommandFailsClosedWithSyntheticReasons(t *testing.T) {
 	}
 }
 
+func TestChatCommandUsageErrorsAreCanonicalBeforeComposition(t *testing.T) {
+	factoryCalls := 0
+	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
+	dependencies.application.ProviderFactory = func(productconfig.Config, string) (pkgProvider.Provider, error) {
+		factoryCalls++
+		return &cliProvider{id: "ollama"}, nil
+	}
+	for _, testCase := range []struct {
+		name  string
+		args  []string
+		stdin string
+	}{
+		{name: "unknown flag", args: []string{"chat", "--unknown"}},
+		{name: "invalid boolean", args: []string{"chat", "--stream=maybe"}},
+		{name: "duplicate", args: []string{"chat", "--stream", "--stream", "Question"}},
+		{name: "empty file", args: []string{"chat", "--file=", "Question"}},
+		{name: "blank", args: []string{"chat"}},
+		{name: "oversized", args: []string{"chat", strings.Repeat("q", maxInstructionBytes+1)}},
+		{name: "concurrent stdin", args: []string{"chat", "Question"}, stdin: "also stdin"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(testCase.args, strings.NewReader(testCase.stdin), &stdout, &stderr, dependencies)
+			if code != 2 || stdout.Len() != 0 || stderr.String() != "chat failed: invalid_request\n" {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+		})
+	}
+	if factoryCalls != 0 {
+		t.Fatalf("usage errors composed provider %d times", factoryCalls)
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	if code := runWithIO([]string{"chat", "--help"}, strings.NewReader(""), &stdout, &stderr, dependencies); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "usage: maestro chat") {
+		t.Fatalf("help code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestChatCommandResponseFailuresUseStableTerminals(t *testing.T) {
+	for _, testCase := range []struct {
+		name     string
+		response pkgProvider.CompletionResponse
+		limit    bool
+		code     int
+		reason   string
+	}{
+		{name: "empty", response: pkgProvider.CompletionResponse{Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant}, FinishReason: pkgProvider.FinishReasonStop}, code: 1, reason: "response_invalid"},
+		{name: "model mismatch", response: pkgProvider.CompletionResponse{Model: "other-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "RESPONSE-SENTINEL"}, FinishReason: pkgProvider.FinishReasonStop}, code: 1, reason: "response_invalid"},
+		{name: "output limit", response: pkgProvider.CompletionResponse{Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "RESPONSE-SENTINEL"}, FinishReason: pkgProvider.FinishReasonStop}, limit: true, code: 1, reason: "limit_exceeded"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			configPath, _ := newCLIChatOnlyConfig(t, false)
+			if testCase.limit {
+				encoded, err := os.ReadFile(configPath)
+				if err != nil {
+					t.Fatal(err)
+				}
+				encoded = bytes.Replace(encoded, []byte("max_output_bytes: 1048576"), []byte("max_output_bytes: 4"), 1)
+				if err := os.WriteFile(configPath, encoded, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(
+				[]string{"chat", "--config", configPath, "QUESTION-SENTINEL"},
+				strings.NewReader(""), &stdout, &stderr,
+				cliTestDependencies(&cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{testCase.response}}),
+			)
+			if code != testCase.code || stdout.Len() != 0 || stderr.String() != "chat failed: "+testCase.reason+"\n" {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+			if strings.Contains(stderr.String(), "QUESTION-SENTINEL") || strings.Contains(stderr.String(), "RESPONSE-SENTINEL") {
+				t.Fatalf("failure leaked payload: %q", stderr.String())
+			}
+		})
+	}
+}
+
 func TestChatCommandStreamingUsesAtomicEquivalentEnvelope(t *testing.T) {
 	configPath, _ := newCLIInteractionConfig(t, true)
 	provider := &cliProvider{id: "ollama", stream: &cliStream{results: []cliStreamResult{

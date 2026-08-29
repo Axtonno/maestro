@@ -2518,3 +2518,16 @@ Il nuovo `configs/maestro.chat.example.yaml` congela
 SHA-256 è `7186188ac769787afd9521a0815e58abb18952526757aa878675bdefd19ce7b1`.
 Suite normale/development, vet e race mirata `-count=3` sono verdi. La Fase 5
 deve chiudere streaming, terminali e osservabilità.
+
+Checkpoint Fase 5: Streaming, terminali e osservabilità è completata sulla
+baseline `9505e16`. Complete e stream validano ruolo, terminale `stop`, modello
+osservato quando presente, usage non negativo, UTF-8/NUL, limite byte e durata;
+lo stream richiede EOF dopo un solo terminale e viene chiuso esattamente una
+volta anche su open/receive/validation failure. Gli errori CLI di parsing,
+input concorrente o oversized sono ora sempre `chat failed: invalid_request`
+con stdout vuoto e prima della provider composition. Cancellazione precede
+deadline nella classificazione, output parziali restano non pubblicati e un
+successo `stop` espone `truncated=false`; effettivi non attestabili restano
+`unknown`. Suite normale/development, race completa, vet, test mirati
+`-count=10` e anti-leak sono verdi. La Fase 6 può congelare ed eseguire la
+matrice deterministica/live.
