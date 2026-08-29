@@ -2,8 +2,8 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — candidate F6.1 e F6.2 respinti con
-`direct_chat_candidate_failed`; F6.3 congelato, live pending; Fase 7 `NOT_RUN`.
+Stato: In corso — candidate F6.1, F6.2 e F6.3 respinti con
+`direct_chat_candidate_failed`; Fase 7 `NOT_RUN`.
 Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
@@ -224,7 +224,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1/F6.2 respinti; F6.3 live pending | Fase 5 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1/F6.2/F6.3 respinti | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
@@ -588,13 +588,13 @@ La correzione non aggiunge parser, risposta fixture, retry o fallback. Tutti i
 gate deterministici e la matrice live devono essere ripetuti su un nuovo
 candidate.
 
-Candidate F6.3 congelato: commit
+Candidate F6.3 respinto: commit
 `e739da6ac7a807b531952f0d06e5b8c0ec1ea6a8`, versione
 `v0.3.0-m17-p6.3`, SHA-256
 `e377940c03bbb5d0bf8ce8c80703011e4ac3b49c1a9f7cfdf78e3bfba8b3e06c`.
-I gate deterministici sono verdi; il record autorevole è
-`docs/reports/milestone-17-phase-6-candidate-3.md` e la qualifica live è
-pending.
+I gate deterministici, C1 e complete/stream sono verdi; C0 è 2/3 e la qualità
+è 2/5. Il record autorevole è
+`docs/reports/milestone-17-phase-6-candidate-3.md`.
 
 ---
 
