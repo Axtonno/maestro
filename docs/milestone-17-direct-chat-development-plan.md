@@ -3,7 +3,7 @@
 Versione candidata: 0.3.0
 
 Stato: In corso — Fasi 1–5 completate; Fase 6 conclusa con stop rule
-`environment_blocked`; Fase 7 `NOT_RUN`. Autorizzata dal verdetto
+`direct_chat_candidate_failed`; Fase 7 `NOT_RUN`. Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -223,7 +223,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | Conclusa — `environment_blocked` | Fase 5 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | Conclusa — `direct_chat_candidate_failed` | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
@@ -493,7 +493,7 @@ Gate: **superato** sulla baseline di Fase 4 `9505e16`.
 
 # Fase 6 — Matrice deterministica e qualifica sul ThinkPad
 
-Stato: Conclusa con stop rule — `environment_blocked`.
+Stato: Conclusa con stop rule — `direct_chat_candidate_failed`.
 
 ## Obiettivo
 
@@ -542,10 +542,11 @@ Task qualitativi minimi:
 - `docs/reports/milestone-17-phase-6.md`.
 
 Gate: **non superato** sul candidate
-`88c4fcbca00a0dbf77d7b7a0d7607dd19c6d8bbe`. Suite deterministica e build
-riproducibile sono verdi; il provider configurato non era disponibile al
-preflight. C0, C1, streaming e qualità restano `NOT_RUN` e non autorizzano il
-packaging.
+`88c4fcbca00a0dbf77d7b7a0d7607dd19c6d8bbe`. Provider, modello, preflight,
+build riproducibile e C0 sono verdi; C1 è 0/3 rispetto all'oracolo esatto,
+l'equivalenza streaming è 0/2 come gate e la qualità è 2/5. La serie è stata
+eseguita sulla piattaforma WSL2/RTX 5070 anziché sul ThinkPad prescritto. Il
+verdetto `direct_chat_candidate_failed` non autorizza il packaging.
 
 ---
 
