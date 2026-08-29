@@ -86,6 +86,7 @@ Completati:
 * reports/milestone-18-phase-2.md
 * reports/milestone-18-phase-3.md
 * reports/milestone-18-phase-4.md
+* reports/milestone-18-phase-5.md
 
 ---
 
@@ -2729,3 +2730,13 @@ verdi. Il digest ricorsivo fixture resta
 La macchina corrente è il ThinkPad Ubuntu senza NVIDIA/Ollama loopback: il
 quick start live non è assorbito nel PASS offline e resta proprietario della
 Fase 5 sul medesimo RC trasferito byte-identico alla WSL2/RTX 5070.
+
+Checkpoint Milestone 18 Fase 5: preflight `release_environment_blocked`. La
+macchina corrente è il ThinkPad Ubuntu senza GPU NVIDIA e senza Ollama
+loopback; non esiste bridge locale verso la WSL2/RTX qualificata. L'RC resta
+immutabile sotto `dist/`, SHA-256
+`b034828a07f33a2643556123c00917ff563d83f1976dab968542712f0df7be3a`,
+e il checksum è ancora verde. La matrice live completa è `NOT_RUN`; il
+protocollo di trasferimento e ripresa è congelato in
+`docs/reports/milestone-18-phase-5.md`. Fasi 6–7 restano vietate: nessun
+artifact finale, tag, push o GitHub Release è stato prodotto.

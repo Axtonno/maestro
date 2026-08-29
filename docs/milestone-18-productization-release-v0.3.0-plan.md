@@ -2,7 +2,7 @@
 
 Versione target: 0.3.0
 
-Stato: In esecuzione — Fasi 1–4 `PASS`; Fase 5 `NOT_RUN`
+Stato: In esecuzione — Fasi 1–4 `PASS`; Fase 5 bloccata dall'ambiente live
 
 Data: 2026-08-29
 
@@ -108,7 +108,7 @@ packaging candidate e riapre i gate owner della Milestone 17.
 | 2 | Documentazione pubblica e metadata | `PASS` | Fase 1 |
 | 3 | Release candidate riproducibile | `PASS` | Fase 2 |
 | 4 | Installazione pulita e audit RC | `PASS` | Fase 3 |
-| 5 | Gate live RC sulla RTX 5070 | `NOT_RUN` | Fase 4 |
+| 5 | Gate live RC sulla RTX 5070 | `BLOCKED` — `release_environment_blocked` | Fase 4 |
 | 6 | Artifact finale e tag annotato | `NOT_RUN` | Fase 5 PASS |
 | 7 | GitHub Release e verifica post-download | `NOT_RUN` | Fase 6 PASS |
 
