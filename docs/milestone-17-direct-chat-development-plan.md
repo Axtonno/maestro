@@ -2,7 +2,7 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — Fasi 1–2 completate; autorizzata dal verdetto
+Stato: In corso — Fasi 1–3 completate; autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -219,7 +219,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 |---|---|---|---|
 | 1 | Freeze del contratto e audit del candidato | Completata | M14 completata + M15 `direct/chat` PASS |
 | 2 | Confine del servizio Direct Chat | Completata | Fase 1 |
-| 3 | Contesto esplicito single-file | Non avviata | Fase 2 |
+| 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Non avviata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Non avviata | Fase 4 |
 | 6 | Matrice deterministica e qualifica sul ThinkPad | Non avviata | Fase 5 |
@@ -359,7 +359,7 @@ Gate: **superato** sulla baseline di Fase 1 `b1c85e4`.
 
 # Fase 3 — Contesto esplicito single-file
 
-Stato: Non avviata.
+Stato: Completata.
 
 ## Obiettivo
 
@@ -395,6 +395,8 @@ il workspace autorizzato, possa essere divulgato al provider.
 - matrice versionata di path, symlink, tipo, encoding, size e race;
 - test del prompt boundary e dell'assenza di provider I/O sui rifiuti;
 - `docs/reports/milestone-17-phase-3.md`.
+
+Gate: **superato** sulla baseline di Fase 2 `7251326`.
 
 ---
 

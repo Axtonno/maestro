@@ -2493,3 +2493,15 @@ spy di composizione provano una factory, un preflight, una completion, zero
 stream inattesi, zero tool e nessun fallback. Suite completa, vet e race mirata
 ripetuta tre volte sono verdi. La Fase 3 deve ora chiudere la matrice del loader
 single-file; nessun artifact o support claim è stato prodotto.
+
+Checkpoint 2026-08-29: la Fase 3 — Contesto esplicito single-file è completata
+sulla baseline `7251326`. Direct Chat possiede ora la propria validazione del
+path logico e non dipende neppure dai tipi del Context Engine: rifiuta path non
+normalizzati, assoluti, traversal, backslash, symlink, caratteri di controllo,
+formattatori invisibili e separatori di linea. File vuoti, BOM UTF-8 e limite
+byte inclusivo sono definiti e testati. Il path entra nel prompt JSON-quoted e
+il contenuto usa il confine del messaggio provider, senza sentinelle testuali
+collidibili. Race su file, mode, symlink, directory padre e root sono fail-closed;
+fixture e workspace restano invariati. Poiché il prompt è cambiato per
+hardening, i PASS live M15 restano evidenza storica ma la nuova serie deve
+essere eseguita integralmente in Fase 6. La Fase 4 è il prossimo gate.

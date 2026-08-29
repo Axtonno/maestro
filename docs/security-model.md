@@ -90,9 +90,13 @@ approver e non può usarli come fallback.
 Il loader applica confinement rispetto alla root configurata, rifiuta path
 assoluti, traversal, backslash, symlink in qualsiasi componente, file non
 regolari, dimensioni oltre limite, UTF-8 invalido, NUL e cambi durante la
-lettura. Il path fisico non viene disclosed. Domanda, path logico e contenuto
-sono delimitati; il contenuto workspace resta non attendibile e non può
-concedere tool o autorità.
+lettura. I caratteri di controllo, formattazione invisibile e separazione di
+linea sono vietati nel path logico, che entra nel prompt soltanto in forma
+quotata. File vuoti e UTF-8 con BOM sono ammessi e preservati; il limite byte è
+inclusivo. Il path fisico non viene disclosed. Domanda, path logico e contenuto
+sono separati da confini di messaggio provider, non da sentinelle testuali
+collidibili; il contenuto workspace resta non attendibile e non può concedere
+tool o autorità.
 
 La request dichiara zero tool e `tool_choice: none`. Una tool call inattesa
 nella response è un protocol failure. Timeout, risposta vuota, output oltre

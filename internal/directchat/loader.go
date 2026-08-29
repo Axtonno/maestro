@@ -9,9 +9,8 @@ import (
 	"os"
 	"path"
 	"strings"
+	"unicode"
 	"unicode/utf8"
-
-	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 )
 
 func loadFile(ctx context.Context, workspaceRoot, logical string, maximum int) (string, error) {
@@ -23,8 +22,7 @@ type fileLoadHooks struct {
 }
 
 func loadFileWithHooks(ctx context.Context, workspaceRoot, logical string, maximum int, hooks fileLoadHooks) (string, error) {
-	if ctx == nil || maximum < 1 || pkgContext.DocumentPath(logical).Validate() != nil ||
-		strings.ContainsRune(logical, '\x00') || strings.Contains(logical, `\`) {
+	if ctx == nil || maximum < 1 || !validLogicalPath(logical) {
 		return "", ErrFileNotAllowed
 	}
 	if err := ctx.Err(); err != nil {
@@ -82,6 +80,20 @@ func loadFileWithHooks(ctx context.Context, workspaceRoot, logical string, maxim
 		return "", ErrFileNotAllowed
 	}
 	return string(first), nil
+}
+
+func validLogicalPath(logical string) bool {
+	if logical == "" || logical == "." || logical == ".." || !utf8.ValidString(logical) ||
+		strings.HasPrefix(logical, "/") || strings.HasPrefix(logical, "../") ||
+		strings.Contains(logical, `\`) || path.Clean(logical) != logical {
+		return false
+	}
+	for _, character := range logical {
+		if unicode.In(character, unicode.Cc, unicode.Cf, unicode.Zl, unicode.Zp) {
+			return false
+		}
+	}
+	return true
 }
 
 func validatePhysicalPath(root *os.Root, logical string) error {

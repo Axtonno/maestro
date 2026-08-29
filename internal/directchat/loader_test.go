@@ -1,6 +1,7 @@
 package directchat
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -67,6 +68,24 @@ func TestFileLoaderDetectsMutationAndReplacement(t *testing.T) {
 				}
 			}
 		}},
+		{name: "mode mutation", hook: func(root, logical string) func() {
+			return func() {
+				if err := os.Chmod(filepath.Join(root, logical), 0o400); err != nil {
+					t.Fatal(err)
+				}
+			}
+		}},
+		{name: "symlink replacement", hook: func(root, logical string) func() {
+			return func() {
+				original := filepath.Join(root, logical)
+				if err := os.Rename(original, original+".old"); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(original+".old", original); err != nil {
+					t.Fatal(err)
+				}
+			}
+		}},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			root := t.TempDir()
@@ -79,6 +98,46 @@ func TestFileLoaderDetectsMutationAndReplacement(t *testing.T) {
 				t.Fatalf("unstable file was accepted: %v", err)
 			}
 		})
+	}
+}
+
+func TestFileLoaderLogicalPathAndContentPolicy(t *testing.T) {
+	root := t.TempDir()
+	for _, logical := range []string{
+		"", ".", "..", "./file.php", "dir//file.php", "dir/../file.php",
+		"../file.php", "/file.php", `dir\file.php`, "line\nbreak.php",
+		"tab\tfile.php", "bidi\u202efile.php", "nul\x00file.php",
+	} {
+		if _, err := loadFile(t.Context(), root, logical, 16); !errors.Is(err, ErrFileNotAllowed) {
+			t.Errorf("unsafe logical path %q accepted: %v", logical, err)
+		}
+	}
+
+	cases := []struct {
+		name    string
+		content []byte
+	}{
+		{name: "empty", content: nil},
+		{name: "utf8 bom", content: []byte{0xef, 0xbb, 0xbf, 'x'}},
+		{name: "exact maximum", content: bytes.Repeat([]byte{'x'}, 16)},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			logical := testCase.name + ".php"
+			if err := os.WriteFile(filepath.Join(root, logical), testCase.content, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			content, err := loadFile(t.Context(), root, logical, 16)
+			if err != nil || !bytes.Equal([]byte(content), testCase.content) {
+				t.Fatalf("content=%x err=%v", []byte(content), err)
+			}
+		})
+	}
+	if err := os.WriteFile(filepath.Join(root, "over.php"), bytes.Repeat([]byte{'x'}, 17), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadFile(t.Context(), root, "over.php", 16); !errors.Is(err, ErrFileNotAllowed) {
+		t.Fatalf("over-limit file accepted: %v", err)
 	}
 }
 
@@ -104,6 +163,31 @@ func TestFileLoaderDetectsWorkspaceRootReplacement(t *testing.T) {
 	}
 	if _, err := loadFileWithHooks(t.Context(), root, "file.php", 1024, fileLoadHooks{afterFirstRead: hook}); !errors.Is(err, ErrFileNotAllowed) {
 		t.Fatalf("replaced workspace root was accepted: %v", err)
+	}
+}
+
+func TestFileLoaderDetectsParentDirectoryReplacement(t *testing.T) {
+	root := t.TempDir()
+	directory := filepath.Join(root, "routes")
+	if err := os.Mkdir(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(directory, "api.php"), []byte("original"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	hook := func() {
+		if err := os.Rename(directory, directory+".old"); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Mkdir(directory, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(directory, "api.php"), []byte("replacement"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := loadFileWithHooks(t.Context(), root, "routes/api.php", 1024, fileLoadHooks{afterFirstRead: hook}); !errors.Is(err, ErrFileNotAllowed) {
+		t.Fatalf("replaced parent directory was accepted: %v", err)
 	}
 }
 
