@@ -135,3 +135,23 @@ Verdetto della fase: **`direct_chat_candidate_failed`**. La Fase 6 è conclusa c
 La Fase 7 resta `NOT_RUN`; archive v0.3.0, tag e pubblicazione non sono
 autorizzati. Una nuova qualifica richiede una decisione esplicita sulla causa
 del failure e, dopo eventuali modifiche owner, un nuovo candidate record.
+
+## Lineage dei recovery
+
+| Candidate | Correzione | C0 | C1 | Stream | Qualità | Verdetto |
+|---|---|---:|---:|---:|---:|---|
+| F6.1 | baseline post-hardening | 3/3 | 0/3 | 0/2 | 2/5 | respinto |
+| F6.2 | domanda finale, protocollo epistemico, temperatura 0 | 3/3 | 0/3 | 0/2 | 2/5 | respinto |
+| F6.3 | soli system iniziali, contratto nell'ultimo user turn | 2/3 | 3/3 | 2/2 | 2/5 | respinto |
+
+F6.2 dimostra che temperatura zero elimina il drift complete/stream. F6.3
+dimostra che il nuovo layout risolve completezza C1 ed equivalenza, ma non la
+disciplina epistemica no-file né le inferenze non supportate dei task
+qualitativi. Dopo tre candidate la qualità resta stabilmente 2/5, sotto la
+soglia 4/5.
+
+Un ulteriore intervento non è classificato come semplice prompt hardening:
+richiederebbe cambiare il contratto di risposta verso evidenza strutturata e
+validabile, oppure aprire una nuova decisione sul modello. Entrambe le opzioni
+riaprono gate di profilo, capability, output e compatibilità. Fino a una scelta
+esplicita, Fase 6 resta FAIL e Fase 7 `NOT_RUN`.

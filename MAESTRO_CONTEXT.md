@@ -2590,3 +2590,19 @@ config e fixture sono invariati. Il record completo è
 `docs/reports/milestone-17-phase-6-candidate-3.md`. Tutti i gate deterministici
 sono verdi; ripetere la serie live completa sulla WSL2/RTX senza tuning. Fase 7
 resta `NOT_RUN` fino al PASS.
+
+Risultato live F6.3: identità e doctor 5/5 sono verdi; C1 sale a 3/3 e
+complete/stream a 2/2, confermando che il layout finale risolve omissione del
+metodo HTTP ed equivalenza. C0 è però 2/3 per una negazione certa senza
+contesto, mentre qualità resta 2/5 con inferenze non supportate. Terminali,
+containment e fixture sono verdi. Il verdict è ancora
+`direct_chat_candidate_failed` e Fase 7 resta `NOT_RUN`.
+
+Checkpoint decisionale: F6.1, F6.2 e F6.3 sono tutti respinti. Sampling e
+layout hanno cause e miglioramenti dimostrati, ma tre serie mantengono qualità
+2/5. Non proseguire con un quarto prompt tuning implicito. Un nuovo recovery
+richiede scelta esplicita fra un contratto di risposta strutturato con evidenza
+validabile — che riapre profilo, capability, renderer e compatibilità — oppure
+una nuova decisione sul modello e una serie completa. Il lineage è registrato
+in `docs/reports/milestone-17-phase-6.md`; nessun archive o tag v0.3.0 è
+autorizzato.
