@@ -2617,3 +2617,14 @@ l'evidenza storica direct-chat M13 e non riqualifica il verified agent. Ripetere
 tutti i gate deterministici e live; se F6.4 fallisce, fermarsi per una decisione
 esplicita sul contratto di output strutturato. Fase 7 resta `NOT_RUN` fino al
 PASS.
+
+Freeze F6.4: il commit sorgente
+`03986c73199c6f854552f623d14f826fb9594ef2` produce due binari
+`v0.3.0-m17-p6.4` byte-identici con SHA-256
+`079bbcbdaa09e6c5b73c5aaf7c71658daade4ee46ce08306ad6285f7bfd2a8f0`.
+Il profilo `configs/maestro.milestone-17-candidate-4.yaml` ha SHA-256
+`173169b61bdc088f69e7898a35c1ab519429a3c5e7e4340a599cb07fb8ce3102`;
+service e fixture restano invariati. Suite normale/development `-count=3`,
+race, vet, test mirati `-count=10`, script e doppia build sono verdi. Il record
+è `docs/reports/milestone-17-phase-6-candidate-4.md`. Ripetere integralmente la
+serie live sulla WSL2/RTX; Fase 7 resta `NOT_RUN` fino al PASS.
