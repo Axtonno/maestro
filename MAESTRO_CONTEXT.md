@@ -2643,3 +2643,18 @@ development, race, vet e audit documentale; poi commit pulito, doppio packaging
 `v0.3.0-pc.1`, installazione fuori checkout e record SHA-256. La matrice sulla
 WSL2/RTX deve usare byte-identico archive/checksum senza rebuild. Fino a quel
 PASS il report finale, tag e pubblicazione restano `NOT_RUN`.
+
+Freeze Fase 7 locale: il commit
+`70a9630203ccf82a4d8858a9e47b48f5333b9cbd` produce due archive
+`maestro-v0.3.0-pc.1-linux-amd64.tar.gz` byte-identici, 3776699 byte, SHA-256
+`82bfb33f3fd9af911e3b2b1e89f9920177b281046da21b186512e577e114fb61`.
+Il binario interno ha SHA-256
+`dee9d5113ccf2db0573b03e8a3851f600d7bc789964793ebae14376f9c849a66`;
+il profilo installabile chat-only ha SHA-256
+`1c5bbe79edf125485d14518e58ff18c48156eaa0fb91faf82fcf3cd97375d0ee`.
+Suite normale/development `-count=3`, race, vet, script, checksum, allowlist,
+installazione esterna, version/help, doctor offline fail-closed, containment e
+anti-leak sono verdi. Archive e checksum sono in `dist/`; trasferirli
+byte-identici sulla WSL2/RTX senza rebuild e compilare la matrice in
+`docs/reports/milestone-17-phase-7.md`. Il report finale resta `NOT_RUN`; tag,
+RC, release e pubblicazione restano vietati fino al PASS live.

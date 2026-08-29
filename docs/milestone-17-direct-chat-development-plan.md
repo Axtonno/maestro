@@ -2,8 +2,8 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — F6.4 qualificato; Fase 7 avviata, packaging candidate
-v0.3.0 in preparazione e matrice finale live `NOT_RUN`.
+Stato: In corso — F6.4 qualificato; packaging candidate F7 locale PASS,
+archive `v0.3.0-pc.1` congelato e matrice finale live `NOT_RUN`.
 Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
@@ -225,7 +225,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
 | 6 | Matrice deterministica e qualifica sul ThinkPad | PASS — F6.4 qualificato | Fase 5 |
-| 7 | Packaging candidate e qualifica finale | In corso — packaging locale | Fase 6 PASS |
+| 7 | Packaging candidate e qualifica finale | In corso — locale PASS, live `NOT_RUN` | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
 fixture della successiva, ma questi non costituiscono evidenza e non vengono
@@ -627,8 +627,8 @@ qualità 4/5, containment e immutabilità sono verdi. Il record autorevole è
 
 # Fase 7 — Packaging candidate e qualifica finale
 
-Stato: In corso — adeguamento packaging/documentazione avviato; archive e
-matrice finale live non ancora qualificati.
+Stato: In corso — packaging candidate `v0.3.0-pc.1` locale PASS; matrice
+finale sullo stesso archive `NOT_RUN`.
 
 ## Obiettivo
 
