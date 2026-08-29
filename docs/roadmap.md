@@ -983,8 +983,8 @@ supportata. Il piano storico è in
 
 # Milestone 17 — Direct/Chat Product Baseline
 
-Stato: In corso — F6.4 qualificato; packaging candidate F7 locale PASS,
-`v0.3.0-pc.1` congelato e matrice finale live `NOT_RUN`
+Stato: Completata — `direct_chat_product_baseline`; F6.4 e packaging candidate
+`v0.3.0-pc.1` qualificati sulla matrice finale live
 
 Obiettivo:
 
