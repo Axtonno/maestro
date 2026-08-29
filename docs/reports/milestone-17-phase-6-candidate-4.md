@@ -2,7 +2,7 @@
 
 Data: 2026-08-29
 
-Stato: **CONGELATO — LIVE QUALIFICATION PENDING**
+Stato: **QUALIFICATO — PASS, GO ALLA FASE 7**
 
 ## Decisione di modello
 
@@ -83,7 +83,84 @@ context, temperatura, timeout, prompt, fixture o criteri. Se F6.4 fallisce,
 fermarsi per decidere il contratto di output strutturato; non creare F6.5 con
 ulteriore prompt tuning implicito.
 
-## Gate
+## Qualifica live
 
-F6.4 è **READY FOR LIVE**, non idoneo al packaging. Fase 7, archive, tag e
-pubblicazione restano `NOT_RUN` fino al PASS integrale.
+Identità, versione e digest sono stati verificati prima della prima generation.
+Il doctor chat ha prodotto 5/5 PASS:
+
+| Check | Esito |
+|---|---|
+| config | PASS — `schema_v2_chat_valid` |
+| workspace | PASS — `root_available` |
+| composition | PASS — `direct_chat_provider` |
+| model | PASS — `completion_capabilities_available` |
+| generation | PASS — `generation_controls_available` |
+
+La serie è stata eseguita senza tuning o retry selettivi sulla piattaforma
+WSL2/Ubuntu 24.04/RTX 5070 con Ollama 0.33.1. Il modello osservato è
+`qwen3.5:9b` e il digest coincide con il record congelato.
+
+| Gate | Esito | Evidenza redatta |
+|---|---|---|
+| C0 senza file | PASS 3/3 | contesto insufficiente dichiarato, zero endpoint inventati |
+| C1 single-file | PASS 3/3 | `POST /orders`, `OrderController::store`, nessun endpoint aggiunto |
+| complete/stream | PASS 2/2 | quattro risposte semanticamente identiche e complete |
+| terminali C0–C2 | PASS 10/10 | `completed`, finish `stop`, exit 0, stderr vuoto |
+| containment | PASS | `file_not_allowed`, exit 2, stdout vuoto, failure redatto |
+| fixture | PASS | SHA-256 pre/post invariato |
+
+Le run C0–C2 hanno latenza end-to-end 353–6.327 ms. Tutte le richieste
+riportano modello, terminale, usage, context richiesto 4096, thinking richiesto
+`false` e `truncated=false`; gli effettivi non attestabili restano `unknown`.
+
+## Matrice qualitativa
+
+| Task | Esito | Oracolo sintetico |
+|---|---|---|
+| spiegazione classe/funzione | CORRECT | dipendenze, chiamate, ordine e limiti dell'evidenza descritti senza database inventato |
+| route, controller e action | CORRECT | `POST /orders`, `OrderController::store`, assenze esplicite |
+| controller e dipendenze | CORRECT | validazione, service call, response 201 e route non determinabile dal file |
+| suggerimento refactoring | INCORRECT | proposta marcata, ma assume erroneamente che dopo un'eccezione di charge il repository possa essere chiamato e presenta perdita di denaro come certa |
+| suggerimento test | CORRECT | proposte ancorate al file; metodo/path non inventati e 422 indicato soltanto come esempio |
+
+Totale accettabile: **4/5**. Falsità materiale nei quattro PASS: **zero**. Le
+cinque run qualitative hanno terminale `completed`, finish `stop`, exit 0,
+stderr vuoto e latenza 2.124–9.560 ms.
+
+### Perché la qualità non è 5/5
+
+Il solo task non accettabile è il suggerimento di refactoring. La risposta
+separa correttamente fatti osservati e proposta, ma la motivazione tecnica
+introduce due affermazioni causali non sostenibili:
+
+- ipotizza che, se `PaymentGateway::charge` fallisce lanciando un'eccezione,
+  l'esecuzione possa proseguire comunque verso `OrderRepository::create`; nel
+  flusso PHP mostrato un'eccezione non intercettata interromperebbe invece il
+  metodo prima della chiamata successiva;
+- presenta come certa la perdita del denaro quando la creazione dell'ordine
+  fallisce dopo il charge, mentre il file non mostra semantica del gateway,
+  compensazioni, idempotenza, transazioni o altri meccanismi esterni.
+
+La proposta di aggiungere gestione esplicita degli errori resta ragionevole,
+ma la sua giustificazione mescola uno scenario contraddittorio e conseguenze
+non dimostrate. In base alla rubrica, questo è un claim materiale e il task è
+quindi `INCORRECT`, non `PARTIAL`. Gli altri quattro task non contengono
+falsità materiali e conservano il loro PASS; per questo il risultato finale è
+4/5 e non 5/5.
+
+## Gate finale F6.4
+
+- candidate, config, prompt/service, fixture, modello e digest: **PASS**;
+- gate deterministici e build riproducibile: **PASS**;
+- doctor chat: **PASS 5/5**;
+- C0: **PASS 3/3**;
+- C1: **PASS 3/3**;
+- equivalenza complete/stream: **PASS 2/2**;
+- qualità minima 4/5: **PASS — 4/5**;
+- containment, terminali, immutabilità e anti-leak: **PASS**;
+- candidate idoneo al packaging: **SÌ**.
+
+Verdetto della fase: **PASS**. F6.4 è il candidate prequalificato che autorizza
+l'ingresso nella Fase 7. Archive, installazione pulita, matrice finale, tag e
+pubblicazione non sono stati eseguiti in questa fase e restano subordinati ai
+gate della Fase 7; `direct_chat_product_baseline` non è ancora emesso.
