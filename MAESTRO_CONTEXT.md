@@ -2740,3 +2740,11 @@ e il checksum è ancora verde. La matrice live completa è `NOT_RUN`; il
 protocollo di trasferimento e ripresa è congelato in
 `docs/reports/milestone-18-phase-5.md`. Fasi 6–7 restano vietate: nessun
 artifact finale, tag, push o GitHub Release è stato prodotto.
+
+Ripresa Milestone 18 Fase 5: la WSL2/Ubuntu 24.04 vede la RTX 5070, Ollama
+0.33.1 su loopback e il modello `qwen3.5:9b` con digest congelato. La matrice
+completa sul medesimo RC SHA-256 `b034828a07f33a2643556123c00917ff563d83f1976dab968542712f0df7be3a`
+è PASS: identità, installazione, version/help, doctor 5/5, no-file,
+complete/stream, traversal, symlink, SIGINT, deadline, immutabilità e
+anti-leak sono verdi. Nessun rebuild, pull o tuning è stato eseguito. Il
+blocco ambientale è risolto e la Fase 6 è autorizzata.
