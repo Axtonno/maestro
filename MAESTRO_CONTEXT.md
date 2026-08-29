@@ -83,6 +83,7 @@ Completati:
 * reports/milestone-12-phase-3.md
 * reports/milestone-12-phase-4.md
 * reports/milestone-18-phase-1.md
+* reports/milestone-18-phase-2.md
 
 ---
 
@@ -2695,3 +2696,15 @@ installazione temporanea, containment e anti-leak sono verdi. Remote
 file documentali sono congelati nel report
 `docs/reports/milestone-18-phase-1.md`. Il verdetto è PASS e autorizza la Fase
 2; nessun tag, push, RC persistente o artifact finale è stato prodotto.
+
+Checkpoint Milestone 18 Fase 2: la superficie pubblica v0.3.0 è congelata nel
+commit sorgente RC `f33ce456cd65c24abcd5561d7140438ff08e64f1` senza
+delta funzionale dalla baseline M17. README, release notes, installazione,
+quick start, CLI, configurazione, compatibility, security, known issues,
+troubleshooting e packaging distinguono candidate/release, usano asset della
+stessa GitHub Release e mantengono visibili tutte le esclusioni. Suite
+normale/development `-count=3`, race, vet, script, token/link audit,
+credential-shaped scan e doppio packaging RC sono verdi. La prova temporanea
+RC ha SHA-256
+`b034828a07f33a2643556123c00917ff563d83f1976dab968542712f0df7be3a`;
+non è stata persistita. La Fase 3 è autorizzata.
