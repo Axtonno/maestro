@@ -2658,3 +2658,16 @@ anti-leak sono verdi. Archive e checksum sono in `dist/`; trasferirli
 byte-identici sulla WSL2/RTX senza rebuild e compilare la matrice in
 `docs/reports/milestone-17-phase-7.md`. Il report finale resta `NOT_RUN`; tag,
 RC, release e pubblicazione restano vietati fino al PASS live.
+
+Checkpoint finale Milestone 17: la matrice Fase 7 è PASS sullo stesso archive
+`v0.3.0-pc.1`, SHA-256
+`82bfb33f3fd9af911e3b2b1e89f9920177b281046da21b186512e577e114fb61`,
+installato fuori checkout sulla WSL2/Ubuntu 24.04/RTX 5070 senza rebuild.
+Identità, modello/digest, doctor 5/5, no-file, complete/stream, traversal,
+symlink, SIGINT, deadline, immutabilità e anti-leak sono verdi. Un primo probe
+deadline non valido per root relativa è stato scartato come errore harness;
+dopo la sola correzione della posizione del profilo temporaneo è stata ripetuta
+l'intera matrice sul medesimo archive, senza tuning. Il verdetto finale è
+`direct_chat_product_baseline`: Milestone 17 completata. Tag, release candidate,
+artifact finale e pubblicazione v0.3.0 restano workflow separati non eseguiti.
+Agent, retrieval, tool e mutation restano non qualificati.

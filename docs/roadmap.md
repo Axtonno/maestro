@@ -1043,7 +1043,7 @@ agent e di Controlled Mutation.
 | Versione | Obiettivo |
 |---|---|
 | v0.2.0 | artifact storico read-only; Field Validation con adoption NO-GO |
-| v0.3.0 | candidata read-only: direct/chat single-file e profilo dedicato, subordinata a Milestone 17 |
+| v0.3.0 | candidata read-only qualificata: direct/chat single-file e profilo dedicato; release workflow separato |
 | v0.4.0 | non pianificata attivamente; nessun support mutativo senza nuova qualifica |
 
 ## Sequenza post-v0.2.0

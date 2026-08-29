@@ -21,9 +21,10 @@ di altro codice nel repository o nel binario non equivale a qualifica.
 | Isolamento | Non fornito | processo trusted in-process, nessuna sandbox |
 
 La prequalifica F6.4 ha superato doctor 5/5, C0 3/3, C1 3/3,
-complete/stream 2/2, qualità 4/5, containment, immutabilità e anti-leak. La
-compatibility promise di release diventa effettiva soltanto dopo che l’archive
-v0.3.0 supera la matrice finale di Fase 7 senza rebuild o tuning.
+complete/stream 2/2, qualità 4/5, containment, immutabilità e anti-leak. Lo
+stesso archive ha poi superato la matrice finale di Fase 7 senza rebuild o
+tuning; il verdetto `direct_chat_product_baseline` autorizza questa
+compatibility promise per il candidate v0.3.0.
 
 ## Confine funzionale
 

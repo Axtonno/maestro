@@ -168,7 +168,7 @@ canonica è:
 ```yaml
 interaction:
   chat:
-    model: qwen2.5-coder:7b
+    model: qwen3.5:9b
     timeout: 600s
     streaming: false
     num_ctx: 4096
@@ -701,9 +701,10 @@ La piattaforma WSL2/Ubuntu 24.04/RTX 5070 resta sospesa durante lo sviluppo.
 Viene riutilizzata soltanto quando esiste un packaging candidate finale,
 immutabile e già verde sui gate precedenti.
 
-Il candidate iniziale resta `qwen2.5-coder:7b`, digest e parametri qualificati
-dalla Milestone 15. Un cambio di modello richiede una nuova decisione e una
-nuova serie completa.
+Il candidate iniziale era `qwen2.5-coder:7b`. Dopo i failure F6.1–F6.3, la
+decisione esplicita F6.4 ha qualificato `qwen3.5:9b` con digest e parametri
+congelati; nessun ulteriore cambio di modello è ammesso senza una nuova
+decisione e una nuova serie completa.
 
 ---
 
