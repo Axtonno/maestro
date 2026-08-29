@@ -1,10 +1,11 @@
-# Milestone 18 — Productization v0.4.0 Plan
+# Piano storico — Productization v0.4.0 (precedentemente Milestone 18)
 
 Versione: 0.2.0
 
-Stato: Non aperta — piano mutativo storico; la dipendenza
-`mutation_qualified` non è stata soddisfatta e la numerazione futura deve
-essere ridefinita prima di qualsiasi riapertura
+Stato: Non eseguibile — piano mutativo storico; la dipendenza
+`mutation_qualified` non è stata soddisfatta. Il numero 18 è stato riassegnato
+il 2026-08-29 a Productization & Release v0.3.0. Un futuro programma mutativo
+richiede una nuova decisione e una nuova numerazione.
 
 Data: 2026-08-21; rinumerazione 2026-08-27; aggiornamento 2026-08-28
 

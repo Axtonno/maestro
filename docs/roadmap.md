@@ -1026,24 +1026,35 @@ senza rebuild. Il tag resta vietato fino al verdetto finale
 
 ---
 
-# Milestone 18 — Productization v0.4.0
+# Milestone 18 — Productization & Release v0.3.0
 
-Stato: Non aperta — dipendenza mutativa non soddisfatta; numerazione futura da
-ridefinire prima di qualsiasi riapertura
+Stato: Aperta — piano approvato; Fase 1 `NOT_RUN`
 
 Obiettivo:
 
-Il piano mutativo v0.4.0 non è autorizzato. Il documento
-`milestone-18-productization-v0.4.0-plan.md` resta storico; una futura
-riapertura richiede prima un nuovo programma di qualificazione del verified
-agent e di Controlled Mutation.
+Pubblicare con prudenza l’esatta baseline Direct Chat qualificata dalla
+Milestone 17, senza aggiungere funzionalità. Il percorso congela identità e
+support claim, prepara documentazione, costruisce un release candidate
+distinto, ripete packaging/installazione e un solo gate live sulla RTX 5070,
+quindi produce artifact finale, tag annotato, GitHub Release e verifica degli
+asset riscaricati.
+
+Il piano è in `milestone-18-productization-release-v0.3.0-plan.md`. Il
+precedente `milestone-18-productization-v0.4.0-plan.md` resta una traccia
+mutativa storica non eseguibile; Controlled Mutation richiede una futura
+decisione e una nuova numerazione.
+
+Sono escluse modifiche a codice Direct Chat, prompt, schema, CLI,
+configurazione, modello/digest, multi-file, sessioni, agent, retrieval, tool e
+mutation. Ogni delta funzionale invalida il candidate e torna ai gate owner
+della Milestone 17.
 
 ## Associazione release
 
 | Versione | Obiettivo |
 |---|---|
 | v0.2.0 | artifact storico read-only; Field Validation con adoption NO-GO |
-| v0.3.0 | candidata read-only qualificata: direct/chat single-file e profilo dedicato; release workflow separato |
+| v0.3.0 | baseline read-only qualificata; release workflow aperto in Milestone 18 |
 | v0.4.0 | non pianificata attivamente; nessun support mutativo senza nuova qualifica |
 
 ## Sequenza post-v0.2.0
@@ -1054,7 +1065,9 @@ Milestone 13 — chiusa con limitazioni / adoption NO-GO
         -> Milestone 15 — hardware e direct/chat PASS; verified agent FAIL
             ├── Milestone 16 — CLOSED; mutazione non autorizzata
             └── Milestone 17 — Direct/Chat Product Baseline
-                ├── PASS -> v0.3.0 candidata read-only
+                ├── PASS -> Milestone 18 — Productization & Release v0.3.0
+                │   ├── PASS -> v0.3.0 pubblicata e asset verificati
+                │   └── FAIL -> nessuna pubblicazione o release incident esplicito
                 └── FAIL -> nessuna release
 ```
 

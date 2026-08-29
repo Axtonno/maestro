@@ -2671,3 +2671,13 @@ l'intera matrice sul medesimo archive, senza tuning. Il verdetto finale è
 `direct_chat_product_baseline`: Milestone 17 completata. Tag, release candidate,
 artifact finale e pubblicazione v0.3.0 restano workflow separati non eseguiti.
 Agent, retrieval, tool e mutation restano non qualificati.
+
+Decisione successiva: Milestone 18 è riassegnata a “Productization & Release
+v0.3.0” e non apre nuove funzionalità. Il piano autorevole è
+`docs/milestone-18-productization-release-v0.3.0-plan.md`; il vecchio piano
+M18 v0.4.0 mutativo resta storico e non eseguibile. La sequenza prevista è:
+freeze/audit; documentazione; RC distinto; installazione/audit; un solo gate
+live sulla RTX; artifact finale e tag annotato; GitHub Release e verifica degli
+asset riscaricati. Sono vietati multi-file, sessioni, nuovi modelli, agent,
+retrieval, tool, mutation e cambi CLI/schema. Fase 1 è `NOT_RUN`; nessun tag,
+push o write GitHub è stato eseguito aprendo il piano.
