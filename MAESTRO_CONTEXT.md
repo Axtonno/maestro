@@ -2760,3 +2760,14 @@ medesimo commit. Suite normale/development, race, vet, audit, installazione,
 profilo e fixture sono verdi. Il tag annotato locale `v0.3.0` punta allo
 stesso commit. Nessun push o asset remoto è stato ancora scritto; la Fase 7 è
 autorizzata.
+
+Chiusura Milestone 18: la GitHub Release pubblica v0.3.0 è visibile su
+`https://github.com/Axtonno/maestro/releases/tag/v0.3.0` con il tag annotato
+sul commit release `3f4c7d4b4fd2e380644cf250ce9e8fec2311af53` e i soli asset archive e
+checksum qualificati. Entrambi sono stati riscaricati dal canale pubblico in
+una directory pulita. Dimensione 3775317 byte, SHA-256 archive
+`6c8f0e883ec8f8c05571fc2e7bc1f4ecac608c2bd7e338395ae0a4253fff1aaf`,
+checksum, manifest, versione/stato/commit, binario, profilo, modello/digest,
+help e installazione separata sono PASS. Il verdetto finale è
+`v0.3.0_released_and_verified`; Milestone 18 completata senza ampliare il
+perimetro Direct Chat read-only.
