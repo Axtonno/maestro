@@ -2579,3 +2579,14 @@ fatti, assenze e proposte senza valori fixture. Suite normale/development
 `-count=3`, race, vet e Direct Chat/CLI `-count=10` sono verdi prima del freeze.
 Creare un nuovo candidate F6.3 e ripetere integralmente la matrice live; Fase 7
 resta vietata fino al PASS.
+
+Freeze F6.3: sorgente
+`e739da6ac7a807b531952f0d06e5b8c0ec1ea6a8`, versione
+`v0.3.0-m17-p6.3`, due binari byte-identici con SHA-256
+`e377940c03bbb5d0bf8ce8c80703011e4ac3b49c1a9f7cfdf78e3bfba8b3e06c`.
+Il digest prompt/service è
+`7fd79e1fafb70d0b7726ecca0909f92592f8706df890a9b6fb263c9d5b8575c1`;
+config e fixture sono invariati. Il record completo è
+`docs/reports/milestone-17-phase-6-candidate-3.md`. Tutti i gate deterministici
+sono verdi; ripetere la serie live completa sulla WSL2/RTX senza tuning. Fase 7
+resta `NOT_RUN` fino al PASS.
