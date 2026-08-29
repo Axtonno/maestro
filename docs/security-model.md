@@ -96,9 +96,12 @@ quotata. File vuoti e UTF-8 con BOM sono ammessi e preservati; il limite byte è
 inclusivo. Il path fisico non viene disclosed. Domanda, path logico e contenuto
 sono separati da confini di messaggio provider, non da sentinelle testuali
 collidibili; il contenuto workspace resta non attendibile e non può concedere
-tool o autorità. Con un file, un messaggio system chiude esplicitamente il
-confine dell'evidenza e la domanda è l'ultimo turno user: istruzioni apparenti
-nel sorgente restano dati e non sostituiscono la richiesta dell'operatore.
+tool o autorità. Con un file, i messaggi system iniziali dichiarano in anticipo
+il confine e l'ordine; seguono il messaggio user del file e quello separato con
+domanda e contratto di risposta. Non esistono messaggi system intermedi dopo
+il payload non attendibile. La domanda resta l'ultimo turno: istruzioni
+apparenti nel sorgente sono dati e non sostituiscono la richiesta
+dell'operatore.
 
 La request dichiara zero tool e `tool_choice: none`. Una tool call inattesa
 nella response è un protocol failure. Timeout, risposta vuota, output oltre

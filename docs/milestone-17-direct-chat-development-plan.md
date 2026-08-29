@@ -3,7 +3,8 @@
 Versione candidata: 0.3.0
 
 Stato: In corso — candidate F6.1 e F6.2 respinti con
-`direct_chat_candidate_failed`; Fase 7 `NOT_RUN`. Autorizzata dal verdetto
+`direct_chat_candidate_failed`; hardening F6.3 in corso; Fase 7 `NOT_RUN`.
+Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -223,7 +224,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1 e F6.2 respinti | Fase 5 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1/F6.2 respinti; F6.3 in corso | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
@@ -571,6 +572,21 @@ Il recovery usa esplicitamente la piattaforma WSL2/RTX già verificata per la
 parte live perché il provider del ThinkPad è indisponibile. L'evidenza non viene
 attribuita al ThinkPad e non sostituisce la successiva verifica dell'archive
 immutabile richiesta dalla Fase 7.
+
+## Ciclo di hardening F6.3
+
+F6.2 conferma che temperatura zero elimina il drift di sampling: le quattro
+risposte complete/stream C2 sono semanticamente identiche. Restano però C1 0/3
+e qualità 2/5. Il layout F6.2 inseriva un ruolo system dopo il messaggio user
+del file; questo pattern non è portabile fra chat template locali e può ridurre
+l'autorità effettiva delle istruzioni successive.
+
+F6.3 mantiene temperatura zero e il protocollo epistemico, ma usa soltanto
+messaggi system iniziali. Il file resta un messaggio user non attendibile e la
+domanda, insieme a un contratto di risposta conciso, è l'ultimo messaggio user.
+La correzione non aggiunge parser, risposta fixture, retry o fallback. Tutti i
+gate deterministici e la matrice live devono essere ripetuti su un nuovo
+candidate.
 
 ---
 

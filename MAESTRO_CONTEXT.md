@@ -2562,3 +2562,20 @@ verdi. Il record e protocollo di ripresa sono in
 `docs/reports/milestone-17-phase-6-candidate-2.md`. La qualifica live completa
 deve essere ripetuta sulla WSL2/RTX, senza tuning; Fase 7 resta `NOT_RUN` fino
 al PASS.
+
+Risultato live F6.2: identità, doctor 5/5, C0 3/3, terminali, containment e
+immutabilità sono verdi. C1 resta 0/3 perché il modello omette il metodo HTTP;
+complete/stream sono ora semanticamente identici ma incompleti 0/2 rispetto
+all'oracolo. Qualità resta 2/5 con inferenze non supportate. Il candidate è
+respinto come `direct_chat_candidate_failed`; il report F6.2 contiene soltanto
+evidenza redatta.
+
+Ciclo F6.3: mantenere temperatura zero, modello, digest, config, fixture e
+oracoli. Rimuovere il ruolo system intermedio dopo il file, che non è portabile
+fra chat template; usare system soltanto all'inizio, poi file user non
+attendibile e domanda/contratto come ultimo user turn. Il contratto finale
+richiede ogni dimensione domandata, preservazione dei literal e distinzione fra
+fatti, assenze e proposte senza valori fixture. Suite normale/development
+`-count=3`, race, vet e Direct Chat/CLI `-count=10` sono verdi prima del freeze.
+Creare un nuovo candidate F6.3 e ripetere integralmente la matrice live; Fase 7
+resta vietata fino al PASS.
