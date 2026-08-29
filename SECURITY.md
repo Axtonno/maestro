@@ -2,12 +2,12 @@
 
 ## Supported version
 
-La release pubblicata corrente è `0.2.0`. Il packaging candidate `0.3.0`
-riceve copertura per il confine Direct Chat durante la qualificazione, ma non
-diventa release supportata prima del verdetto finale. Le capacità dichiarate
-non supportate nella compatibility matrix non ricevono una promessa operativa;
-i problemi che compromettono containment, redazione o read-only restano
-comunque rilevanti.
+Le versioni supportate sono gli artifact pubblicati nella pagina GitHub
+Releases. v0.3.0 riceve copertura nel solo confine Direct Chat definito dalla
+compatibility matrix; uno stato `packaging-candidate` o `release-candidate`
+non equivale a una release pubblicata. Le capacità dichiarate non supportate
+non ricevono una promessa operativa; i problemi che compromettono
+containment, redazione o read-only restano comunque rilevanti.
 
 ## Reporting a vulnerability
 

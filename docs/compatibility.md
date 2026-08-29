@@ -2,8 +2,8 @@
 
 Data: 2026-08-29
 
-Questa pagina definisce l’unico support claim candidato di v0.3.0. La presenza
-di altro codice nel repository o nel binario non equivale a qualifica.
+Questa pagina definisce l’unico support claim di v0.3.0. La presenza di altro
+codice nel repository o nel binario non equivale a qualifica.
 
 ## Percorso qualificato
 
@@ -24,7 +24,7 @@ La prequalifica F6.4 ha superato doctor 5/5, C0 3/3, C1 3/3,
 complete/stream 2/2, qualità 4/5, containment, immutabilità e anti-leak. Lo
 stesso archive ha poi superato la matrice finale di Fase 7 senza rebuild o
 tuning; il verdetto `direct_chat_product_baseline` autorizza questa
-compatibility promise per il candidate v0.3.0.
+compatibility promise per v0.3.0.
 
 ## Confine funzionale
 

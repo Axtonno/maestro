@@ -12,7 +12,8 @@ deve essere dichiarato nelle note di release.
 - schema v2 con profilo chat separato e doctor dedicato;
 - streaming opt-in con aggregazione e pubblicazione atomica;
 - envelope, reason code, limiti file/output e generation controls osservabili;
-- packaging candidate Linux `amd64` dedicato alla baseline Direct Chat.
+- packaging Linux `amd64` riproducibile con stati distinti per candidate,
+  release candidate e release finale.
 
 ### Security
 
@@ -26,7 +27,7 @@ deve essere dichiarato nelle note di release.
 
 ### Compatibility
 
-- baseline candidata: Ollama 0.33.1, `qwen3.5:9b` con digest congelato,
+- baseline qualificata: Ollama 0.33.1, `qwen3.5:9b` con digest congelato,
   context 4096, thinking false e temperatura zero;
 - solo Direct Chat single-file read-only è qualificabile per v0.3.0;
 - reference/verified agent, retrieval, tool e mutation restano non supportati;

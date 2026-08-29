@@ -19,14 +19,18 @@ Maestro non avvia Ollama e non esegue pull, update o sostituzioni implicite.
 ```sh
 version=@MAESTRO_VERSION@
 artifact="maestro-${version}-linux-amd64"
+base_url="https://github.com/Axtonno/maestro/releases/download/${version}"
+curl -fLO "${base_url}/${artifact}.tar.gz"
+curl -fLO "${base_url}/${artifact}.tar.gz.sha256"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
 cd "$artifact"
 ./maestro version
 ```
 
-Nome archive, checksum, `maestro version` e `ARTIFACT-MANIFEST.txt` devono
-riportare la stessa identità. Non proseguire in caso di divergenza.
+I due asset devono provenire dalla stessa GitHub Release. Nome archive,
+checksum, `maestro version` e `ARTIFACT-MANIFEST.txt` devono riportare la
+stessa identità e lo stato `release`. Non proseguire in caso di divergenza.
 
 ## 2. Verifica del modello
 

@@ -73,6 +73,7 @@ Completati:
 * milestone-15-reference-hardware-readonly-baseline-plan.md
 * milestone-16-controlled-mutation-recovery-plan.md
 * milestone-17-mutation-qualification-plan.md
+* milestone-18-productization-release-v0.3.0-plan.md
 * milestone-18-productization-v0.4.0-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
@@ -81,6 +82,7 @@ Completati:
 * reports/milestone-12-phase-2.md
 * reports/milestone-12-phase-3.md
 * reports/milestone-12-phase-4.md
+* reports/milestone-18-phase-1.md
 
 ---
 
@@ -2679,5 +2681,17 @@ M18 v0.4.0 mutativo resta storico e non eseguibile. La sequenza prevista è:
 freeze/audit; documentazione; RC distinto; installazione/audit; un solo gate
 live sulla RTX; artifact finale e tag annotato; GitHub Release e verifica degli
 asset riscaricati. Sono vietati multi-file, sessioni, nuovi modelli, agent,
-retrieval, tool, mutation e cambi CLI/schema. Fase 1 è `NOT_RUN`; nessun tag,
-push o write GitHub è stato eseguito aprendo il piano.
+retrieval, tool, mutation e cambi CLI/schema. All'apertura la Fase 1 era
+`NOT_RUN`; nessun tag, push o write GitHub è stato eseguito aprendo il piano.
+
+Checkpoint Milestone 18 Fase 1: il source auditato `8bf5114` conserva zero
+delta in codice, configurazione, fixture, script e dipendenze rispetto al
+packaging candidate M17 `70a9630`. Gli hash di profilo, servizio/prompt e
+fixture coincidono con il record qualificato; l'archive M17 verifica ancora
+SHA-256 `82bfb33f3fd9af911e3b2b1e89f9920177b281046da21b186512e577e114fb61`.
+Suite normale/development `-count=3`, race, vet, script, doppio packaging,
+installazione temporanea, containment e anti-leak sono verdi. Remote
+`origin`, branch `master`, tag annotato futuro `v0.3.0` e allowlist dei soli
+file documentali sono congelati nel report
+`docs/reports/milestone-18-phase-1.md`. Il verdetto è PASS e autorizza la Fase
+2; nessun tag, push, RC persistente o artifact finale è stato prodotto.

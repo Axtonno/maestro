@@ -3,7 +3,7 @@
 ## Il checksum fallisce
 
 Non estrarre né eseguire l’archive. Recuperare nuovamente `.tar.gz` e
-`.sha256` dallo stesso candidate e ripetere `sha256sum -c`.
+`.sha256` dalla stessa GitHub Release e ripetere `sha256sum -c`.
 
 ## Versione, commit o stato non coincidono
 

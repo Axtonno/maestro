@@ -2,7 +2,7 @@
 
 Versione target: 0.3.0
 
-Stato: Aperta — piano approvato; Fase 1 `NOT_RUN`
+Stato: In esecuzione — Fase 1 completata `PASS`; Fase 2 `NOT_RUN`
 
 Data: 2026-08-29
 
@@ -104,7 +104,7 @@ packaging candidate e riapre i gate owner della Milestone 17.
 
 | Fase | Titolo | Stato | Dipende da |
 |---:|---|---|---|
-| 1 | Freeze release e audit del delta | `NOT_RUN` | M17 PASS |
+| 1 | Freeze release e audit del delta | `PASS` | M17 PASS |
 | 2 | Documentazione pubblica e metadata | `NOT_RUN` | Fase 1 |
 | 3 | Release candidate riproducibile | `NOT_RUN` | Fase 2 |
 | 4 | Installazione pulita e audit RC | `NOT_RUN` | Fase 3 |

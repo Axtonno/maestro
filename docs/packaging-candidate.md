@@ -23,12 +23,20 @@ archive può essere costruito un artifact distinto con stato
 `release-candidate`. Tag e pubblicazione richiedono il verdetto finale
 `direct_chat_product_baseline` e una build separata con stato `release`.
 
+Dal checkout sorgente, i tre stati usano build distinte:
+
 ```sh
 ./scripts/verify-package-candidate.sh \
   --version v0.3.0-pc.1 --status packaging-candidate
-./scripts/package-candidate.sh \
-  --version v0.3.0-pc.1 --status packaging-candidate --output dist
+./scripts/verify-package-candidate.sh \
+  --version v0.3.0-rc.1 --status release-candidate
+./scripts/verify-package-candidate.sh \
+  --version v0.3.0 --status release
 ```
+
+Gli esempi verificano in directory temporanee doppia build, checksum,
+allowlist, installazione e identità. La persistenza sotto `dist/` avviene
+soltanto per il candidate approvato e lo script rifiuta ogni overwrite.
 
 ## Riproducibilità
 

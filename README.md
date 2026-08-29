@@ -24,18 +24,22 @@ agentico o mutativo presente nel repository non amplia la promessa di prodotto.
 
 ## Installazione dall’artifact
 
-Scaricare insieme archive e checksum del candidate o della release:
+Scaricare insieme archive e checksum dalla stessa GitHub Release:
 
 ```sh
 version=v0.3.0
 artifact="maestro-${version}-linux-amd64"
+base_url="https://github.com/Axtonno/maestro/releases/download/${version}"
+curl -fLO "${base_url}/${artifact}.tar.gz"
+curl -fLO "${base_url}/${artifact}.tar.gz.sha256"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
 cd "$artifact"
 ./maestro version
 ```
 
-Versione, commit e stato devono coincidere con `ARTIFACT-MANIFEST.txt`.
+I due download devono provenire dalla stessa release. Versione, commit e stato
+`release` devono coincidere con `ARTIFACT-MANIFEST.txt`.
 
 ## Quick start
 

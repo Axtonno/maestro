@@ -6,11 +6,15 @@ Piattaforma verificata: Linux `amd64`
 
 ## Verifica e installazione
 
-Scaricare archive e checksum nello stesso percorso:
+Per una release pubblicata, scaricare archive e checksum dalla stessa GitHub
+Release nello stesso percorso:
 
 ```sh
 version=@MAESTRO_VERSION@
 artifact="maestro-${version}-linux-amd64"
+base_url="https://github.com/Axtonno/maestro/releases/download/${version}"
+curl -fLO "${base_url}/${artifact}.tar.gz"
+curl -fLO "${base_url}/${artifact}.tar.gz.sha256"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
 cd "$artifact"
@@ -18,9 +22,10 @@ cd "$artifact"
 ./maestro --help
 ```
 
-Versione, commit e stato devono coincidere con `ARTIFACT-MANIFEST.txt`. Un
-artifact non cambia stato tramite rename: packaging candidate, release
-candidate e release sono build distinte.
+I due file devono provenire dalla stessa release. Versione, commit e stato
+devono coincidere con `ARTIFACT-MANIFEST.txt`; per la release pubblicata lo
+stato è `release`. Un artifact non cambia stato tramite rename: packaging
+candidate, release candidate e release sono build distinte.
 
 Per installare il binario senza privilegi:
 
