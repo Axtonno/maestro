@@ -2,8 +2,8 @@
 
 Versione candidata: 0.3.0
 
-Stato: In corso — Fasi 1–5 completate; Fase 6 conclusa con stop rule
-`direct_chat_candidate_failed`; Fase 7 `NOT_RUN`. Autorizzata dal verdetto
+Stato: In corso — candidate F6.1 respinto; candidate F6.2 congelato e in attesa
+di qualifica live; Fase 7 `NOT_RUN`. Autorizzata dal verdetto
 `verified_agent_rejected` della Milestone 15 esclusivamente per il perimetro
 `direct/chat` read-only
 
@@ -223,7 +223,7 @@ architetturale e blocca il gate, anche se i test qualitativi risultano verdi.
 | 3 | Contesto esplicito single-file | Completata | Fase 2 |
 | 4 | Profilo dedicato e preflight | Completata | Fase 3 |
 | 5 | Streaming, terminali e osservabilità | Completata | Fase 4 |
-| 6 | Matrice deterministica e qualifica sul ThinkPad | Conclusa — `direct_chat_candidate_failed` | Fase 5 |
+| 6 | Matrice deterministica e qualifica sul ThinkPad | F6.1 respinto; F6.2 live pending | Fase 5 |
 | 7 | Packaging candidate e qualifica finale | `NOT_RUN` — non autorizzata | Fase 6 PASS |
 
 Le fasi sono sequenziali rispetto ai gate. Una fase può preparare test o
@@ -558,6 +558,18 @@ modifiche riaprono i gate posseduti dal prompt e dal trasporto; suite,
 containment, anti-leak e matrice live devono essere ripetuti integralmente su
 un nuovo commit congelato. Modello, digest, profilo, fixture e oracoli restano
 invariati.
+
+Candidate F6.2 congelato: commit
+`f059c2e0015d748bc846cce8d790ee11515291ab`, binario
+`v0.3.0-m17-p6.2`, SHA-256
+`e4f9a5f734da7db9da91ef00d694fe199f8fb865d59ca8c3fd9629c2964628af`.
+I gate deterministici sono verdi; la qualifica live è pending. Il record
+autorevole è `docs/reports/milestone-17-phase-6-candidate-2.md`.
+
+Il recovery usa esplicitamente la piattaforma WSL2/RTX già verificata per la
+parte live perché il provider del ThinkPad è indisponibile. L'evidenza non viene
+attribuita al ThinkPad e non sostituisce la successiva verifica dell'archive
+immutabile richiesta dalla Fase 7.
 
 ---
 

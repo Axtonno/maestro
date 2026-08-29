@@ -2550,3 +2550,15 @@ per entrambi i trasporti. Il prompt non contiene risposte della fixture. Prima
 del nuovo freeze devono tornare verdi suite normale/development `-count=3`,
 race, vet, test mirati e anti-leak; poi la matrice live va ripetuta integralmente
 su un nuovo candidate. Packaging e tag restano vietati fino al PASS F6.2.
+
+Freeze F6.2: il commit sorgente
+`f059c2e0015d748bc846cce8d790ee11515291ab` produce due binari
+`v0.3.0-m17-p6.2` byte-identici con SHA-256
+`e4f9a5f734da7db9da91ef00d694fe199f8fb865d59ca8c3fd9629c2964628af`.
+Config, modello/digest, fixture, context, thinking, timeout, limiti e oracoli
+restano quelli F6.1; temperatura è ora fissata a zero. Suite normale e
+development `-count=3`, race, vet e test Direct Chat/CLI `-count=10` sono
+verdi. Il record e protocollo di ripresa sono in
+`docs/reports/milestone-17-phase-6-candidate-2.md`. La qualifica live completa
+deve essere ripetuta sulla WSL2/RTX, senza tuning; Fase 7 resta `NOT_RUN` fino
+al PASS.
