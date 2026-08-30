@@ -2818,3 +2818,28 @@ e fixture immutata. Sugli stessi cinque task la mediana è 69,0 secondi contro
 v0.3.0; i failure M17 restano vincolanti. Report in
 `docs/reports/milestone-20-phase-a.md` e
 `docs/reports/milestone-20-phase-b.md`. Fase C non è avviata.
+
+Chiusura Milestone 20: la Fase C implementa diagnostica configurazione
+tipizzata (`read_failed`, `yaml_invalid`, `unknown_field`, `missing_field`,
+`invalid_value`) con soli field path allowlisted, `maestro version
+--diagnostic` con status/path risolto/SHA-256 e heartbeat stderr ogni 15
+secondi bounded a 40 righe. Stdout chat resta atomico; ticker e goroutine sono
+arrestati prima del terminale. Packaging incorpora e verifica lo status. Il
+verdetto C è `operational_corrections_ready`; M20 chiude conservando
+`model_hardware_bound` e `thinkpad_profile_candidate`, senza promuovere il
+modello o modificare v0.3.0. Report in
+`docs/reports/milestone-20-phase-c.md` e
+`docs/reports/milestone-20-final.md`.
+
+Apertura Milestone 21: il piano autorevole è
+`docs/milestone-21-cpu-direct-chat-product-qualification-plan.md`. Il support
+claim candidato è limitato a Direct Chat CPU-only sul ThinkPad T490s con
+Ollama 0.33.1 e qwen2.5-coder:7b digest
+`dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364`.
+Prima della qualifica vengono congelati i dieci task M17+M20 e relativi
+oracoli. Servono due serie complete, cold/warm separati, residency esplicita
+5m, eviction e memoria dichiarate. Ogni serie richiede completion 100%,
+qualità almeno 80%, mediana warm <=60s, massimo warm <=120s e zero timeout.
+Il candidate M20 non presume PASS: un task aveva richiesto 190,6 secondi.
+Artifact e installazione fuori checkout sono obbligatori; pubblicazione,
+agent, tool, retrieval, multi-file e Controlled Mutation restano esclusi.

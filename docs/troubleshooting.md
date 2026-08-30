@@ -11,6 +11,16 @@ Eseguire `./maestro version` dalla directory estratta e confrontare nome
 archive e `ARTIFACT-MANIFEST.txt`. Non rinominare un packaging candidate come
 release candidate o release.
 
+Nel candidate post-v0.3.0 usare:
+
+```sh
+./maestro version --diagnostic
+```
+
+Confrontare `version`, `status`, `commit`, path `executable` risolto e
+`sha256`. Questa forma permette di individuare un altro `maestro` precedente
+nel `PATH`; non è disponibile nell'asset pubblico v0.3.0.
+
 ## `doctor` non completa cinque PASS
 
 Usare il modo chat esplicito:
@@ -41,6 +51,11 @@ Direct Chat richiede un profilo strict `version: 2` con provider, workspace,
 `interaction.chat` e `policy.workspace_mutate: deny`. Un profilo agentico v1
 non viene convertito e il doctor senza `--mode chat` segue il percorso agentico.
 
+Nel candidate post-v0.3.0 la riga `configuration` distingue `read_failed`,
+`yaml_invalid`, `unknown_field`, `missing_field` e `invalid_value`, indicando
+solo il path logico del campo. Correggere quella categoria senza pubblicare il
+contenuto del file di configurazione.
+
 ## `file_not_allowed`
 
 `--file` accetta un solo path logico relativo. Sono rifiutati path assoluti,
@@ -69,6 +84,11 @@ Non trattare la risposta come autorizzazione a modificare il workspace.
 
 SIGINT/SIGTERM producono exit 130 e `canceled`. Una deadline provider produce
 exit 4 e `deadline_exceeded`. Nessun output parziale deve apparire su stdout.
+
+Nel candidate post-v0.3.0, durante generation oltre 15 secondi, stderr può
+mostrare heartbeat `progress state=generating` con il solo tempo trascorso.
+Non è una risposta parziale. L'assenza di nuovi heartbeat dopo un terminale è
+parte del contratto.
 
 ## Exit code Direct Chat
 

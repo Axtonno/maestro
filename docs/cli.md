@@ -2,6 +2,9 @@
 
 Stato: contratto pubblico sperimentale Direct Chat
 
+Le sezioni marcate **candidate post-v0.3.0** descrivono il source tree dopo la
+Milestone 20 e non sono presenti nell'asset pubblico v0.3.0.
+
 ## Superficie supportata
 
 ```text
@@ -38,6 +41,17 @@ non può concedere authority o cambiare modalità.
 Lo streaming conserva output atomico: stdout viene scritto soltanto dopo una
 response valida, un terminale `stop` e EOF. Chunk parziali vengono scartati su
 errore, cancellazione, deadline o limite.
+
+**Candidate post-v0.3.0:** dopo il preflight e durante una generation lunga,
+stderr emette al massimo 40 heartbeat ogni 15 secondi:
+
+```text
+progress\tstate=generating elapsed_ms=15000
+```
+
+L'heartbeat non contiene modello, domanda, file, path, risposta parziale,
+secret o errore remoto. Il ticker viene arrestato prima del risultato o del
+failure; stdout resta atomico.
 
 ### Output
 
@@ -82,6 +96,23 @@ maestro version
 Stampa versione e commit incorporati. Un build locale senza metadata restituisce
 `devel` e `unknown`; l’artifact incorpora identità esatta.
 
+**Candidate post-v0.3.0:** il comando diagnostico esplicito aggiunge identità
+del file effettivamente eseguito:
+
+```text
+maestro version --diagnostic
+
+mode\tbinary_identity
+version\t...
+status\tdevelopment|packaging-candidate|release-candidate|release|dirty|unknown
+commit\t...
+dirty\ttrue|false
+executable\t"/path/risolto/maestro"
+sha256\t...
+```
+
+L'output normale di `maestro version` resta invariato.
+
 ## Exit code Direct Chat
 
 | Codice | Significato |
@@ -92,11 +123,22 @@ Stampa versione e commit incorporati. Un build locale senza metadata restituisce
 | 4 | provider, modello, capability o deadline non disponibile |
 | 130 | cancellazione tramite interrupt |
 
-Un failure chat espone soltanto:
+Un failure chat espone come prima riga:
 
 ```text
 chat failed: <reason_code>
 ```
+
+**Candidate post-v0.3.0:** un errore di configurazione aggiunge una seconda
+riga allowlisted con categoria e, quando noto, solo il path logico del campo:
+
+```text
+configuration\tkind=unknown_field field=interaction.chat.example
+```
+
+Le categorie sono `read_failed`, `yaml_invalid`, `unknown_field`,
+`missing_field` e `invalid_value`. Valore, path fisico ed errore YAML grezzo
+non vengono stampati.
 
 I reason code pubblici sono `invalid_request`, `chat_profile_required`,
 `file_not_allowed`, `provider_unavailable`, `capability_unsupported`,

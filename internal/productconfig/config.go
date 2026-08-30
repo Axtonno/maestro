@@ -429,11 +429,11 @@ func exact(value string, maximum int) bool {
 }
 
 func fieldError(field, message string) error {
-	return fmt.Errorf("configuration field %s %s: %w", field, message, ErrInvalid)
+	return &validationError{field: field, message: message, cause: ErrInvalid}
 }
 
 func fieldWrap(field string, err error) error {
-	return fmt.Errorf("configuration field %s: %v: %w", field, err, ErrInvalid)
+	return &validationError{field: field, message: err.Error(), cause: ErrInvalid}
 }
 
 func ResolvePath(explicit string, getenv func(string) string) (string, error) {

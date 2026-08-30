@@ -7,16 +7,18 @@ import "runtime/debug"
 var (
 	Version = ""
 	Commit  = ""
+	Status  = ""
 )
 
 type Info struct {
 	Version string
 	Commit  string
+	Status  string
 	Dirty   bool
 }
 
 func Current() Info {
-	current := Info{Version: Version, Commit: Commit}
+	current := Info{Version: Version, Commit: Commit, Status: Status}
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		return normalize(current)
@@ -43,6 +45,13 @@ func normalize(info Info) Info {
 	}
 	if info.Commit == "" {
 		info.Commit = "unknown"
+	}
+	if info.Dirty {
+		info.Status = "dirty"
+	} else if info.Status == "" && info.Version == "devel" {
+		info.Status = "development"
+	} else if info.Status == "" {
+		info.Status = "unknown"
 	}
 	return info
 }

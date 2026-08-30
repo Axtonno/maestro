@@ -487,6 +487,41 @@ func TestChatCommandUsageErrorsAreCanonicalBeforeComposition(t *testing.T) {
 	}
 }
 
+func TestChatConfigurationDiagnosticsExposeOnlyKindAndLogicalField(t *testing.T) {
+	configPath, _ := newCLIChatOnlyConfig(t, false)
+	encoded, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded = bytes.Replace(encoded, []byte("    timeout: 1m"), []byte("    timeout: 1m\n    secret_option: VALUE-SENTINEL"), 1)
+	if err := os.WriteFile(configPath, encoded, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	wantDetail := "configuration\tkind=unknown_field field=interaction.chat.secret_option\n"
+	for _, testCase := range []struct {
+		name string
+		args []string
+		want string
+	}{
+		{name: "chat", args: []string{"chat", "--config", configPath, "Question"}, want: "chat failed: invalid_request\n" + wantDetail},
+		{name: "doctor", args: []string{"doctor", "--mode", "chat", "--config", configPath}, want: "doctor failed: invalid_request\n" + wantDetail},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			code := runWithIO(testCase.args, strings.NewReader(""), &stdout, &stderr, cliTestDependencies(&cliProvider{id: "ollama"}))
+			if code != 2 || stdout.Len() != 0 || stderr.String() != testCase.want {
+				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+			for _, forbidden := range []string{"VALUE-SENTINEL", configPath, "secret-value"} {
+				if strings.Contains(stderr.String(), forbidden) {
+					t.Fatalf("configuration diagnostic leaked %q: %q", forbidden, stderr.String())
+				}
+			}
+		})
+	}
+}
+
 func TestChatCommandResponseFailuresUseStableTerminals(t *testing.T) {
 	for _, testCase := range []struct {
 		name     string
@@ -547,6 +582,48 @@ func TestChatCommandStreamingUsesAtomicEquivalentEnvelope(t *testing.T) {
 	}
 }
 
+func TestChatCommandRendersBoundedRedactedHeartbeatAndStopsIt(t *testing.T) {
+	configPath, _ := newCLIChatOnlyConfig(t, false)
+	provider := &cliProvider{
+		id:            "ollama",
+		completeDelay: 25 * time.Millisecond,
+		responses: []pkgProvider.CompletionResponse{{
+			Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "RESPONSE-SENTINEL"},
+			FinishReason: pkgProvider.FinishReasonStop,
+		}},
+	}
+	dependencies := cliTestDependencies(provider)
+	dependencies.chatHeartbeat = time.Millisecond
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "QUESTION-SENTINEL"},
+		strings.NewReader(""), &stdout, &stderr, dependencies,
+	)
+	if code != 0 || !strings.Contains(stdout.String(), "result\nRESPONSE-SENTINEL") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stderr.String()), "\n")
+	if len(lines) == 0 || len(lines) > maxChatHeartbeats {
+		t.Fatalf("unexpected heartbeat count %d: %q", len(lines), stderr.String())
+	}
+	for _, line := range lines {
+		if !strings.HasPrefix(line, "progress\tstate=generating elapsed_ms=") {
+			t.Fatalf("unexpected heartbeat: %q", line)
+		}
+	}
+	for _, forbidden := range []string{"QUESTION-SENTINEL", "RESPONSE-SENTINEL", configPath, "chat-model"} {
+		if strings.Contains(stderr.String(), forbidden) {
+			t.Fatalf("heartbeat leaked %q: %q", forbidden, stderr.String())
+		}
+	}
+	stopped := stderr.String()
+	time.Sleep(5 * time.Millisecond)
+	if stderr.String() != stopped {
+		t.Fatalf("heartbeat continued after terminal: before=%q after=%q", stopped, stderr.String())
+	}
+}
+
 func TestChatCommandFailureDoesNotLeakInputsOrPartialResponse(t *testing.T) {
 	configPath, root := newCLIInteractionConfig(t, true)
 	provider := &cliProvider{id: "ollama", stream: &cliStream{results: []cliStreamResult{
@@ -601,7 +678,10 @@ func TestChatCommandMapsCanceledContextWithoutProviderIO(t *testing.T) {
 
 func TestProductCommandHelpVersionAndErrorExitCodes(t *testing.T) {
 	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
-	dependencies.buildInfo = func() buildinfo.Info { return buildinfo.Info{Version: "v0.1.0", Commit: "abc123"} }
+	dependencies.buildInfo = func() buildinfo.Info { return buildinfo.Info{Version: "v0.1.0", Commit: "abc123", Status: "release"} }
+	dependencies.binaryIdentity = func() (binaryIdentity, error) {
+		return binaryIdentity{Executable: "/opt/maestro/bin/maestro", SHA256: strings.Repeat("a", 64)}, nil
+	}
 	for _, testCase := range []struct {
 		name     string
 		args     []string
@@ -612,6 +692,7 @@ func TestProductCommandHelpVersionAndErrorExitCodes(t *testing.T) {
 		{name: "command help", args: []string{"doctor", "--help"}, wantCode: 0, output: "maestro doctor"},
 		{name: "help command", args: []string{"help", "run"}, wantCode: 0, output: "maestro run"},
 		{name: "version", args: []string{"version"}, wantCode: 0, output: "maestro v0.1.0\ncommit abc123"},
+		{name: "version diagnostic", args: []string{"version", "--diagnostic"}, wantCode: 0, output: "mode\tbinary_identity\nversion\tv0.1.0\nstatus\trelease\ncommit\tabc123\ndirty\tfalse\nexecutable\t\"/opt/maestro/bin/maestro\"\nsha256\t" + strings.Repeat("a", 64)},
 		{name: "unknown", args: []string{"unknown"}, wantCode: 2, output: "unknown command"},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -633,6 +714,19 @@ func TestProductCommandHelpVersionAndErrorExitCodes(t *testing.T) {
 	var stderr bytes.Buffer
 	if code := runWithIO([]string{"doctor", "--config", invalidPath}, strings.NewReader(""), &stdout, &stderr, dependencies); code != 2 || !strings.Contains(stderr.String(), "configuration invalid") {
 		t.Fatalf("invalid config code=%d stderr=%q", code, stderr.String())
+	}
+}
+
+func TestVersionDiagnosticFailsClosedWithoutLeakingIdentityError(t *testing.T) {
+	dependencies := cliTestDependencies(&cliProvider{id: "ollama"})
+	dependencies.binaryIdentity = func() (binaryIdentity, error) {
+		return binaryIdentity{}, errors.New("PATH-SENTINEL identity failure")
+	}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO([]string{"version", "--diagnostic"}, strings.NewReader(""), &stdout, &stderr, dependencies)
+	if code != 1 || stdout.Len() != 0 || stderr.String() != "version failed: identity_unavailable\n" || strings.Contains(stderr.String(), "PATH-SENTINEL") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
 	}
 }
 
@@ -777,6 +871,7 @@ type cliProvider struct {
 	streamErr      error
 	streamRequests []pkgProvider.CompletionRequest
 	inspectCalls   int
+	completeDelay  time.Duration
 }
 
 func (provider *cliProvider) Stream(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.Stream, error) {
@@ -788,6 +883,9 @@ func (provider *cliProvider) ID() pkgProvider.ID { return provider.id }
 
 func (provider *cliProvider) Complete(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
 	provider.requests = append(provider.requests, request)
+	if provider.completeDelay > 0 {
+		time.Sleep(provider.completeDelay)
+	}
 	if len(provider.responses) == 0 {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf("fixture provider failure")
 	}

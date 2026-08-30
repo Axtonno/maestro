@@ -1078,7 +1078,7 @@ restano fermi.
 
 # Milestone 20 — ThinkPad Latency Attribution & Lower-Resource Profile
 
-Stato: Aperta — Fasi A/B completate; Fase C non avviata
+Stato: Completata — candidate non promosso
 
 Obiettivo:
 
@@ -1100,7 +1100,29 @@ mostrano delta terminali Maestro/Ollama tra -0,18 e +0,11 secondi. La Fase B
 emette `thinkpad_profile_candidate`: `qwen2.5-coder:7b` completa no-file 3/3 e
 single-file 5/5, qualità 4/5, zero timeout/mutazioni e mediana 69,0 secondi
 contro 123,9 secondi di `qwen3.5:9b` sugli stessi task (-44,3%). Il candidato
-resta development-only; Fase C non è ancora implementata.
+resta development-only. La Fase C completa diagnostica config specifica,
+identità del binario e heartbeat redatto; il report finale mantiene i verdetti
+senza promuovere il modello.
+
+---
+
+# Milestone 21 — CPU Direct Chat Product Qualification
+
+Stato: Aperta — Fase 1 autorizzata
+
+Obiettivo:
+
+Qualificare o respingere `qwen2.5-coder:7b` come esatto profilo Direct Chat
+CPU-only sul ThinkPad. La milestone congela Ollama 0.33.1, riconcilia in due
+serie complete i task M17+M20, separa cold/warm/residency/eviction, impone
+completion 100%, qualità almeno 80%, mediana warm massimo 60 secondi, massimo
+warm 120 secondi e zero timeout, quindi verifica un artifact installato fuori
+checkout.
+
+Il piano è in
+`milestone-21-cpu-direct-chat-product-qualification-plan.md`. Il profilo M20
+resta un candidato fino al verdetto; agent, tool, retrieval, multi-file e
+Controlled Mutation restano esclusi.
 
 ## Associazione release
 
@@ -1121,7 +1143,8 @@ Milestone 13 — chiusa con limitazioni / adoption NO-GO
                 ├── PASS -> Milestone 18 — Productization & Release v0.3.0
                 │   ├── PASS -> v0.3.0 pubblicata e asset verificati
                 │   │   └── Milestone 19 -> adoption ThinkPad operationally impractical
-                │   │       └── Milestone 20 -> attribuzione latenza; profilo leggero solo se hardware-bound
+                │   │       └── Milestone 20 -> model hardware-bound; profilo ThinkPad candidato non promosso
+                │   │           └── Milestone 21 -> qualifica prodotto Direct Chat CPU
                 │   └── FAIL -> nessuna pubblicazione o release incident esplicito
                 └── FAIL -> nessuna release
 ```

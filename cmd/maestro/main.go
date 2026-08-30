@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/antonio-cafeo/maestro/internal/application"
 	internalBenchmark "github.com/antonio-cafeo/maestro/internal/benchmark"
@@ -23,16 +24,22 @@ func run(arguments []string, stdout io.Writer, stderr io.Writer) int {
 }
 
 type commandDependencies struct {
-	application application.Dependencies
-	buildInfo   func() buildinfo.Info
-	context     func() (context.Context, context.CancelFunc)
-	isTerminal  func(io.Reader) bool
+	application    application.Dependencies
+	buildInfo      func() buildinfo.Info
+	binaryIdentity func() (binaryIdentity, error)
+	chatHeartbeat  time.Duration
+	context        func() (context.Context, context.CancelFunc)
+	isTerminal     func(io.Reader) bool
 }
 
 func defaultCommandDependencies() commandDependencies {
 	return commandDependencies{
 		application: application.DefaultDependencies(),
 		buildInfo:   buildinfo.Current,
+		binaryIdentity: func() (binaryIdentity, error) {
+			return currentBinaryIdentity()
+		},
+		chatHeartbeat: 15 * time.Second,
 		context: func() (context.Context, context.CancelFunc) {
 			return signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		},

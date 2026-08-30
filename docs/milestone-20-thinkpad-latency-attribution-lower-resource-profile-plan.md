@@ -2,7 +2,7 @@
 
 Versione osservata: v0.3.0
 
-Stato: **APERTA — Fasi A/B completate; Fase C non avviata**
+Stato: **COMPLETATA — candidate non promosso**
 
 Data: 2026-08-30
 
@@ -204,6 +204,9 @@ raccomandazione operativa resta hardware accelerato.
 
 ## Fase C — Correzioni indipendenti
 
+Stato: **COMPLETATA — `operational_corrections_ready`**. Evidenza in
+`reports/milestone-20-phase-c.md`.
+
 Questa fase non entra nel confronto A/B e non può alterarne binario, payload o
 misure. Le modifiche, se implementate, usano un candidate development separato
 e ripetono i gate deterministici owner.
@@ -241,7 +244,7 @@ e ripetono i gate deterministici owner.
 |---:|---|---|
 | A | completata — `model_hardware_bound` | attribuzione esplicita o `attribution_inconclusive` |
 | B | completata — `thinkpad_profile_candidate` | matrice completa e uno dei quattro verdetti lower-resource |
-| C | non avviata; progettazione autorizzata | test, anti-leak e report per C1-C3 |
+| C | completata — `operational_corrections_ready` | test, anti-leak e report per C1-C3 |
 
 Un failure di sicurezza arresta immediatamente la serie interessata. Un
 failure qualitativo non viene convertito in PASS attraverso reinterpretazione
@@ -261,3 +264,11 @@ La Milestone 20 è completata soltanto quando:
   timeout;
 - le correzioni C1-C3 restano separate dalle misure e hanno un esito esplicito;
 - roadmap, context e report finale concordano sul support claim invariato.
+
+## Chiusura
+
+La milestone chiude con `model_hardware_bound`,
+`thinkpad_profile_candidate` e `operational_corrections_ready`. Il modello non
+viene promosso: riconciliazione M17/M20, versione Ollama, gate cold/warm,
+soglie assolute e artifact qualification passano alla Milestone 21. Il report
+finale è `reports/milestone-20-final.md`.

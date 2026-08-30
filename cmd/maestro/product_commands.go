@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,8 +50,9 @@ func runDoctor(arguments []string, stdout io.Writer, stderr io.Writer, dependenc
 		if *mode == "chat" {
 			fmt.Fprintln(stderr, "doctor failed: invalid_request")
 		} else {
-			fmt.Fprintf(stderr, "configuration invalid: %v\n", err)
+			fmt.Fprintln(stderr, "configuration invalid")
 		}
+		renderConfigurationDiagnostic(stderr, err)
 		return 2
 	}
 	ctx, cancel := commandContext(dependencies)
@@ -242,7 +244,8 @@ func readBoundedLine(input *bufio.Reader, maximum int) (string, error) {
 func runVersion(arguments []string, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
 	flags := flag.NewFlagSet("maestro version", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro version") }
+	flags.Usage = func() { fmt.Fprintln(stdout, "usage: maestro version [--diagnostic]") }
+	diagnostic := flags.Bool("diagnostic", false, "include resolved executable identity")
 	if err := flags.Parse(arguments); err != nil {
 		if err == flag.ErrHelp {
 			return 0
@@ -256,6 +259,34 @@ func runVersion(arguments []string, stdout io.Writer, stderr io.Writer, dependen
 	current := buildinfo.Current()
 	if dependencies.buildInfo != nil {
 		current = dependencies.buildInfo()
+	}
+	if *diagnostic {
+		identity := currentBinaryIdentity
+		if dependencies.binaryIdentity != nil {
+			identity = dependencies.binaryIdentity
+		}
+		resolved, err := identity()
+		if err != nil {
+			fmt.Fprintln(stderr, "version failed: identity_unavailable")
+			return 1
+		}
+		status := current.Status
+		switch {
+		case current.Dirty:
+			status = "dirty"
+		case status == "" && current.Version == "devel":
+			status = "development"
+		case status == "":
+			status = "unknown"
+		}
+		fmt.Fprintln(stdout, "mode\tbinary_identity")
+		fmt.Fprintf(stdout, "version\t%s\n", current.Version)
+		fmt.Fprintf(stdout, "status\t%s\n", status)
+		fmt.Fprintf(stdout, "commit\t%s\n", current.Commit)
+		fmt.Fprintf(stdout, "dirty\t%t\n", current.Dirty)
+		fmt.Fprintf(stdout, "executable\t%s\n", strconv.Quote(resolved.Executable))
+		fmt.Fprintf(stdout, "sha256\t%s\n", resolved.SHA256)
+		return 0
 	}
 	fmt.Fprintf(stdout, "maestro %s\n", current.Version)
 	fmt.Fprintf(stdout, "commit %s\n", current.Commit)
@@ -282,7 +313,8 @@ func loadConfigForCommand(name string, arguments []string, stdout io.Writer, std
 	}
 	config, err := resolveAndLoad(*configPath, dependencies)
 	if err != nil {
-		fmt.Fprintf(stderr, "configuration invalid: %v\n", err)
+		fmt.Fprintln(stderr, "configuration invalid")
+		renderConfigurationDiagnostic(stderr, err)
 		return productconfig.Config{}, false, 2
 	}
 	return config, false, 0
@@ -301,10 +333,24 @@ func loadRunConfig(name string, arguments []string, stdout io.Writer, stderr io.
 	}
 	config, err := resolveAndLoad(*configPath, dependencies)
 	if err != nil {
-		fmt.Fprintf(stderr, "configuration invalid: %v\n", err)
+		fmt.Fprintln(stderr, "configuration invalid")
+		renderConfigurationDiagnostic(stderr, err)
 		return productconfig.Config{}, nil, false, 2
 	}
 	return config, flags.Args(), false, 0
+}
+
+func renderConfigurationDiagnostic(writer io.Writer, err error) {
+	diagnostic := productconfig.Diagnose(err)
+	kind := diagnostic.Kind
+	if kind == "" {
+		kind = productconfig.DiagnosticInvalidValue
+	}
+	fmt.Fprintf(writer, "configuration\tkind=%s", kind)
+	if diagnostic.Field != "" {
+		fmt.Fprintf(writer, " field=%s", diagnostic.Field)
+	}
+	fmt.Fprintln(writer)
 }
 
 func resolveAndLoad(explicit string, dependencies commandDependencies) (productconfig.Config, error) {

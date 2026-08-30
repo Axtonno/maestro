@@ -104,7 +104,7 @@ trap cleanup EXIT
 root="$working/$artifact"
 mkdir -p "$root/configs" "$root/docs" "$root/fixtures/laravel-v1"
 
-ldflags="-s -w -buildid= -X github.com/antonio-cafeo/maestro/internal/buildinfo.Version=${version} -X github.com/antonio-cafeo/maestro/internal/buildinfo.Commit=${commit}"
+ldflags="-s -w -buildid= -X github.com/antonio-cafeo/maestro/internal/buildinfo.Version=${version} -X github.com/antonio-cafeo/maestro/internal/buildinfo.Commit=${commit} -X github.com/antonio-cafeo/maestro/internal/buildinfo.Status=${status}"
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=local GOENV=off GOFLAGS='' \
     GOCACHE="$working/go-cache" SOURCE_DATE_EPOCH="$source_date_epoch" \
     go build -mod=readonly -trimpath -buildvcs=false -ldflags "$ldflags" \

@@ -40,9 +40,10 @@ Evidence rules:
 type ProviderFactory func(productconfig.Config, string) (pkgProvider.Provider, error)
 
 type Dependencies struct {
-	Getenv          func(string) string
-	ProviderFactory ProviderFactory
-	Now             func() time.Time
+	Getenv            func(string) string
+	ProviderFactory   ProviderFactory
+	Now               func() time.Time
+	GenerationStarted func()
 }
 
 type Request struct {
@@ -75,6 +76,7 @@ type Service struct {
 	profile  productconfig.ChatProfileConfig
 	provider chatProvider
 	now      func() time.Time
+	started  func()
 }
 
 func Build(config productconfig.Config, dependencies Dependencies) (*Service, error) {
@@ -102,7 +104,10 @@ func Build(config productconfig.Config, dependencies Dependencies) (*Service, er
 	if now == nil {
 		now = time.Now
 	}
-	return &Service{config: config, profile: profile, provider: provider, now: now}, nil
+	return &Service{
+		config: config, profile: profile, provider: provider, now: now,
+		started: dependencies.GenerationStarted,
+	}, nil
 }
 
 func normalizeDependencies(dependencies Dependencies) Dependencies {
@@ -167,6 +172,9 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 		Messages:   chatMessages(request.Question, request.File, content),
 		Options:    service.generationOptions(),
 		ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceNone},
+	}
+	if service.started != nil {
+		service.started()
 	}
 	if request.Stream {
 		return service.executeStreaming(runContext, completionRequest)

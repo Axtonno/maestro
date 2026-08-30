@@ -252,6 +252,47 @@ func TestDirectChatRequiresV2ProfileAndGenerationCapabilities(t *testing.T) {
 	}
 }
 
+func TestDirectChatSignalsGenerationAfterPreflightAndBeforeProvider(t *testing.T) {
+	provider := validProvider()
+	started := 0
+	provider.complete = func(_ context.Context, _ pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
+		if started != 1 {
+			t.Fatalf("generation signal count at provider=%d, want 1", started)
+		}
+		return provider.response, nil
+	}
+	service, err := Build(directConfig(t.TempDir()), Dependencies{
+		ProviderFactory:   fixtureFactory(provider),
+		GenerationStarted: func() { started++ },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Execute(t.Context(), Request{Question: "Answer"}); err != nil {
+		t.Fatal(err)
+	}
+	if started != 1 {
+		t.Fatalf("generation signal count=%d, want 1", started)
+	}
+
+	provider = validProvider()
+	provider.capabilities = provider.capabilities[:1]
+	started = 0
+	service, err = Build(directConfig(t.TempDir()), Dependencies{
+		ProviderFactory:   fixtureFactory(provider),
+		GenerationStarted: func() { started++ },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Execute(t.Context(), Request{Question: "Answer"}); !errors.Is(err, ErrCapabilityUnsupported) {
+		t.Fatalf("expected preflight failure, got %v", err)
+	}
+	if started != 0 {
+		t.Fatalf("preflight failure signaled generation %d times", started)
+	}
+}
+
 func TestDirectChatRejectsInvalidQuestionsAndTypedNilProvider(t *testing.T) {
 	for _, question := range []string{"", " \n", string([]byte{0xff}), "nul\x00", strings.Repeat("q", maxQuestionBytes+1)} {
 		provider := validProvider()

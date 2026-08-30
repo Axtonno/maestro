@@ -78,14 +78,19 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 	config, err := resolveAndLoadChat(*configPath, dependencies)
 	if err != nil {
 		fmt.Fprintln(stderr, "chat failed: invalid_request")
+		renderConfigurationDiagnostic(stderr, err)
 		return 2
 	}
-	service, err := directchat.Build(config, directChatDependencies(dependencies))
+	heartbeat := newChatHeartbeat(stderr, dependencies.chatHeartbeat)
+	chatDependencies := directChatDependencies(dependencies)
+	chatDependencies.GenerationStarted = heartbeat.Start
+	service, err := directchat.Build(config, chatDependencies)
 	if err != nil {
 		fmt.Fprintf(stderr, "chat failed: %s\n", chatFailureCode(ctx, err))
 		return exitCodeForChatError(ctx, err)
 	}
 	result, err := service.Execute(ctx, directchat.Request{Question: question, File: *logical, Stream: *stream})
+	heartbeat.Stop()
 	if err != nil {
 		fmt.Fprintf(stderr, "chat failed: %s\n", chatFailureCode(ctx, err))
 		return exitCodeForChatError(ctx, err)

@@ -125,9 +125,18 @@ for unsupported in configs/maestro.mutating.example.yaml \
     }
 done
 
-version_output="$($root/maestro version)"
+version_output="$("$root/maestro" version)"
 grep -Fxq "maestro ${version}" <<<"$version_output"
 grep -Fxq "commit ${commit}" <<<"$version_output"
+diagnostic_output="$("$root/maestro" version --diagnostic)"
+read -r binary_sha256 _ < <(sha256sum "$root/maestro")
+grep -Fxq $'mode\tbinary_identity' <<<"$diagnostic_output"
+grep -Fxq $'version\t'"${version}" <<<"$diagnostic_output"
+grep -Fxq $'status\t'"${status}" <<<"$diagnostic_output"
+grep -Fxq $'commit\t'"${commit}" <<<"$diagnostic_output"
+grep -Fxq $'dirty\tfalse' <<<"$diagnostic_output"
+grep -Fxq $'executable\t'"\"$root/maestro\"" <<<"$diagnostic_output"
+grep -Fxq $'sha256\t'"${binary_sha256}" <<<"$diagnostic_output"
 "$root/maestro" --help | grep -Fq 'usage: maestro <command>'
 
 doctor_config="$root/configs/doctor-test.yaml"

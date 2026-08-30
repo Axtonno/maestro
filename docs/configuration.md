@@ -4,6 +4,9 @@ Versione schema: 2
 
 Stato: contratto pubblico sperimentale chat-only
 
+La diagnostica specifica descritta sotto è un **candidate post-v0.3.0** e non
+appartiene al binario pubblico v0.3.0.
+
 ## Profilo distribuito
 
 ```yaml
@@ -106,6 +109,21 @@ maestro doctor --mode chat --config /path/to/chat.yaml
 
 Una configurazione invalida usa exit 2. Failure di provider o capability sono
 check operativi distinti e non vengono trasformati in PASS.
+
+Nel candidate post-v0.3.0, CLI e doctor mantengono il reason code
+`invalid_request` e aggiungono una diagnostica redatta:
+
+| Categoria | Significato |
+|---|---|
+| `read_failed` | file assente o non leggibile |
+| `yaml_invalid` | documento YAML malformato, duplicato o strutturalmente invalido |
+| `unknown_field` | chiave non appartenente allo schema strict |
+| `missing_field` | campo obbligatorio non presente |
+| `invalid_value` | campo presente ma non valido |
+
+Quando disponibile viene mostrato soltanto il path logico allowlisted, per
+esempio `interaction.chat.num_ctx`. Non sono mostrati valore, path del file,
+secret o testo dell'errore del decoder.
 
 ## Profili agentici storici
 

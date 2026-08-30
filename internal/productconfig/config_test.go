@@ -130,6 +130,50 @@ func TestLoadChatValidatesOnlyChatAuthorityAndStrictSyntax(t *testing.T) {
 	}
 }
 
+func TestConfigurationDiagnosticsAreSpecificAndRedacted(t *testing.T) {
+	valid := validChatYAML("workspace")
+	for _, testCase := range []struct {
+		name  string
+		setup func(t *testing.T, path string)
+		kind  DiagnosticKind
+		field string
+	}{
+		{name: "read failed", setup: func(t *testing.T, path string) {
+			if err := os.Mkdir(path, 0o700); err != nil {
+				t.Fatal(err)
+			}
+		}, kind: DiagnosticReadFailed},
+		{name: "yaml invalid", setup: func(t *testing.T, path string) {
+			writeConfig(t, path, "version: [VALUE-SENTINEL\n")
+		}, kind: DiagnosticYAMLInvalid},
+		{name: "unknown field", setup: func(t *testing.T, path string) {
+			writeConfig(t, path, strings.Replace(valid, "    timeout: 1m", "    timeout: 1m\n    extra_option: VALUE-SENTINEL", 1))
+		}, kind: DiagnosticUnknownField, field: "interaction.chat.extra_option"},
+		{name: "missing field", setup: func(t *testing.T, path string) {
+			writeConfig(t, path, strings.Replace(valid, "    model: chat-model\n", "", 1))
+		}, kind: DiagnosticMissingField, field: "interaction.chat.model"},
+		{name: "invalid value", setup: func(t *testing.T, path string) {
+			writeConfig(t, path, strings.Replace(valid, "    num_ctx: 4096", "    num_ctx: 64", 1))
+		}, kind: DiagnosticInvalidValue, field: "interaction.chat.num_ctx"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "config.yaml")
+			testCase.setup(t, path)
+			_, err := LoadChat(path)
+			if err == nil {
+				t.Fatal("invalid configuration was accepted")
+			}
+			diagnostic := Diagnose(err)
+			if diagnostic.Kind != testCase.kind || diagnostic.Field != testCase.field {
+				t.Fatalf("diagnostic=%#v err=%v", diagnostic, err)
+			}
+			if strings.Contains(diagnostic.Field, "VALUE-SENTINEL") {
+				t.Fatalf("diagnostic leaked a value: %#v", diagnostic)
+			}
+		})
+	}
+}
+
 func TestMilestone14CandidateProfileIsFrozenAndValid(t *testing.T) {
 	config, err := Load("../../configs/maestro.milestone-14-candidate.yaml")
 	if err != nil {

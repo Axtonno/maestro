@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -32,38 +34,53 @@ func load(path string, validate func(Config) error) (Config, error) {
 	encoded, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return Config{}, fmt.Errorf("read configuration: %w: %w", err, ErrNotFound)
+			return Config{}, withDiagnostic(fmt.Errorf("read configuration: %w: %w", err, ErrNotFound), DiagnosticReadFailed, "")
 		}
-		return Config{}, fmt.Errorf("read configuration: %w: %w", err, ErrInvalid)
+		return Config{}, withDiagnostic(fmt.Errorf("read configuration: %w: %w", err, ErrInvalid), DiagnosticReadFailed, "")
 	}
 	if len(encoded) == 0 || len(encoded) > maxConfigBytes {
-		return Config{}, fmt.Errorf("configuration must contain 1..%d bytes: %w", maxConfigBytes, ErrInvalid)
+		return Config{}, withDiagnostic(fmt.Errorf("configuration must contain 1..%d bytes: %w", maxConfigBytes, ErrInvalid), DiagnosticYAMLInvalid, "")
 	}
 	if err := rejectAliases(encoded); err != nil {
-		return Config{}, err
+		return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
 	}
 	var header struct {
 		Version int `yaml:"version"`
 	}
 	if err := yaml.Unmarshal(encoded, &header); err != nil {
-		return Config{}, fmt.Errorf("decode configuration version: %v: %w", err, ErrInvalid)
+		return Config{}, withDiagnostic(fmt.Errorf("decode configuration version: %v: %w", err, ErrInvalid), DiagnosticYAMLInvalid, "")
 	}
 	var config Config
 	switch header.Version {
 	case Version:
 		var decoded configV1
+		if field, err := unknownYAMLField(encoded, reflect.TypeOf(decoded)); err != nil {
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
+		} else if field != "" {
+			return Config{}, withDiagnostic(fmt.Errorf("configuration contains unknown field: %w", ErrInvalid), DiagnosticUnknownField, field)
+		}
 		if err := decodeStrict(encoded, &decoded); err != nil {
-			return Config{}, err
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
 		}
 		config = decoded.config()
 	case CandidateVersion:
 		var decoded configV2
+		if field, err := unknownYAMLField(encoded, reflect.TypeOf(decoded)); err != nil {
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
+		} else if field != "" {
+			return Config{}, withDiagnostic(fmt.Errorf("configuration contains unknown field: %w", ErrInvalid), DiagnosticUnknownField, field)
+		}
 		if err := decodeStrict(encoded, &decoded); err != nil {
-			return Config{}, err
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
 		}
 		config = decoded.config()
 	default:
-		return Config{}, fieldError("version", fmt.Sprintf("must equal %d or %d", Version, CandidateVersion))
+		err := fieldError("version", fmt.Sprintf("must equal %d or %d", Version, CandidateVersion))
+		kind := DiagnosticInvalidValue
+		if !hasYAMLPath(encoded, "version") {
+			kind = DiagnosticMissingField
+		}
+		return Config{}, withDiagnostic(err, kind, "version")
 	}
 	absolute, err := filepath.Abs(path)
 	if err != nil {
@@ -77,9 +94,114 @@ func load(path string, validate func(Config) error) (Config, error) {
 		return Config{}, fmt.Errorf("configuration validator is missing: %w", ErrInvalid)
 	}
 	if err := validate(config); err != nil {
-		return Config{}, err
+		field := validationField(err)
+		kind := DiagnosticInvalidValue
+		if field != "" && !hasYAMLPath(encoded, field) {
+			kind = DiagnosticMissingField
+		}
+		return Config{}, withDiagnostic(err, kind, field)
 	}
 	return config, nil
+}
+
+func unknownYAMLField(encoded []byte, target reflect.Type) (string, error) {
+	var document yaml.Node
+	if err := yaml.Unmarshal(encoded, &document); err != nil {
+		return "", fmt.Errorf("parse configuration fields: %v: %w", err, ErrInvalid)
+	}
+	if len(document.Content) == 0 {
+		return "", nil
+	}
+	return findUnknownYAMLField(document.Content[0], target, ""), nil
+}
+
+func findUnknownYAMLField(node *yaml.Node, target reflect.Type, prefix string) string {
+	for target.Kind() == reflect.Pointer {
+		target = target.Elem()
+	}
+	if node == nil || node.Kind != yaml.MappingNode || target.Kind() != reflect.Struct {
+		return ""
+	}
+	fields := yamlStructFields(target)
+	for index := 0; index+1 < len(node.Content); index += 2 {
+		key := node.Content[index].Value
+		child := node.Content[index+1]
+		path := key
+		if prefix != "" {
+			path = prefix + "." + key
+		}
+		childType, exists := fields[key]
+		if !exists {
+			return path
+		}
+		if unknown := findUnknownYAMLField(child, childType, path); unknown != "" {
+			return unknown
+		}
+	}
+	return ""
+}
+
+func yamlStructFields(target reflect.Type) map[string]reflect.Type {
+	fields := make(map[string]reflect.Type)
+	for index := 0; index < target.NumField(); index++ {
+		field := target.Field(index)
+		if field.PkgPath != "" {
+			continue
+		}
+		tag := field.Tag.Get("yaml")
+		parts := strings.Split(tag, ",")
+		name := parts[0]
+		inline := slicesContain(parts[1:], "inline")
+		if inline {
+			for childName, childType := range yamlStructFields(field.Type) {
+				fields[childName] = childType
+			}
+			continue
+		}
+		if name == "" || name == "-" {
+			continue
+		}
+		fields[name] = field.Type
+	}
+	return fields
+}
+
+func slicesContain(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
+func hasYAMLPath(encoded []byte, field string) bool {
+	parts := strings.Split(field, ".")
+	var document yaml.Node
+	if err := yaml.Unmarshal(encoded, &document); err != nil || len(document.Content) == 0 {
+		return false
+	}
+	node := document.Content[0]
+	for _, part := range parts {
+		if index := strings.IndexByte(part, '['); index >= 0 {
+			part = part[:index]
+		}
+		if part == "" || node.Kind != yaml.MappingNode {
+			return false
+		}
+		found := false
+		for index := 0; index+1 < len(node.Content); index += 2 {
+			if node.Content[index].Value == part {
+				node = node.Content[index+1]
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 type configV1 struct {
