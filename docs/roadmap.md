@@ -1074,12 +1074,40 @@ ThinkPad resta hardware osservato e non qualificato. Verified agent,
 multi-file, Controlled Mutation, nuovi provider e altri modelli supportati
 restano fermi.
 
+---
+
+# Milestone 20 — ThinkPad Latency Attribution & Lower-Resource Profile
+
+Stato: Aperta — Fasi A/B completate; Fase C non avviata
+
+Obiettivo:
+
+Attribuire con un confronto appaiato e a payload equivalente la latenza
+osservata sul ThinkPad tra Ollama diretto e l'esatto binario Maestro v0.3.0.
+Soltanto se il collo di bottiglia risulta principalmente modello/hardware, la
+milestone prova `qwen2.5-coder:7b` come candidato development-only per lo
+stesso perimetro Direct Chat read-only.
+
+Il piano è in
+`milestone-20-thinkpad-latency-attribution-lower-resource-profile-plan.md`.
+La matrice non riapre agent, retrieval, multi-file o Controlled Mutation e non
+modifica automaticamente il support claim di v0.3.0. Errori di configurazione
+specifici, identità del binario e feedback di progresso redatto costituiscono
+un workstream separato dalle misure prestazionali.
+
+La Fase A emette `model_hardware_bound`: quattro coppie a body byte-identico
+mostrano delta terminali Maestro/Ollama tra -0,18 e +0,11 secondi. La Fase B
+emette `thinkpad_profile_candidate`: `qwen2.5-coder:7b` completa no-file 3/3 e
+single-file 5/5, qualità 4/5, zero timeout/mutazioni e mediana 69,0 secondi
+contro 123,9 secondi di `qwen3.5:9b` sugli stessi task (-44,3%). Il candidato
+resta development-only; Fase C non è ancora implementata.
+
 ## Associazione release
 
 | Versione | Obiettivo |
 |---|---|
 | v0.2.0 | artifact storico read-only; Field Validation con adoption NO-GO |
-| v0.3.0 | baseline read-only qualificata; release workflow aperto in Milestone 18 |
+| v0.3.0 | baseline Direct Chat read-only pubblicata e verificata; support claim invariato in M19-M20 |
 | v0.4.0 | non pianificata attivamente; nessun support mutativo senza nuova qualifica |
 
 ## Sequenza post-v0.2.0
@@ -1093,6 +1121,7 @@ Milestone 13 — chiusa con limitazioni / adoption NO-GO
                 ├── PASS -> Milestone 18 — Productization & Release v0.3.0
                 │   ├── PASS -> v0.3.0 pubblicata e asset verificati
                 │   │   └── Milestone 19 -> adoption ThinkPad operationally impractical
+                │   │       └── Milestone 20 -> attribuzione latenza; profilo leggero solo se hardware-bound
                 │   └── FAIL -> nessuna pubblicazione o release incident esplicito
                 └── FAIL -> nessuna release
 ```

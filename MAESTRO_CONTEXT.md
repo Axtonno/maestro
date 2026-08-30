@@ -2785,3 +2785,36 @@ Stato e digest aggregato del workspace coincidono pre/post. Il verdetto
 post-release è `operationally_impractical`: non qualifica il ThinkPad, non
 modifica v0.3.0 e mantiene fermi verified agent, multi-file, Controlled
 Mutation, nuovi provider e altri modelli ufficialmente supportati.
+
+Apertura Milestone 20: il piano autorevole è
+`docs/milestone-20-thinkpad-latency-attribution-lower-resource-profile-plan.md`.
+La Fase A confronta sul ThinkPad due task congelati, due ripetizioni per task e
+per percorso, tra replay Ollama diretto e l'esatto binario Maestro v0.3.0. Il
+body deve essere dimostrabilmente equivalente; si misurano primo chunk,
+terminale, output visibile, usage, CPU/RSS e immutabilità. Solo il verdetto
+`model_hardware_bound` autorizza la Fase B con `qwen2.5-coder:7b` come candidato
+development-only. Il gate richiede no-file 3/3, single-file 5/5, coppia
+stream/non-stream 2/2, qualità almeno 4/5, zero timeout o mutazioni e riduzione
+mediana di almeno 30% e 20 secondi rispetto a qwen3.5 sugli stessi cinque
+task. I precedenti failure qualitativi 2/5 di
+qwen2.5-coder in M17 restano evidenza vincolante e impediscono qualunque
+promozione automatica. Diagnostica config, identità del binario e heartbeat
+redatto sono separati dal benchmark. v0.3.0, agent, retrieval, multi-file e
+Controlled Mutation restano invariati.
+
+Checkpoint Milestone 20 Fasi A/B: l'archive pubblico e il binario v0.3.0 sono
+stati riscaricati e verificati; il binario è stato invocato per path assoluto
+perché quello preesistente nel PATH aveva identità diversa. Un relay loopback
+temporaneo, con body locali `0600`, ha dimostrato payload byte-identici tra
+Maestro e replay Ollama. Sui quattro confronti formali qwen3.5 a modello
+residente, i delta terminali Maestro sono compresi tra -0,18 e +0,11 secondi;
+verdetto A `model_hardware_bound`. Il primo uso resta costoso e lo stream
+atomico nasconde circa 15,8 secondi tra primo chunk e terminale, ma non aggiunge
+ritardo terminale materiale. Questo ha autorizzato qwen2.5-coder:7b: no-file
+3/3, single-file 5/5, qualità 4/5, stream/non-stream equivalente, zero timeout
+e fixture immutata. Sugli stessi cinque task la mediana è 69,0 secondi contro
+123,9 di qwen3.5, miglioramento 54,9 secondi / 44,3%; verdetto B
+`thinkpad_profile_candidate`. Il profilo resta development-only e non modifica
+v0.3.0; i failure M17 restano vincolanti. Report in
+`docs/reports/milestone-20-phase-a.md` e
+`docs/reports/milestone-20-phase-b.md`. Fase C non è avviata.
