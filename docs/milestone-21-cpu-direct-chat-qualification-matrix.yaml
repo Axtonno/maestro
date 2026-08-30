@@ -1,0 +1,187 @@
+version: 1
+status: task_oracle_freeze
+frozen_at: "2026-08-30"
+
+profile:
+  model: qwen2.5-coder:7b
+  model_digest: dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364
+  num_ctx: 4096
+  num_predict: 512
+  thinking: "false"
+  temperature: 0
+  timeout: 5m
+  residency: 5m
+  max_file_bytes: 1048576
+  max_output_bytes: 1048576
+
+fixture:
+  source: internal/benchmark/developer/testdata/laravel-v1
+  digest_algorithm: "sha256 of sorted '<file-sha256>  <relative-path>' lines"
+  digest: a7831ea9d6cfebf397f004ae0bded6fec59ec935962f8e268b79534fc68abda3
+  files:
+    routes/api.php: 7e224d7e57bf0be6d2618e668d8515b07d332f94b7960de4640e4388b31bbc39
+    app/Http/Controllers/OrderController.php: 4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd
+    app/Services/OrderService.php: 4db47a6729c1be76ad724490f6966b845a0624991bb9e322a6251e10ec0d33f7
+    app/Services/CheckoutService.php: c2ae5b667100867423a3822fed0bba2ff64603a63fbb2c802fe785a319021cab
+    app/Repositories/OrderRepository.php: 635d1091091c4981789e2bac1316ba6b3f13019dd6c475b0b99f66ac884d5733
+
+series_order:
+  series_1: [Q17-1, Q17-2, Q17-3, Q17-4, Q17-5, Q20-1, Q20-2, Q20-3, Q20-4, Q20-5]
+  series_2: [Q20-1, Q20-2, Q20-3, Q20-4, Q20-5, Q17-1, Q17-2, Q17-3, Q17-4, Q17-5]
+  paired_stream_task: Q20-1
+  paired_stream_capture_sha256: 1b23d504ce65203c48fd664c3980288cd75ce560f57cea26caba274d1ab927ec
+
+tasks:
+  - id: Q17-1
+    source: conservative_reconstruction
+    historical_exact_prompt_available: false
+    file: app/Services/OrderService.php
+    question: >-
+      Spiega esclusivamente ciò che questo file mostra sulla classe OrderService
+      e sul metodo create: dipendenze, chiamate, ordine delle operazioni, evento
+      e valore restituito. Distingui i fatti osservabili da interfacce,
+      persistenza o database non dimostrati dal file.
+    required:
+      - "OrderRepository, PaymentGateway e Dispatcher sono dipendenze tipizzate; il file non prova che OrderRepository e PaymentGateway siano interfacce"
+      - "charge precede OrderRepository::create, che precede dispatch di OrderCreated"
+      - "create restituisce $order"
+    forbidden:
+      - "database o persistenza certi"
+      - "tutte le dipendenze sono interfacce"
+
+  - id: Q17-2
+    source: conservative_reconstruction
+    historical_exact_prompt_available: false
+    file: routes/api.php
+    question: >-
+      Quali route, metodo HTTP, controller e action sono dichiarati in questo
+      file? Riporta ogni literal e dichiara ciò che il file non mostra, senza
+      aggiungere route name, middleware o autenticazione.
+    required:
+      - "POST /orders"
+      - "OrderController::store"
+    forbidden:
+      - "route name, middleware o autenticazione come fatti"
+
+  - id: Q17-3
+    source: conservative_reconstruction
+    historical_exact_prompt_available: false
+    file: app/Http/Controllers/OrderController.php
+    question: >-
+      Descrivi OrderController::store e le dipendenze visibili: validazione,
+      chiamata al service, struttura della risposta e status. Specifica se
+      route, metodo HTTP e persistenza sono determinabili da questo file.
+    required:
+      - "customer_id required integer; items required array min:1"
+      - "OrderService::create riceve il payload validato"
+      - "risposta data => $order con status 201"
+      - "route, metodo HTTP e persistenza non sono mostrati"
+    forbidden:
+      - "POST o /orders come fatti del controller"
+      - "database o persistenza certi"
+
+  - id: Q17-4
+    source: conservative_reconstruction
+    historical_exact_prompt_available: false
+    file: app/Services/OrderService.php
+    question: >-
+      Proponi un refactoring di OrderService::create basato soltanto su questo
+      file. Separa prima i fatti osservati dalla proposta e non attribuire
+      transazioni, compensazioni, idempotenza o semantica esterna non visibili.
+      Non applicare modifiche.
+    required:
+      - "sequenza osservata charge, create, dispatch e return preservata"
+      - "ogni cambiamento è marcato come proposta"
+    forbidden:
+      - "dopo un'eccezione non intercettata di charge l'esecuzione prosegue verso create"
+      - "perdita di denaro, transazioni o compensazioni presentate come certe"
+
+  - id: Q17-5
+    source: conservative_reconstruction
+    historical_exact_prompt_available: false
+    file: app/Http/Controllers/OrderController.php
+    question: >-
+      Proponi test per OrderController::store usando soltanto questo file.
+      Separa fatti e proposte; non presentare come esistenti route, route name,
+      autenticazione, persistenza, schema aggiuntivo o semantica framework non
+      mostrati. Non applicare modifiche.
+    required:
+      - "proposte ancorate a validazione, OrderService::create e risposta data/201"
+      - "route e metodo HTTP non determinabili dal file"
+    forbidden:
+      - "route name, autenticazione, database, payload/schema aggiuntivi o 422 come fatti certi"
+
+  - id: Q20-1
+    source: exact_m20_capture
+    capture_sha256: c523c1be50d5ec0a8aeeb118bfdf4e1483866d9f5782403042780d28bdb6c5b2
+    file: routes/api.php
+    question: >-
+      Quali endpoint, controller e action sono dichiarati? Includi il metodo
+      HTTP e non aggiungere informazioni non presenti nel file.
+    required: ["POST /orders", "OrderController::store"]
+    forbidden: ["route, controller, action, middleware o autenticazione aggiuntivi"]
+
+  - id: Q20-2
+    source: exact_m20_capture
+    capture_sha256: d3f5894bc2e4d0e983d02addd475e642e2328aaadbd23540c97ee8c307efa6cb
+    file: app/Http/Controllers/OrderController.php
+    question: >-
+      Descrivi esclusivamente ciò che questo file mostra: regole di validazione,
+      dipendenza invocata, struttura della risposta e status HTTP. Non inferire
+      route o persistenza.
+    required:
+      - "customer_id required integer; items required array min:1"
+      - "OrderService::create"
+      - "data => $order; status 201"
+    forbidden: ["route, metodo HTTP o persistenza come fatti"]
+
+  - id: Q20-3
+    source: exact_m20_capture
+    capture_sha256: 68a619e9283002a93462caac9f5403106c805bf849467a1966f692bd846dddb6
+    file: app/Services/OrderService.php
+    question: >-
+      Descrivi nell ordine esatto le operazioni di create: dipendenze e metodi
+      chiamati, evento emesso e valore restituito. Non attribuire
+      implementazioni o effetti esterni non visibili nel file.
+    required:
+      - "PaymentGateway::charge, OrderRepository::create, Dispatcher::dispatch nell'ordine"
+      - "new OrderCreated($order['id'])"
+      - "return $order"
+    forbidden: ["implementazioni, database o effetti esterni certi"]
+
+  - id: Q20-4
+    source: exact_m20_capture
+    capture_sha256: e3825cd04b90006c5e6420da10a840bc85c04264cc0f6c32875743df1d9caa97
+    file: app/Services/CheckoutService.php
+    question: >-
+      Spiega i rami di selectGateway e il valore restituito: gateway non
+      disponibili, preferito disponibile, fallback e assenza di candidati. Usa
+      soltanto il file.
+    required:
+      - "gateway non disponibili saltati"
+      - "preferred disponibile restituito immediatamente"
+      - "primo gateway disponibile conservato come fallback"
+      - "fallback restituito, altrimenti null"
+    forbidden: ["gateway concreti, costruttori o configurazioni non presenti"]
+
+  - id: Q20-5
+    source: exact_m20_capture
+    capture_sha256: c5a1048b7c310cc6512cbf94607d97e692b1d34cbd05a46c593bd19b10782639
+    file: app/Repositories/OrderRepository.php
+    question: >-
+      Che cosa restituisce create e quali operazioni esterne sono visibili in
+      questo file? Distingui il codice osservabile da ogni possibile inferenza.
+    required:
+      - "array con id 42 seguito dagli elementi di $payload"
+      - "nessuna operazione esterna visibile"
+    forbidden: ["mock, database o persistenza come fatti"]
+
+grading:
+  correct_requires_all_required: true
+  material_falsehood_is_incorrect: true
+  partial_counts_as_correct: false
+  truncated_or_length_finish_is_incorrect: true
+  minimum_correct_per_series: 8
+  no_task_incorrect_in_both_series: true
+  no_material_falsehood_repeated: true
+  post_hoc_selection: forbidden

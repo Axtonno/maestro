@@ -2843,3 +2843,28 @@ qualità almeno 80%, mediana warm <=60s, massimo warm <=120s e zero timeout.
 Il candidate M20 non presume PASS: un task aveva richiesto 190,6 secondi.
 Artifact e installazione fuori checkout sono obbligatori; pubblicazione,
 agent, tool, retrieval, multi-file e Controlled Mutation restano esclusi.
+
+Checkpoint Milestone 21 Fase 1: il piano incorpora quattro precisazioni
+vincolanti. Warm richiede snapshot provider resident positivo, request entro
+TTL, nessuna eviction e `load_duration` entro una soglia housekeeping derivata
+da cinque probe non qualitative con formula predefinita e cap 2s. Il profilo
+congela `num_predict: 512`; troncamento/length resta failure. Ogni serie deve
+raggiungere almeno 8/10 correct, nessun task può essere incorrect in entrambe
+e nessuna falsità materiale può ripetersi. La matrice artifact è già fissata a
+cold no-file e cinque generation warm (`no-file`, Q17-1, Q20-4, Q20-1
+complete/stream) con mediana <=60s e massimo <=120s, oltre ai gate operativi.
+
+La matrice task/oracoli è congelata in
+`docs/milestone-21-cpu-direct-chat-qualification-matrix.yaml`: M20 conserva
+domande e file esatti dei capture; M17 usa superset conservativi perché i
+prompt storici completi non furono conservati, deviazione che non viene
+descritta come replay esatto. Fixture digest
+`a7831ea9d6cfebf397f004ae0bded6fec59ec935962f8e268b79534fc68abda3`.
+Hardware ThinkPad/OS/CPU/RAM sono registrati. Lo snap installato resta Ollama
+0.32.14 revisione 131; lo Store espone 0.33.1 revisione 133, ma entrambi i
+tentativi di refresh sono stati negati perché serve `sudo` interattivo. La
+baseline manifest on-disk del modello coincide già con il digest congelato,
+ma la riconferma post-upgrade resta obbligatoria. La
+Fase 1 resta in corso; Fase 2 non parte prima di upgrade, hold, digest modello
+e calibrazione housekeeping. Report in
+`docs/reports/milestone-21-phase-1.md`.

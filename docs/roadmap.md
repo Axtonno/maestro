@@ -1108,7 +1108,7 @@ senza promuovere il modello.
 
 # Milestone 21 — CPU Direct Chat Product Qualification
 
-Stato: Aperta — Fase 1 autorizzata
+Stato: Aperta — Fase 1 in corso
 
 Obiettivo:
 
@@ -1119,10 +1119,24 @@ completion 100%, qualità almeno 80%, mediana warm massimo 60 secondi, massimo
 warm 120 secondi e zero timeout, quindi verifica un artifact installato fuori
 checkout.
 
+Il freeze aggiunge `num_predict: 512`; output troncato resta failure. Una run
+warm richiede snapshot resident positivo, avvio entro TTL, nessuna eviction e
+`load_duration` entro una soglia housekeeping calibrata prima dei task. Ogni
+task deve risultare correct in almeno una delle due serie e nessuna falsità
+materiale può ripetersi. La matrice artifact minima è precongelata con cinque
+generation warm e conserva gli stessi limiti assoluti.
+
 Il piano è in
 `milestone-21-cpu-direct-chat-product-qualification-plan.md`. Il profilo M20
 resta un candidato fino al verdetto; agent, tool, retrieval, multi-file e
 Controlled Mutation restano esclusi.
+
+Task, oracoli e ordini sono congelati in
+`milestone-21-cpu-direct-chat-qualification-matrix.yaml`. La parte ambientale
+della Fase 1 resta aperta: lo snap locale è ancora Ollama 0.32.14/revisione
+131; lo Store espone 0.33.1/revisione 133, ma l'upgrade richiede autenticazione
+amministrativa interattiva. Fase 2 non è autorizzata prima di upgrade, hold,
+digest modello e calibrazione housekeeping.
 
 ## Associazione release
 

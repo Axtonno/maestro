@@ -2,7 +2,7 @@
 
 Versione candidata: non assegnata
 
-Stato: **APERTA — Fase 1 autorizzata**
+Stato: **APERTA — Fase 1 in corso**
 
 Data: 2026-08-30
 
@@ -16,7 +16,9 @@ Documenti di riferimento:
 - `reports/milestone-17-final.md`;
 - `configuration.md`;
 - `cli.md`;
-- `packaging-candidate.md`.
+- `packaging-candidate.md`;
+- `milestone-21-cpu-direct-chat-qualification-matrix.yaml`;
+- `reports/milestone-21-phase-1.md`.
 
 ## Decisione di apertura
 
@@ -88,17 +90,24 @@ interaction:
     timeout: 5m
     streaming: true
     num_ctx: 4096
+    num_predict: 512
     thinking: "false"
     residency: 5m
     max_file_bytes: 1048576
     max_output_bytes: 1048576
 ```
 
-Temperatura 0 resta interna e identica tra complete/stream. `residency: 5m` è
-un requisito candidato nuovo: deve essere rappresentato esplicitamente nel
-contratto e inoltrato in modo verificabile a Ollama. Il gate live non parte
-finché assenza, invalidità o mancato supporto della residenza non falliscono
-closed.
+Temperatura 0 resta interna e identica tra complete/stream. `num_predict: 512`
+è un hard budget di generazione congelato prima delle serie: deve essere
+rappresentato nel contratto, validato e inoltrato a Ollama come
+`options.num_predict` per complete e stream. Il limite non cambia dopo una
+risposta e non sana output incompleti: finish per limite, troncamento o risposta
+che non copre l'oracolo resta failure/`incorrect`.
+
+`residency: 5m` è un requisito candidato nuovo: deve essere rappresentato
+esplicitamente nel contratto e inoltrato in modo verificabile a Ollama. Il gate
+live non parte finché assenza, invalidità o mancato supporto di budget e
+residenza non falliscono closed.
 
 ## Riconciliazione qualità M17 + M20
 
@@ -168,9 +177,23 @@ mediana warm.
 
 ### Warm
 
-`warm` significa modello già residente, richiesta iniziata entro il TTL e
-nessun load provider osservato. Soltanto queste run alimentano mediana e
-massimo warm.
+Una run è `warm` soltanto quando valgono insieme:
+
+- snapshot provider positivo immediatamente prima della request;
+- request iniziata entro il TTL congelato;
+- nessuna eviction osservata tra snapshot e terminale;
+- `load_duration` non superiore alla soglia di housekeeping congelata.
+
+La soglia non richiede zero: distingue il bookkeeping di alcune centinaia di
+millisecondi da un vero caricamento di decine di secondi. Durante il freeze
+ambientale vengono eseguite cinque probe no-file warm, senza valutare o usare
+il contenuto delle risposte. La soglia è il massimo `load_duration` osservato
+più 200 ms, arrotondato ai 100 ms superiori e con hard cap di 2 s. Se una probe
+richiede un vero reload, la calibrazione è invalida e ricomincia dopo averne
+isolato la causa. Valore calcolato, raw duration e formula vengono registrati
+prima di qualunque risposta Q17/Q20. Soltanto le run conformi alimentano
+mediana e massimo warm; una run ambigua non viene riclassificata post-hoc e
+rende incompleta la serie.
 
 ### Residency ed eviction
 
@@ -200,8 +223,12 @@ Inoltre:
 
 - no-file deve essere 3/3 in entrambe le serie;
 - complete/stream deve essere semanticamente equivalente 2/2 per serie;
+- nessun task Q17/Q20 può essere `incorrect` in entrambe le serie,
+  indipendentemente dalla falsità o omissione specifica;
 - nessun task può produrre lo stesso claim materiale falso in entrambe le
   serie ed essere comunque promosso;
+- output limitato o troncato non conta come completion corretta e resta
+  failure/`incorrect`;
 - workspace e fixture devono coincidere pre/post;
 - heartbeat deve comparire nelle generation oltre 15 secondi, restare redatto
   e fermarsi prima del terminale;
@@ -233,9 +260,31 @@ Dopo due serie verdi:
 - registrare archive/binario SHA-256, manifest, versione, status e commit;
 - verificare `maestro version --diagnostic` sul file estratto e installato;
 - installare in prefix nuovo fuori checkout;
-- ripetere doctor, config diagnostics, heartbeat, containment, no-file,
-  single-file, stream, cold/warm e immutabilità sull'esatto archive;
+- eseguire la matrice minima precongelata descritta sotto sull'esatto archive;
 - non ricostruire sull'hardware di qualifica.
+
+La matrice minima viene scelta ora, prima dei risultati delle serie 1 e 2, e
+non può essere ridotta o sostituita:
+
+1. doctor chat completo, 5/5 check `pass`;
+2. cold no-file, 1/1 completion entro timeout, costo misurato e dichiarato;
+3. warm no-file, 1/1 completion conforme alla definizione warm;
+4. `Q17-1`, task classe/funzione storicamente problematico, `correct`;
+5. `Q20-4`, task CheckoutService e coda M20, `correct`;
+6. `Q20-1` complete più stream, entrambi `correct` e semanticamente
+   equivalenti;
+7. TTL 5 minuti, permanenza resident, eviction e successiva completion cold;
+8. almeno un heartbeat per ogni generation oltre 15 s, redatto e arrestato
+   prima del terminale;
+9. un caso per ciascuna categoria C1 e binary identity C2 verificata contro
+   path e SHA-256 dell'installato;
+10. containment negativo, digest fixture/workspace pre/post e zero mutazioni.
+
+Sulle cinque generation warm della matrice (`warm no-file`, `Q17-1`, `Q20-4`
+e la coppia `Q20-1`) valgono completion 5/5, qualità 4/4 sui task con oracolo,
+mediana <= 60 s, massimo <= 120 s, timeout zero, troncamenti zero e
+`num_predict: 512` invariato. Qualunque failure respinge l'artifact; non viene
+compensata dai risultati precedenti delle serie live.
 
 La pubblicazione resta un workflow separato e richiede decisione esplicita.
 
@@ -260,4 +309,3 @@ La milestone è completa soltanto quando:
 - il candidate è installato e verificato da artifact immutabile;
 - il report finale emette uno dei quattro verdetti;
 - agent, tool, retrieval, multi-file e mutation restano invariati.
-
