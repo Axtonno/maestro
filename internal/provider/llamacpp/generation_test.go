@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 )
@@ -96,6 +97,18 @@ func TestLlamaCPPRejectsPerRequestContextAndThinkingBeforeIO(t *testing.T) {
 		if _, err := provider.Complete(context.Background(), pkgProvider.CompletionRequest{Options: options}); !errors.Is(err, pkgProvider.ErrUnsupportedCapability) {
 			t.Fatalf("expected unsupported capability for %#v, got %v", options, err)
 		}
+	}
+}
+
+func TestLlamaCPPRejectsPerRequestKeepAliveBeforeIO(t *testing.T) {
+	provider := newTestProvider(t, "local", "", func(http.ResponseWriter, *http.Request) {
+		t.Fatal("unsupported keep alive performed remote I/O")
+	})
+	_, err := provider.Complete(context.Background(), pkgProvider.CompletionRequest{
+		KeepAlive: 5 * time.Minute,
+	})
+	if !errors.Is(err, pkgProvider.ErrUnsupportedCapability) {
+		t.Fatalf("expected unsupported capability, got %v", err)
 	}
 }
 

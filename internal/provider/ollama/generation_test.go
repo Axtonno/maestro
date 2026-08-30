@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 )
@@ -23,7 +24,7 @@ func TestOllamaAdvancedGenerationMapsOptionsToolsAndResults(t *testing.T) {
 		if err := json.NewDecoder(request.Body).Decode(&decoded); err != nil {
 			t.Fatalf("decode request: %v", err)
 		}
-		if decoded.Options == nil || decoded.Options.NumPredict != 96 ||
+		if decoded.KeepAlive != "5m0s" || decoded.Options == nil || decoded.Options.NumPredict != 96 ||
 			decoded.Options.NumCtx != 4096 || decoded.Think == nil || *decoded.Think ||
 			decoded.Options.Temperature == nil || *decoded.Options.Temperature != 0.1 ||
 			decoded.Options.TopP == nil || *decoded.Options.TopP != 0.8 ||
@@ -53,7 +54,8 @@ func TestOllamaAdvancedGenerationMapsOptionsToolsAndResults(t *testing.T) {
 	})
 
 	response, err := provider.Complete(context.Background(), pkgProvider.CompletionRequest{
-		Model: "qwen",
+		Model:     "qwen",
+		KeepAlive: 5 * time.Minute,
 		Options: pkgProvider.GenerationOptions{
 			MaxTokens: 96, Temperature: &temperature, TopP: &topP,
 			Stop: []string{"END"}, ContextWindow: 4096,

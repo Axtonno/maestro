@@ -3,6 +3,7 @@ package directchat
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
@@ -25,7 +26,7 @@ type Check struct {
 // Doctor validates and probes only the direct-chat graph. It never performs a
 // completion and never composes agent, retrieval, tool or plugin services.
 func Doctor(ctx context.Context, config productconfig.Config, dependencies Dependencies) []Check {
-	checks := []Check{{Name: "config", Status: CheckPass, Detail: "schema_v2_chat_valid"}}
+	checks := []Check{{Name: "config", Status: CheckPass, Detail: fmt.Sprintf("schema_v%d_chat_valid", config.Version)}}
 	if ctx == nil || config.ValidateChatExecutionProfile() != nil {
 		return append(checks[:0],
 			Check{Name: "config", Status: CheckFail, Detail: "configuration_invalid"},

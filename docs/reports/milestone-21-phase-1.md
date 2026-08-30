@@ -2,7 +2,7 @@
 
 Data: 2026-08-30
 
-Stato: **IN CORSO — freeze task/oracoli completato, ambiente non congelato**
+Stato: **COMPLETATA — ambiente, matrice e soglie congelati**
 
 ## Parti congelate
 
@@ -53,30 +53,45 @@ senza invalidare la Fase 1.
 | swap | 4.294.963.200 byte |
 | acceleratore | nessuno nel support claim; CPU-only |
 
-## Blocco ambientale corrente
+## Freeze Ollama e modello
 
-Lo snap installato è ancora Ollama v0.32.14, revisione 131, SHA-256 del binario
-payload `d0758d38ac5882a2c68fd930d0c1220af1952469fa9f30c268746d4021709bf4`.
-Lo Snap Store espone v0.33.1 come revisione esatta 133 su `latest/edge`.
+L'upgrade amministrativo è stato completato prima di qualunque risposta
+Q17/Q20. Il record congelato è:
 
-Il manifest modello attualmente presente on-disk ha SHA-256
-`dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364`
-e il layer modello dichiarato misura 4.683.074.048 byte. Questo verifica la
-baseline pre-upgrade, ma non sostituisce la riconferma via catalogo/API dopo
-l'installazione della revisione 133.
+| Campo | Valore |
+|---|---|
+| package | Snap `ollama` |
+| versione/revisione | 0.33.1 / 133 |
+| tracking | `latest/stable`, revisione esatta installata |
+| auto-update | hold `forever` |
+| servizio | enabled e active |
+| endpoint | `http://127.0.0.1:11434` |
+| versione CLI/API | 0.33.1 / 0.33.1 |
+| SHA-256 `/snap/ollama/current/bin/ollama` | `9f595107f966433f93f20ee19043f8e0cdea88e7403672f4dba2cadcb45ee085` |
+| modello | `qwen2.5-coder:7b` |
+| digest catalogo/API | `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364` |
+| dimensione catalogo/API | 4.683.087.561 byte |
+| SHA-256 manifest on-disk | `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364` |
 
-L'upgrade automatico non è stato eseguito perché snapd richiede autenticazione
-`sudo` interattiva. I comandi amministrativi da eseguire sul ThinkPad sono:
+## Calibrazione housekeeping warm
 
-```bash
-sudo snap refresh ollama --revision=133
-sudo snap refresh --hold ollama
-```
+Dopo unload e preload espliciti con TTL 5 minuti, cinque probe fisse non
+qualitative (`Reply with exactly OK.`) sono partite con snapshot resident
+positivo. Il modello è rimasto residente fino al terminale in tutte le probe;
+il contenuto delle risposte non è stato ispezionato né usato per modificare il
+freeze.
 
-Dopo l'upgrade occorre registrare `snap info ollama`, versione API, SHA-256 del
-payload, stato del servizio, catalogo e digest esatto di
-`qwen2.5-coder:7b`. Seguono cinque probe warm per calcolare la soglia
-housekeeping senza valutare le risposte qualitative.
+| Probe | `load_duration` |
+|---:|---:|
+| 1 | 1.089.707 ns |
+| 2 | 1.244.230 ns |
+| 3 | 1.251.013 ns |
+| 4 | 1.306.399 ns |
+| 5 | 1.163.561 ns |
+
+Applicando la formula congelata — massimo osservato più 200 ms, arrotondato
+ai 100 ms superiori, hard cap 2 s — la soglia M21 è **300 ms**. Il preload
+aveva terminale `load`; non è una probe warm e non alimenta la soglia.
 
 ## Gate della fase
 
@@ -84,10 +99,10 @@ housekeeping senza valutare le risposte qualitative.
 |---|---|
 | hardware e OS | PASS |
 | profilo, task, oracoli e ordini | PASS |
-| Ollama 0.33.1 revisione 133 | BLOCKED — privilegio amministrativo richiesto |
-| hold aggiornamenti automatici | NOT RUN |
-| digest modello | PASS pre-upgrade; riconferma post-upgrade NOT RUN |
-| soglia housekeeping congelata | NOT RUN |
+| Ollama 0.33.1 revisione 133 | PASS |
+| hold aggiornamenti automatici | PASS — `forever` |
+| digest modello | PASS — API e manifest coincidono |
+| soglia housekeeping congelata | PASS — 300 ms |
 
-La Fase 1 non è chiusa e la Fase 2 non parte finché gli ultimi quattro gate non
-sono completati. Nessuna risposta Q17/Q20 è stata generata durante il freeze.
+Verdetto di fase: `cpu_qualification_environment_frozen`. La Fase 2 è
+autorizzata. Nessuna risposta Q17/Q20 è stata generata durante il freeze.

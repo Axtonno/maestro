@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
 )
 
 func TestLoadStrictVersionedConfigurationAndResolveRelativeWorkspace(t *testing.T) {
@@ -95,6 +97,71 @@ func TestChatExampleLoadsWithoutAgentConfiguration(t *testing.T) {
 	}
 	if _, err := Load("../../configs/maestro.chat.example.yaml"); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("agent loader accepted chat-only configuration: %v", err)
+	}
+}
+
+func TestQualificationChatProfileRequiresGenerationBudgetAndResidency(t *testing.T) {
+	config, err := LoadChat("../../configs/maestro.milestone-21-candidate.yaml")
+	if err != nil {
+		t.Fatalf("qualification profile is invalid: %v", err)
+	}
+	chat, ok := config.ChatProfile()
+	options := chat.GenerationOptions()
+	if !ok || config.Version != QualificationVersion || chat.Model != "qwen2.5-coder:7b" ||
+		chat.NumPredict != 512 || chat.Residency.Duration != 5*time.Minute ||
+		options.MaxTokens != 512 || options.ContextWindow != 4096 ||
+		options.Thinking != pkgProvider.ThinkingDisabled {
+		t.Fatalf("unexpected qualification profile: %#v %#v", chat, options)
+	}
+
+	valid := validQualificationChatYAML(t.TempDir())
+	for _, testCase := range []struct {
+		name   string
+		mutate func(string) string
+		kind   DiagnosticKind
+		field  string
+	}{
+		{name: "missing num predict", mutate: func(value string) string {
+			return strings.Replace(value, "    num_predict: 512\n", "", 1)
+		}, kind: DiagnosticMissingField, field: "interaction.chat.num_predict"},
+		{name: "missing residency", mutate: func(value string) string {
+			return strings.Replace(value, "    residency: 5m\n", "", 1)
+		}, kind: DiagnosticMissingField, field: "interaction.chat.residency"},
+		{name: "invalid num predict", mutate: func(value string) string {
+			return strings.Replace(value, "num_predict: 512", "num_predict: 0", 1)
+		}, kind: DiagnosticInvalidValue, field: "interaction.chat.num_predict"},
+		{name: "invalid residency", mutate: func(value string) string {
+			return strings.Replace(value, "residency: 5m", "residency: 0s", 1)
+		}, kind: DiagnosticInvalidValue, field: "interaction.chat.residency"},
+		{name: "unsupported provider", mutate: func(value string) string {
+			return strings.Replace(value, "id: ollama", "id: llama.cpp", 1)
+		}, kind: DiagnosticInvalidValue, field: "provider.id"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "qualification.yaml")
+			writeConfig(t, path, testCase.mutate(valid))
+			_, err := LoadChat(path)
+			if !errors.Is(err, ErrInvalid) {
+				t.Fatalf("invalid qualification config accepted: %v", err)
+			}
+			if diagnostic := Diagnose(err); diagnostic.Kind != testCase.kind || diagnostic.Field != testCase.field {
+				t.Fatalf("diagnostic=%#v, want kind=%s field=%s", diagnostic, testCase.kind, testCase.field)
+			}
+		})
+	}
+}
+
+func TestV2RejectsQualificationOnlyFields(t *testing.T) {
+	encoded := strings.Replace(validQualificationChatYAML(t.TempDir()), "version: 3", "version: 2", 1)
+	path := filepath.Join(t.TempDir(), "v2.yaml")
+	writeConfig(t, path, encoded)
+	_, err := LoadChat(path)
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("v2 accepted qualification fields: %v", err)
+	}
+	diagnostic := Diagnose(err)
+	if diagnostic.Kind != DiagnosticUnknownField || diagnostic.Field != "interaction.chat.num_predict" {
+		t.Fatalf("unexpected v2 diagnostic: %#v", diagnostic)
 	}
 }
 
@@ -299,7 +366,7 @@ func TestValidationRejectsUnsafeOrImplicitTargets(t *testing.T) {
 		mutate func(*Config)
 		field  string
 	}{
-		{name: "version", mutate: func(c *Config) { c.Version = 3 }, field: "version"},
+		{name: "version", mutate: func(c *Config) { c.Version = QualificationVersion + 1 }, field: "version"},
 		{name: "provider", mutate: func(c *Config) { c.Provider.ID = "auto" }, field: "provider.id"},
 		{name: "URL path", mutate: func(c *Config) { c.Provider.BaseURL = "http://localhost:11434/api" }, field: "provider.base_url"},
 		{name: "workspace ID", mutate: func(c *Config) { c.Workspace.ID = "project" }, field: "workspace.id"},
@@ -431,6 +498,33 @@ interaction:
     streaming: false
     num_ctx: 4096
     thinking: "false"
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+policy:
+  workspace_mutate: deny
+`, root)
+}
+
+func validQualificationChatYAML(root string) string {
+	return fmt.Sprintf(`version: 3
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 5m
+  api_key_env: ""
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+interaction:
+  chat:
+    model: qwen2.5-coder:7b
+    timeout: 5m
+    streaming: true
+    num_ctx: 4096
+    num_predict: 512
+    thinking: "false"
+    residency: 5m
     max_file_bytes: 1048576
     max_output_bytes: 1048576
 policy:

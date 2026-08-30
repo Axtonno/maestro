@@ -383,6 +383,37 @@ func TestChatCommandUsesV2ProfileAndStableRedactedEnvelope(t *testing.T) {
 	}
 }
 
+func TestChatCommandUsesQualificationBudgetAndResidency(t *testing.T) {
+	configPath := newCLIQualificationConfig(t, false)
+	provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
+		Model: "chat-model", Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Qualified response."},
+		FinishReason: pkgProvider.FinishReasonStop,
+	}}}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "Question"}, strings.NewReader(""),
+		&stdout, &stderr, cliTestDependencies(provider),
+	)
+	if code != 0 || stderr.Len() != 0 ||
+		!strings.Contains(stdout.String(), "num_predict_requested\t512") ||
+		!strings.Contains(stdout.String(), "residency_requested\t5m0s") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	if len(provider.requests) != 1 || provider.requests[0].Options.MaxTokens != 512 ||
+		provider.requests[0].KeepAlive != 5*time.Minute {
+		t.Fatalf("qualification request drifted: %#v", provider.requests)
+	}
+
+	stdout.Reset()
+	if code := runWithIO(
+		[]string{"doctor", "--mode", "chat", "--config", configPath}, strings.NewReader(""),
+		&stdout, &stderr, cliTestDependencies(provider),
+	); code != 0 || !strings.Contains(stdout.String(), "pass\tconfig\tschema_v3_chat_valid") {
+		t.Fatalf("doctor code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestChatCommandAndDoctorAcceptChatOnlyProfile(t *testing.T) {
 	configPath, _ := newCLIChatOnlyConfig(t, false)
 	provider := &cliProvider{id: "ollama", responses: []pkgProvider.CompletionResponse{{
@@ -1087,6 +1118,40 @@ policy:
 		t.Fatal(err)
 	}
 	return path, root
+}
+
+func newCLIQualificationConfig(t *testing.T, streaming bool) string {
+	t.Helper()
+	root := t.TempDir()
+	content := fmt.Sprintf(`version: 3
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 5m
+  api_key_env: ""
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+interaction:
+  chat:
+    model: chat-model
+    timeout: 5m
+    streaming: %t
+    num_ctx: 4096
+    num_predict: 512
+    thinking: "false"
+    residency: 5m
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+policy:
+  workspace_mutate: deny
+`, root, streaming)
+	path := filepath.Join(t.TempDir(), "qualification.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path
 }
 
 type cliStreamResult struct {

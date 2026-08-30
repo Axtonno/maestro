@@ -29,7 +29,8 @@ Usare il modo chat esplicito:
 ./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
 ```
 
-- `config`: verificare schema v2 strict e campi duplicati/sconosciuti;
+- `config`: verificare lo schema strict dichiarato e campi
+  duplicati/sconosciuti; v2 è il profilo v0.3.0, v3 il candidate M21;
 - `workspace`: verificare che `workspace.root` sia una directory reale e non
   un symlink;
 - `composition`: verificare provider e nome della variabile secret;
@@ -50,6 +51,12 @@ aggiornare il modello durante una serie di qualificazione.
 Direct Chat richiede un profilo strict `version: 2` con provider, workspace,
 `interaction.chat` e `policy.workspace_mutate: deny`. Un profilo agentico v1
 non viene convertito e il doctor senza `--mode chat` segue il percorso agentico.
+
+Il candidate CPU M21 usa invece `version: 3` e richiede anche
+`interaction.chat.num_predict` e `interaction.chat.residency`. Devono essere
+rispettivamente positivi e una durata positiva non superiore a 10 minuti; il
+provider deve essere Ollama. Non aggiungere questi campi a un file v2: lo
+schema strict li rifiuta intenzionalmente.
 
 Nel candidate post-v0.3.0 la riga `configuration` distingue `read_failed`,
 `yaml_invalid`, `unknown_field`, `missing_field` e `invalid_value`, indicando
@@ -73,6 +80,10 @@ non applica fallback ad agent, altro modello o altro provider.
 Response vuota, ruolo/finish non validi, tool call inattesa, stream malformato,
 UTF-8 invalido o output oltre limite vengono scartati interamente. stdout resta
 vuoto; conservare soltanto versione, commit, reason code e durata redatti.
+
+Nel candidate M21, anche una risposta terminata perché ha esaurito
+`num_predict` resta invalida/incompleta: non aumentare il budget dopo aver
+visto i risultati di una serie congelata.
 
 ## Risposta qualitativamente dubbia
 

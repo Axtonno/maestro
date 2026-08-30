@@ -2860,11 +2860,22 @@ domande e file esatti dei capture; M17 usa superset conservativi perché i
 prompt storici completi non furono conservati, deviazione che non viene
 descritta come replay esatto. Fixture digest
 `a7831ea9d6cfebf397f004ae0bded6fec59ec935962f8e268b79534fc68abda3`.
-Hardware ThinkPad/OS/CPU/RAM sono registrati. Lo snap installato resta Ollama
-0.32.14 revisione 131; lo Store espone 0.33.1 revisione 133, ma entrambi i
-tentativi di refresh sono stati negati perché serve `sudo` interattivo. La
-baseline manifest on-disk del modello coincide già con il digest congelato,
-ma la riconferma post-upgrade resta obbligatoria. La
-Fase 1 resta in corso; Fase 2 non parte prima di upgrade, hold, digest modello
-e calibrazione housekeeping. Report in
+Hardware ThinkPad/OS/CPU/RAM sono registrati. La Fase 1 è completata con
+Ollama 0.33.1 revisione 133, hold `forever`, servizio attivo, SHA-256 binario
+`9f595107f966433f93f20ee19043f8e0cdea88e7403672f4dba2cadcb45ee085`,
+digest modello riconfermato via API e manifest e soglia housekeeping 300 ms
+derivata da cinque probe warm non qualitative. Verdetto
+`cpu_qualification_environment_frozen`; report in
 `docs/reports/milestone-21-phase-1.md`.
+
+Checkpoint Milestone 21 Fase 2: lo schema strict v3 aggiunge i campi
+obbligatori `num_predict` e `residency`, preservando strict e invariato il v2.
+Direct Chat inoltra 512 come `options.num_predict` e 5m come `keep_alive` sia
+in complete sia in stream; provider senza supporto falliscono prima di I/O.
+L'envelope v3 dichiara entrambi i valori e doctor identifica lo schema. Test,
+race e vet sono verdi, doctor live è 5/5. Una probe non qualitativa partita da
+unload ha completato in 40,568s con heartbeat redatti, è rimasta resident fino
+al TTL invariato ed è stata evicted automaticamente dopo la scadenza.
+Verdetto `cpu_chat_residency_contract_ready`; Fase 3 è il prossimo gate e
+nessun task Q17/Q20 è stato eseguito. Report in
+`docs/reports/milestone-21-phase-2.md`.

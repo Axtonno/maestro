@@ -53,13 +53,15 @@ type Request struct {
 }
 
 type Result struct {
-	Model             string
-	Content           string
-	Duration          time.Duration
-	Usage             pkgProvider.Usage
-	FinishReason      string
-	RequestedNumCtx   int
-	RequestedThinking pkgProvider.ThinkingMode
+	Model               string
+	Content             string
+	Duration            time.Duration
+	Usage               pkgProvider.Usage
+	FinishReason        string
+	RequestedNumCtx     int
+	RequestedNumPredict int
+	RequestedThinking   pkgProvider.ThinkingMode
+	RequestedResidency  time.Duration
 }
 
 type chatProvider interface {
@@ -171,6 +173,7 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 		Model:      service.profile.Model,
 		Messages:   chatMessages(request.Question, request.File, content),
 		Options:    service.generationOptions(),
+		KeepAlive:  service.profile.Residency.Duration,
 		ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceNone},
 	}
 	if service.started != nil {
@@ -205,8 +208,10 @@ func (service *Service) executeCompletion(ctx context.Context, request pkgProvid
 	return Result{
 		Model: service.profile.Model, Content: response.Message.Content,
 		Duration: duration, Usage: response.Usage, FinishReason: response.FinishReason,
-		RequestedNumCtx:   service.profile.NumCtx,
-		RequestedThinking: service.profile.GenerationOptions().Thinking,
+		RequestedNumCtx:     service.profile.NumCtx,
+		RequestedNumPredict: service.profile.NumPredict,
+		RequestedThinking:   service.profile.GenerationOptions().Thinking,
+		RequestedResidency:  service.profile.Residency.Duration,
 	}, nil
 }
 
@@ -298,8 +303,10 @@ func (service *Service) result(content string, duration time.Duration, usage pkg
 	return Result{
 		Model: service.profile.Model, Content: content,
 		Duration: duration, Usage: usage, FinishReason: finishReason,
-		RequestedNumCtx:   service.profile.NumCtx,
-		RequestedThinking: service.profile.GenerationOptions().Thinking,
+		RequestedNumCtx:     service.profile.NumCtx,
+		RequestedNumPredict: service.profile.NumPredict,
+		RequestedThinking:   service.profile.GenerationOptions().Thinking,
+		RequestedResidency:  service.profile.Residency.Duration,
 	}
 }
 

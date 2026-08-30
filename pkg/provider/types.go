@@ -25,6 +25,7 @@ type CompletionRequest struct {
 	Model      string
 	Messages   []Message
 	Options    GenerationOptions
+	KeepAlive  time.Duration
 	Output     *StructuredOutput
 	Tools      []Tool
 	ToolChoice ToolChoice

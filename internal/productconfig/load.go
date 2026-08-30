@@ -74,8 +74,19 @@ func load(path string, validate func(Config) error) (Config, error) {
 			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
 		}
 		config = decoded.config()
+	case QualificationVersion:
+		var decoded configV3
+		if field, err := unknownYAMLField(encoded, reflect.TypeOf(decoded)); err != nil {
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
+		} else if field != "" {
+			return Config{}, withDiagnostic(fmt.Errorf("configuration contains unknown field: %w", ErrInvalid), DiagnosticUnknownField, field)
+		}
+		if err := decodeStrict(encoded, &decoded); err != nil {
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
+		}
+		config = decoded.config()
 	default:
-		err := fieldError("version", fmt.Sprintf("must equal %d or %d", Version, CandidateVersion))
+		err := fieldError("version", fmt.Sprintf("must equal %d, %d or %d", Version, CandidateVersion, QualificationVersion))
 		kind := DiagnosticInvalidValue
 		if !hasYAMLPath(encoded, "version") {
 			kind = DiagnosticMissingField
@@ -233,7 +244,53 @@ type agentV2 struct {
 	Tools []string `yaml:"tools"`
 }
 
+type chatProfileV2 struct {
+	ProfileConfig  `yaml:",inline"`
+	MaxFileBytes   int `yaml:"max_file_bytes"`
+	MaxOutputBytes int `yaml:"max_output_bytes"`
+}
+
+type interactionV2 struct {
+	Chat  chatProfileV2      `yaml:"chat"`
+	Agent AgentProfileConfig `yaml:"agent"`
+}
+
 type configV2 struct {
+	Version     int             `yaml:"version"`
+	Provider    ProviderConfig  `yaml:"provider"`
+	Models      modelsV2        `yaml:"models"`
+	Workspace   WorkspaceConfig `yaml:"workspace"`
+	Interaction interactionV2   `yaml:"interaction"`
+	Agent       agentV2         `yaml:"agent"`
+	Policy      PolicyConfig    `yaml:"policy"`
+	Limits      LimitsConfig    `yaml:"limits"`
+	Context     ContextConfig   `yaml:"context"`
+}
+
+func (decoded configV2) config() Config {
+	interaction := InteractionConfig{
+		Chat: ChatProfileConfig{
+			ProfileConfig:  decoded.Interaction.Chat.ProfileConfig,
+			MaxFileBytes:   decoded.Interaction.Chat.MaxFileBytes,
+			MaxOutputBytes: decoded.Interaction.Chat.MaxOutputBytes,
+		},
+		Agent: decoded.Interaction.Agent,
+	}
+	return Config{
+		Version: decoded.Version, Provider: decoded.Provider,
+		Models: ModelsConfig{
+			Chat: interaction.Agent.Model, Embedding: decoded.Models.Embedding,
+		},
+		Workspace: decoded.Workspace, Interaction: interaction,
+		Agent: AgentConfig{
+			ID: decoded.Agent.ID, Streaming: interaction.Agent.Streaming,
+			Tools: decoded.Agent.Tools,
+		},
+		Policy: decoded.Policy, Limits: decoded.Limits, Context: decoded.Context,
+	}
+}
+
+type configV3 struct {
 	Version     int               `yaml:"version"`
 	Provider    ProviderConfig    `yaml:"provider"`
 	Models      modelsV2          `yaml:"models"`
@@ -245,7 +302,7 @@ type configV2 struct {
 	Context     ContextConfig     `yaml:"context"`
 }
 
-func (decoded configV2) config() Config {
+func (decoded configV3) config() Config {
 	return Config{
 		Version: decoded.Version, Provider: decoded.Provider,
 		Models: ModelsConfig{

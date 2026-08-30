@@ -92,6 +92,9 @@ func (r CompletionRequest) Validate() error {
 	if err := r.Options.Validate(); err != nil {
 		return err
 	}
+	if r.KeepAlive < 0 {
+		return invalidCompletionRequest("keep alive cannot be negative")
+	}
 
 	if r.Output != nil {
 		switch r.Output.Mode {

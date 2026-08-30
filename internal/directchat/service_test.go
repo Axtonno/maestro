@@ -34,7 +34,8 @@ func TestDirectChatDisclosesOneExplicitFileInOneToolFreeCompletion(t *testing.T)
 		t.Fatalf("execute direct chat: %v", err)
 	}
 	if result.Content != "One orders endpoint." || result.Model != "chat-model" ||
-		result.RequestedNumCtx != 4096 || result.RequestedThinking != pkgProvider.ThinkingDisabled {
+		result.RequestedNumCtx != 4096 || result.RequestedNumPredict != 512 ||
+		result.RequestedThinking != pkgProvider.ThinkingDisabled || result.RequestedResidency != 5*time.Minute {
 		t.Fatalf("unexpected result: %#v", result)
 	}
 	provider.mu.Lock()
@@ -46,7 +47,8 @@ func TestDirectChatDisclosesOneExplicitFileInOneToolFreeCompletion(t *testing.T)
 	request := requests[0]
 	if request.Model != "chat-model" || len(request.Tools) != 0 ||
 		request.ToolChoice.Mode != pkgProvider.ToolChoiceNone ||
-		request.Options.ContextWindow != 4096 || request.Options.Thinking != pkgProvider.ThinkingDisabled {
+		request.Options.ContextWindow != 4096 || request.Options.MaxTokens != 512 ||
+		request.Options.Thinking != pkgProvider.ThinkingDisabled || request.KeepAlive != 5*time.Minute {
 		t.Fatalf("unsafe completion request: %#v", request)
 	}
 	if request.Options.Temperature == nil || *request.Options.Temperature != directChatTemperature {
@@ -359,7 +361,8 @@ func TestDirectChatStreamingAndCompletionAreEquivalent(t *testing.T) {
 		t.Fatalf("unexpected requests: complete=%#v stream=%#v", provider.requests, provider.streamRequests)
 	}
 	for _, request := range []pkgProvider.CompletionRequest{provider.requests[0], provider.streamRequests[0]} {
-		if request.Options.Temperature == nil || *request.Options.Temperature != directChatTemperature {
+		if request.Options.Temperature == nil || *request.Options.Temperature != directChatTemperature ||
+			request.Options.MaxTokens != 512 || request.KeepAlive != 5*time.Minute {
 			t.Fatalf("complete/stream sampling drifted: %#v", request.Options)
 		}
 	}
@@ -615,13 +618,13 @@ func (stream *chatStreamStub) Close() error {
 
 func directConfig(root string) productconfig.Config {
 	return productconfig.Config{
-		Version:   productconfig.CandidateVersion,
+		Version:   productconfig.QualificationVersion,
 		Provider:  productconfig.ProviderConfig{ID: "ollama", BaseURL: "http://127.0.0.1:11434", Timeout: productconfig.Duration{Duration: time.Minute}},
 		Workspace: productconfig.WorkspaceConfig{ID: "laravel", Root: root, Framework: "laravel"},
 		Interaction: productconfig.InteractionConfig{
 			Chat: productconfig.ChatProfileConfig{ProfileConfig: productconfig.ProfileConfig{
 				Model: "chat-model", Timeout: productconfig.Duration{Duration: time.Minute}, NumCtx: 4096, Thinking: productconfig.ThinkingDisabled,
-			}, MaxFileBytes: 1 << 20, MaxOutputBytes: 1 << 20},
+			}, NumPredict: 512, Residency: productconfig.Duration{Duration: 5 * time.Minute}, MaxFileBytes: 1 << 20, MaxOutputBytes: 1 << 20},
 			Agent: productconfig.AgentProfileConfig{ProfileConfig: productconfig.ProfileConfig{
 				Model: "agent-model", Timeout: productconfig.Duration{Duration: time.Minute}, NumCtx: 8192, Thinking: productconfig.ThinkingDefault,
 			}},

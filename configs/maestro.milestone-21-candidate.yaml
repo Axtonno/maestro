@@ -1,0 +1,27 @@
+version: 3
+
+provider:
+  id: ollama
+  base_url: http://127.0.0.1:11434
+  timeout: 5m
+  api_key_env: ""
+
+workspace:
+  id: laravel
+  root: ../internal/benchmark/developer/testdata/laravel-v1
+  framework: laravel
+
+interaction:
+  chat:
+    model: qwen2.5-coder:7b
+    timeout: 5m
+    streaming: true
+    num_ctx: 4096
+    num_predict: 512
+    thinking: "false"
+    residency: 5m
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+
+policy:
+  workspace_mutate: deny

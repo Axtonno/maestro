@@ -1108,7 +1108,7 @@ senza promuovere il modello.
 
 # Milestone 21 — CPU Direct Chat Product Qualification
 
-Stato: Aperta — Fase 1 in corso
+Stato: Aperta — Fasi 1-2 completate, Fase 3 prossimo gate
 
 Obiettivo:
 
@@ -1132,11 +1132,13 @@ resta un candidato fino al verdetto; agent, tool, retrieval, multi-file e
 Controlled Mutation restano esclusi.
 
 Task, oracoli e ordini sono congelati in
-`milestone-21-cpu-direct-chat-qualification-matrix.yaml`. La parte ambientale
-della Fase 1 resta aperta: lo snap locale è ancora Ollama 0.32.14/revisione
-131; lo Store espone 0.33.1/revisione 133, ma l'upgrade richiede autenticazione
-amministrativa interattiva. Fase 2 non è autorizzata prima di upgrade, hold,
-digest modello e calibrazione housekeeping.
+`milestone-21-cpu-direct-chat-qualification-matrix.yaml`. La Fase 1 congela
+Ollama 0.33.1/revisione 133 con hold indefinito, digest modello riconfermato e
+soglia housekeeping 300 ms. La Fase 2 consegna schema strict v3,
+`num_predict: 512` e residency 5m inoltrati a Ollama per complete/stream; una
+probe non qualitativa conferma unload, cold snapshot, permanenza entro TTL ed
+eviction automatica. Fase 3 è il prossimo gate; nessun support claim è ancora
+emesso.
 
 ## Associazione release
 

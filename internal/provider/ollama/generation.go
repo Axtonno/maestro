@@ -58,6 +58,9 @@ func newChatRequest(
 	result := chatRequest{
 		Model: model, Messages: translatedMessages, Stream: stream,
 	}
+	if request.KeepAlive > 0 {
+		result.KeepAlive = request.KeepAlive.String()
+	}
 	switch request.Options.Thinking {
 	case pkgProvider.ThinkingEnabled:
 		enabled := true

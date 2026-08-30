@@ -103,8 +103,14 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 	fmt.Fprintf(stdout, "output_tokens\t%d\n", result.Usage.OutputTokens)
 	fmt.Fprintf(stdout, "num_ctx_requested\t%d\n", result.RequestedNumCtx)
 	fmt.Fprintln(stdout, "num_ctx_effective\tunknown")
+	if result.RequestedNumPredict > 0 {
+		fmt.Fprintf(stdout, "num_predict_requested\t%d\n", result.RequestedNumPredict)
+	}
 	fmt.Fprintf(stdout, "thinking_requested\t%s\n", result.RequestedThinking)
 	fmt.Fprintln(stdout, "thinking_effective\tunknown")
+	if result.RequestedResidency > 0 {
+		fmt.Fprintf(stdout, "residency_requested\t%s\n", result.RequestedResidency)
+	}
 	fmt.Fprintln(stdout, "truncated\tfalse")
 	fmt.Fprintf(stdout, "finish_reason\t%s\n", result.FinishReason)
 	fmt.Fprintln(stdout, "result")

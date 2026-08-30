@@ -53,6 +53,11 @@ L'heartbeat non contiene modello, domanda, file, path, risposta parziale,
 secret o errore remoto. Il ticker viene arrestato prima del risultato o del
 failure; stdout resta atomico.
 
+**Candidate M21:** un profilo strict v3 inoltra inoltre
+`num_predict: 512` e `residency: 5m` alla stessa richiesta Ollama per complete
+e stream. Non crea timer o goroutine di lifecycle in Maestro e non scarica
+modelli posseduti da altri processi.
+
 ### Output
 
 ```text
@@ -64,8 +69,10 @@ input_tokens\t...
 output_tokens\t...
 num_ctx_requested\t4096
 num_ctx_effective\t4096|unknown
+num_predict_requested\t512
 thinking_requested\tfalse
 thinking_effective\tfalse|unknown
+residency_requested\t5m0s
 truncated\tfalse
 finish_reason\tstop
 result
@@ -74,7 +81,8 @@ result
 
 Il risultato è intenzionalmente visibile all’utente locale. Log e failure non
 includono domanda, prompt, response completa, contenuto del file, root fisica o
-secret.
+secret. Le righe `num_predict_requested` e `residency_requested` sono presenti
+nel candidate v3; l'envelope v2 dell'asset v0.3.0 resta invariato.
 
 ## `doctor --mode chat`
 
@@ -86,6 +94,9 @@ Esegue cinque check: config, workspace, composition, model e generation. Il
 probe non invoca completion, non indicizza e non modifica il workspace, non
 avvia provider e non installa modelli. `skip`, `unknown` o `fail` non valgono
 come PASS in una serie di qualificazione.
+
+Il dettaglio del check config identifica lo schema caricato
+(`schema_v2_chat_valid` oppure `schema_v3_chat_valid`).
 
 ## `version`
 

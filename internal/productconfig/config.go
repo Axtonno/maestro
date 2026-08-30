@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	Version          = 1
-	CandidateVersion = 2
+	Version              = 1
+	CandidateVersion     = 2
+	QualificationVersion = 3
 )
 
 var (
@@ -97,8 +98,10 @@ type ProfileConfig struct {
 
 type ChatProfileConfig struct {
 	ProfileConfig  `yaml:",inline"`
-	MaxFileBytes   int `yaml:"max_file_bytes"`
-	MaxOutputBytes int `yaml:"max_output_bytes"`
+	NumPredict     int      `yaml:"num_predict"`
+	Residency      Duration `yaml:"residency"`
+	MaxFileBytes   int      `yaml:"max_file_bytes"`
+	MaxOutputBytes int      `yaml:"max_output_bytes"`
 }
 
 type AgentProfileConfig struct {
@@ -147,7 +150,9 @@ type ContextConfig struct {
 
 func (config Config) Path() string { return config.path }
 
-func (config Config) HasChatProfile() bool { return config.Version == CandidateVersion }
+func (config Config) HasChatProfile() bool {
+	return config.Version == CandidateVersion || config.Version == QualificationVersion
+}
 
 func (config Config) ChatProfile() (ChatProfileConfig, bool) {
 	if !config.HasChatProfile() {
@@ -157,7 +162,7 @@ func (config Config) ChatProfile() (ChatProfileConfig, bool) {
 }
 
 func (config Config) AgentProfile() AgentProfileConfig {
-	if config.Version == CandidateVersion {
+	if config.HasChatProfile() {
 		return config.Interaction.Agent
 	}
 	return AgentProfileConfig{ProfileConfig: ProfileConfig{
@@ -171,6 +176,12 @@ func (config ProfileConfig) GenerationOptions() pkgProvider.GenerationOptions {
 		ContextWindow: config.NumCtx,
 		Thinking:      pkgProvider.ThinkingMode(config.Thinking),
 	}
+}
+
+func (config ChatProfileConfig) GenerationOptions() pkgProvider.GenerationOptions {
+	options := config.ProfileConfig.GenerationOptions()
+	options.MaxTokens = config.NumPredict
+	return options
 }
 
 func (config Config) AgentLimits() pkgAgent.Limits {
@@ -206,17 +217,20 @@ func (config Config) ToolIDs() []pkgTool.ID {
 }
 
 func (config Config) Validate() error {
-	if config.Version != Version && config.Version != CandidateVersion {
-		return fieldError("version", fmt.Sprintf("must equal %d or %d", Version, CandidateVersion))
+	if config.Version != Version && config.Version != CandidateVersion && config.Version != QualificationVersion {
+		return fieldError("version", fmt.Sprintf("must equal %d, %d or %d", Version, CandidateVersion, QualificationVersion))
 	}
 	if err := validateProvider(config.Provider); err != nil {
 		return err
+	}
+	if config.Version == QualificationVersion && config.Provider.ID != "ollama" {
+		return fieldError("provider.id", "qualification profile requires ollama")
 	}
 	if config.Version == Version {
 		if !exact(config.Models.Chat, 512) {
 			return fieldError("models.chat", "must be explicit and exact")
 		}
-	} else if err := validateInteraction(config.Interaction, config.Provider.Timeout.Duration); err != nil {
+	} else if err := validateInteraction(config.Interaction, config.Provider.Timeout.Duration, config.Version == QualificationVersion); err != nil {
 		return err
 	}
 	if config.Models.Embedding != "" && !exact(config.Models.Embedding, 512) {
@@ -266,11 +280,14 @@ func (config Config) Validate() error {
 // are intentionally outside this mode and remain subject to Validate and
 // ValidateExecutionProfile when an agent command is requested.
 func (config Config) ValidateChatExecutionProfile() error {
-	if config.Version != CandidateVersion {
-		return fieldError("version", fmt.Sprintf("direct chat requires %d", CandidateVersion))
+	if config.Version != CandidateVersion && config.Version != QualificationVersion {
+		return fieldError("version", fmt.Sprintf("direct chat requires %d or %d", CandidateVersion, QualificationVersion))
 	}
 	if err := validateProvider(config.Provider); err != nil {
 		return err
+	}
+	if config.Version == QualificationVersion && config.Provider.ID != "ollama" {
+		return fieldError("provider.id", "qualification profile requires ollama")
 	}
 	if config.Models.Embedding != "" && !exact(config.Models.Embedding, 512) {
 		return fieldError("models.embedding", "must be exact when set")
@@ -283,6 +300,11 @@ func (config Config) ValidateChatExecutionProfile() error {
 	}
 	if config.Interaction.Chat.MaxOutputBytes < 1 || config.Interaction.Chat.MaxOutputBytes > 16<<20 {
 		return fieldError("interaction.chat.max_output_bytes", "must be between 1 and 16777216")
+	}
+	if config.Version == QualificationVersion {
+		if err := validateQualificationChatProfile(config.Interaction.Chat); err != nil {
+			return err
+		}
 	}
 	if err := validateWorkspace(config.Workspace); err != nil {
 		return err
@@ -311,7 +333,7 @@ func validateWorkspace(config WorkspaceConfig) error {
 	return nil
 }
 
-func validateInteraction(config InteractionConfig, transportTimeout time.Duration) error {
+func validateInteraction(config InteractionConfig, transportTimeout time.Duration, qualification bool) error {
 	if err := validateProfile("interaction.chat", config.Chat.ProfileConfig, transportTimeout); err != nil {
 		return err
 	}
@@ -323,6 +345,21 @@ func validateInteraction(config InteractionConfig, transportTimeout time.Duratio
 	}
 	if config.Chat.MaxOutputBytes < 1 || config.Chat.MaxOutputBytes > 16<<20 {
 		return fieldError("interaction.chat.max_output_bytes", "must be between 1 and 16777216")
+	}
+	if qualification {
+		if err := validateQualificationChatProfile(config.Chat); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateQualificationChatProfile(config ChatProfileConfig) error {
+	if config.NumPredict < 1 || config.NumPredict > 1<<20 {
+		return fieldError("interaction.chat.num_predict", "must be between 1 and 1048576")
+	}
+	if config.Residency.Duration <= 0 || config.Residency.Duration > 10*time.Minute {
+		return fieldError("interaction.chat.residency", "must be positive and at most 10m")
 	}
 	return nil
 }

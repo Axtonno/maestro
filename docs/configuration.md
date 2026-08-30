@@ -1,11 +1,15 @@
 # Maestro v0.3.0 Direct Chat Configuration
 
-Versione schema: 2
+Versione schema pubblica v0.3.0: 2
 
 Stato: contratto pubblico sperimentale chat-only
 
 La diagnostica specifica descritta sotto è un **candidate post-v0.3.0** e non
 appartiene al binario pubblico v0.3.0.
+
+Il source tree della Milestone 21 aggiunge lo schema strict `version: 3`
+soltanto per il candidate CPU Direct Chat. Lo schema v2 resta invariato e non
+accetta i campi v3.
 
 ## Profilo distribuito
 
@@ -55,8 +59,9 @@ del YAML e diventa assoluto prima della validazione.
 ## Parsing strict
 
 Il loader rifiuta campi sconosciuti o duplicati, documenti multipli, anchor,
-alias, trailing data, file vuoti, file oltre 1 MiB e versioni diverse da 2.
-Un errore non abilita fallback verso un profilo agentico.
+alias, trailing data, file vuoti e file oltre 1 MiB. L'asset v0.3.0 usa
+`version: 2`; il candidate M21 accetta anche `version: 3` con una struttura
+strict distinta. Un errore non abilita fallback verso un profilo agentico.
 
 ## `provider`
 
@@ -89,6 +94,38 @@ workspace, ma Direct Chat non avvia plugin o detection framework.
 La temperatura non è configurabile: Direct Chat la imposta a zero sia per
 complete sia per stream. Un generation control non supportato fallisce il
 preflight invece di essere ignorato.
+
+### Profilo CPU qualification v3
+
+Il candidate M21 è disponibile in
+`../configs/maestro.milestone-21-candidate.yaml` e aggiunge due campi
+obbligatori:
+
+```yaml
+version: 3
+interaction:
+  chat:
+    model: qwen2.5-coder:7b
+    timeout: 5m
+    streaming: true
+    num_ctx: 4096
+    num_predict: 512
+    thinking: "false"
+    residency: 5m
+    max_file_bytes: 1048576
+    max_output_bytes: 1048576
+```
+
+`num_predict` deve essere positivo e viene inoltrato a Ollama come
+`options.num_predict`; `residency` deve essere positiva, non superiore a 10
+minuti e viene inoltrata come `keep_alive`. Entrambi valgono allo stesso modo
+per complete e stream. Assenza, valore invalido o provider diverso da Ollama
+fanno fallire il preflight. Un terminale per limite o un output troncato non è
+convertito in successo.
+
+Questi campi non vengono aggiunti implicitamente allo schema v2: inserirli in
+un documento v2 produce `unknown_field`. Questo preserva i profili e gli hash
+storici della qualifica v0.3.0.
 
 ## `policy`
 

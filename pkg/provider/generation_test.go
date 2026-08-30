@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"testing"
+	"time"
 )
 
 func TestCompletionRequestValidationAcceptsBaselineAndAdvancedRequests(t *testing.T) {
@@ -13,6 +14,7 @@ func TestCompletionRequestValidationAcceptsBaselineAndAdvancedRequests(t *testin
 	requests := []CompletionRequest{
 		{},
 		{
+			KeepAlive: 5 * time.Minute,
 			Options: GenerationOptions{
 				MaxTokens: 128, Temperature: &temperature, TopP: &topP,
 				Stop: []string{"END"}, ContextWindow: 4096,
@@ -47,6 +49,7 @@ func TestCompletionRequestValidationAcceptsBaselineAndAdvancedRequests(t *testin
 func TestCompletionRequestValidationRejectsInvalidAdvancedContracts(t *testing.T) {
 	nan := math.NaN()
 	tests := []CompletionRequest{
+		{KeepAlive: -time.Second},
 		{Options: GenerationOptions{MaxTokens: -1}},
 		{Options: GenerationOptions{ContextWindow: -1}},
 		{Options: GenerationOptions{ContextWindow: 1<<20 + 1}},

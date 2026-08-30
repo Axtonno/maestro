@@ -2,7 +2,7 @@
 
 Versione candidata: non assegnata
 
-Stato: **APERTA — Fase 1 in corso**
+Stato: **APERTA — Fasi 1-2 completate, Fase 3 prossimo gate**
 
 Data: 2026-08-30
 
@@ -18,7 +18,8 @@ Documenti di riferimento:
 - `cli.md`;
 - `packaging-candidate.md`;
 - `milestone-21-cpu-direct-chat-qualification-matrix.yaml`;
-- `reports/milestone-21-phase-1.md`.
+- `reports/milestone-21-phase-1.md`;
+- `reports/milestone-21-phase-2.md`.
 
 ## Decisione di apertura
 
@@ -80,6 +81,10 @@ ThinkPad, quindi vengono registrati:
 Il passaggio da 0.32.14 a 0.33.1 è setup della milestone, non evidenza. Tutta la
 matrice viene eseguita soltanto dopo il nuovo freeze; risultati misti tra
 versioni sono invalidi.
+
+Il freeze della Fase 1 ha registrato revisione Snap 133, hold indefinito,
+versione CLI/API 0.33.1 e SHA-256 del payload binario
+`9f595107f966433f93f20ee19043f8e0cdea88e7403672f4dba2cadcb45ee085`.
 
 ### Modello e profilo
 
@@ -194,6 +199,10 @@ isolato la causa. Valore calcolato, raw duration e formula vengono registrati
 prima di qualunque risposta Q17/Q20. Soltanto le run conformi alimentano
 mediana e massimo warm; una run ambigua non viene riclassificata post-hoc e
 rende incompleta la serie.
+
+La calibrazione congelata della Fase 1 ha osservato `load_duration` pari a
+1.089.707, 1.244.230, 1.251.013, 1.306.399 e 1.163.561 ns. Con la formula
+predefinita, la soglia housekeeping M21 è quindi **300 ms**.
 
 ### Residency ed eviction
 

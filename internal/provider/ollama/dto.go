@@ -6,13 +6,14 @@ import (
 )
 
 type chatRequest struct {
-	Model    string          `json:"model"`
-	Messages []chatMessage   `json:"messages"`
-	Stream   bool            `json:"stream"`
-	Think    *bool           `json:"think,omitempty"`
-	Format   json.RawMessage `json:"format,omitempty"`
-	Options  *chatOptions    `json:"options,omitempty"`
-	Tools    []chatTool      `json:"tools,omitempty"`
+	Model     string          `json:"model"`
+	Messages  []chatMessage   `json:"messages"`
+	Stream    bool            `json:"stream"`
+	KeepAlive string          `json:"keep_alive,omitempty"`
+	Think     *bool           `json:"think,omitempty"`
+	Format    json.RawMessage `json:"format,omitempty"`
+	Options   *chatOptions    `json:"options,omitempty"`
+	Tools     []chatTool      `json:"tools,omitempty"`
 }
 
 type chatMessage struct {
