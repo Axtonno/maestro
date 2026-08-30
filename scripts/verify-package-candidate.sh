@@ -4,6 +4,7 @@ set -euo pipefail
 
 version="v0.2.0-pc.1"
 status="packaging-candidate"
+profile_kind="release"
 while (($# > 0)); do
     case "$1" in
         --version)
@@ -16,8 +17,13 @@ while (($# > 0)); do
             status="$2"
             shift 2
             ;;
+        --profile)
+            (($# >= 2)) || { printf 'missing --profile value\n' >&2; exit 2; }
+            profile_kind="$2"
+            shift 2
+            ;;
         *)
-            printf 'usage: %s [--version vX.Y.Z[-prerelease]] [--status packaging-candidate|release-candidate|release]\n' "$0" >&2
+            printf 'usage: %s [--version vX.Y.Z[-prerelease]] [--status packaging-candidate|release-candidate|release] [--profile release|cpu-qualification]\n' "$0" >&2
             exit 2
             ;;
     esac
@@ -29,6 +35,23 @@ fi
 if [[ "$status" == "release" && "$version" == *-* ]]; then
     printf 'release status requires a final vX.Y.Z version\n' >&2
     exit 2
+fi
+if [[ "$profile_kind" != "release" && "$profile_kind" != "cpu-qualification" ]]; then
+    printf 'profile must be release or cpu-qualification\n' >&2
+    exit 2
+fi
+
+schema_version="2"
+chat_model="qwen3.5:9b"
+chat_model_digest="6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
+chat_num_predict="provider-default"
+chat_residency="provider-default"
+if [[ "$profile_kind" == "cpu-qualification" ]]; then
+    schema_version="3"
+    chat_model="qwen2.5-coder:7b"
+    chat_model_digest="dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
+    chat_num_predict="512"
+    chat_residency="5m"
 fi
 
 repository="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -46,8 +69,8 @@ trap cleanup EXIT
 
 mkdir -p "$working/first" "$working/second" "$working/extracted" \
     "$working/install/bin" "$working/empty"
-"$repository/scripts/package-candidate.sh" --version "$version" --status "$status" --output "$working/first" >/dev/null
-"$repository/scripts/package-candidate.sh" --version "$version" --status "$status" --output "$working/second" >/dev/null
+"$repository/scripts/package-candidate.sh" --version "$version" --status "$status" --profile "$profile_kind" --output "$working/first" >/dev/null
+"$repository/scripts/package-candidate.sh" --version "$version" --status "$status" --profile "$profile_kind" --output "$working/second" >/dev/null
 
 cmp "$working/first/$archive" "$working/second/$archive"
 cmp "$working/first/$checksum" "$working/second/$checksum"
@@ -87,11 +110,14 @@ grep -Fxq "version=${version}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "commit=${commit}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "status=${status}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq 'profile=configs/maestro.chat.example.yaml' "$root/ARTIFACT-MANIFEST.txt"
-grep -Fxq 'chat_model=qwen3.5:9b' "$root/ARTIFACT-MANIFEST.txt"
-grep -Fxq 'chat_model_digest=6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "profile_kind=${profile_kind}" "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "chat_model=${chat_model}" "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "chat_model_digest=${chat_model_digest}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq 'chat_num_ctx=4096' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "chat_num_predict=${chat_num_predict}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq 'chat_thinking=false' "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq 'chat_temperature=0' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "chat_residency=${chat_residency}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/docs/installation.md"
 grep -Fxq "Stato: ${status}" "$root/docs/installation.md"
 grep -Fq 'artifact="maestro-${version}-linux-amd64"' "$root/docs/installation.md"
@@ -102,13 +128,17 @@ fi
 grep -Fq '"id": "maestro-laravel-mini"' "$root/fixtures/laravel-v1/dataset.json"
 grep -Fq '"version": "1.0.0"' "$root/fixtures/laravel-v1/dataset.json"
 profile="$root/configs/maestro.chat.example.yaml"
-grep -Eq '^[[:space:]]*version:[[:space:]]*2[[:space:]]*$' "$profile"
-grep -Eq '^[[:space:]]*model:[[:space:]]*qwen3\.5:9b[[:space:]]*$' "$profile"
+grep -Eq "^[[:space:]]*version:[[:space:]]*${schema_version}[[:space:]]*$" "$profile"
+grep -Eq "^[[:space:]]*model:[[:space:]]*${chat_model//./\\.}[[:space:]]*$" "$profile"
 grep -Eq '^[[:space:]]*streaming:[[:space:]]*true[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*num_ctx:[[:space:]]*4096[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*thinking:[[:space:]]*"false"[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*max_file_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*max_output_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
+if [[ "$profile_kind" == "cpu-qualification" ]]; then
+    grep -Eq '^[[:space:]]*num_predict:[[:space:]]*512[[:space:]]*$' "$profile"
+    grep -Eq '^[[:space:]]*residency:[[:space:]]*5m[[:space:]]*$' "$profile"
+fi
 if grep -Eq 'workspace\.(write|patch)|^[[:space:]]*(agent|limits|context):' "$profile"; then
     printf 'published configuration exposes an unsupported agent or mutation surface\n' >&2
     exit 1
@@ -147,7 +177,7 @@ doctor_output="$($root/maestro doctor --mode chat --config "$doctor_config" 2>&1
 doctor_status=$?
 set -e
 [[ $doctor_status -eq 1 ]]
-grep -Fq $'pass\tconfig\tschema_v2_chat_valid' <<<"$doctor_output"
+grep -Fq $'pass\tconfig\tschema_v'"${schema_version}"'_chat_valid' <<<"$doctor_output"
 grep -Fq $'pass\tworkspace\troot_available' <<<"$doctor_output"
 grep -Fq $'pass\tcomposition\tdirect_chat_provider' <<<"$doctor_output"
 grep -Fq $'fail\tmodel\trequired_capability_unavailable' <<<"$doctor_output"
@@ -181,5 +211,5 @@ if grep -aERq -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_
     exit 1
 fi
 
-printf 'artifact verified: %s commit=%s status=%s\n' "$archive" "$commit" "$status"
+printf 'artifact verified: %s commit=%s status=%s profile=%s\n' "$archive" "$commit" "$status" "$profile_kind"
 sha256sum "$working/first/$archive"

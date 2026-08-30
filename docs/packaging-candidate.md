@@ -38,6 +38,19 @@ Gli esempi verificano in directory temporanee doppia build, checksum,
 allowlist, installazione e identità. La persistenza sotto `dist/` avviene
 soltanto per il candidate approvato e lo script rifiuta ogni overwrite.
 
+Il candidate development-only della Milestone 21 usa la variante esplicita:
+
+```sh
+./scripts/verify-package-candidate.sh \
+  --version v0.3.0-m21.pc1 --status packaging-candidate \
+  --profile cpu-qualification
+```
+
+La variante non cambia il default `release`: sostituisce soltanto il profilo
+chat nell'archive con lo schema strict v3, `qwen2.5-coder:7b`,
+`num_predict: 512` e residency 5m, e registra `profile_kind` nel manifest.
+Non assegna una futura versione di release e non autorizza pubblicazione.
+
 ## Riproducibilità
 
 Il packaging richiede worktree pulito, Go 1.24.5 e GNU tar. Usa commit time

@@ -3,11 +3,12 @@
 set -euo pipefail
 
 usage() {
-    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate|release] [--output directory]\n' "$0"
+    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate|release] [--profile release|cpu-qualification] [--output directory]\n' "$0"
 }
 
 version=""
 status="packaging-candidate"
+profile_kind="release"
 output="dist"
 while (($# > 0)); do
     case "$1" in
@@ -19,6 +20,11 @@ while (($# > 0)); do
         --status)
             (($# >= 2)) || { usage >&2; exit 2; }
             status="$2"
+            shift 2
+            ;;
+        --profile)
+            (($# >= 2)) || { usage >&2; exit 2; }
+            profile_kind="$2"
             shift 2
             ;;
         --output)
@@ -49,6 +55,23 @@ fi
 if [[ "$status" == "release" && "$version" == *-* ]]; then
     printf 'release status requires a final vX.Y.Z version\n' >&2
     exit 2
+fi
+if [[ "$profile_kind" != "release" && "$profile_kind" != "cpu-qualification" ]]; then
+    printf 'profile must be release or cpu-qualification\n' >&2
+    exit 2
+fi
+
+profile_source="configs/maestro.chat.example.yaml"
+chat_model="qwen3.5:9b"
+chat_model_digest="6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
+chat_num_predict="provider-default"
+chat_residency="provider-default"
+if [[ "$profile_kind" == "cpu-qualification" ]]; then
+    profile_source="configs/maestro.milestone-21-candidate.yaml"
+    chat_model="qwen2.5-coder:7b"
+    chat_model_digest="dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
+    chat_num_predict="512"
+    chat_residency="5m"
 fi
 
 repository="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -117,7 +140,11 @@ cp docs/installation.md docs/configuration.md docs/cli.md \
     "$root/docs/"
 mkdir -p "$root/docs/releases"
 cp "$release_notes" "$root/docs/releases/"
-cp configs/maestro.chat.example.yaml "$root/configs/"
+cp "$profile_source" "$root/configs/maestro.chat.example.yaml"
+if [[ "$profile_kind" == "cpu-qualification" ]]; then
+    sed -i 's#root: ../internal/benchmark/developer/testdata/laravel-v1#root: ../fixtures/laravel-v1#' \
+        "$root/configs/maestro.chat.example.yaml"
+fi
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
 sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"
 sed -i "s/@MAESTRO_STATUS@/${status}/g" "$root/docs/installation.md"
@@ -138,11 +165,14 @@ go=${go_version}
 license=Apache-2.0
 fixture=maestro-laravel-mini@1.0.0
 profile=configs/maestro.chat.example.yaml
-chat_model=qwen3.5:9b
-chat_model_digest=6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+profile_kind=${profile_kind}
+chat_model=${chat_model}
+chat_model_digest=${chat_model_digest}
 chat_num_ctx=4096
+chat_num_predict=${chat_num_predict}
 chat_thinking=false
 chat_temperature=0
+chat_residency=${chat_residency}
 status=${status}
 EOF
 
