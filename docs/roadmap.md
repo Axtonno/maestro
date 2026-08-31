@@ -1108,7 +1108,7 @@ senza promuovere il modello.
 
 # Milestone 21 — CPU Direct Chat Product Qualification
 
-Stato: Aperta — Fasi 1-2 completate, Fase 3 prossimo gate
+Stato: Completata — `cpu_profile_candidate_rejected`
 
 Obiettivo:
 
@@ -1137,8 +1137,19 @@ Ollama 0.33.1/revisione 133 con hold indefinito, digest modello riconfermato e
 soglia housekeeping 300 ms. La Fase 2 consegna schema strict v3,
 `num_predict: 512` e residency 5m inoltrati a Ollama per complete/stream; una
 probe non qualitativa conferma unload, cold snapshot, permanenza entro TTL ed
-eviction automatica. Fase 3 è il prossimo gate; nessun support claim è ancora
-emesso.
+eviction automatica. La Fase 3 congela un candidate e un profilo packaging
+riproducibili.
+
+Le due serie live completano l'intera matrice ma ottengono entrambe completion
+7/10 e qualità 4/10. Le mediane warm sono 72,864 e 67,609 secondi; i massimi
+192,581 e 175,234 secondi. Sei task sono incorrect in entrambe le serie,
+incluse falsità materiali ripetute. No-file, streaming, timeout zero,
+residency/eviction, containment e immutabilità passano.
+
+La qualifica artifact, ammessa soltanto dopo due serie verdi, è chiusa
+`NOT_RUN`. Il verdetto finale è `cpu_profile_candidate_rejected`: nessuna
+versione o promessa CPU viene assegnata e il support claim v0.3.0 resta
+invariato. Report finale in `reports/milestone-21-final.md`.
 
 ## Associazione release
 

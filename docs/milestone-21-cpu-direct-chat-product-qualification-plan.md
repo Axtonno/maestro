@@ -2,7 +2,7 @@
 
 Versione candidata: non assegnata
 
-Stato: **APERTA — Fasi 1-2 completate, Fase 3 prossimo gate**
+Stato: **COMPLETATA — `cpu_profile_candidate_rejected`**
 
 Data: 2026-08-30
 
@@ -19,7 +19,12 @@ Documenti di riferimento:
 - `packaging-candidate.md`;
 - `milestone-21-cpu-direct-chat-qualification-matrix.yaml`;
 - `reports/milestone-21-phase-1.md`;
-- `reports/milestone-21-phase-2.md`.
+- `reports/milestone-21-phase-2.md`;
+- `reports/milestone-21-phase-3.md`;
+- `reports/milestone-21-phase-4.md`;
+- `reports/milestone-21-phase-5.md`;
+- `reports/milestone-21-phase-6.md`;
+- `reports/milestone-21-final.md`.
 
 ## Decisione di apertura
 
@@ -318,3 +323,17 @@ La milestone è completa soltanto quando:
 - il candidate è installato e verificato da artifact immutabile;
 - il report finale emette uno dei quattro verdetti;
 - agent, tool, retrieval, multi-file e mutation restano invariati.
+
+## Esito di esecuzione
+
+Le Fasi 1-3 superano i gate deterministici e operativi. Le due serie live sono
+state completate integralmente senza tuning e falliscono entrambe: completion
+7/10, qualità 4/10, mediana warm 72,864/67,609 secondi e massimo warm
+192,581/175,234 secondi. Sei task sono incorrect in entrambe le serie.
+
+La Fase 6 era esplicitamente autorizzata soltanto «dopo due serie verdi».
+Poiché il prerequisito è falso, resta `NOT_RUN`: non viene costruito un
+artifact post-serie e la clausola artifact della Definition of Done non viene
+reinterpretata per promuovere il candidato. La Fase 7 emette
+`cpu_profile_candidate_rejected`; nessuna versione, release o promessa CPU è
+assegnata.

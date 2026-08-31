@@ -2879,3 +2879,23 @@ al TTL invariato ed è stata evicted automaticamente dopo la scadenza.
 Verdetto `cpu_chat_residency_contract_ready`; Fase 3 è il prossimo gate e
 nessun task Q17/Q20 è stato eseguito. Report in
 `docs/reports/milestone-21-phase-2.md`.
+
+Chiusura Milestone 21: la Fase 3 congela il candidate
+`v0.3.0-m21-p3` dal commit
+`0a23e0410fe7d4dcd60b76fd489dceb339666dd2`, SHA-256 binario
+`af09eb5ac53351115c1de707f53d2dd9a2c0d728d82533789ff32a910600e393`.
+Suite, race, vet, doppia build e packaging `cpu-qualification` passano. Le due
+serie live integrali falliscono però nello stesso modo: completion 7/10,
+qualità 4/10, mediane warm 72,864/67,609 secondi e massimi
+192,581/175,234 secondi. Sei task sono incorrect in entrambe le serie; Q17-3
+e Q17-5 ripetono falsità materiali. No-file, streaming, timeout zero,
+residency/eviction, heartbeat, containment e immutabilità passano.
+
+La Fase 6 è `NOT_RUN` perché il piano autorizza l'artifact soltanto dopo due
+serie verdi. Nessun archive post-serie, versione, tag o support claim CPU è
+prodotto. La Fase 7 emette `cpu_profile_candidate_rejected`; v0.3.0 e i suoi
+confini restano invariati. Report in `docs/reports/milestone-21-phase-3.md`,
+`docs/reports/milestone-21-phase-4.md`,
+`docs/reports/milestone-21-phase-5.md`,
+`docs/reports/milestone-21-phase-6.md` e
+`docs/reports/milestone-21-final.md`.
