@@ -1257,6 +1257,22 @@ finale, tag o GitHub Release viene prodotto. Report in
 
 ---
 
+# Milestone 24 — v0.3.1 Generation Bound Recovery
+
+Stato: In esecuzione
+
+Obiettivo:
+
+Correggere esclusivamente il limite generativo respinto da M23. Cinque run
+progettuali v0.3.0 osservano 71–944 output token; il nuovo e unico candidate
+congela `num_predict: 1024` e ripete l'intera matrice Q17-1…Q17-5 in confronto
+appaiato. Un nuovo `length` vieta aumenti seriali e rinvia il profilo GPU al
+comportamento provider-default. Piano e matrice sono in
+`milestone-24-v0.3.1-generation-bound-recovery-plan.md` e
+`milestone-24-generation-bound-recovery-matrix.yaml`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

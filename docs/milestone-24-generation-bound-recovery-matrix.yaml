@@ -1,0 +1,79 @@
+version: 1
+status: frozen
+frozen_at: "2026-09-01"
+
+baseline_design_observations:
+  source: public-v0.3.0-asset
+  qualification_evidence: false
+  output_tokens:
+    Q17-1: 721
+    Q17-2: 71
+    Q17-3: 441
+    Q17-4: 796
+    Q17-5: 944
+  finish_reason_all: stop
+
+candidate:
+  model: qwen3.5:9b
+  digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  provider: ollama
+  provider_version: 0.33.1
+  num_ctx: 4096
+  num_predict: 1024
+  thinking: "false"
+  temperature: 0
+  residency: 5m
+
+tasks:
+  source: docs/milestone-21-cpu-direct-chat-qualification-matrix.yaml
+  exact_ids: [Q17-1, Q17-2, Q17-3, Q17-4, Q17-5]
+  paired_stream_task: Q17-2
+
+gates:
+  completion_required: 5
+  correct_minimum: 4
+  length_terminals_maximum: 0
+  regressions_vs_paired_baseline_maximum: 0
+  material_falsehoods_in_pass_maximum: 0
+  workspace_mutations_maximum: 0
+  serial_limit_increase_forbidden: true
+
+qualification_results:
+  environment:
+    hardware: NVIDIA GeForce RTX 5070
+    provider_version: 0.33.1
+    model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  paired_runs:
+    Q17-1:
+      baseline: {output_tokens: 721, finish_reason: stop, quality: pass}
+      candidate: {output_tokens: 535, finish_reason: stop, duration_ms: 11809, quality: pass}
+    Q17-2:
+      baseline: {output_tokens: 71, finish_reason: stop, quality: pass}
+      candidate: {output_tokens: 110, finish_reason: stop, duration_ms: 1448, quality: pass}
+    Q17-3:
+      baseline: {output_tokens: 441, finish_reason: stop, quality: pass}
+      candidate: {output_tokens: 422, finish_reason: stop, duration_ms: 4794, quality: pass}
+    Q17-4:
+      baseline: {output_tokens: 796, finish_reason: stop, quality: pass}
+      candidate: {output_tokens: 564, finish_reason: stop, duration_ms: 6300, quality: pass}
+    Q17-5:
+      baseline: {output_tokens: 944, finish_reason: stop, quality: fail}
+      candidate: {output_tokens: 537, finish_reason: stop, duration_ms: 6033, quality: fail}
+      note: >-
+        La proposta sul 422 e sull'ordine restituito oltrepassa i fatti del
+        controller. Il task non e' un PASS e non contribuisce al gate dei
+        claim falsi; la baseline appaiata contiene analoghe assunzioni esterne.
+  stream_check:
+    task: Q17-2
+    output_tokens: 69
+    finish_reason: stop
+    required_facts_present: true
+    semantic_coherence: pass
+  summary:
+    candidate_completion: 5
+    candidate_correct: 4
+    length_terminals: 0
+    regressions_vs_paired_baseline: 0
+    material_falsehoods_in_pass: 0
+    workspace_mutations: 0
+    verdict: pass

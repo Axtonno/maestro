@@ -12,7 +12,7 @@ import (
 	"github.com/antonio-cafeo/maestro/internal/productconfig"
 )
 
-func TestMilestone23V2CompatibilityAndV3ContractAreFrozen(t *testing.T) {
+func TestReleaseV2CompatibilityAndCurrentV3ContractAreFrozen(t *testing.T) {
 	v2Path := filepath.FromSlash("configs/maestro.v0.3.0-compat.yaml")
 	v2Bytes, err := os.ReadFile(v2Path)
 	if err != nil {
@@ -48,8 +48,8 @@ func TestMilestone23V2CompatibilityAndV3ContractAreFrozen(t *testing.T) {
 	}
 	v3Chat, ok := v3.ChatProfile()
 	if !ok || v3.Version != productconfig.QualificationVersion ||
-		v3Chat.NumPredict != 512 || v3Chat.Residency.Duration != 5*time.Minute ||
-		v3Chat.GenerationOptions().MaxTokens != 512 {
+		v3Chat.NumPredict != 1024 || v3Chat.Residency.Duration != 5*time.Minute ||
+		v3Chat.GenerationOptions().MaxTokens != 1024 {
 		t.Fatalf("v3 operational contract drifted: %#v", v3Chat)
 	}
 }

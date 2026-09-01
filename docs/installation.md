@@ -41,7 +41,7 @@ Maestro non richiede né invoca `sudo`.
 
 L’archive include soltanto il profilo di prodotto chat-only v3. Punta alla
 fixture inclusa, abilita streaming opt-in e congela `qwen3.5:9b`, context 4096,
-thinking disabilitato, temperatura interna zero, `num_predict: 512`, residency
+thinking disabilitato, temperatura interna zero, `num_predict: 1024`, residency
 5 minuti e limiti da 1 MiB.
 
 ```sh

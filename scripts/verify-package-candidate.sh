@@ -44,7 +44,7 @@ fi
 schema_version="3"
 chat_model="qwen3.5:9b"
 chat_model_digest="6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
-chat_num_predict="512"
+chat_num_predict="1024"
 chat_residency="5m"
 if [[ "$profile_kind" == "cpu-qualification" ]]; then
     schema_version="3"
@@ -133,7 +133,7 @@ grep -Eq '^[[:space:]]*num_ctx:[[:space:]]*4096[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*thinking:[[:space:]]*"false"[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*max_file_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*max_output_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
-grep -Eq '^[[:space:]]*num_predict:[[:space:]]*512[[:space:]]*$' "$profile"
+grep -Eq "^[[:space:]]*num_predict:[[:space:]]*${chat_num_predict}[[:space:]]*$" "$profile"
 grep -Eq '^[[:space:]]*residency:[[:space:]]*5m[[:space:]]*$' "$profile"
 if grep -Eq 'workspace\.(write|patch)|^[[:space:]]*(agent|limits|context):' "$profile"; then
     printf 'published configuration exposes an unsupported agent or mutation surface\n' >&2

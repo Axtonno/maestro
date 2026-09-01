@@ -30,7 +30,7 @@ interaction:
     timeout: 5m
     streaming: true
     num_ctx: 4096
-    num_predict: 512
+    num_predict: 1024
     thinking: "false"
     residency: 5m
     max_file_bytes: 1048576
@@ -106,7 +106,7 @@ interaction:
     timeout: 5m
     streaming: true
     num_ctx: 4096
-    num_predict: 512
+    num_predict: 1024
     thinking: "false"
     residency: 5m
     max_file_bytes: 1048576

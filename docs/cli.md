@@ -53,7 +53,7 @@ secret o errore remoto. Il ticker viene arrestato prima del risultato o del
 failure; stdout resta atomico.
 
 Il profilo strict v3 inoltra inoltre
-`num_predict: 512` e `residency: 5m` alla stessa richiesta Ollama per complete
+`num_predict: 1024` e `residency: 5m` alla stessa richiesta Ollama per complete
 e stream. Non crea timer o goroutine di lifecycle in Maestro e non scarica
 modelli posseduti da altri processi.
 
@@ -68,7 +68,7 @@ input_tokens\t...
 output_tokens\t...
 num_ctx_requested\t4096
 num_ctx_effective\t4096|unknown
-num_predict_requested\t512
+num_predict_requested\t1024
 thinking_requested\tfalse
 thinking_effective\tfalse|unknown
 residency_requested\t5m0s

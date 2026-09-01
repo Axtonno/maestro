@@ -16,7 +16,7 @@ codice nel repository o nel binario non equivale a qualifica.
 | Provider | Supportato | Ollama 0.33.1 su `http://127.0.0.1:11434` |
 | Modello | Supportato | `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
 | Modalità | Supportata | Direct Chat tool-free, zero o un file esplicito |
-| Profilo | Supportato | schema v3 chat-only, context 4096, `num_predict` 512, residency 5m, thinking false, temperatura zero |
+| Profilo | Candidate | schema v3 chat-only, context 4096, `num_predict` 1024, residency 5m, thinking false, temperatura zero |
 | Streaming | Supportato | opt-in, equivalente e con pubblicazione atomica |
 | Workspace | Supportato | root locale autorizzata; path logico single-file contained |
 | Mutazioni | Non supportate | policy `workspace_mutate: deny`; nessun tool nel percorso chat |

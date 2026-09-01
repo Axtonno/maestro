@@ -72,7 +72,7 @@ maestro version
 - `--file` accetta un solo path logico relativo e contained;
 - file assente significa nessun contesto workspace implicito;
 - complete e stream usano temperatura zero, context 4096 e thinking disabilitato;
-- il profilo v3 imposta `num_predict: 512` e residency 5 minuti;
+- il profilo v3 candidato imposta `num_predict: 1024` e residency 5 minuti;
 - stdout viene pubblicato soltanto dopo una response valida e terminale;
 - i failure non avviano retrieval, tool o agent come percorso alternativo.
 

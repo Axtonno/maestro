@@ -16,7 +16,7 @@ deve essere dichiarato nelle note di release.
 ### Compatibility
 
 - invariati Ollama 0.33.1, `qwen3.5:9b`, digest, context e support claim GPU;
-- il profilo distribuito usa `num_predict: 512` e `residency: 5m`;
+- il profilo candidato usa `num_predict: 1024` e `residency: 5m`;
 - nessuna promessa CPU, agentica, multi-file o mutativa viene aggiunta.
 
 ## [0.3.0] - 2026-08-29
