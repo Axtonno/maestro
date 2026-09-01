@@ -2,7 +2,7 @@
 
 Versione target: 0.3.1
 
-Stato: In esecuzione
+Stato: Release qualificata; pubblicazione in corso
 
 Data: 2026-09-01
 
@@ -61,9 +61,9 @@ preservare il comportamento provider-default.
 | 1 | raccolta baseline e freeze 1024 | Completata |
 | 2 | aggiornamento profilo, contratti e test | Completata |
 | 3 | matrice appaiata completa | Completata: PASS 4/5, `length` 0 |
-| 4 | commit reale e RC LF | Non avviata |
-| 5 | installazione e gate live archive | Non avviata |
-| 6 | artifact finale, tag e pubblicazione | Non avviata |
+| 4 | commit reale e RC LF | Completata: `6b879d8`, archive byte-identici |
+| 5 | installazione e gate live archive | Completata: PASS |
+| 6 | artifact finale, tag e pubblicazione | In esecuzione |
 | 7 | verifica post-download e audit | Non avviata |
 
 ## Esito della matrice appaiata
@@ -77,3 +77,18 @@ quindi una regressione introdotta dal nuovo limite.
 Il controllo streaming Q17-2 termina a sua volta `stop` e conserva i fatti
 richiesti. Il gate qualitativo e' PASS: completion 5/5, qualita' 4/5,
 terminali `length` zero, regressioni appaiate zero e claim falsi nei PASS zero.
+
+## Release candidate reale
+
+Il commit `6b879d8bdaa61aebf55b55304155bad4784510e0` è stato clonato in un
+filesystem Linux LF pulito. Due build indipendenti di `v0.3.1-rc.2` sono
+byte-identiche:
+
+```text
+fb141965d972e321df2e7d4349c22abcb4ccb4d6054a458220668f8deab56867
+```
+
+L'archive è stato estratto fuori dal checkout. Identità binaria, doctor,
+no-file, complete, stream, containment, redazione, `num_predict: 1024`,
+residency `5m` e immutabilità sono PASS. Il digest aggregato del fixture prima
+e dopo è `33aae03f668100c4b8f219c07d897661a53877c839367a226d7a0397d3cadd55`.

@@ -1,6 +1,6 @@
 # Maestro v0.3.1 Compatibility Matrix
 
-Data: 2026-08-29
+Data: 2026-09-02
 
 Classificazione hardware aggiornata: 2026-09-01
 
@@ -16,17 +16,17 @@ codice nel repository o nel binario non equivale a qualifica.
 | Provider | Supportato | Ollama 0.33.1 su `http://127.0.0.1:11434` |
 | Modello | Supportato | `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
 | Modalità | Supportata | Direct Chat tool-free, zero o un file esplicito |
-| Profilo | Candidate | schema v3 chat-only, context 4096, `num_predict` 1024, residency 5m, thinking false, temperatura zero |
+| Profilo | Supportato | schema v3 chat-only, context 4096, `num_predict` 1024, residency 5m, thinking false, temperatura zero |
 | Streaming | Supportato | opt-in, equivalente e con pubblicazione atomica |
 | Workspace | Supportato | root locale autorizzata; path logico single-file contained |
 | Mutazioni | Non supportate | policy `workspace_mutate: deny`; nessun tool nel percorso chat |
 | Isolamento | Non fornito | processo trusted in-process, nessuna sandbox |
 
-La prequalifica F6.4 ha superato doctor 5/5, C0 3/3, C1 3/3,
-complete/stream 2/2, qualità 4/5, containment, immutabilità e anti-leak. Lo
-stesso archive ha poi superato la matrice finale di Fase 7 senza rebuild o
-tuning; il verdetto `direct_chat_product_baseline` autorizza questa
-compatibility promise per v0.3.0.
+La baseline v0.3.0 e il candidate v0.3.1 sono stati confrontati sugli stessi
+cinque task M17. Il profilo 1024 completa 5/5 con terminale `stop`, qualità
+4/5 e zero regressioni appaiate; complete e stream sono coerenti. L'esatto RC
+costruito dal commit release ha inoltre superato doctor, no-file, route,
+containment, immutabilità, identità e anti-leak fuori dal checkout.
 
 ## Confine funzionale
 

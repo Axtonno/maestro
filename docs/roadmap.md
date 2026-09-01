@@ -1259,7 +1259,7 @@ finale, tag o GitHub Release viene prodotto. Report in
 
 # Milestone 24 — v0.3.1 Generation Bound Recovery
 
-Stato: In esecuzione
+Stato: Release qualificata; pubblicazione in corso
 
 Obiettivo:
 
@@ -1270,6 +1270,11 @@ appaiato. Un nuovo `length` vieta aumenti seriali e rinvia il profilo GPU al
 comportamento provider-default. Piano e matrice sono in
 `milestone-24-v0.3.1-generation-bound-recovery-plan.md` e
 `milestone-24-generation-bound-recovery-matrix.yaml`.
+
+La matrice candidate completa 5/5 con `stop`, qualità 4/5 e zero regressioni
+appaiate. Test, race e vet sono verdi su una materializzazione LF. Il vero RC
+dal commit `6b879d8` è byte-riproducibile e supera il gate live fuori checkout;
+la pubblicazione finale è quindi autorizzata.
 
 ---
 
