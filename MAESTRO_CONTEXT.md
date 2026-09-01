@@ -2899,3 +2899,18 @@ confini restano invariati. Report in `docs/reports/milestone-21-phase-3.md`,
 `docs/reports/milestone-21-phase-5.md`,
 `docs/reports/milestone-21-phase-6.md` e
 `docs/reports/milestone-21-final.md`.
+
+Interpretazione post-M21: `cpu_profile_candidate_rejected` significa che
+Maestro non può promettere Direct Chat sul T490s con l'esatto candidato
+provato; non significa che Maestro non possa funzionare senza GPU. Il T490s è
+classificato Legacy CPU development-only, una Modern CPU-only resta non
+qualificata e il reference GPU RTX 5070 conserva il supporto dell'esatto
+profilo v0.3.0 con `qwen3.5:9b`.
+
+Direzione concordata: proporre **Milestone 22 — Operational Hardening
+v0.3.1** per productizzare diagnostica config, binary identity, heartbeat,
+residency e budget di generazione, senza ampliare il support claim e con breve
+riqualificazione sulla RTX 5070. La futura qualifica Modern CPU-only resta un
+workstream separato e deve provare offload disabilitato, zero layer GPU, zero
+VRAM del modello, processo Ollama CPU-only e configurazione congelata. Il
+T490s resta macchina di sviluppo/lower bound, non hardware minimo di prodotto.

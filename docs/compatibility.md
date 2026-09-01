@@ -2,6 +2,8 @@
 
 Data: 2026-08-29
 
+Classificazione hardware aggiornata: 2026-09-01
+
 Questa pagina definisce l’unico support claim di v0.3.0. La presenza di altro
 codice nel repository o nel binario non equivale a qualifica.
 
@@ -54,6 +56,21 @@ approver o fallback. Senza `--file` non usa contesto di progetto. Con
 
 “Non qualificato” non significa necessariamente incompatibile: significa che
 v0.3.0 non offre una promessa operativa per quel percorso.
+
+## Classificazione hardware post-M21
+
+La Milestone 21 ha respinto soltanto l'esatto candidato Direct Chat provato
+sul T490s. Non ha dimostrato che Maestro richieda necessariamente una GPU.
+
+| Classe | Stato corrente | Interpretazione |
+|---|---|---|
+| Legacy CPU — ThinkPad T490s | Development-only | nessuna promessa operativa per `qwen2.5-coder:7b` e il profilo M21 |
+| Modern CPU-only | Non qualificata | richiede una nuova matrice con offload GPU disabilitato e verificato |
+| GPU reference — RTX 5070 | Supportata da v0.3.0 | vale l'esatto percorso qualificato descritto sopra, non un requisito minimo universale |
+
+Una futura prova CPU moderna deve dimostrare zero layer sulla GPU, zero VRAM
+usata dal modello, processo Ollama CPU-only e configurazione congelata. Il
+T490s resta un lower bound osservato, non il minimo hardware supportato.
 
 ## Relazione con v0.2.0
 

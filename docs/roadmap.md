@@ -1151,6 +1151,30 @@ La qualifica artifact, ammessa soltanto dopo due serie verdi, è chiusa
 versione o promessa CPU viene assegnata e il support claim v0.3.0 resta
 invariato. Report finale in `reports/milestone-21-final.md`.
 
+Il verdetto è circoscritto al T490s con l'esatto candidato M21 e non dimostra
+che Maestro non possa funzionare senza GPU. Le classi hardware correnti sono:
+
+| Classe | Stato |
+|---|---|
+| Legacy CPU — ThinkPad T490s | Development-only, nessuna promessa operativa |
+| Modern CPU-only | Non ancora qualificata |
+| GPU reference — RTX 5070 | Supportata dal profilo v0.3.0 qualificato |
+
+## Direzione successiva proposta
+
+**Milestone 22 — Operational Hardening v0.3.1** deve productizzare diagnostica
+di configurazione specifica, identità del binario, heartbeat redatto,
+residency esplicita e limite di generazione configurabile. Mantiene
+`qwen3.5:9b`, RTX 5070 e il support claim corrente; prima della pubblicazione
+richiede una breve riqualificazione sul reference hardware e non promette
+supporto CPU.
+
+Una milestone successiva e distinta potrà qualificare una CPU moderna. Anche
+su una macchina dotata di RTX 5070, la prova è valida come CPU-only soltanto
+con offload disabilitato, zero layer GPU, zero VRAM del modello, processo
+Ollama CPU-only e configurazione congelata. Questa separazione permette di
+distinguere il limite del modello dal limite della CPU legacy del T490s.
+
 ## Associazione release
 
 | Versione | Obiettivo |
