@@ -1,0 +1,46 @@
+version: 1
+status: frozen
+frozen_at: "2026-09-01"
+
+compatibility:
+  v2_source: "git tag v0.3.0:configs/maestro.chat.example.yaml"
+  v2_sha256: 1c5bbe79edf125485d14518e58ff18c48156eaa0fb91faf82fcf3cd97375d0ee
+  v2_expected_num_predict: provider-default
+  v2_expected_residency: provider-default
+  v3_source: configs/maestro.chat.example.yaml
+  v3_sha256_at_m22_commit: f811b6cd86c606076a5fae8a84a7047829e6c55aa15a0be69093c0ae838ea248
+  v3_expected_num_predict: 512
+  v3_expected_residency: 5m
+  unknown_version: reject
+  invalid_configuration: typed-redacted-diagnostic
+
+profile:
+  provider: ollama
+  provider_version: 0.33.1
+  model: qwen3.5:9b
+  model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  num_ctx: 4096
+  num_predict: 512
+  thinking: "false"
+  temperature: 0
+  timeout: 5m
+  residency: 5m
+
+task_contract:
+  source: docs/milestone-21-cpu-direct-chat-qualification-matrix.yaml
+  source_sha256: 783e463449136df0bba3c82d2cf3f402f98739103270ef697e0cc8b0c8b907c4
+  exact_ids: [Q17-1, Q17-2, Q17-3, Q17-4, Q17-5]
+  paired_stream_task: Q17-2
+  candidate_completion_required: 5
+  candidate_correct_minimum: 4
+  candidate_length_terminals_maximum: 0
+  material_falsehoods_in_pass_maximum: 0
+  workspace_mutations_maximum: 0
+  reject_if_baseline_completes_and_candidate_truncates: true
+
+environment:
+  platform: linux/amd64
+  reference: WSL2 Ubuntu 24.04 / RTX 5070 12 GB
+  source_materialization: git-blobs-lf
+  direct_packaging_from_mnt_c: forbidden
+

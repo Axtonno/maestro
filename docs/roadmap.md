@@ -1231,6 +1231,32 @@ pubblicazione remota. Piano e report sono in
 
 ---
 
+# Milestone 23 — Release Readiness & Publication v0.3.1
+
+Stato: Completata — `v0.3.1_candidate_rejected_length_regression`
+
+Obiettivo:
+
+Verificare compatibilità byte-level e comportamentale del profilo v2 pubblico,
+contratto v3, regressione qualitativa appaiata sui cinque task M17, identità
+reale e riproducibilità LF prima di pubblicare v0.3.1. La milestone non aggiunge
+funzionalità e applica stop fail-fast per incompatibilità v2, qualità sotto
+4/5, terminali `length` o identità non riproducibile.
+
+Piano e matrice sono in
+`milestone-23-release-readiness-publication-v0.3.1-plan.md` e
+`milestone-23-release-readiness-matrix.yaml`.
+
+Compatibilità v2, contratto v3, suite, race, vet e policy LF sono verdi. La
+matrice live si ferma però al primo task: v0.3.0 completa Q17-1 con 535 output
+token e terminale `stop`, mentre il candidate v3 raggiunge `length` a 512 e
+fallisce chiuso con `response_invalid`. Q17-2…Q17-5 e tutte le fasi di release
+sono `NOT_RUN` per stop rule. Nessun commit release, RC pubblicabile, artifact
+finale, tag o GitHub Release viene prodotto. Report in
+`reports/milestone-23-final.md`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

@@ -1,0 +1,8 @@
+*.go text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
+internal/benchmark/** text eol=lf
+configs/** text eol=lf
+scripts/** text eol=lf
+

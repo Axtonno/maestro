@@ -378,7 +378,8 @@ func TestChatCommandUsesV2ProfileAndStableRedactedEnvelope(t *testing.T) {
 		t.Fatalf("physical root leaked: stdout=%q stderr=%q", stdout.String(), stderr.String())
 	}
 	if len(provider.requests) != 1 || len(provider.requests[0].Tools) != 0 ||
-		provider.requests[0].ToolChoice.Mode != pkgProvider.ToolChoiceNone {
+		provider.requests[0].ToolChoice.Mode != pkgProvider.ToolChoiceNone ||
+		provider.requests[0].Options.MaxTokens != 0 || provider.requests[0].KeepAlive != 0 {
 		t.Fatalf("chat request was not tool-free: %#v", provider.requests)
 	}
 }

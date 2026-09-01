@@ -4,7 +4,7 @@ Le modifiche rilevanti di Maestro sono registrate in questo file. Durante la
 serie `0.x` i contratti pubblici restano sperimentali e ogni breaking change
 deve essere dichiarato nelle note di release.
 
-## [0.3.1] - 2026-09-01
+## [Unreleased]
 
 ### Added
 
@@ -144,4 +144,3 @@ Nessun tool, permesso o support claim mutativo viene aggiunto.
 [0.1.1]: https://github.com/Axtonno/maestro/releases/tag/v0.1.1
 [0.2.0]: https://github.com/Axtonno/maestro/releases/tag/v0.2.0
 [0.3.0]: https://github.com/Axtonno/maestro/releases/tag/v0.3.0
-[0.3.1]: https://github.com/Axtonno/maestro/releases/tag/v0.3.1
