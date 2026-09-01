@@ -1206,6 +1206,31 @@ sono fallback del percorso chat.
 
 ---
 
+# Milestone 22 — Operational Hardening v0.3.1
+
+Stato: Completata — `v0.3.1_operational_hardening_qualified`
+
+Obiettivo:
+
+Productizzare diagnostica di configurazione specifica, identità del binario,
+heartbeat redatto, residency esplicita e limite di generazione configurabile,
+mantenendo il support claim Direct Chat GPU di v0.3.0.
+
+Il profilo pubblico strict v3 conserva Ollama 0.33.1, `qwen3.5:9b`, digest
+qualificato, context 4096, thinking false e temperatura zero; aggiunge
+`num_predict: 512` e residency 5 minuti. Suite, race, vet, doppio packaging e
+archive audit sono verdi. La breve riqualificazione live sulla RTX 5070 supera
+doctor 5/5, no-file, complete/stream, equivalenza semantica, containment,
+immutabilità e anti-leak.
+
+CPU, agent, retrieval, multi-file, tool e Controlled Mutation restano fuori
+scope. Il verdetto qualifica il candidate v0.3.1 ma non implica tag o
+pubblicazione remota. Piano e report sono in
+`milestone-22-operational-hardening-v0.3.1-plan.md` e
+`reports/milestone-22-final.md`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

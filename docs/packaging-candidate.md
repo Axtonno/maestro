@@ -1,6 +1,6 @@
 # Maestro Packaging and Release Artifacts
 
-Stato: contratto di packaging v0.3.0 Direct Chat
+Stato: contratto di packaging v0.3.1 Direct Chat
 
 Lo stesso percorso normalizzato produce packaging candidate, release candidate
 e release finale. Lo stato è incorporato nel manifest e nella guida inclusa;
@@ -58,7 +58,7 @@ come `SOURCE_DATE_EPOCH`, path rimossi, build ID vuoto, ownership e permessi
 normalizzati e gzip senza timestamp. Il gate costruisce due archive e richiede
 uguaglianza byte-per-byte prima di verificare checksum e contenuto.
 
-## Contenuto v0.3.0
+## Contenuto v0.3.1
 
 - binario `maestro` Linux `amd64`;
 - licenza, attribution, README, changelog e security policy;

@@ -4,6 +4,21 @@ Le modifiche rilevanti di Maestro sono registrate in questo file. Durante la
 serie `0.x` i contratti pubblici restano sperimentali e ogni breaking change
 deve essere dichiarato nelle note di release.
 
+## [0.3.1] - 2026-09-01
+
+### Added
+
+- schema chat v3 con `num_predict` e residency espliciti;
+- diagnostica di configurazione tipizzata e redatta;
+- identità binaria verificabile con `version --diagnostic`;
+- heartbeat redatto durante le generazioni lunghe.
+
+### Compatibility
+
+- invariati Ollama 0.33.1, `qwen3.5:9b`, digest, context e support claim GPU;
+- il profilo distribuito usa `num_predict: 512` e `residency: 5m`;
+- nessuna promessa CPU, agentica, multi-file o mutativa viene aggiunta.
+
 ## [0.3.0] - 2026-08-29
 
 ### Added
@@ -129,3 +144,4 @@ Nessun tool, permesso o support claim mutativo viene aggiunto.
 [0.1.1]: https://github.com/Axtonno/maestro/releases/tag/v0.1.1
 [0.2.0]: https://github.com/Axtonno/maestro/releases/tag/v0.2.0
 [0.3.0]: https://github.com/Axtonno/maestro/releases/tag/v0.3.0
+[0.3.1]: https://github.com/Axtonno/maestro/releases/tag/v0.3.1

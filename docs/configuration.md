@@ -1,20 +1,17 @@
-# Maestro v0.3.0 Direct Chat Configuration
+# Maestro v0.3.1 Direct Chat Configuration
 
-Versione schema pubblica v0.3.0: 2
+Versione schema pubblica v0.3.1: 3
 
 Stato: contratto pubblico sperimentale chat-only
 
-La diagnostica specifica descritta sotto è un **candidate post-v0.3.0** e non
-appartiene al binario pubblico v0.3.0.
-
-Il source tree della Milestone 21 aggiunge lo schema strict `version: 3`
-soltanto per il candidate CPU Direct Chat. Lo schema v2 resta invariato e non
-accetta i campi v3.
+La v0.3.1 rende pubblici la diagnostica specifica e lo schema strict
+`version: 3`. Lo schema v2 resta decodificabile per compatibilità, ma non
+accetta i campi v3 e non riceve valori impliciti.
 
 ## Profilo distribuito
 
 ```yaml
-version: 2
+version: 3
 
 provider:
   id: ollama
@@ -33,7 +30,9 @@ interaction:
     timeout: 5m
     streaming: true
     num_ctx: 4096
+    num_predict: 512
     thinking: "false"
+    residency: 5m
     max_file_bytes: 1048576
     max_output_bytes: 1048576
 
@@ -59,8 +58,8 @@ del YAML e diventa assoluto prima della validazione.
 ## Parsing strict
 
 Il loader rifiuta campi sconosciuti o duplicati, documenti multipli, anchor,
-alias, trailing data, file vuoti e file oltre 1 MiB. L'asset v0.3.0 usa
-`version: 2`; il candidate M21 accetta anche `version: 3` con una struttura
+alias, trailing data, file vuoti e file oltre 1 MiB. L'asset v0.3.1 usa
+`version: 3` con una struttura
 strict distinta. Un errore non abilita fallback verso un profilo agentico.
 
 ## `provider`
@@ -83,7 +82,7 @@ workspace, ma Direct Chat non avvia plugin o detection framework.
 
 ## `interaction.chat`
 
-- `model` è esatto; v0.3.0 qualifica soltanto `qwen3.5:9b` con il digest del
+- `model` è esatto; v0.3.1 qualifica soltanto `qwen3.5:9b` con il digest del
   manifest;
 - `timeout` delimita la richiesta e non può superare il ceiling provider;
 - `streaming: true` autorizza `--stream`, ma non lo abilita implicitamente;
@@ -95,17 +94,15 @@ La temperatura non è configurabile: Direct Chat la imposta a zero sia per
 complete sia per stream. Un generation control non supportato fallisce il
 preflight invece di essere ignorato.
 
-### Profilo CPU qualification v3
+### Controlli operativi v3
 
-Il candidate M21 è disponibile in
-`../configs/maestro.milestone-21-candidate.yaml` e aggiunge due campi
-obbligatori:
+Il profilo pubblico aggiunge due campi obbligatori:
 
 ```yaml
 version: 3
 interaction:
   chat:
-    model: qwen2.5-coder:7b
+    model: qwen3.5:9b
     timeout: 5m
     streaming: true
     num_ctx: 4096
@@ -147,7 +144,7 @@ maestro doctor --mode chat --config /path/to/chat.yaml
 Una configurazione invalida usa exit 2. Failure di provider o capability sono
 check operativi distinti e non vengono trasformati in PASS.
 
-Nel candidate post-v0.3.0, CLI e doctor mantengono il reason code
+In v0.3.1, CLI e doctor mantengono il reason code
 `invalid_request` e aggiungono una diagnostica redatta:
 
 | Categoria | Significato |
@@ -166,5 +163,5 @@ secret o testo dell'errore del decoder.
 
 Lo schema v1 e i blocchi agentici v2 rimangono contratti sperimentali del
 repository, ma non appartengono alla configurazione distribuita né alla
-compatibility promise v0.3.0. `maestro chat` non deriva un profilo da
+compatibility promise v0.3.1. `maestro chat` non deriva un profilo da
 `models.chat` e non costruisce agent come fallback.

@@ -1,4 +1,4 @@
-# Maestro v0.3.0 Troubleshooting
+# Maestro v0.3.1 Troubleshooting
 
 ## Il checksum fallisce
 
@@ -11,7 +11,7 @@ Eseguire `./maestro version` dalla directory estratta e confrontare nome
 archive e `ARTIFACT-MANIFEST.txt`. Non rinominare un packaging candidate come
 release candidate o release.
 
-Nel candidate post-v0.3.0 usare:
+In v0.3.1 usare:
 
 ```sh
 ./maestro version --diagnostic
@@ -19,7 +19,7 @@ Nel candidate post-v0.3.0 usare:
 
 Confrontare `version`, `status`, `commit`, path `executable` risolto e
 `sha256`. Questa forma permette di individuare un altro `maestro` precedente
-nel `PATH`; non è disponibile nell'asset pubblico v0.3.0.
+nel `PATH`.
 
 ## `doctor` non completa cinque PASS
 
@@ -30,7 +30,7 @@ Usare il modo chat esplicito:
 ```
 
 - `config`: verificare lo schema strict dichiarato e campi
-  duplicati/sconosciuti; v2 è il profilo v0.3.0, v3 il candidate M21;
+  duplicati/sconosciuti; v3 è il profilo v0.3.1;
 - `workspace`: verificare che `workspace.root` sia una directory reale e non
   un symlink;
 - `composition`: verificare provider e nome della variabile secret;
@@ -48,17 +48,17 @@ aggiornare il modello durante una serie di qualificazione.
 
 ## `configuration invalid` o `chat_profile_required`
 
-Direct Chat richiede un profilo strict `version: 2` con provider, workspace,
+Direct Chat v0.3.1 richiede il profilo distribuito strict `version: 3` con provider, workspace,
 `interaction.chat` e `policy.workspace_mutate: deny`. Un profilo agentico v1
 non viene convertito e il doctor senza `--mode chat` segue il percorso agentico.
 
-Il candidate CPU M21 usa invece `version: 3` e richiede anche
-`interaction.chat.num_predict` e `interaction.chat.residency`. Devono essere
+Lo schema v3 richiede anche `interaction.chat.num_predict` e
+`interaction.chat.residency`. Devono essere
 rispettivamente positivi e una durata positiva non superiore a 10 minuti; il
-provider deve essere Ollama. Non aggiungere questi campi a un file v2: lo
-schema strict li rifiuta intenzionalmente.
+provider deve essere Ollama. Un file v2 storico resta leggibile, ma non riceve
+questi controlli implicitamente.
 
-Nel candidate post-v0.3.0 la riga `configuration` distingue `read_failed`,
+La riga `configuration` distingue `read_failed`,
 `yaml_invalid`, `unknown_field`, `missing_field` e `invalid_value`, indicando
 solo il path logico del campo. Correggere quella categoria senza pubblicare il
 contenuto del file di configurazione.
@@ -81,7 +81,7 @@ Response vuota, ruolo/finish non validi, tool call inattesa, stream malformato,
 UTF-8 invalido o output oltre limite vengono scartati interamente. stdout resta
 vuoto; conservare soltanto versione, commit, reason code e durata redatti.
 
-Nel candidate M21, anche una risposta terminata perché ha esaurito
+Anche una risposta terminata perché ha esaurito
 `num_predict` resta invalida/incompleta: non aumentare il budget dopo aver
 visto i risultati di una serie congelata.
 
@@ -96,7 +96,7 @@ Non trattare la risposta come autorizzazione a modificare il workspace.
 SIGINT/SIGTERM producono exit 130 e `canceled`. Una deadline provider produce
 exit 4 e `deadline_exceeded`. Nessun output parziale deve apparire su stdout.
 
-Nel candidate post-v0.3.0, durante generation oltre 15 secondi, stderr può
+Durante generation oltre 15 secondi, stderr può
 mostrare heartbeat `progress state=generating` con il solo tempo trascorso.
 Non è una risposta parziale. L'assenza di nuovi heartbeat dopo un terminale è
 parte del contratto.

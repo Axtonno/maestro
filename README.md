@@ -2,11 +2,11 @@
 
 > The intelligence is in the orchestration.
 
-Maestro v0.3.0 introduce una chat locale diretta per interrogare zero o un file
+Maestro v0.3.1 consolida una chat locale diretta per interrogare zero o un file
 esplicitamente scelto dentro un workspace. Il percorso supportato è read-only,
 non usa tool, retrieval, Agent Runtime o fallback agentici.
 
-## v0.3.0 in breve
+## v0.3.1 in breve
 
 | Dimensione | Supporto ufficiale |
 |---|---|
@@ -15,7 +15,7 @@ non usa tool, retrieval, Agent Runtime o fallback agentici.
 | Modello | `qwen3.5:9b`, digest qualificato nel manifest |
 | Modalità | `maestro chat`, zero o un file esplicito |
 | Streaming | Opt-in con output atomico |
-| Tool/retrieval/agent | Non qualificati per v0.3.0 |
+| Tool/retrieval/agent | Non qualificati per v0.3.1 |
 | Mutazioni | Non supportate |
 | Isolamento | Trusted in-process, nessuna sandbox |
 
@@ -27,7 +27,7 @@ agentico o mutativo presente nel repository non amplia la promessa di prodotto.
 Scaricare insieme archive e checksum dalla stessa GitHub Release:
 
 ```sh
-version=v0.3.0
+version=v0.3.1
 artifact="maestro-${version}-linux-amd64"
 base_url="https://github.com/Axtonno/maestro/releases/download/${version}"
 curl -fLO "${base_url}/${artifact}.tar.gz"
@@ -72,6 +72,7 @@ maestro version
 - `--file` accetta un solo path logico relativo e contained;
 - file assente significa nessun contesto workspace implicito;
 - complete e stream usano temperatura zero, context 4096 e thinking disabilitato;
+- il profilo v3 imposta `num_predict: 512` e residency 5 minuti;
 - stdout viene pubblicato soltanto dopo una response valida e terminale;
 - i failure non avviano retrieval, tool o agent come percorso alternativo.
 
@@ -108,7 +109,7 @@ Vedere [Known Issues](docs/known-issues.md) e
 - [CLI](docs/cli.md)
 - [Security Model](docs/security-model.md)
 - [Compatibility Matrix](docs/compatibility.md)
-- [Release Notes v0.3.0](docs/releases/v0.3.0.md)
+- [Release Notes v0.3.1](docs/releases/v0.3.1.md)
 - [Changelog](CHANGELOG.md)
 
 ## Sviluppo

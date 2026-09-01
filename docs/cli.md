@@ -1,9 +1,8 @@
-# Maestro v0.3.0 CLI
+# Maestro v0.3.1 CLI
 
 Stato: contratto pubblico sperimentale Direct Chat
 
-Le sezioni marcate **candidate post-v0.3.0** descrivono il source tree dopo la
-Milestone 20 e non sono presenti nell'asset pubblico v0.3.0.
+La v0.3.1 productizza le correzioni operative sviluppate dopo v0.3.0.
 
 ## Superficie supportata
 
@@ -14,7 +13,7 @@ maestro version
 ```
 
 La root help può mostrare comandi storici o di sviluppo. `agent`, `run`,
-`models`, `agents` e `bench` non appartengono al support claim v0.3.0 e non
+`models`, `agents` e `bench` non appartengono al support claim v0.3.1 e non
 sono fallback di Direct Chat.
 
 ## `chat`
@@ -42,7 +41,7 @@ Lo streaming conserva output atomico: stdout viene scritto soltanto dopo una
 response valida, un terminale `stop` e EOF. Chunk parziali vengono scartati su
 errore, cancellazione, deadline o limite.
 
-**Candidate post-v0.3.0:** dopo il preflight e durante una generation lunga,
+Dopo il preflight e durante una generation lunga,
 stderr emette al massimo 40 heartbeat ogni 15 secondi:
 
 ```text
@@ -53,7 +52,7 @@ L'heartbeat non contiene modello, domanda, file, path, risposta parziale,
 secret o errore remoto. Il ticker viene arrestato prima del risultato o del
 failure; stdout resta atomico.
 
-**Candidate M21:** un profilo strict v3 inoltra inoltre
+Il profilo strict v3 inoltra inoltre
 `num_predict: 512` e `residency: 5m` alla stessa richiesta Ollama per complete
 e stream. Non crea timer o goroutine di lifecycle in Maestro e non scarica
 modelli posseduti da altri processi.
@@ -82,7 +81,7 @@ result
 Il risultato è intenzionalmente visibile all’utente locale. Log e failure non
 includono domanda, prompt, response completa, contenuto del file, root fisica o
 secret. Le righe `num_predict_requested` e `residency_requested` sono presenti
-nel candidate v3; l'envelope v2 dell'asset v0.3.0 resta invariato.
+nel profilo v3; l'envelope v2 storico resta invariato.
 
 ## `doctor --mode chat`
 
@@ -107,7 +106,7 @@ maestro version
 Stampa versione e commit incorporati. Un build locale senza metadata restituisce
 `devel` e `unknown`; l’artifact incorpora identità esatta.
 
-**Candidate post-v0.3.0:** il comando diagnostico esplicito aggiunge identità
+Il comando diagnostico esplicito aggiunge identità
 del file effettivamente eseguito:
 
 ```text
@@ -140,7 +139,7 @@ Un failure chat espone come prima riga:
 chat failed: <reason_code>
 ```
 
-**Candidate post-v0.3.0:** un errore di configurazione aggiunge una seconda
+Un errore di configurazione aggiunge una seconda
 riga allowlisted con categoria e, quando noto, solo il path logico del campo:
 
 ```text

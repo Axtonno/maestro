@@ -64,8 +64,8 @@ fi
 profile_source="configs/maestro.chat.example.yaml"
 chat_model="qwen3.5:9b"
 chat_model_digest="6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
-chat_num_predict="provider-default"
-chat_residency="provider-default"
+chat_num_predict="512"
+chat_residency="5m"
 if [[ "$profile_kind" == "cpu-qualification" ]]; then
     profile_source="configs/maestro.milestone-21-candidate.yaml"
     chat_model="qwen2.5-coder:7b"

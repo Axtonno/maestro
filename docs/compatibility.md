@@ -1,10 +1,10 @@
-# Maestro v0.3.0 Compatibility Matrix
+# Maestro v0.3.1 Compatibility Matrix
 
 Data: 2026-08-29
 
 Classificazione hardware aggiornata: 2026-09-01
 
-Questa pagina definisce l’unico support claim di v0.3.0. La presenza di altro
+Questa pagina definisce l’unico support claim di v0.3.1. La presenza di altro
 codice nel repository o nel binario non equivale a qualifica.
 
 ## Percorso qualificato
@@ -16,7 +16,7 @@ codice nel repository o nel binario non equivale a qualifica.
 | Provider | Supportato | Ollama 0.33.1 su `http://127.0.0.1:11434` |
 | Modello | Supportato | `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
 | Modalità | Supportata | Direct Chat tool-free, zero o un file esplicito |
-| Profilo | Supportato | schema v2 chat-only, context 4096, thinking false, temperatura zero |
+| Profilo | Supportato | schema v3 chat-only, context 4096, `num_predict` 512, residency 5m, thinking false, temperatura zero |
 | Streaming | Supportato | opt-in, equivalente e con pubblicazione atomica |
 | Workspace | Supportato | root locale autorizzata; path logico single-file contained |
 | Mutazioni | Non supportate | policy `workspace_mutate: deny`; nessun tool nel percorso chat |
@@ -55,7 +55,7 @@ approver o fallback. Senza `--file` non usa contesto di progetto. Con
 - sandbox, remote execution, shell, Git, Docker, persistence e multi-agent.
 
 “Non qualificato” non significa necessariamente incompatibile: significa che
-v0.3.0 non offre una promessa operativa per quel percorso.
+v0.3.1 non offre una promessa operativa per quel percorso.
 
 ## Classificazione hardware post-M21
 
@@ -66,7 +66,7 @@ sul T490s. Non ha dimostrato che Maestro richieda necessariamente una GPU.
 |---|---|---|
 | Legacy CPU — ThinkPad T490s | Development-only | nessuna promessa operativa per `qwen2.5-coder:7b` e il profilo M21 |
 | Modern CPU-only | Non qualificata | richiede una nuova matrice con offload GPU disabilitato e verificato |
-| GPU reference — RTX 5070 | Supportata da v0.3.0 | vale l'esatto percorso qualificato descritto sopra, non un requisito minimo universale |
+| GPU reference — RTX 5070 | Supportata da v0.3.1 | vale l'esatto percorso qualificato descritto sopra, non un requisito minimo universale |
 
 Una futura prova CPU moderna deve dimostrare zero layer sulla GPU, zero VRAM
 usata dal modello, processo Ollama CPU-only e configurazione congelata. Il
@@ -81,4 +81,6 @@ non reinterpreta quelle evidenze: productizza soltanto la completion
 single-file separata.
 
 CLI e schema sono ancora sperimentali nella serie 0.x. Una configurazione v1
-agentica non viene convertita implicitamente nel profilo chat v2.
+agentica non viene convertita implicitamente nel profilo chat v3. Lo schema v2
+resta leggibile per compatibilità ma non riceve valori impliciti di generation
+limit o residency.

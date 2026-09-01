@@ -23,6 +23,8 @@ import (
 const (
 	Version              = 1
 	CandidateVersion     = 2
+	// QualificationVersion is the public Direct Chat schema used by v0.3.1.
+	// The name is retained internally to avoid a needless API rename in 0.x.
 	QualificationVersion = 3
 )
 

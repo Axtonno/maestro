@@ -39,9 +39,10 @@ Maestro non richiede né invoca `sudo`.
 
 ## Configurazione Direct Chat
 
-L’archive include soltanto il profilo di prodotto chat-only v2. Punta alla
+L’archive include soltanto il profilo di prodotto chat-only v3. Punta alla
 fixture inclusa, abilita streaming opt-in e congela `qwen3.5:9b`, context 4096,
-thinking disabilitato, temperatura interna zero e limiti da 1 MiB.
+thinking disabilitato, temperatura interna zero, `num_predict: 512`, residency
+5 minuti e limiti da 1 MiB.
 
 ```sh
 ./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
@@ -67,7 +68,7 @@ logico esplicito. Il file YAML non contiene credenziali; `api_key_env` accetta
 soltanto il nome di una variabile d’ambiente.
 
 Agent, retrieval, tool calling, profili mutativi e approval non appartengono
-al support claim v0.3.0 e non sono inclusi nella configurazione distribuita.
+al support claim v0.3.1 e non sono inclusi nella configurazione distribuita.
 
 ## Upgrade
 
@@ -79,7 +80,7 @@ install -m 0755 ./maestro "$HOME/.local/bin/maestro.new"
 mv "$HOME/.local/bin/maestro.new" "$HOME/.local/bin/maestro"
 ```
 
-Non riutilizzare automaticamente un profilo agentico v1 come profilo chat v2.
+Non riutilizzare automaticamente un profilo agentico v1 come profilo chat v3.
 
 ## Rimozione
 

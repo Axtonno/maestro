@@ -1,4 +1,4 @@
-# Maestro v0.3.0 Known Issues and Limitations
+# Maestro v0.3.1 Known Issues and Limitations
 
 ## Qualità e prestazioni
 
@@ -12,7 +12,8 @@
   l’adapter non restituisce un’attestazione per-run; doctor verifica comunque
   che i controlli richiesti siano supportabili prima della completion.
 - Latenza e memoria dipendono dal provider, dall’hardware e dalla residenza del
-  modello. Maestro non gestisce automaticamente load/unload.
+  modello. Il profilo distribuito richiede 5 minuti di residency, ma non
+  garantisce che una run sia warm e non sostituisce la verifica del provider.
 
 ## Supporto ristretto
 
@@ -36,7 +37,7 @@
 
 ## Prodotto ed ecosistema
 
-- CLI e schema v2 sono sperimentali durante la serie 0.x.
+- CLI e schema v3 sono sperimentali durante la serie 0.x.
 - Non esistono installer di sistema, auto-update o service unit.
 - Maestro non installa Ollama, modelli, PHP, Composer o dipendenze Laravel.
 - Nessun packaging generalizzato di plugin/tool di terze parti.
