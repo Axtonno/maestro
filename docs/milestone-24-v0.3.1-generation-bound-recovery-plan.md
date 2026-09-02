@@ -2,7 +2,7 @@
 
 Versione target: 0.3.1
 
-Stato: Release qualificata; pubblicazione in corso
+Stato: Completata — `v0.3.1_released_and_verified`
 
 Data: 2026-09-01
 
@@ -63,8 +63,8 @@ preservare il comportamento provider-default.
 | 3 | matrice appaiata completa | Completata: PASS 4/5, `length` 0 |
 | 4 | commit reale e RC LF | Completata: `6b879d8`, archive byte-identici |
 | 5 | installazione e gate live archive | Completata: PASS |
-| 6 | artifact finale, tag e pubblicazione | In esecuzione |
-| 7 | verifica post-download e audit | Non avviata |
+| 6 | artifact finale, tag e pubblicazione | Completata |
+| 7 | verifica post-download e audit | Completata |
 
 ## Esito della matrice appaiata
 
@@ -92,3 +92,20 @@ L'archive è stato estratto fuori dal checkout. Identità binaria, doctor,
 no-file, complete, stream, containment, redazione, `num_predict: 1024`,
 residency `5m` e immutabilità sono PASS. Il digest aggregato del fixture prima
 e dopo è `33aae03f668100c4b8f219c07d897661a53877c839367a226d7a0397d3cadd55`.
+
+## Pubblicazione e verifica pubblica
+
+Il commit release finale è `bd0e902c8d7ef01c01117537fceed76845a33732`.
+Il tag annotato `v0.3.1` e la GitHub Release non-draft/non-prerelease puntano a
+questa identità. L'artifact finale è distinto dall'RC:
+
+```text
+archive  2420ba89ada7b0b9cf3de8bd62d7f97dc32868aa342e44e5c3dacbaa94b3a6b6
+binary   0d5e068019e5187c517f9ff0bc7966b5f3123be933b6d858f2f2fa16978c36ed
+size     3791820 byte
+```
+
+Archive e checksum sono stati riscaricati dalla GitHub Release in una
+directory nuova. Entrambi coincidono byte per byte con gli asset locali; il
+checksum, l'estrazione, l'identità e il gate live sull'installazione pubblica
+sono PASS. Nessun rebuild o tuning è avvenuto dopo il tag.

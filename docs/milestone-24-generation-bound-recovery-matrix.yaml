@@ -77,3 +77,26 @@ qualification_results:
     material_falsehoods_in_pass: 0
     workspace_mutations: 0
     verdict: pass
+
+release_results:
+  release_commit: bd0e902c8d7ef01c01117537fceed76845a33732
+  tag: v0.3.1
+  tag_kind: annotated
+  release_url: https://github.com/Axtonno/maestro/releases/tag/v0.3.1
+  draft: false
+  prerelease: false
+  published_at: "2026-09-02T17:53:55Z"
+  archive:
+    name: maestro-v0.3.1-linux-amd64.tar.gz
+    size_bytes: 3791820
+    sha256: 2420ba89ada7b0b9cf3de8bd62d7f97dc32868aa342e44e5c3dacbaa94b3a6b6
+    reproducible_builds: 2
+    public_download_byte_identical: true
+  binary:
+    sha256: 0d5e068019e5187c517f9ff0bc7966b5f3123be933b6d858f2f2fa16978c36ed
+    version: v0.3.1
+    status: release
+    commit: bd0e902c8d7ef01c01117537fceed76845a33732
+    dirty: false
+  public_install_gate: pass
+  verdict: v0.3.1_released_and_verified

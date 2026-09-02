@@ -1259,7 +1259,7 @@ finale, tag o GitHub Release viene prodotto. Report in
 
 # Milestone 24 — v0.3.1 Generation Bound Recovery
 
-Stato: Release qualificata; pubblicazione in corso
+Stato: Completata — `v0.3.1_released_and_verified`
 
 Obiettivo:
 
@@ -1274,7 +1274,10 @@ comportamento provider-default. Piano e matrice sono in
 La matrice candidate completa 5/5 con `stop`, qualità 4/5 e zero regressioni
 appaiate. Test, race e vet sono verdi su una materializzazione LF. Il vero RC
 dal commit `6b879d8` è byte-riproducibile e supera il gate live fuori checkout;
-la pubblicazione finale è quindi autorizzata.
+la pubblicazione finale è quindi autorizzata. L'artifact finale costruito dal
+commit `bd0e902` è stato pubblicato con tag annotato `v0.3.1`, riscaricato e
+verificato byte per byte. Il gate live sul download pubblico è PASS. Report in
+`reports/milestone-24-final.md`.
 
 ---
 
