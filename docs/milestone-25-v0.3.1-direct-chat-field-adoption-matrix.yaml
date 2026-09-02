@@ -1,5 +1,5 @@
 version: 1
-status: frozen_not_run
+status: completed
 frozen_at: "2026-09-02"
 
 scope:
@@ -111,5 +111,51 @@ stop_rules:
     - any_material_falsehood_in_accepted_result
   serial_num_predict_increase_forbidden: true
 
-results: null
-verdict: null
+results:
+  executed_at: "2026-09-02"
+  projects_executed: 2
+  core_and_optional_tasks: 11
+  paired_transport_tasks: 1
+  completed_tasks: 7
+  completion_rate: 0.6364
+  evaluable_tasks: 7
+  quality:
+    correct: 4
+    partial: 3
+    incorrect: 0
+    unevaluable: 4
+    correct_rate_evaluable: 0.5714
+  material_falsehoods_in_accepted_results: 0
+  unsupported_assumptions: 3
+  length_terminals: 0
+  perceived_utility_median: 3
+  latency:
+    p50_ms: 6970
+    p95_ms: 20260
+  heartbeat:
+    eligible_runs: 3
+    conforming_runs: 2
+    coverage: 0.6667
+  diagnostics:
+    passed: 3
+    required: 4
+    failed_case: M25-D3
+  workspace_mutations: 0
+  safety_incidents: 0
+  failures:
+    response_invalid: [M25-C4, M25-C5, M25-C7, M25-B3]
+  task_outcomes:
+    M25-C0: {terminal: completed, duration_ms: 6211, quality: correct, utility: 5}
+    M25-C1: {terminal: completed, duration_ms: 6171, quality: partial, utility: 3}
+    M25-C2: {terminal: completed, duration_ms: 6361, quality: correct, utility: 5}
+    M25-C3: {terminal: completed, duration_ms: 6970, quality: correct, utility: 5}
+    M25-C4: {terminal: response_invalid, duration_ms: 20260, quality: unevaluable, utility: 1}
+    M25-C5: {terminal: response_invalid, duration_ms: 11290, quality: unevaluable, utility: 1}
+    M25-C6: {terminal: completed, duration_ms: 1974, quality: partial, utility: 3}
+    M25-C7: {terminal: response_invalid, duration_ms: 15470, quality: unevaluable, utility: 1}
+    M25-S1: {terminal: completed, duration_ms: 15810, quality: paired_only, utility: 4}
+    M25-B1: {terminal: completed, duration_ms: 6098, quality: correct, utility: 5}
+    M25-B2: {terminal: completed, duration_ms: 9653, quality: partial, utility: 4}
+    M25-B3: {terminal: response_invalid, duration_ms: 11340, quality: unevaluable, utility: 1}
+
+verdict: field_adoption_negative

@@ -2,7 +2,7 @@
 
 Versione osservata: v0.3.1
 
-Stato: Aperta — protocollo congelato, run non avviate
+Stato: Completata — `field_adoption_negative`
 
 Data: 2026-09-02
 

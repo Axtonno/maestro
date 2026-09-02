@@ -6,6 +6,13 @@ deve essere dichiarato nelle note di release.
 
 ## [Unreleased]
 
+### Field observation
+
+- completata la Milestone 25 su due progetti Laravel reali con verdetto
+  `field_adoption_negative`: 7/11 completamenti, quattro `response_invalid`,
+  zero terminali `length`, zero mutazioni e nessun incidente di sicurezza;
+- la decisione osservativa non modifica il support claim della release v0.3.1.
+
 ## [0.3.1] - 2026-09-02
 
 ### Added

@@ -1283,7 +1283,7 @@ verificato byte per byte. Il gate live sul download pubblico è PASS. Report in
 
 # Milestone 25 — v0.3.1 Direct Chat Field Adoption
 
-Stato: Aperta — protocollo congelato, run non avviate
+Stato: Completata — `field_adoption_negative`
 
 Obiettivo:
 
@@ -1299,6 +1299,11 @@ moderna è esplicitamente separata e richiederà GPU disabilitata e zero offload
 verificato. Piano e matrice sono in
 `milestone-25-v0.3.1-direct-chat-field-adoption-plan.md` e
 `milestone-25-v0.3.1-direct-chat-field-adoption-matrix.yaml`.
+
+La campagna su due progetti reali chiude con completion 7/11, correct 4/7
+delle valutabili, zero mutazioni e verdetto `field_adoption_negative`. Quattro
+task terminano `response_invalid`; report conclusivo in
+`reports/milestone-25-final.md`.
 
 ---
 
