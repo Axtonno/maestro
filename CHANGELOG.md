@@ -12,6 +12,10 @@ deve essere dichiarato nelle note di release.
   `field_adoption_negative`: 7/11 completamenti, quattro `response_invalid`,
   zero terminali `length`, zero mutazioni e nessun incidente di sicurezza;
 - la decisione osservativa non modifica il support claim della release v0.3.1.
+- aperta la Milestone 26 per attribuire `response_invalid`, rafforzare il
+  contratto epistemico e portare i task reali M25 nel gate pre-release; il
+  replay dei quattro payload originali è impossibile perché M25 non ne
+  conservava i body grezzi.
 
 ## [0.3.1] - 2026-09-02
 

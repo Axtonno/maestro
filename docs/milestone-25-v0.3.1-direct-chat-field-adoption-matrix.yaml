@@ -133,13 +133,14 @@ results:
     p50_ms: 6970
     p95_ms: 20260
   heartbeat:
-    eligible_runs: 3
+    eligible_runs: 2
     conforming_runs: 2
-    coverage: 0.6667
+    coverage: 1.0
   diagnostics:
-    passed: 3
+    passed: 4
     required: 4
-    failed_case: M25-D3
+    failed_case: null
+    correction: semantic_invalid_residency_uses_0s
   workspace_mutations: 0
   safety_incidents: 0
   failures:

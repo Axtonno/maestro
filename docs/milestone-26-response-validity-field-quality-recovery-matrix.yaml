@@ -1,0 +1,55 @@
+version: 1
+status: diagnostic_open
+opened_at: "2026-09-02"
+
+baseline:
+  release: v0.3.1
+  milestone_25_verdict: field_adoption_negative
+  response_invalid_cases: [M25-C4, M25-C5, M25-C7, M25-B3]
+  original_raw_payloads_available: false
+  offline_replay_of_originals_possible: false
+
+scope:
+  capability_expansion_allowed: false
+  prompt_change_before_cause_classification: false
+  new_model_allowed: false
+  cpu_qualification_allowed: false
+  multi_file_agent_or_mutation_allowed: false
+
+diagnostic_fields:
+  - http_status
+  - provider_terminal
+  - message_content_present
+  - message_thinking_present
+  - content_empty_or_whitespace
+  - raw_output_bytes
+  - done
+  - done_reason
+  - streaming_terminal
+  - validator_rule
+  - semantically_usable_payload
+
+phases:
+  - {id: M26-P1, name: evidence_inventory, status: completed}
+  - {id: M26-P2, name: offline_validator_fixture_replay, status: pending}
+  - {id: M26-P3, name: raw_capture_harness, status: pending}
+  - {id: M26-P4, name: frozen_input_diagnostic_runs, status: pending}
+  - {id: M26-P5, name: cause_classification, status: pending}
+  - {id: M26-P6, name: adapter_or_validator_recovery, status: pending}
+  - {id: M26-P7, name: stderr_and_heartbeat_contract, status: pending}
+  - {id: M26-P8, name: epistemic_contract_candidate, status: pending}
+  - {id: M26-P9, name: real_task_prerelease_matrix, status: pending}
+  - {id: M26-P10, name: field_adoption_repeat, status: pending}
+
+initial_findings:
+  raw_payload_gap: confirmed
+  response_invalid_layer: direct_chat_validator
+  thinking_dropped_by_normalization: true
+  thinking_as_observed_cause: unproven
+  heartbeat_streaming_bug: false
+  streaming_generation_duration_ms: 12927
+  residency_diagnostic_bug: false
+  semantic_invalid_residency_result: typed_field_redacted
+
+release_decision: null
+verdict: null

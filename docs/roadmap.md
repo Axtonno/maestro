@@ -1307,6 +1307,29 @@ task terminano `response_invalid`; report conclusivo in
 
 ---
 
+# Milestone 26 — Response Validity & Field Quality Recovery
+
+Stato: Aperta — diagnosi iniziale, nessun candidate
+
+Obiettivo:
+
+Spiegare i quattro `response_invalid` di M25 prima di cambiare prompt o
+profilo, introdurre una cattura privata dei payload per nuove run diagnostiche,
+rendere attribuibile ogni ramo del validator e progettare un contratto
+epistemico che separi fatti, inferenze e informazioni non determinabili.
+
+L'inventario iniziale dimostra che i body originali M25 non sono stati
+conservati e non possono essere riprodotti offline. Dimostra inoltre che
+l'heartbeat streaming era corretto sulla finestra di generation e che la
+diagnostica residency semanticamente invalida è già tipizzata. Piano e matrice
+sono in `milestone-26-response-validity-field-quality-recovery-plan.md` e
+`milestone-26-response-validity-field-quality-recovery-matrix.yaml`.
+
+Restano fuori scope CPU, altri modelli, multi-file, agent e Controlled
+Mutation. Nessuna release precede una nuova matrice sui task reali M25.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

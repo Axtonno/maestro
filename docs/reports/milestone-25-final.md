@@ -42,8 +42,8 @@ configurazioni private differivano dal profilo distribuito soltanto per
 | utilità mediana | 3/5 | almeno 4/5 |
 | latenza p50 | 6,97 s | massimo 30 s |
 | latenza p95 | 20,26 s | massimo 90 s |
-| heartbeat eleggibili conformi | 2/3 (66,67%) | 100% |
-| diagnostica | 3/4 | 4/4 |
+| heartbeat eleggibili conformi | 2/2 (100%) | 100% |
+| diagnostica | 4/4 | 4/4 |
 | mutazioni workspace | 0 | 0 |
 
 La replica `M25-S1`, esclusa dal denominatore qualitativo, è semanticamente
@@ -62,15 +62,19 @@ I sette completamenti terminano tutti `stop`, con `truncated=false`.
 
 ## Diagnostica e heartbeat
 
-Il profilo valido supera 5 controlli su 5. Versione schema ignota e
-`num_predict` invalido falliscono chiusi con categoria e campo redatti. La
-residency invalida fallisce chiusa, ma espone soltanto `yaml_invalid` senza un
-campo utile: `M25-D3` è quindi FAIL.
+Il profilo valido supera 5 controlli su 5. Versione schema ignota,
+`num_predict` invalido e residency semanticamente invalida (`0s`) falliscono
+chiusi con categoria e campo redatti. Una prima preparazione del caso residency
+con il valore non decodificabile `never` aveva misurato correttamente
+`yaml_invalid`, ma non il caso semantico richiesto; l'evidenza correttiva non
+esegue alcuna generazione.
 
-Le run end-to-end di almeno 15 secondi sono tre. Due emettono almeno un
-heartbeat; la replica streaming supera i 15 secondi end-to-end senza emetterlo.
-Le quattro terminazioni `response_invalid` aggiungono inoltre una riga di
-errore allo stderr oltre alla forma heartbeat consentita.
+Il ticker parte dopo il preflight, immediatamente prima della chiamata di
+generazione. Le due generazioni che raggiungono 15 secondi emettono almeno un
+heartbeat. La replica streaming dura 15,81 secondi end-to-end, ma soltanto
+12,927 secondi nella finestra di generazione: l'assenza di heartbeat è corretta.
+Le quattro terminazioni `response_invalid` aggiungono una riga di errore allo
+stderr oltre alla forma heartbeat consentita.
 
 ## Sicurezza e immutabilità
 
@@ -89,10 +93,7 @@ M24 e non qualifica hardware CPU.
 Backlog separato:
 
 - diagnosticare le quattro risposte Ollama rifiutate come `response_invalid`;
-- rendere il failure di residency diagnostica tipizzato con il campo utile;
 - chiarire la politica stderr per gli errori terminali;
-- verificare heartbeat sul trasporto streaming quando la durata end-to-end
-  supera la soglia;
 - migliorare il vincolo epistemico su errori, mapping ORM e route model binding.
 
 Manifest, prompt, oracoli e risposte complete restano nell'evidenza privata
