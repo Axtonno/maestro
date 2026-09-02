@@ -1,0 +1,12 @@
+[
+  {"id":"valid","model":"chat-model","role":"assistant","content":"usable answer","finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"accepted"},
+  {"id":"role","model":"chat-model","role":"user","content":"usable answer","finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"tool_call","model":"chat-model","role":"assistant","content":"usable answer","tool_call":true,"finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"finish_reason","model":"chat-model","role":"assistant","content":"partial","finish_reason":"length","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"empty_content","model":"chat-model","role":"assistant","content":"","finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"whitespace_content","model":"chat-model","role":"assistant","content":" \n\t","finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"nul_content","model":"chat-model","role":"assistant","content":"answer\u0000tail","finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"model_mismatch","model":"other-model","role":"assistant","content":"usable answer","finish_reason":"stop","input_tokens":1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"negative_input_usage","model":"chat-model","role":"assistant","content":"usable answer","finish_reason":"stop","input_tokens":-1,"output_tokens":1,"expected":"response_invalid"},
+  {"id":"negative_output_usage","model":"chat-model","role":"assistant","content":"usable answer","finish_reason":"stop","input_tokens":1,"output_tokens":-1,"expected":"response_invalid"}
+]

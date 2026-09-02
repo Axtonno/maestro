@@ -31,8 +31,8 @@ diagnostic_fields:
 
 phases:
   - {id: M26-P1, name: evidence_inventory, status: completed}
-  - {id: M26-P2, name: offline_validator_fixture_replay, status: pending}
-  - {id: M26-P3, name: raw_capture_harness, status: pending}
+  - {id: M26-P2, name: offline_validator_fixture_replay, status: completed}
+  - {id: M26-P3, name: raw_capture_harness, status: completed}
   - {id: M26-P4, name: frozen_input_diagnostic_runs, status: pending}
   - {id: M26-P5, name: cause_classification, status: pending}
   - {id: M26-P6, name: adapter_or_validator_recovery, status: pending}
@@ -50,6 +50,36 @@ initial_findings:
   streaming_generation_duration_ms: 12927
   residency_diagnostic_bug: false
   semantic_invalid_residency_result: typed_field_redacted
+
+offline_fixture_replay:
+  provider_calls: 0
+  new_generations: 0
+  fixtures: 12
+  accepted_controls: 1
+  rejected_validator_branches: 11
+  coverage:
+    - assistant_role
+    - no_tool_calls
+    - stop_finish_reason
+    - nonempty_content
+    - nonwhitespace_content
+    - valid_utf8
+    - no_nul
+    - observed_model_matches
+    - nonnegative_input_usage
+    - nonnegative_output_usage
+    - nonnegative_duration
+
+raw_capture_harness:
+  location: private_outside_repository
+  sha256: 6493cfdf58857ddc158e6c55acae82068e229951446af2cb84e31daa9cfce38c
+  request_or_response_logged: false
+  output_directory_mode: "0700"
+  output_file_mode: "0600"
+  refuses_git_worktree_output: true
+  overwrite_allowed: false
+  captures: [http_status, raw_headers, raw_body, body_bytes, body_sha256, curl_exit, timestamps]
+  live_calls_executed: 0
 
 release_decision: null
 verdict: null
