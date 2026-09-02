@@ -1281,6 +1281,27 @@ verificato byte per byte. Il gate live sul download pubblico è PASS. Report in
 
 ---
 
+# Milestone 25 — v0.3.1 Direct Chat Field Adoption
+
+Stato: Aperta — protocollo congelato, run non avviate
+
+Obiettivo:
+
+Osservare l'utilità quotidiana dell'esatto asset pubblico v0.3.1 sul reference
+hardware, usando uno o due progetti Laravel reali e soltanto Direct Chat
+single-file read-only. La matrice misura completion, qualità, falsità
+materiali, terminali `length`, latenza, utilità percepita, diagnostica,
+heartbeat e immutabilità senza tuning o nuove funzionalità.
+
+Progetti, path, prompt, risposte e contenuti restano in evidenze locali
+private; il repository riceve soltanto risultati redatti. La qualifica CPU
+moderna è esplicitamente separata e richiederà GPU disabilitata e zero offload
+verificato. Piano e matrice sono in
+`milestone-25-v0.3.1-direct-chat-field-adoption-plan.md` e
+`milestone-25-v0.3.1-direct-chat-field-adoption-matrix.yaml`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

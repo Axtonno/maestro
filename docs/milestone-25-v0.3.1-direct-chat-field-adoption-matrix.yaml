@@ -1,0 +1,115 @@
+version: 1
+status: frozen_not_run
+frozen_at: "2026-09-02"
+
+scope:
+  release: v0.3.1
+  mode: direct_chat_single_file_read_only
+  minimum_projects: 1
+  maximum_projects: 2
+  tuning_allowed: false
+  feature_changes_allowed: false
+
+public_asset:
+  release_url: https://github.com/Axtonno/maestro/releases/tag/v0.3.1
+  commit: bd0e902c8d7ef01c01117537fceed76845a33732
+  archive: maestro-v0.3.1-linux-amd64.tar.gz
+  archive_sha256: 2420ba89ada7b0b9cf3de8bd62d7f97dc32868aa342e44e5c3dacbaa94b3a6b6
+  binary_sha256: 0d5e068019e5187c517f9ff0bc7966b5f3123be933b6d858f2f2fa16978c36ed
+  download_required: true
+  local_build_forbidden: true
+
+environment:
+  os: Ubuntu 24.04 under WSL2
+  architecture: amd64
+  hardware: NVIDIA GeForce RTX 5070
+  provider: ollama
+  provider_version: 0.33.1
+  endpoint: http://127.0.0.1:11434
+  model: qwen3.5:9b
+  model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  num_ctx: 4096
+  thinking: "false"
+  temperature: 0
+  num_predict: 1024
+  residency: 5m
+
+privacy:
+  project_aliases: [project-a, project-b]
+  private_manifest_outside_repository: true
+  raw_evidence_mode: "0600"
+  committed_project_paths: false
+  committed_prompts_or_responses: false
+  forbidden_files: [.env, secrets, credentials, customer_data, vendor, storage, generated]
+
+configuration_delta:
+  allowed_fields: [workspace.root]
+  all_other_public_profile_values_frozen: true
+
+tasks:
+  core:
+    - {id: M25-C0, category: insufficient_context_no_file, complexity: none, transport: complete}
+    - {id: M25-C1, category: explain_service_or_controller, complexity: simple, transport: complete}
+    - {id: M25-C2, category: validation_analysis, complexity: simple_or_articulated, transport: complete}
+    - {id: M25-C3, category: visible_effects, complexity: articulated, transport: complete}
+    - {id: M25-C4, category: facts_vs_refactoring, complexity: articulated, transport: complete}
+    - {id: M25-C5, category: test_suggestions, complexity: simple_or_articulated, transport: complete}
+    - {id: M25-C6, category: insufficient_evidence_single_file, complexity: simple, transport: complete}
+    - {id: M25-C7, category: explain_complex_file, complexity: articulated, transport: complete}
+  paired_transport:
+    - {id: M25-S1, mirrors: M25-C1, transport: stream, counted_in_quality_denominator: false}
+  optional_project_b:
+    - {id: M25-B1, category: explain_service_or_controller, complexity: simple, transport: complete}
+    - {id: M25-B2, category: validation_analysis, complexity: simple_or_articulated, transport: complete}
+    - {id: M25-B3, category: explain_complex_file, complexity: articulated, transport: complete}
+
+diagnostic_cases:
+  - {id: M25-D0, case: valid_project_profile, expected: doctor_5_of_5}
+  - {id: M25-D1, case: unknown_schema_version, expected: typed_redacted_failure}
+  - {id: M25-D2, case: invalid_num_predict, expected: typed_redacted_failure}
+  - {id: M25-D3, case: invalid_residency, expected: typed_redacted_failure}
+
+per_run_fields:
+  - exit_code
+  - terminal
+  - reason_code
+  - input_tokens
+  - output_tokens
+  - duration_ms
+  - transport
+  - file_size_bytes
+  - complexity
+  - heartbeat_expected
+  - heartbeat_observed
+  - quality
+  - material_falsehoods
+  - unsupported_assumptions
+  - perceived_utility_1_to_5
+  - workspace_digest_before
+  - workspace_digest_after
+
+positive_thresholds:
+  completion_rate_minimum: 0.85
+  correct_rate_evaluable_minimum: 0.80
+  material_falsehoods_in_accepted_maximum: 0
+  length_terminals_maximum: 0
+  perceived_utility_median_minimum: 4
+  latency_p50_ms_maximum: 30000
+  latency_p95_ms_maximum: 90000
+  heartbeat_coverage_eligible_minimum: 1.0
+  diagnostic_cases_pass_required: 4
+  workspace_mutations_maximum: 0
+
+stop_rules:
+  immediate:
+    - public_asset_identity_mismatch
+    - workspace_mutation
+    - sensitive_data_leak
+    - authority_boundary_violation
+  blocks_positive_verdict:
+    - any_length_terminal
+    - any_material_falsehood_in_accepted_result
+  serial_num_predict_increase_forbidden: true
+
+results: null
+verdict: null
