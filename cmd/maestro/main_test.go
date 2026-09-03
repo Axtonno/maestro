@@ -656,6 +656,58 @@ func TestChatCommandRendersBoundedRedactedHeartbeatAndStopsIt(t *testing.T) {
 	}
 }
 
+func TestChatCommandDoesNotStartHeartbeatDuringPreflight(t *testing.T) {
+	configPath, _ := newCLIChatOnlyConfig(t, false)
+	provider := &cliProvider{id: "ollama", inspectErr: errors.New("preflight failed")}
+	dependencies := cliTestDependencies(provider)
+	dependencies.chatHeartbeat = time.Millisecond
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "QUESTION-SENTINEL"},
+		strings.NewReader(""), &stdout, &stderr, dependencies,
+	)
+	if code != 4 || stdout.Len() != 0 || stderr.String() != "chat failed: provider_unavailable\n" {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestChatCommandFailureStopsHeartbeatBeforeSingleTerminal(t *testing.T) {
+	configPath, _ := newCLIChatOnlyConfig(t, false)
+	provider := &cliProvider{id: "ollama", completeDelay: 10 * time.Millisecond, completeErr: errors.New("generation failed")}
+	dependencies := cliTestDependencies(provider)
+	dependencies.chatHeartbeat = time.Millisecond
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"chat", "--config", configPath, "QUESTION-SENTINEL"},
+		strings.NewReader(""), &stdout, &stderr, dependencies,
+	)
+	lines := strings.Split(strings.TrimSpace(stderr.String()), "\n")
+	if code != 4 || stdout.Len() != 0 || len(lines) < 2 || lines[len(lines)-1] != "chat failed: provider_unavailable" {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	terminals := 0
+	for index, line := range lines {
+		if strings.HasPrefix(line, "chat failed:") {
+			terminals++
+			if index != len(lines)-1 {
+				t.Fatalf("terminal is not last: %q", stderr.String())
+			}
+		} else if !strings.HasPrefix(line, "progress\tstate=generating elapsed_ms=") {
+			t.Fatalf("unexpected stderr line %q", line)
+		}
+	}
+	if terminals != 1 {
+		t.Fatalf("terminal count=%d stderr=%q", terminals, stderr.String())
+	}
+	stopped := stderr.String()
+	time.Sleep(5 * time.Millisecond)
+	if stderr.String() != stopped {
+		t.Fatalf("heartbeat continued after failure: before=%q after=%q", stopped, stderr.String())
+	}
+}
+
 func TestChatCommandFailureDoesNotLeakInputsOrPartialResponse(t *testing.T) {
 	configPath, root := newCLIInteractionConfig(t, true)
 	provider := &cliProvider{id: "ollama", stream: &cliStream{results: []cliStreamResult{
@@ -904,6 +956,8 @@ type cliProvider struct {
 	streamRequests []pkgProvider.CompletionRequest
 	inspectCalls   int
 	completeDelay  time.Duration
+	inspectErr     error
+	completeErr    error
 }
 
 func (provider *cliProvider) Stream(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.Stream, error) {
@@ -917,6 +971,9 @@ func (provider *cliProvider) Complete(_ context.Context, request pkgProvider.Com
 	provider.requests = append(provider.requests, request)
 	if provider.completeDelay > 0 {
 		time.Sleep(provider.completeDelay)
+	}
+	if provider.completeErr != nil {
+		return pkgProvider.CompletionResponse{}, provider.completeErr
 	}
 	if len(provider.responses) == 0 {
 		return pkgProvider.CompletionResponse{}, fmt.Errorf("fixture provider failure")
@@ -936,6 +993,9 @@ func (provider *cliProvider) Models(context.Context) ([]pkgProvider.Model, error
 
 func (provider *cliProvider) InspectCapabilities(_ context.Context, request pkgProvider.CapabilityRequest) (pkgProvider.CapabilityReport, error) {
 	provider.inspectCalls++
+	if provider.inspectErr != nil {
+		return pkgProvider.CapabilityReport{}, provider.inspectErr
+	}
 	descriptors := make([]pkgProvider.CapabilityDescriptor, 0, len(pkgProvider.KnownCapabilities()))
 	for _, capability := range pkgProvider.KnownCapabilities() {
 		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{Capability: capability, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable})

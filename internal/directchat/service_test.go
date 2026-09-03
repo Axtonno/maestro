@@ -107,6 +107,32 @@ func TestDirectChatWithoutFileDoesNotDiscoverContext(t *testing.T) {
 	}
 }
 
+func TestDirectChatUsesCompactEpistemicResponseContract(t *testing.T) {
+	provider := validProvider()
+	service := buildService(t, directConfig(t.TempDir()), provider)
+	if _, err := service.Execute(t.Context(), Request{Question: "Explain the project"}); err != nil {
+		t.Fatal(err)
+	}
+	provider.mu.Lock()
+	text := messagesText(provider.requests[0].Messages)
+	provider.mu.Unlock()
+
+	headings := []string{"Observed facts", "Possible inferences", "Information not determinable"}
+	position := -1
+	for _, heading := range headings {
+		next := strings.Index(text, heading)
+		if next <= position {
+			t.Fatalf("missing or unordered epistemic heading %q", heading)
+		}
+		position = next
+	}
+	for _, required := range []string{"at most 450 words", "Proposal:", "otherwise write exactly \"None\"", "Do not infer runtime behavior", "visible branch conditions", "local helper bodies", "Never fill gaps"} {
+		if !strings.Contains(text, required) {
+			t.Fatalf("missing response rule %q", required)
+		}
+	}
+}
+
 func TestDirectChatUsesMessageBoundaryForUntrustedFile(t *testing.T) {
 	root := t.TempDir()
 	logical := `quote"name.php`

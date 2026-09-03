@@ -1309,7 +1309,7 @@ task terminano `response_invalid`; report conclusivo in
 
 # Milestone 26 — Response Validity & Field Quality Recovery
 
-Stato: Aperta — diagnosi iniziale, nessun candidate
+Stato: Completata — `field_quality_recovered`, candidate v0.4.0 validato
 
 Obiettivo:
 
@@ -1327,6 +1327,21 @@ sono in `milestone-26-response-validity-field-quality-recovery-plan.md` e
 
 Restano fuori scope CPU, altri modelli, multi-file, agent e Controlled
 Mutation. Nessuna release precede una nuova matrice sui task reali M25.
+
+La diagnosi raw attribuisce tutti e quattro i nuovi capture al limite generativo
+congelato (`done_reason=length`, 1024/1024 token), senza difetti dimostrati di
+adapter, validator o provider. Il validator resta fail-closed e `num_predict`
+resta 1024. Il contratto epistemico v0.4.0 impone risposte entro 450 parole e
+separa `Observed facts`, `Possible inferences` e
+`Information not determinable`; stderr e heartbeat sono coperti anche nei
+confini temporali di preflight e terminale.
+
+I candidate rc.1–rc.3 sono respinti dai gate di completion o qualità. rc.4
+supera sia la matrice pre-release sia la singola ripetizione Field Adoption:
+11/11 completion, 10 correct, 1 partial, zero `response_invalid`, zero
+terminali `length`, zero falsità materiali e mediana utilità 5/5. La milestone
+è chiusa senza pubblicare o taggare v0.4.0; dettaglio in
+`reports/milestone-26-final.md`.
 
 ---
 

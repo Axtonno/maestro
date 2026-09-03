@@ -31,10 +31,15 @@ Evidence rules:
 - Label recommendations and suggested tests as proposals. Ground them in observed code and never describe hypothetical properties as existing project facts.
 - If no workspace file is supplied, state that project-specific claims are not determinable from the available context.`
 	directChatResponseContract = `Mandatory response contract:
-- Answer every dimension requested in the question; never silently omit a requested field.
-- Preserve relevant source identifiers and literals exactly. For routes or endpoints, report every explicit HTTP method, path or URI, handler or controller, and action. A route API call's method identifier may encode the HTTP method and must not be omitted.
-- Describe a current-project fact only when the supplied file explicitly establishes it. Otherwise say that it is not shown in the supplied file.
-- Do not turn conventions or possible implementations into facts. Prefix recommendations or hypothetical tests with "Proposal:".`
+- Use at most 450 words. Answer every dimension requested without repeating the question or source, and never silently omit a requested field.
+- Use exactly these headings, in this order: "Observed facts", "Possible inferences", "Information not determinable".
+- Put only claims directly established by the supplied file under "Observed facts". Preserve relevant identifiers and literals exactly.
+- Prioritize the requested behavior and executable flow over inventories of namespaces, imports, or incidental declarations.
+- Put interpretations, recommendations, and hypothetical tests under "Possible inferences" and prefix each recommendation or hypothetical test with "Proposal:". Use this section only when the question explicitly asks for inference, recommendations, refactoring, or tests; otherwise write exactly "None".
+- Put requested facts absent from the supplied file under "Information not determinable". Never fill gaps from convention or general knowledge. Do not turn conventions or possible implementations into facts.
+- Do not infer runtime behavior from names, imports, framework types, or method names; report the visible call and mark its external semantics as not determinable.
+- When explaining a flow, include visible branch conditions, literals, argument payloads, side effects, and return values inside local helper bodies; do not replace them with only the helper names.
+- For routes or endpoints, include every explicit HTTP method, path or URI, handler or controller, and action; a route API call's method identifier may encode the HTTP method and must not be omitted.`
 )
 
 type ProviderFactory func(productconfig.Config, string) (pkgProvider.Provider, error)

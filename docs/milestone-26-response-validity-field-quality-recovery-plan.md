@@ -2,9 +2,11 @@
 
 Versione di partenza: v0.3.1
 
-Stato: Aperta — diagnosi iniziale, nessun candidate
+Stato: Completata — `field_quality_recovered`, candidate v0.4.0 validato
 
 Data: 2026-09-02
+
+Chiusura: 2026-09-03
 
 Prerequisito: M25 chiusa con `field_adoption_negative`.
 

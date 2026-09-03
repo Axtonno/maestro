@@ -1,6 +1,7 @@
 version: 1
-status: diagnostic_open
+status: completed
 opened_at: "2026-09-02"
+closed_at: "2026-09-03"
 
 baseline:
   release: v0.3.1
@@ -33,13 +34,13 @@ phases:
   - {id: M26-P1, name: evidence_inventory, status: completed}
   - {id: M26-P2, name: offline_validator_fixture_replay, status: completed}
   - {id: M26-P3, name: raw_capture_harness, status: completed}
-  - {id: M26-P4, name: frozen_input_diagnostic_runs, status: pending}
-  - {id: M26-P5, name: cause_classification, status: pending}
-  - {id: M26-P6, name: adapter_or_validator_recovery, status: pending}
-  - {id: M26-P7, name: stderr_and_heartbeat_contract, status: pending}
-  - {id: M26-P8, name: epistemic_contract_candidate, status: pending}
-  - {id: M26-P9, name: real_task_prerelease_matrix, status: pending}
-  - {id: M26-P10, name: field_adoption_repeat, status: pending}
+  - {id: M26-P4, name: frozen_input_diagnostic_runs, status: completed}
+  - {id: M26-P5, name: cause_classification, status: completed}
+  - {id: M26-P6, name: adapter_or_validator_recovery, status: completed_no_change_required}
+  - {id: M26-P7, name: stderr_and_heartbeat_contract, status: completed}
+  - {id: M26-P8, name: epistemic_contract_candidate, status: completed}
+  - {id: M26-P9, name: real_task_prerelease_matrix, status: completed}
+  - {id: M26-P10, name: field_adoption_repeat, status: completed}
 
 initial_findings:
   raw_payload_gap: confirmed
@@ -79,7 +80,96 @@ raw_capture_harness:
   refuses_git_worktree_output: true
   overwrite_allowed: false
   captures: [http_status, raw_headers, raw_body, body_bytes, body_sha256, curl_exit, timestamps]
-  live_calls_executed: 0
+  live_calls_executed: 4
 
-release_decision: null
-verdict: null
+diagnostic_run:
+  executed_at: "2026-09-02"
+  identity:
+    provider: ollama
+    provider_version: 0.33.1
+    model: "qwen3.5:9b"
+    model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+    num_ctx: 4096
+    thinking: "false"
+    temperature: 0
+    num_predict: 1024
+    residency: 5m
+  description: new_diagnostic_generation_not_m25_replay
+  runs_per_input: 1
+  capture_location: private_outside_repository
+  results:
+    M25-C4: {http_status: 200, raw_output_bytes: 4856, raw_sha256: e82252a0d31181a6e0382f4f2a6d343d8240fd865eac3621d0f00935401125c1, model_match: true, role: assistant, content_present: true, content_chars: 4474, content_whitespace: false, thinking_present: false, tool_calls: 0, done: true, done_reason: length, streaming_terminal: false, input_tokens: 2673, output_tokens: 1024, validator_rule: finish_reason_not_stop, semantically_usable_payload: false}
+    M25-C5: {http_status: 200, raw_output_bytes: 4722, raw_sha256: fdcbce1c030f887db43847c8f4cd27dbf6eded121894da97447ceebf8a01e451, model_match: true, role: assistant, content_present: true, content_chars: 4323, content_whitespace: false, thinking_present: false, tool_calls: 0, done: true, done_reason: length, streaming_terminal: false, input_tokens: 792, output_tokens: 1024, validator_rule: finish_reason_not_stop, semantically_usable_payload: false}
+    M25-C7: {http_status: 200, raw_output_bytes: 4092, raw_sha256: b6d5baff4f84a90abd32d243861cd71a6c88e45e4b748ae22059eb2584b47ef0, model_match: true, role: assistant, content_present: true, content_chars: 3627, content_whitespace: false, thinking_present: false, tool_calls: 0, done: true, done_reason: length, streaming_terminal: false, input_tokens: 2681, output_tokens: 1024, validator_rule: finish_reason_not_stop, semantically_usable_payload: false}
+    M25-B3: {http_status: 200, raw_output_bytes: 4086, raw_sha256: 6b57080666340d5c9be23bd0e5fe868d8ffb8e30a331ffe167b139250c3d45a5, model_match: true, role: assistant, content_present: true, content_chars: 3672, content_whitespace: false, thinking_present: false, tool_calls: 0, done: true, done_reason: length, streaming_terminal: false, input_tokens: 1670, output_tokens: 1024, validator_rule: finish_reason_not_stop, semantically_usable_payload: false}
+
+cause_classification:
+  uniform_cause: provider_generation_reached_frozen_output_limit
+  public_reason_compatibility: response_invalid
+  software_validator_defect_demonstrated: false
+  adapter_normalization_defect_demonstrated: false
+  thinking_only_payload_observed: false
+  provider_contract_defect_demonstrated: false
+  correctly_nonpublishable: true
+  diagnosis: model_profile_limit
+
+stderr_and_heartbeat_contract:
+  generation_window_only: true
+  preflight_heartbeat: false
+  terminal_lines: 1
+  terminal_after_heartbeat_stop: true
+  payload_redacted: true
+  temporal_tests: pass
+
+epistemic_candidate:
+  release_line: v0.4.0
+  selected_candidate: v0.4.0-rc.4
+  prompt_changed: true
+  num_predict_changed: false
+  validator_changed: false
+  adapter_changed: false
+  sections: [Observed facts, Possible inferences, Information not determinable]
+  editorial_word_limit: 450
+  capability_expansion: false
+  rejected_candidates:
+    - {candidate: v0.4.0-rc.1, completion: 8, total: 11, response_invalid: 3, reason: completion_gate_failed}
+    - {candidate: v0.4.0-rc.2, completion: 11, total: 11, response_invalid: 0, reason: epistemic_quality_gate_failed}
+    - {candidate: v0.4.0-rc.3, completion: 11, total: 11, response_invalid: 0, reason: epistemic_quality_gate_failed}
+
+prerelease_matrix:
+  candidate: v0.4.0-rc.4
+  runs_per_task: 1
+  tasks: 11
+  completion: 11
+  correct: 10
+  partial: 1
+  incorrect: 0
+  response_invalid: 0
+  length_terminals: 0
+  material_falsehoods: 0
+  median_utility: 5
+  workspace_mutations: 0
+  output_tokens: {minimum: 220, maximum: 590}
+  verdict: pass
+
+field_adoption_repeat:
+  candidate: v0.4.0-rc.4
+  runs_per_task: 1
+  tasks: 11
+  completion: 11
+  correct: 10
+  partial: 1
+  incorrect: 0
+  response_invalid: 0
+  length_terminals: 0
+  material_falsehoods: 0
+  median_utility: 5
+  workspace_mutations: 0
+  output_tokens: {minimum: 220, maximum: 796}
+  verdict: pass
+
+release_decision:
+  version: v0.4.0
+  rationale: prompt_contract_changed_without_capability_expansion
+  publication_performed: false
+verdict: field_quality_recovered
