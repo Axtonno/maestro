@@ -26,25 +26,25 @@ candidate_identity:
   residency: 5m
 
 phases:
-  - {id: M27-P1, name: global_test_resolution, status: pending}
-  - {id: M27-P2, name: full_static_and_race_gate, status: pending}
-  - {id: M27-P3, name: v2_v3_compatibility, status: pending}
-  - {id: M27-P4, name: independent_single_file_holdout, status: pending}
+  - {id: M27-P1, name: global_test_resolution, status: complete}
+  - {id: M27-P2, name: full_static_and_race_gate, status: complete}
+  - {id: M27-P3, name: v2_v3_compatibility, status: complete}
+  - {id: M27-P4, name: independent_single_file_holdout, status: complete}
   - {id: M27-P5, name: reproducible_packaging, status: pending}
   - {id: M27-P6, name: clean_installation, status: pending}
   - {id: M27-P7, name: archive_live_gate, status: pending}
   - {id: M27-P8, name: publication_and_redownload_verification, status: pending}
 
 global_gate:
-  full_suite: pending
-  race_detector: pending
-  vet: pending
-  diff_check: pending
-  v2_compatibility: pending
-  v3_compatibility: pending
+  full_suite: pass
+  race_detector: pass
+  vet: pass
+  diff_check: pass
+  v2_compatibility: pass
+  v3_compatibility: pass
 
 holdout:
-  frozen: false
+  frozen: true
   used_for_candidate_selection: false
   runs_per_task: 1
   completion_minimum: 0.85
@@ -53,7 +53,15 @@ holdout:
   material_falsehoods_maximum: 0
   workspace_mutations_maximum: 0
   tool_calls_maximum: 0
-  result: null
+  task_manifest_sha256: e01bd46a0e2c885f158e3168c2ae7e39ebb5a3f91c40a9792bab720f26e09cd3
+  oracle_sha256: 96941f4fabf7662f2edafefe8bd9f40675b3d419d6e479d0fb6a4a12a9b3be14
+  completion: 1.00
+  correct: 0.80
+  response_invalid: 0
+  material_falsehoods: 0
+  workspace_mutations: 0
+  tool_calls: 0
+  result: pass
 
 packaging:
   source_commit: null
