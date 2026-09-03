@@ -16,16 +16,18 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	mutation "github.com/antonio-cafeo/maestro/internal/mutation"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
 
 const (
-	WorkspaceListID   pkgTool.ID = "workspace.list"
-	WorkspaceReadID   pkgTool.ID = "workspace.read"
-	WorkspaceSearchID pkgTool.ID = "workspace.search"
-	WorkspaceWriteID  pkgTool.ID = "workspace.write"
-	WorkspacePatchID  pkgTool.ID = "workspace.patch"
+	WorkspaceListID    pkgTool.ID = "workspace.list"
+	WorkspaceReadID    pkgTool.ID = "workspace.read"
+	WorkspaceSearchID  pkgTool.ID = "workspace.search"
+	WorkspaceWriteID   pkgTool.ID = "workspace.write"
+	WorkspacePatchID   pkgTool.ID = "workspace.patch"
+	WorkspaceReplaceID pkgTool.ID = "workspace.replace"
 
 	maxPatchPreviewBytes  = 256 << 10
 	patchDiffContextLines = 3
@@ -34,11 +36,12 @@ const (
 type workspaceOperation string
 
 const (
-	workspaceList   workspaceOperation = "list"
-	workspaceRead   workspaceOperation = "read"
-	workspaceSearch workspaceOperation = "search"
-	workspaceWrite  workspaceOperation = "write"
-	workspacePatch  workspaceOperation = "patch"
+	workspaceList    workspaceOperation = "list"
+	workspaceRead    workspaceOperation = "read"
+	workspaceSearch  workspaceOperation = "search"
+	workspaceWrite   workspaceOperation = "write"
+	workspacePatch   workspaceOperation = "patch"
+	workspaceReplace workspaceOperation = "replace"
 )
 
 type workspaceTool struct {
@@ -85,6 +88,25 @@ func NewWorkspaceTools(registry *WorkspaceRegistry) ([]pkgTool.Tool, error) {
 	return tools, nil
 }
 
+// NewControlledMutationTool constructs the opt-in M28 candidate. Keeping it
+// outside NewWorkspaceTools preserves the supported v0.4.0 read-only graph and
+// the historical experimental catalog until qualification is complete.
+func NewControlledMutationTool(registry *WorkspaceRegistry) (pkgTool.Tool, error) {
+	if registry == nil {
+		return nil, fmt.Errorf("workspace registry is nil: %w", pkgTool.ErrInvalidTool)
+	}
+	descriptor, err := pkgTool.NewDescriptor(
+		WorkspaceReplaceID, "workspace_replace", "1.0.0",
+		"Compile and replace one exact occurrence from a strict versioned proposal.",
+		json.RawMessage(`{"type":"object","additionalProperties":false,"required":["version","path","operation","old_text","new_text"],"properties":{"version":{"const":1},"path":{"type":"string"},"operation":{"const":"replace"},"old_text":{"type":"string","minLength":1},"new_text":{"type":"string"}}}`),
+		[]pkgTool.Effect{pkgTool.EffectWorkspaceMutate},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &workspaceTool{registry: registry, operation: workspaceReplace, descriptor: descriptor, atomicOps: defaultAtomicFileOps()}, nil
+}
+
 func (tool *workspaceTool) Descriptor() pkgTool.Descriptor { return tool.descriptor }
 
 func (tool *workspaceTool) Prepare(ctx context.Context, invocation pkgTool.Invocation) (pkgTool.PreparedInvocation, error) {
@@ -97,7 +119,7 @@ func (tool *workspaceTool) Prepare(ctx context.Context, invocation pkgTool.Invoc
 		return pkgTool.PreparedInvocation{}, err
 	}
 	effect := pkgTool.EffectWorkspaceInspect
-	if tool.operation == workspaceWrite || tool.operation == workspacePatch {
+	if tool.operation == workspaceWrite || tool.operation == workspacePatch || tool.operation == workspaceReplace {
 		effect = pkgTool.EffectWorkspaceMutate
 	}
 	action, err := pkgTool.NewAction(effect, logical, workspace.ID())
@@ -106,6 +128,9 @@ func (tool *workspaceTool) Prepare(ctx context.Context, invocation pkgTool.Invoc
 	}
 	if tool.operation == workspacePatch {
 		return tool.preparePatch(ctx, invocation, workspace, normalized, action)
+	}
+	if tool.operation == workspaceReplace {
+		return tool.prepareReplace(ctx, invocation, workspace, normalized, action)
 	}
 	return pkgTool.NewPreparedInvocation(invocation, tool.descriptor.Version(), normalized, []pkgTool.Action{action})
 }
@@ -134,6 +159,8 @@ func (tool *workspaceTool) Execute(ctx context.Context, prepared pkgTool.Prepare
 		return executeWrite(ctx, root, workspace, prepared.Arguments())
 	case workspacePatch:
 		return executePatch(ctx, root, workspace, prepared.Arguments(), tool.atomicOps)
+	case workspaceReplace:
+		return executeReplace(ctx, root, workspace, prepared.Arguments(), tool.atomicOps)
 	default:
 		return pkgTool.Result{}, pkgTool.ErrExecutionFailed
 	}
@@ -174,6 +201,63 @@ type preparedPatchArguments struct {
 	New             string `json:"new"`
 	ExpectedDigest  string `json:"expected_digest"`
 	ProposedContent string `json:"proposed_content"`
+}
+
+type preparedReplaceArguments struct {
+	Path            string `json:"path"`
+	Old             string `json:"old"`
+	New             string `json:"new"`
+	ExpectedDigest  string `json:"expected_digest"`
+	ProposedContent string `json:"proposed_content"`
+	AfterDigest     string `json:"after_digest"`
+	Fingerprint     string `json:"fingerprint"`
+}
+
+func (tool *workspaceTool) prepareReplace(ctx context.Context, invocation pkgTool.Invocation, workspace pkgContext.Workspace, normalized json.RawMessage, action pkgTool.Action) (pkgTool.PreparedInvocation, error) {
+	if err := ctx.Err(); err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	proposal, err := mutation.Decode(normalized)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, pkgTool.ErrInvalidInvocation
+	}
+	root, err := openPhysicalRoot(workspace)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	defer root.Close()
+	if err := validatePhysicalPath(root, proposal.Path, false, false); err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	content, err := readPhysicalFile(ctx, root, proposal.Path, workspace.Policy().MaxFileBytes)
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	candidate, err := mutation.Compile(normalized, mutation.Snapshot{Path: proposal.Path, Content: content, Digest: digest(content)})
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, fmt.Errorf("compile controlled mutation: %w: %w", err, pkgTool.ErrInvalidInvocation)
+	}
+	diff, err := renderPatchDiff(candidate.Path(), candidate.Before(), candidate.After())
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	fields := make([]pkgTool.PreviewField, 0, 4)
+	for _, value := range [][2]string{{"path", candidate.Path()}, {"before_sha256", candidate.BeforeDigest()}, {"after_sha256", candidate.AfterDigest()}, {"fingerprint", candidate.Fingerprint()}} {
+		field, fieldErr := pkgTool.NewPreviewField(value[0], value[1])
+		if fieldErr != nil {
+			return pkgTool.PreparedInvocation{}, fieldErr
+		}
+		fields = append(fields, field)
+	}
+	preview, err := pkgTool.NewPreview("Replace one exact occurrence in "+candidate.Path(), fields, diff, "text/x-diff")
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	preparedArguments, err := json.Marshal(preparedReplaceArguments{Path: candidate.Path(), Old: candidate.OldText(), New: candidate.NewText(), ExpectedDigest: candidate.BeforeDigest(), ProposedContent: candidate.After(), AfterDigest: candidate.AfterDigest(), Fingerprint: candidate.Fingerprint()})
+	if err != nil {
+		return pkgTool.PreparedInvocation{}, err
+	}
+	return pkgTool.NewPreparedInvocationWithPreview(invocation, tool.descriptor.Version(), preparedArguments, []pkgTool.Action{action}, preview)
 }
 
 func (tool *workspaceTool) preparePatch(
@@ -312,6 +396,12 @@ func (tool *workspaceTool) normalize(arguments json.RawMessage, workspace pkgCon
 			return nil, "", pkgTool.ErrInvalidInvocation
 		}
 		return marshalArguments(value, value.Path)
+	case workspaceReplace:
+		value, err := mutation.Decode(arguments)
+		if err != nil || validateLogical(value.Path, false) != nil {
+			return nil, "", pkgTool.ErrInvalidInvocation
+		}
+		return bytes.Clone(arguments), value.Path, nil
 	default:
 		return nil, "", pkgTool.ErrInvalidInvocation
 	}
@@ -611,6 +701,42 @@ func executePatch(
 			atomicResultContent(arguments.Path, arguments.ProposedContent, true, outcome.durable),
 			"application/json", reason, 1, false, "", pkgTool.EffectApplied, outcome.durable,
 		)
+	}
+	if err != nil {
+		return pkgTool.Result{}, err
+	}
+	if !outcome.matched {
+		return pkgTool.NewEffectResult(pkgTool.ResultFailed, "", "", "precondition_failed", 0, false, "", pkgTool.EffectUnchanged, false)
+	}
+	return pkgTool.Result{}, pkgTool.ErrExecutionFailed
+}
+
+func executeReplace(ctx context.Context, root *os.Root, workspace pkgContext.Workspace, raw json.RawMessage, ops atomicFileOps) (pkgTool.Result, error) {
+	var arguments preparedReplaceArguments
+	if err := decodeStrict(raw, &arguments); err != nil {
+		return pkgTool.Result{}, err
+	}
+	if err := validatePhysicalPath(root, arguments.Path, false, false); err != nil {
+		return pkgTool.Result{}, err
+	}
+	if digest(arguments.ProposedContent) != arguments.AfterDigest || len(arguments.Fingerprint) != 64 || int64(len(arguments.ProposedContent)) > workspace.Policy().MaxFileBytes {
+		return pkgTool.Result{}, pkgTool.ErrInvalidPreparedInvocation
+	}
+	outcome, err := replacePhysicalFileAtomically(ctx, root, arguments.Path, arguments.ExpectedDigest, arguments.Old, arguments.New, arguments.ProposedContent, workspace.Policy().MaxFileBytes, ops)
+	if outcome.committed {
+		resultOutcome, reason := pkgTool.ResultSuccess, "written"
+		if err != nil {
+			resultOutcome, reason = pkgTool.ResultFailed, "post_commit_sync_failed"
+		}
+		encoded, _ := json.Marshal(struct {
+			Path         string `json:"path"`
+			BeforeDigest string `json:"before_digest"`
+			AfterDigest  string `json:"after_digest"`
+			Fingerprint  string `json:"fingerprint"`
+			Applied      bool   `json:"applied"`
+			Durable      bool   `json:"durable"`
+		}{arguments.Path, arguments.ExpectedDigest, arguments.AfterDigest, arguments.Fingerprint, true, outcome.durable})
+		return pkgTool.NewEffectResult(resultOutcome, string(encoded), "application/json", reason, 1, false, "", pkgTool.EffectApplied, outcome.durable)
 	}
 	if err != nil {
 		return pkgTool.Result{}, err

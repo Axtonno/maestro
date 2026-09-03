@@ -1,5 +1,5 @@
 version: 1
-status: open
+status: in_progress
 opened_at: "2026-09-03"
 
 baseline:
@@ -57,11 +57,11 @@ state_machine:
   - terminal_result
 
 phases:
-  - {id: M28-P1, name: threat_model_and_contract_freeze, status: pending}
-  - {id: M28-P2, name: deterministic_proposal_compiler, status: pending}
-  - {id: M28-P3, name: preview_fingerprint_and_one_shot_approval, status: pending}
-  - {id: M28-P4, name: containment_stale_check_and_atomic_apply, status: pending}
-  - {id: M28-P5, name: deterministic_positive_and_negative_matrix, status: pending}
+  - {id: M28-P1, name: threat_model_and_contract_freeze, status: complete}
+  - {id: M28-P2, name: deterministic_proposal_compiler, status: complete}
+  - {id: M28-P3, name: preview_fingerprint_and_one_shot_approval, status: in_progress}
+  - {id: M28-P4, name: containment_stale_check_and_atomic_apply, status: in_progress}
+  - {id: M28-P5, name: deterministic_positive_and_negative_matrix, status: in_progress}
   - {id: M28-P6, name: transport_comparison, status: pending}
   - {id: M28-P7, name: semantic_and_live_qualification, status: pending}
   - {id: M28-P8, name: v0.5.0_candidate_handoff, status: pending}

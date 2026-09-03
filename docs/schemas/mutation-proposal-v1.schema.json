@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/antonio-cafeo/maestro/docs/schemas/mutation-proposal-v1.schema.json",
+  "title": "Maestro controlled mutation proposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "path", "operation", "old_text", "new_text"],
+  "properties": {
+    "version": { "const": 1 },
+    "path": { "type": "string", "minLength": 1 },
+    "operation": { "const": "replace" },
+    "old_text": { "type": "string", "minLength": 1 },
+    "new_text": { "type": "string" }
+  }
+}

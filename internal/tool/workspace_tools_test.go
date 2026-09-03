@@ -160,6 +160,46 @@ func TestWorkspacePatchPreparationRejectsUnsupportedAndAmbiguousProposals(t *tes
 	}
 }
 
+func TestWorkspaceReplaceCompilesStrictV1ProposalIntoBoundPreview(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	original := "package demo\n\nconst answer = 41\n"
+	if err := os.WriteFile(filepath.Join(root, "src", "demo.go"), []byte(original), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	workspace, _ := pkgContext.NewWorkspace("workspace", root, pkgContext.WorkspaceOptions{Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy()})
+	registry := NewWorkspaceRegistry()
+	run := pkgTool.RunID("run-m28-preview")
+	_ = registry.Bind(run, workspace)
+	replace, err := NewControlledMutationTool(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw := json.RawMessage(`{"version":1,"path":"src/demo.go","operation":"replace","old_text":"answer = 41","new_text":"answer = 42"}`)
+	invocation, _ := pkgTool.NewInvocation(WorkspaceReplaceID, "call-m28-preview", run, raw)
+	prepared, err := replace.Prepare(t.Context(), invocation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, ok := prepared.Preview()
+	if !ok || !strings.Contains(preview.Body(), "-const answer = 41") || !strings.Contains(preview.Body(), "+const answer = 42") {
+		t.Fatalf("unexpected preview: %#v", preview)
+	}
+	fields := map[string]string{}
+	for _, field := range preview.Fields() {
+		fields[field.Label()] = field.Value()
+	}
+	if fields["path"] != "src/demo.go" || len(fields["fingerprint"]) != 64 || len(fields["before_sha256"]) != 64 || len(fields["after_sha256"]) != 64 {
+		t.Fatalf("preview is not fully bound: %#v", fields)
+	}
+	content, _ := os.ReadFile(filepath.Join(root, "src", "demo.go"))
+	if string(content) != original {
+		t.Fatal("prepare changed the workspace")
+	}
+}
+
 func TestWorkspaceToolsRejectTraversalAbsolutePathsAndSymlinks(t *testing.T) {
 	root := t.TempDir()
 	outside := filepath.Join(t.TempDir(), "outside.txt")
