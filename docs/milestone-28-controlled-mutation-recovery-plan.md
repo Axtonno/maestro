@@ -2,7 +2,7 @@
 
 Linea di versione candidata: v0.5.0
 
-Stato: Aperta — `mutation_recovery_not_yet_qualified`
+Stato: Completata senza qualificazione — `controlled_mutation_transport_unresolved`
 
 Data: 2026-09-03
 
@@ -197,6 +197,16 @@ retry qualitativi o rilassamento delle soglie.
 M28 non pubblica automaticamente v0.5.0. La pubblicazione richiede una distinta
 release readiness con package riproducibile, installazione pulita, live gate e
 verifica degli asset pubblici.
+
+## Chiusura
+
+La parte deterministica, di autorizzazione e di integrità è verde. I due
+trasporti convergono sullo stesso candidato, ma il confronto semantico e live
+non è stato eseguito perché provider, modello e target Linux qualificato non
+erano disponibili. Nessun dato è stato imputato e nessun trasporto è stato
+selezionato. Il verdetto finale è `controlled_mutation_transport_unresolved`;
+non è autorizzato un candidate v0.5.0. Evidenza e handoff sono in
+`reports/milestone-28-final.md`.
 
 ## Output attesi
 

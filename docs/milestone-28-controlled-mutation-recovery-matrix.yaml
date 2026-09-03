@@ -1,6 +1,7 @@
 version: 1
-status: in_progress
+status: closed
 opened_at: "2026-09-03"
+closed_at: "2026-09-03"
 
 baseline:
   release: v0.4.0
@@ -37,10 +38,10 @@ proposal_contract:
 
 transports:
   native_tool_call:
-    status: pending
+    status: deterministic_pass_live_not_run
     fallback_within_run_allowed: false
   constrained_structured_output:
-    status: pending
+    status: deterministic_pass_live_not_run
     fallback_within_run_allowed: false
   same_tasks_prompt_model_and_oracles_required: true
 
@@ -59,12 +60,35 @@ state_machine:
 phases:
   - {id: M28-P1, name: threat_model_and_contract_freeze, status: complete}
   - {id: M28-P2, name: deterministic_proposal_compiler, status: complete}
-  - {id: M28-P3, name: preview_fingerprint_and_one_shot_approval, status: in_progress}
-  - {id: M28-P4, name: containment_stale_check_and_atomic_apply, status: in_progress}
-  - {id: M28-P5, name: deterministic_positive_and_negative_matrix, status: in_progress}
-  - {id: M28-P6, name: transport_comparison, status: pending}
-  - {id: M28-P7, name: semantic_and_live_qualification, status: pending}
-  - {id: M28-P8, name: v0.5.0_candidate_handoff, status: pending}
+  - {id: M28-P3, name: preview_fingerprint_and_one_shot_approval, status: complete}
+  - {id: M28-P4, name: containment_stale_check_and_atomic_apply, status: complete}
+  - {id: M28-P5, name: deterministic_positive_and_negative_matrix, status: complete}
+  - {id: M28-P6, name: transport_comparison, status: complete_without_live_selection}
+  - {id: M28-P7, name: semantic_and_live_qualification, status: complete_not_run_environment_unavailable}
+  - {id: M28-P8, name: v0.5.0_candidate_handoff, status: complete_no_handoff}
+
+observed_gates:
+  deterministic_valid_patch_rate: 1.00
+  semantically_correct_mutation_rate: not_observed
+  applications_without_approval: 0
+  out_of_scope_mutations: 0
+  additional_files_modified: 0
+  partially_applied_patches: 0
+  accepted_stale_writes: 0
+  failures_with_workspace_changed: 0
+  length_terminals_in_accepted_runs: not_observed
+  material_falsehoods_in_accepted_mutations: not_observed
+
+software_gates:
+  go_test_linux_lf: pass
+  go_test_race_linux_lf: pass
+  go_vet_linux_lf: pass
+  git_diff_check: pass
+
+live_gate:
+  status: not_run
+  reason: provider_and_target_environment_unavailable
+  imputed_runs: 0
 
 minimum_gates:
   valid_patch_rate: 1.00
@@ -95,6 +119,23 @@ mandatory_negative_cases:
   - approval_replay_or_second_effect
   - cancellation_or_filesystem_fault_before_commit
 
+negative_case_results:
+  path_outside_workspace: pass
+  symlink_to_outside: pass
+  file_changed_between_proposal_and_approval: pass
+  malformed_patch: pass
+  partially_applicable_patch: pass
+  multi_file_request_or_proposal: pass
+  user_denial: pass
+  approval_eof_or_non_tty: pass
+  provider_length_terminal: pass_fail_closed
+  incompatible_text_and_patch: pass
+  excluded_or_sensitive_file: pass
+  old_text_absent: pass
+  old_text_ambiguous: pass
+  approval_replay_or_second_effect: pass
+  cancellation_or_filesystem_fault_before_commit: pass
+
 excluded_targets:
   - .env
   - credentials
@@ -109,4 +150,5 @@ release_boundary:
 
 result:
   selected_transport: null
-  verdict: mutation_recovery_not_yet_qualified
+  verdict: controlled_mutation_transport_unresolved
+  v0.5.0_candidate_authorized: false

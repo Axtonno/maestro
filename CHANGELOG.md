@@ -6,6 +6,21 @@ deve essere dichiarato nelle note di release.
 
 ## [Unreleased]
 
+### Added
+
+- contratto strict `mutation-proposal-v1` e compilatore deterministico per una
+  singola sostituzione esatta;
+- superficie opt-in `workspace.replace` con preview, digest pre/post,
+  fingerprint, stale check e apply atomico;
+- adapter senza fallback per tool calling nativo e structured output.
+
+### Qualification
+
+- gate deterministici, suite Linux LF, race, vet e diff check verdi;
+- confronto semanticamente decisivo non eseguito per indisponibilità del
+  provider target; M28 chiusa come `controlled_mutation_transport_unresolved`;
+- nessun ampliamento del claim v0.4.0 e nessun candidate v0.5.0 autorizzato.
+
 ## [0.4.0] - 2026-09-03
 
 ### Changed

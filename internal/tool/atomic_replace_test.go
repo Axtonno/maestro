@@ -226,6 +226,94 @@ func TestWorkspacePatchReportsCommittedButUnsyncedDirectory(t *testing.T) {
 	}
 }
 
+func TestControlledMutationApprovalPreviewApplyAndResultShareFingerprint(t *testing.T) {
+	rootPath, _, _ := atomicFixture(t)
+	workspace, _ := pkgContext.NewWorkspace("workspace", rootPath, pkgContext.WorkspaceOptions{Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy()})
+	registry := NewWorkspaceRegistry()
+	run := pkgTool.RunID("run-m28-e2e")
+	_ = registry.Bind(run, workspace)
+	runtime := NewRuntime()
+	replace, err := NewControlledMutationTool(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := runtime.Register(replace); err != nil {
+		t.Fatal(err)
+	}
+	prompt, _ := pkgTool.NewDecision(pkgTool.DecisionPrompt, "approval_required", "", "")
+	if err := runtime.RegisterPolicy(&workspacePolicy{id: "policy.m28", decision: prompt}); err != nil {
+		t.Fatal(err)
+	}
+	approver := &fixtureApprover{approval: policyApproval(t, pkgTool.ApprovalAllow, "user_allowed", "", pkgTool.GrantOneShot)}
+	var previewFingerprint string
+	_ = runtime.ObserveExecutionStart(func(prepared pkgTool.PreparedInvocation) {
+		preview, ok := prepared.Preview()
+		if !ok {
+			return
+		}
+		for _, field := range preview.Fields() {
+			if field.Label() == "fingerprint" {
+				previewFingerprint = field.Value()
+			}
+		}
+	})
+	arguments := json.RawMessage(`{"version":1,"path":"app/Order.php","operation":"replace","old_text":"class Order","new_text":"final class Order"}`)
+	invocation, _ := pkgTool.NewInvocation(WorkspaceReplaceID, "call-m28-e2e", run, arguments)
+	execution, _ := pkgTool.NewExecutionRequest(invocation, "policy.m28", approver, workspaceExecutionLimits())
+	result, err := runtime.Invoke(t.Context(), execution)
+	if err != nil || result.Outcome() != pkgTool.ResultSuccess || result.Effect() != pkgTool.EffectApplied || !result.Durable() {
+		t.Fatalf("result=%#v err=%v", result, err)
+	}
+	if previewFingerprint == "" || !strings.Contains(result.Content(), `"fingerprint":"`+previewFingerprint+`"`) {
+		t.Fatalf("preview fingerprint %q differs from result %s", previewFingerprint, result.Content())
+	}
+	content, _ := os.ReadFile(filepath.Join(rootPath, "app", "Order.php"))
+	if string(content) != "<?php\nfinal class Order {}\n" || approver.calls.Load() != 1 {
+		t.Fatalf("content=%q approvals=%d", content, approver.calls.Load())
+	}
+}
+
+func TestControlledMutationStaleAndPrecommitFaultLeaveWorkspaceUnchanged(t *testing.T) {
+	for _, mode := range []string{"stale", "write_fault"} {
+		t.Run(mode, func(t *testing.T) {
+			rootPath, logical, original := atomicFixture(t)
+			workspace, _ := pkgContext.NewWorkspace("workspace", rootPath, pkgContext.WorkspaceOptions{Source: pkgContext.SourceFilesystem, Policy: pkgContext.DefaultScanPolicy()})
+			registry := NewWorkspaceRegistry()
+			run := pkgTool.RunID("run-m28-" + mode)
+			_ = registry.Bind(run, workspace)
+			candidate, _ := NewControlledMutationTool(registry)
+			replace := candidate.(*workspaceTool)
+			arguments := json.RawMessage(`{"version":1,"path":"app/Order.php","operation":"replace","old_text":"class Order","new_text":"final class Order"}`)
+			invocation, _ := pkgTool.NewInvocation(WorkspaceReplaceID, pkgTool.CallID("call-m28-"+mode), run, arguments)
+			prepared, err := replace.Prepare(t.Context(), invocation)
+			if err != nil {
+				t.Fatal(err)
+			}
+			expected := original
+			if mode == "stale" {
+				expected = "<?php\nclass Concurrent {}\n"
+				if err := os.WriteFile(filepath.Join(rootPath, filepath.FromSlash(logical)), []byte(expected), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				replace.atomicOps = &faultAtomicFileOps{delegate: defaultAtomicFileOps(), failStage: "write"}
+			}
+			result, executeErr := replace.Execute(t.Context(), prepared)
+			if mode == "stale" && (executeErr != nil || result.Outcome() != pkgTool.ResultFailed || result.Effect() != pkgTool.EffectUnchanged) {
+				t.Fatalf("result=%#v err=%v", result, executeErr)
+			}
+			if mode == "write_fault" && !errors.Is(executeErr, errInjectedAtomicFault) {
+				t.Fatalf("got %v", executeErr)
+			}
+			content, _ := os.ReadFile(filepath.Join(rootPath, filepath.FromSlash(logical)))
+			if string(content) != expected {
+				t.Fatalf("failure changed workspace: %q", content)
+			}
+			assertNoAtomicTemps(t, rootPath)
+		})
+	}
+}
+
 func atomicFixture(t *testing.T) (string, string, string) {
 	t.Helper()
 	root := t.TempDir()

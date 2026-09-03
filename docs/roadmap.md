@@ -1371,7 +1371,7 @@ stati verificati byte-per-byte; il support claim resta single-file read-only.
 
 # Milestone 28 — Controlled Mutation Recovery
 
-Stato: Aperta — `mutation_recovery_not_yet_qualified`
+Stato: Completata senza qualificazione — `controlled_mutation_transport_unresolved`
 
 Linea candidata: v0.5.0
 
@@ -1392,6 +1392,12 @@ Il piano e la matrice autorevoli sono in
 `milestone-28-controlled-mutation-recovery-matrix.yaml`. Il superamento di M28
 può qualificare un candidate, ma la pubblicazione v0.5.0 richiede una successiva
 release readiness separata.
+
+Il protocollo deterministico, l'approval one-shot, l'atomicità e la matrice
+negativa sono verdi. I due trasporti risultano equivalenti fino al compilatore,
+ma provider e modello target non erano disponibili per il confronto semantico
+e live: nessun trasporto è selezionato e nessun candidate v0.5.0 è autorizzato.
+Il dettaglio è in `reports/milestone-28-final.md`.
 
 ---
 
