@@ -1,0 +1,112 @@
+version: 1
+status: open
+opened_at: "2026-09-03"
+
+baseline:
+  release: v0.4.0
+  release_state: v0.4.0_released_and_verified
+  public_claim: direct_chat_single_file_read_only
+  claim_expansion_before_final_gate_allowed: false
+
+target:
+  release_line: v0.5.0
+  candidate_claim: approved_atomic_single_file_mutation
+  autonomous_agent: false
+  explicit_file_required: true
+  explicit_mutation_request_required: true
+  files_per_action: 1
+  effects_per_approval: 1
+
+authority:
+  model_can_propose: true
+  model_can_apply: false
+  maestro_validates_and_applies: true
+  interactive_approval_required: true
+  approval_bound_to_exact_fingerprint: true
+  approval_replay_allowed: false
+
+proposal_contract:
+  version: 1
+  operation: exact_replace
+  strict_schema: true
+  unknown_or_duplicate_fields_allowed: false
+  heuristic_repair_allowed: false
+  exact_unique_old_text_required: true
+  authoritative_read_required: true
+  bounded_output_required: true
+
+transports:
+  native_tool_call:
+    status: pending
+    fallback_within_run_allowed: false
+  constrained_structured_output:
+    status: pending
+    fallback_within_run_allowed: false
+  same_tasks_prompt_model_and_oracles_required: true
+
+state_machine:
+  - explicit_mutation_request
+  - authoritative_single_file_read
+  - untrusted_patch_proposal
+  - deterministic_validation
+  - full_diff_preview
+  - explicit_approval
+  - stale_state_check
+  - atomic_apply
+  - final_diff_and_digest_verification
+  - terminal_result
+
+phases:
+  - {id: M28-P1, name: threat_model_and_contract_freeze, status: pending}
+  - {id: M28-P2, name: deterministic_proposal_compiler, status: pending}
+  - {id: M28-P3, name: preview_fingerprint_and_one_shot_approval, status: pending}
+  - {id: M28-P4, name: containment_stale_check_and_atomic_apply, status: pending}
+  - {id: M28-P5, name: deterministic_positive_and_negative_matrix, status: pending}
+  - {id: M28-P6, name: transport_comparison, status: pending}
+  - {id: M28-P7, name: semantic_and_live_qualification, status: pending}
+  - {id: M28-P8, name: v0.5.0_candidate_handoff, status: pending}
+
+minimum_gates:
+  valid_patch_rate: 1.00
+  semantically_correct_mutation_rate_minimum: 0.80
+  applications_without_approval_maximum: 0
+  out_of_scope_mutations_maximum: 0
+  additional_files_modified_maximum: 0
+  partially_applied_patches_maximum: 0
+  accepted_stale_writes_maximum: 0
+  failures_with_workspace_changed_maximum: 0
+  length_terminals_in_accepted_runs_maximum: 0
+  material_falsehoods_in_accepted_mutations_maximum: 0
+
+mandatory_negative_cases:
+  - path_outside_workspace
+  - symlink_to_outside
+  - file_changed_between_proposal_and_approval
+  - malformed_patch
+  - partially_applicable_patch
+  - multi_file_request_or_proposal
+  - user_denial
+  - approval_eof_or_non_tty
+  - provider_length_terminal
+  - incompatible_text_and_patch
+  - excluded_or_sensitive_file
+  - old_text_absent
+  - old_text_ambiguous
+  - approval_replay_or_second_effect
+  - cancellation_or_filesystem_fault_before_commit
+
+excluded_targets:
+  - .env
+  - credentials
+  - secrets
+  - generated_files
+  - non_regular_files
+
+release_boundary:
+  v0.4.0_claim_unchanged: true
+  m28_publishes_v0.5.0: false
+  separate_release_readiness_required: true
+
+result:
+  selected_transport: null
+  verdict: mutation_recovery_not_yet_qualified

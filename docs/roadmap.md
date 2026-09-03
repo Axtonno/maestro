@@ -1369,6 +1369,32 @@ stati verificati byte-per-byte; il support claim resta single-file read-only.
 
 ---
 
+# Milestone 28 — Controlled Mutation Recovery
+
+Stato: Aperta — `mutation_recovery_not_yet_qualified`
+
+Linea candidata: v0.5.0
+
+Obiettivo:
+
+Qualificare una sola modifica atomica a un file esplicitamente indicato,
+proposta dal modello ma validata, mostrata e applicata esclusivamente da
+Maestro dopo approvazione esplicita. La validazione post-release v0.4.0 può
+continuare informalmente, ma non costituisce la milestone principale.
+
+M28 confronta tool calling nativo e output strutturato vincolato senza fallback
+nella stessa run. Entrambi convergono sul medesimo compilatore deterministico,
+fingerprint, preview completa, controllo anti-stale e apply atomico. Multi-file,
+agente autonomo e ogni effetto senza nuova approvazione restano esclusi.
+
+Il piano e la matrice autorevoli sono in
+`milestone-28-controlled-mutation-recovery-plan.md` e
+`milestone-28-controlled-mutation-recovery-matrix.yaml`. Il superamento di M28
+può qualificare un candidate, ma la pubblicazione v0.5.0 richiede una successiva
+release readiness separata.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.
