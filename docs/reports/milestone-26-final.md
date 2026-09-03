@@ -4,7 +4,9 @@ Data: 2026-09-03
 
 Stato: **COMPLETATA**
 
-Verdetto: **`field_quality_recovered`**
+Verdetto: **`v0.4.0_candidate_field_qualified`**
+
+Release: **`release_not_yet_authorized`**
 
 La milestone chiude la diagnosi dei quattro `response_invalid` M25 e valida
 un candidate v0.4.0 senza ampliare capability o autorità. Non è stata
@@ -69,6 +71,9 @@ Restano fuori scope CPU, altri modelli, multi-file, agent, retrieval e
 Controlled Mutation. La chiusura autorizza la preparazione futura della
 release v0.4.0, ma non costituisce pubblicazione e non sostituisce i normali
 gate di packaging, installazione e canale pubblico.
+
+L'handoff vincolante è la Milestone 27: validazione indipendente, pulizia della
+suite globale e intera catena di release restano ancora da completare.
 
 ## Verifica repository
 

@@ -173,3 +173,7 @@ release_decision:
   rationale: prompt_contract_changed_without_capability_expansion
   publication_performed: false
 verdict: field_quality_recovered
+handoff:
+  state: v0.4.0_candidate_field_qualified
+  release_authorized: false
+  next_milestone: M27

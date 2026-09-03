@@ -1309,7 +1309,7 @@ task terminano `response_invalid`; report conclusivo in
 
 # Milestone 26 — Response Validity & Field Quality Recovery
 
-Stato: Completata — `field_quality_recovered`, candidate v0.4.0 validato
+Stato: Completata — `v0.4.0_candidate_field_qualified`
 
 Obiettivo:
 
@@ -1342,6 +1342,25 @@ supera sia la matrice pre-release sia la singola ripetizione Field Adoption:
 terminali `length`, zero falsità materiali e mediana utilità 5/5. La milestone
 è chiusa senza pubblicare o taggare v0.4.0; dettaglio in
 `reports/milestone-26-final.md`.
+
+---
+
+# Milestone 27 — v0.4.0 Release Readiness & Publication
+
+Stato: Aperta — `release_not_yet_authorized`
+
+Obiettivo:
+
+Validare indipendentemente il candidate v0.4.0 qualificato da M26, ripristinare
+una baseline globale verde e completare una catena di packaging, installazione,
+gate live e pubblicazione verificabile senza modificare il perimetro di
+autorità Direct Chat single-file read-only.
+
+La selezione di `v0.4.0-rc.4` è conclusa e non può usare il nuovo holdout. Ogni
+modifica funzionale al prompt, validator, adapter, profilo o autorità invalida
+il candidate e richiede il ritorno ai gate owner appropriati. Piano e matrice
+sono in `milestone-27-v0.4.0-release-readiness-publication-plan.md` e
+`milestone-27-v0.4.0-release-readiness-publication-matrix.yaml`.
 
 ---
 

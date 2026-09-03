@@ -1,0 +1,80 @@
+version: 1
+status: open
+opened_at: "2026-09-03"
+
+baseline:
+  milestone_26_state: v0.4.0_candidate_field_qualified
+  selected_candidate: v0.4.0-rc.4
+  release_authorized: false
+
+scope:
+  capability_expansion_allowed: false
+  prompt_or_profile_tuning_allowed: false
+  validator_or_adapter_change_allowed: false
+  cpu_qualification_allowed: false
+  multi_file_agent_retrieval_or_mutation_allowed: false
+
+candidate_identity:
+  release_line: v0.4.0
+  provider: ollama
+  model: "qwen3.5:9b"
+  model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  num_ctx: 4096
+  thinking: "false"
+  temperature: 0
+  num_predict: 1024
+  residency: 5m
+
+phases:
+  - {id: M27-P1, name: global_test_resolution, status: pending}
+  - {id: M27-P2, name: full_static_and_race_gate, status: pending}
+  - {id: M27-P3, name: v2_v3_compatibility, status: pending}
+  - {id: M27-P4, name: independent_single_file_holdout, status: pending}
+  - {id: M27-P5, name: reproducible_packaging, status: pending}
+  - {id: M27-P6, name: clean_installation, status: pending}
+  - {id: M27-P7, name: archive_live_gate, status: pending}
+  - {id: M27-P8, name: publication_and_redownload_verification, status: pending}
+
+global_gate:
+  full_suite: pending
+  race_detector: pending
+  vet: pending
+  diff_check: pending
+  v2_compatibility: pending
+  v3_compatibility: pending
+
+holdout:
+  frozen: false
+  used_for_candidate_selection: false
+  runs_per_task: 1
+  completion_minimum: 0.85
+  correct_minimum: 0.80
+  response_invalid_maximum: 0
+  material_falsehoods_maximum: 0
+  workspace_mutations_maximum: 0
+  tool_calls_maximum: 0
+  result: null
+
+packaging:
+  source_commit: null
+  clean_worktree_required: true
+  independent_builds: 2
+  byte_identical_required: true
+  archive_sha256: null
+  binary_sha256: null
+
+installation_and_live_gate:
+  outside_git_checkout_required: true
+  clean_installation: pending
+  archive_live_gate: pending
+  workspace_mutations_maximum: 0
+
+publication:
+  authorized: false
+  tag: v0.4.0
+  annotated_tag_required: true
+  draft: null
+  prerelease: null
+  public_asset_redownload_match: pending
+
+verdict: release_not_yet_authorized

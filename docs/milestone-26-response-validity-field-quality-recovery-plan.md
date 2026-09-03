@@ -2,11 +2,14 @@
 
 Versione di partenza: v0.3.1
 
-Stato: Completata — `field_quality_recovered`, candidate v0.4.0 validato
+Stato: Completata — `v0.4.0_candidate_field_qualified`
 
 Data: 2026-09-02
 
 Chiusura: 2026-09-03
+
+Release: non ancora autorizzata; la validazione indipendente e la catena di
+pubblicazione appartengono alla Milestone 27.
 
 Prerequisito: M25 chiusa con `field_adoption_negative`.
 
