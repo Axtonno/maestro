@@ -1347,7 +1347,7 @@ terminali `length`, zero falsità materiali e mediana utilità 5/5. La milestone
 
 # Milestone 27 — v0.4.0 Release Readiness & Publication
 
-Stato: Aperta — `release_not_yet_authorized`
+Stato: Completata — `v0.4.0_released_and_verified`
 
 Obiettivo:
 
@@ -1361,6 +1361,11 @@ modifica funzionale al prompt, validator, adapter, profilo o autorità invalida
 il candidate e richiede il ritorno ai gate owner appropriati. Piano e matrice
 sono in `milestone-27-v0.4.0-release-readiness-publication-plan.md` e
 `milestone-27-v0.4.0-release-readiness-publication-matrix.yaml`.
+
+Il commit `0c1a9f7cc596eaee05436f91f8030989871b9ca7` ha superato suite globale,
+race, vet, compatibilità v2/v3, holdout indipendente, doppio packaging e gate
+live fuori checkout. La release pubblica v0.4.0 e i due asset riscaricati sono
+stati verificati byte-per-byte; il support claim resta single-file read-only.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Versione candidata: v0.4.0
 
-Stato: Aperta — `release_not_yet_authorized`
+Stato: Completata — `v0.4.0_released_and_verified`
 
 Data: 2026-09-03
 

@@ -6,16 +6,22 @@ deve essere dichiarato nelle note di release.
 
 ## [Unreleased]
 
-### Field observation
+## [0.4.0] - 2026-09-03
 
-- completata la Milestone 25 su due progetti Laravel reali con verdetto
-  `field_adoption_negative`: 7/11 completamenti, quattro `response_invalid`,
-  zero terminali `length`, zero mutazioni e nessun incidente di sicurezza;
-- la decisione osservativa non modifica il support claim della release v0.3.1.
-- aperta la Milestone 26 per attribuire `response_invalid`, rafforzare il
-  contratto epistemico e portare i task reali M25 nel gate pre-release; il
-  replay dei quattro payload originali è impossibile perché M25 non ne
-  conservava i body grezzi.
+### Changed
+
+- risposte Direct Chat entro 450 parole, focalizzate sul flusso richiesto e
+  strutturate in fatti osservati, inferenze possibili e dati non determinabili;
+- inferenze, refactoring e test compaiono soltanto quando richiesti;
+- `response_invalid` continua a respingere ogni terminale diverso da `stop`.
+
+### Qualification
+
+- holdout indipendente: 10/10 completion, 8/10 correct, zero falsità
+  materiali, zero risposte invalide e zero mutazioni;
+- suite, race, vet, compatibilità v2/v3, packaging riproducibile, installazione
+  pulita, gate live e riscaricamento pubblico sono verdi;
+- invariati modello, profilo, budget generativo e support claim read-only.
 
 ## [0.3.1] - 2026-09-02
 

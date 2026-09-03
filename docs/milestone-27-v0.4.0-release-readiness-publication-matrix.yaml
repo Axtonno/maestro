@@ -1,11 +1,11 @@
 version: 1
-status: open
+status: complete
 opened_at: "2026-09-03"
 
 baseline:
   milestone_26_state: v0.4.0_candidate_field_qualified
   selected_candidate: v0.4.0-rc.4
-  release_authorized: false
+  release_authorized: true
 
 scope:
   capability_expansion_allowed: false
@@ -30,10 +30,10 @@ phases:
   - {id: M27-P2, name: full_static_and_race_gate, status: complete}
   - {id: M27-P3, name: v2_v3_compatibility, status: complete}
   - {id: M27-P4, name: independent_single_file_holdout, status: complete}
-  - {id: M27-P5, name: reproducible_packaging, status: pending}
-  - {id: M27-P6, name: clean_installation, status: pending}
-  - {id: M27-P7, name: archive_live_gate, status: pending}
-  - {id: M27-P8, name: publication_and_redownload_verification, status: pending}
+  - {id: M27-P5, name: reproducible_packaging, status: complete}
+  - {id: M27-P6, name: clean_installation, status: complete}
+  - {id: M27-P7, name: archive_live_gate, status: complete}
+  - {id: M27-P8, name: publication_and_redownload_verification, status: complete}
 
 global_gate:
   full_suite: pass
@@ -64,25 +64,27 @@ holdout:
   result: pass
 
 packaging:
-  source_commit: null
+  source_commit: 0c1a9f7cc596eaee05436f91f8030989871b9ca7
   clean_worktree_required: true
   independent_builds: 2
   byte_identical_required: true
-  archive_sha256: null
-  binary_sha256: null
+  archive_sha256: c9b41872d3decda589c11983f16a485267895b2ab675b51784d11dd2d4380120
+  binary_sha256: 96f4b376b501f2cee479cf374de2f09a744fb9f60702f9d37e7995d5355ed25b
 
 installation_and_live_gate:
   outside_git_checkout_required: true
-  clean_installation: pending
-  archive_live_gate: pending
+  clean_installation: pass
+  archive_live_gate: pass
   workspace_mutations_maximum: 0
 
 publication:
-  authorized: false
+  authorized: true
   tag: v0.4.0
   annotated_tag_required: true
-  draft: null
-  prerelease: null
-  public_asset_redownload_match: pending
+  draft: false
+  prerelease: false
+  published_at: "2026-09-03T19:22:39Z"
+  url: https://github.com/Axtonno/maestro/releases/tag/v0.4.0
+  public_asset_redownload_match: pass
 
-verdict: release_not_yet_authorized
+verdict: v0.4.0_released_and_verified
