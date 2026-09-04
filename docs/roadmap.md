@@ -1491,6 +1491,24 @@ v0.5.0 è autorizzato.
 
 ---
 
+# Milestone 32 — Mutation Decision Contract Simplification
+
+Stato: Aperta — `binary_mutation_decision_not_qualified`
+
+M32 riduce l'output autorevole del modello a `propose` oppure `abstain`.
+L'astensione diventa il terminale generale `insufficient_information`; solo
+Maestro assegna `target_not_found`, `target_ambiguous`, `protected_target`,
+`stale_source` e `approval_rejected` in base a evidenza deterministica.
+
+La matrice nuova richiede allow e deny su TTY reale, applicazione atomica e
+verifica del diff sul percorso positivo, zero effetti sui reject e un holdout
+mai usato in M30/M31. Se persistono falsi negativi frequenti anche col
+contratto binario, lo stop definitivo del profilo è
+`controlled_mutation_model_profile_rejected`; non verranno aggiunte eccezioni
+ad hoc al prompt.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

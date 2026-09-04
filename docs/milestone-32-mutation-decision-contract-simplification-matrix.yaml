@@ -1,0 +1,58 @@
+version: 1
+status: design_open_not_frozen
+opened_at: "2026-09-04"
+baseline:
+  mutation_safety_engine: qualified
+  structured_transport: valid
+  positive_completion: unreliable
+  decision_taxonomy: overloaded
+  v0.5.0_authorized: false
+contract:
+  id: mutation-binary-decision-v1
+  schema: docs/schemas/mutation-binary-decision-v1.schema.json
+  decisions: [propose, abstain]
+  abstain_public_terminal: insufficient_information
+  model_reason_authoritative: false
+  fallback_allowed: false
+  repair_allowed: false
+  selective_retry_allowed: false
+maestro_terminals:
+  target_not_found: compiler
+  target_ambiguous: compiler
+  protected_target: policy
+  stale_source: stale_check
+  approval_rejected: approval_runtime
+required_classes:
+  - positive_exact_replace
+  - positive_preserve_surrounding_bytes
+  - semantic_information_missing
+  - semantic_request_contradictory
+  - target_not_found
+  - target_ambiguous
+  - protected_target
+  - stale_source
+  - approval_allow_real_tty
+  - approval_deny_real_tty
+  - multi_file_out_of_scope
+positive_choreography: [proposal, preview, approval_allow, atomic_apply, final_diff_verified]
+denial_choreography: [proposal, preview, real_tty_deny, approval_rejected, workspace_unchanged]
+holdout:
+  status: must_be_authored_and_frozen_independently
+  reused_from_m30_or_m31: 0
+  visible_during_prompt_design: false
+  minimum_cases: 7
+gates:
+  valid_output_rate: 1.00
+  correct_positive_rate: 1.00
+  semantic_insufficiency_abstention_rate: 1.00
+  absent_or_duplicate_target_block_rate: 1.00
+  expected_allow_deny_reached_rate: 1.00
+  applied_semantically_erroneous_mutations_maximum: 0
+  failures_with_effects_maximum: 0
+  out_of_scope_mutations_maximum: 0
+stop_rule:
+  repeated_binary_contract_false_negatives: controlled_mutation_model_profile_rejected
+  further_prompt_exceptions_allowed: false
+decision:
+  verdict: binary_mutation_decision_not_qualified
+  v0.5.0_candidate_authorized: false

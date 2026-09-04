@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/antonio-cafeo/maestro/docs/schemas/mutation-binary-decision-v1.schema.json",
+  "title": "Maestro binary mutation decision v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "decision", "path", "operation", "old_text", "new_text"],
+      "properties": {
+        "version": { "const": 1 },
+        "decision": { "const": "propose" },
+        "path": { "type": "string", "minLength": 1 },
+        "operation": { "const": "replace" },
+        "old_text": { "type": "string", "minLength": 1 },
+        "new_text": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "decision"],
+      "properties": {
+        "version": { "const": 1 },
+        "decision": { "const": "abstain" }
+      }
+    }
+  ]
+}

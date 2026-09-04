@@ -3187,3 +3187,28 @@ qualificata. Nessun candidate v0.5.0 è autorizzato. Report in
 `docs/reports/milestone-31-preflight.md`,
 `docs/reports/milestone-31-live-runs.json` e
 `docs/reports/milestone-31-final.md`; decisione in `docs/adr/ADR-0036.md`.
+
+---
+
+# Apertura Milestone 32 — Mutation Decision Contract Simplification
+
+Lo stato iniziale è `mutation_safety_engine_qualified`,
+`structured_transport_valid`, `positive_completion_unreliable`,
+`decision_taxonomy_overloaded`, `v0.5.0_not_authorized`.
+
+M32 limita l'autorità del modello alle sole decisioni `propose` e `abstain`.
+`abstain` produce `insufficient_information`; le categorie dimostrabili
+`target_not_found`, `target_ambiguous`, `protected_target`, `stale_source` e
+`approval_rejected` appartengono esclusivamente a Maestro. Una motivazione del
+modello non è parte del contratto strict e non controlla il terminale.
+
+Il gate live userà una matrice e un holdout nuovi, eseguiti una sola volta. I
+percorsi positivi devono attraversare preview, TTY allow, apply atomico e
+verifica del diff; il deny deve raggiungere realmente la TTY e terminare
+`approval_rejected`. Se il contratto binario conserva falsi negativi frequenti,
+la stop rule è `controlled_mutation_model_profile_rejected`, senza ulteriore
+tuning ad hoc di `qwen3.5:9b`. Riferimenti:
+
+- `docs/milestone-32-mutation-decision-contract-simplification-plan.md`;
+- `docs/milestone-32-mutation-decision-contract-simplification-matrix.yaml`;
+- `docs/schemas/mutation-binary-decision-v1.schema.json`.
