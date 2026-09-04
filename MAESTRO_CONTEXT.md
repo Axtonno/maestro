@@ -3070,3 +3070,22 @@ ferma immediatamente la qualification. Riferimenti:
 
 - `docs/milestone-29-controlled-mutation-transport-qualification-plan.md`;
 - `docs/milestone-29-controlled-mutation-transport-qualification-matrix.yaml`.
+
+---
+
+# Chiusura Milestone 29 — Transport Qualification respinta
+
+Il preflight ha riconfermato WSL2 Ubuntu 24.04, Ollama 0.33.1, RTX 5070 e
+`qwen3.5:9b` con il digest congelato. Le 20 run appaiate sono state eseguite
+una sola volta nell'ordine fissato. Structured output completa 7/10 e tutte
+le tre mutazioni positive sono corrette, ma non si astiene nei casi richiesti.
+Native tool calling completa soltanto i due reject pre-provider e nessuna delle
+sette proposte attese supera il decoder strict. Zero failure di sicurezza e
+workspace corretto dopo ogni failure.
+
+Verdetto: `controlled_mutation_model_transport_rejected`. Nessun trasporto è
+selezionato e nessun candidate v0.5.0 è autorizzato. Le run non possono essere
+ripetute dopo tuning; un nuovo tentativo richiede milestone e freeze nuovi.
+Report in `docs/reports/milestone-29-preflight.md`,
+`docs/reports/milestone-29-live-runs.json` e
+`docs/reports/milestone-29-final.md`.

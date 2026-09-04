@@ -1,5 +1,5 @@
 version: 1
-status: frozen_not_run
+status: completed_rejected
 opened_at: "2026-09-04"
 
 baseline:
@@ -49,10 +49,10 @@ prompts:
 transports:
   - id: native_tool_call
     provider_tool_name: workspace_replace
-    status: not_run
+    status: failed_gates
   - id: constrained_structured_output
     response_schema: mutation-proposal-v1
-    status: not_run
+    status: failed_gates
 
 execution_order:
   - {task: M29-T01, first: native_tool_call, second: constrained_structured_output}
@@ -184,5 +184,5 @@ stop_rule:
 
 decision:
   selected_transport: null
-  verdict: transport_not_qualified
+  verdict: controlled_mutation_model_transport_rejected
   v0.5.0_candidate_authorized: false

@@ -1403,7 +1403,7 @@ Il dettaglio è in `reports/milestone-28-final.md`.
 
 # Milestone 29 — Controlled Mutation Transport Qualification
 
-Stato: Aperta — `transport_not_qualified`
+Stato: Completata — `controlled_mutation_model_transport_rejected`
 
 Linea candidata: v0.5.0
 
@@ -1429,6 +1429,13 @@ interrompe immediatamente la qualification. Piano e matrice sono in
 
 M29 non pubblica v0.5.0. Un eventuale PASS autorizza esclusivamente un primo
 candidate mutativo e una successiva release readiness separata.
+
+Il preflight congelato è PASS e le 20 run sono state eseguite una sola volta.
+`native_tool_call` completa 2/10 e non produce proposte accettate; structured
+output completa 7/10 con 3/3 positivi corretti, ma fallisce le astensioni e le
+precondizioni negative. Zero violazioni di sicurezza. Nessun trasporto è
+selezionato e nessun candidate v0.5.0 è autorizzato. Dettaglio in
+`reports/milestone-29-final.md`.
 
 ---
 

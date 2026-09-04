@@ -71,7 +71,7 @@ func TestMilestone29TransportQualificationMatrixIsFrozen(t *testing.T) {
 	if err := yaml.Unmarshal(encoded, &matrix); err != nil {
 		t.Fatal(err)
 	}
-	if matrix.Version != 1 || matrix.Status != "frozen_not_run" ||
+	if matrix.Version != 1 || matrix.Status != "completed_rejected" ||
 		matrix.Baseline.Engine != "controlled_mutation_engine_ready" ||
 		matrix.Baseline.Transport != "transport_not_qualified" || matrix.Baseline.Authorized {
 		t.Fatalf("unexpected matrix identity: %#v", matrix.Baseline)
@@ -115,7 +115,7 @@ func TestMilestone29TransportQualificationMatrixIsFrozen(t *testing.T) {
 		matrix.Gates.Valid != 1 || matrix.Gates.Completion != .90 || matrix.Gates.Semantic != .80 || matrix.Gates.CorrectWorkspace != 1 {
 		t.Fatalf("unexpected gates: %#v", matrix.Gates)
 	}
-	if matrix.Decision.Selected != nil || matrix.Decision.Verdict != "transport_not_qualified" || matrix.Decision.Authorized {
+	if matrix.Decision.Selected != nil || matrix.Decision.Verdict != "controlled_mutation_model_transport_rejected" || matrix.Decision.Authorized {
 		t.Fatalf("unexpected initial decision: %#v", matrix.Decision)
 	}
 }
