@@ -1437,6 +1437,27 @@ precondizioni negative. Zero violazioni di sicurezza. Nessun trasporto è
 selezionato e nessun candidate v0.5.0 è autorizzato. Dettaglio in
 `reports/milestone-29-final.md`.
 
+L'analisi offline successiva non trova evidenza di un difetto di
+normalizzazione dell'adapter: JSON malformato e arguments serializzati come
+stringa sono esclusi dal confine Ollama, mentre le sottoclassi strict residue
+non sono ricostruibili perché il raw non fu conservato. M29 non viene ripetuta.
+
+---
+
+# Milestone 30 — Structured Mutation Abstention Recovery
+
+Stato: Aperta — `semantic_abstention_unqualified`
+
+M30 prosegue soltanto con `constrained_structured_output`. Introduce un
+envelope strict che distingue `propose`, `abstain_missing_information`,
+`abstain_target_not_found` e `abstain_target_ambiguous`, vietando la
+sostituzione del target richiesto con un frammento plausibile alternativo.
+
+I gate richiedono 100% di positivi corretti, astensioni corrette e output
+validi, con zero response invalid, modifiche inventate, mutazioni senza
+approval o failure con effetti. La qualifica include un holdout indipendente
+mai esposto durante il prompt design. M30 non autorizza ancora v0.5.0.
+
 ---
 
 # Principio della roadmap

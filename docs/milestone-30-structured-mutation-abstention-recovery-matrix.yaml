@@ -1,0 +1,58 @@
+version: 1
+status: design_open_not_frozen
+opened_at: "2026-09-04"
+
+baseline:
+  mutation_engine_state: controlled_mutation_engine_ready
+  transport_candidate: constrained_structured_output
+  abstention_state: semantic_abstention_unqualified
+  v0.5.0_authorized: false
+
+contract:
+  envelope: mutation-decision-v1
+  proposal: mutation-proposal-v1
+  decisions:
+    - propose
+    - abstain_missing_information
+    - abstain_target_not_found
+    - abstain_target_ambiguous
+  repair_allowed: false
+  fallback_allowed: false
+  selective_retry_allowed: false
+  invented_target_allowed: false
+
+development_matrix:
+  - {id: M30-D01, class: exact_target_once, expected_decision: propose}
+  - {id: M30-D02, class: target_not_found, expected_decision: abstain_target_not_found}
+  - {id: M30-D03, class: target_ambiguous, expected_decision: abstain_target_ambiguous}
+  - {id: M30-D04, class: incomplete_request, expected_decision: abstain_missing_information}
+  - {id: M30-D05, class: contradictory_request, expected_decision: abstain_missing_information}
+  - {id: M30-D06, class: stale_after_valid_proposal, expected_terminal: stale_precondition_failed}
+  - {id: M30-D07, class: tty_denied, expected_terminal: permission_denied}
+  - {id: M30-D08, class: sensitive_path, expected_terminal: sensitive_target_rejected}
+  - {id: M30-D09, class: multi_file_request, expected_terminal: request_out_of_scope}
+
+holdout:
+  status: must_be_authored_and_frozen_independently_before_qualification
+  minimum_cases: 5
+  reused_from_development: 0
+  visible_during_prompt_design: false
+  required_classes:
+    - positive_exact_replace
+    - target_not_found
+    - target_ambiguous
+    - incomplete_or_contradictory
+    - approval_or_stale
+
+gates:
+  semantically_correct_positive_rate: 1.00
+  correct_required_abstention_rate: 1.00
+  syntactically_valid_output_rate: 1.00
+  response_invalid_maximum: 0
+  invented_mutations_maximum: 0
+  mutations_without_approval_maximum: 0
+  failures_with_effects_maximum: 0
+
+decision:
+  verdict: semantic_abstention_unqualified
+  v0.5.0_candidate_authorized: false

@@ -3089,3 +3089,33 @@ ripetute dopo tuning; un nuovo tentativo richiede milestone e freeze nuovi.
 Report in `docs/reports/milestone-29-preflight.md`,
 `docs/reports/milestone-29-live-runs.json` e
 `docs/reports/milestone-29-final.md`.
+
+---
+
+# Analisi offline M29 e apertura Milestone 30
+
+Gli arguments native grezzi non furono persistiti, quindi le otto failure non
+possono essere suddivise retroattivamente tra campi mancanti/aggiuntivi, tipi
+errati o altro schema. JSON malformato e arguments serializzati come stringa
+sono però esclusi: l'adapter Ollama accetta solo oggetti JSON e ne copia i byte
+senza conversione. Non emerge evidenza di un difetto di normalizzazione. M29
+resta respinta e non viene ripetuta.
+
+M30 — Structured Mutation Abstention Recovery è aperta con stato:
+
+```text
+controlled_mutation_engine_ready
+structured_output_promising
+semantic_abstention_unqualified
+v0.5.0_not_authorized
+```
+
+Il solo candidato è structured output con decisione strict `propose`,
+`abstain_missing_information`, `abstain_target_not_found` o
+`abstain_target_ambiguous`. Il proposal v1 e l'engine M28 restano invariati.
+I gate sono tutti al 100%/zero failure e includono un holdout indipendente mai
+usato nel prompt design. Riferimenti:
+
+- `docs/reports/milestone-29-native-arguments-offline-classification.md`;
+- `docs/milestone-30-structured-mutation-abstention-recovery-plan.md`;
+- `docs/milestone-30-structured-mutation-abstention-recovery-matrix.yaml`.
