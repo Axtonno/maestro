@@ -1515,6 +1515,19 @@ la matrice M32 non può essere ripetuta o ritoccata.
 
 ---
 
+# Milestone 33 — Host-Bound Target Mutation
+
+Stato: Aperta — `host_bound_mutation_not_yet_qualified`
+
+Il primo claim CLI vincola la mutazione a un file autorizzato e a un
+intervallo di righe scelto dall'utente. Maestro congela target e hash prima
+della generazione; il modello può emettere soltanto `new_text` o astenersi.
+Preview, approval fingerprint, stale check e splice atomico restano sotto
+autorità host. La soglia positiva è almeno 80% e tutti i gate di confinamento
+richiedono 100% o zero effetti.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

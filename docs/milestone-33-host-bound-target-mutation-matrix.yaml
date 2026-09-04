@@ -1,0 +1,58 @@
+version: 1
+status: design_open_not_frozen
+opened_at: "2026-09-04"
+baseline:
+  mutation_engine: safe
+  structured_output: valid
+  free_target_model_selection: rejected
+  host_bound_mutation: not_yet_qualified
+  v0.5.0_authorized: false
+contract:
+  id: host-bound-mutation-decision-v1
+  schema: docs/schemas/host-bound-mutation-decision-v1.schema.json
+  model_fields: [decision, new_text]
+  forbidden_model_fields: [path, old_text, start_line, end_line, operation]
+  target_authority: maestro_and_user
+  fallback_allowed: false
+  repair_allowed: false
+selection:
+  coordinates: one_based_inclusive_lines
+  includes_internal_line_endings: true
+  includes_ending_line_terminator: false
+  newline_normalization_allowed: false
+approval_fingerprint:
+  - canonical_logical_path
+  - whole_file_sha256
+  - start_line
+  - end_line
+  - selected_text_sha256
+  - replacement_text_sha256
+  - rendered_diff_sha256
+required_cases:
+  - single_line_selection
+  - multiline_selection
+  - identical_text_elsewhere
+  - request_incompatible_with_selection
+  - model_attempts_path_or_old_text
+  - approval_denial
+  - source_changed_after_preview
+  - selection_out_of_bounds
+  - unicode_and_line_endings
+  - second_file_attempt
+gates:
+  model_target_selection_impossible_by_schema: true
+  host_bound_target_preserved_rate: 1.00
+  correct_positive_rate_minimum: 0.80
+  preview_matches_selected_target_rate: 1.00
+  expected_allow_deny_reached_rate: 1.00
+  stale_writes_applied_maximum: 0
+  out_of_selection_mutations_maximum: 0
+  unapproved_mutations_maximum: 0
+  failures_with_effects_maximum: 0
+holdout:
+  status: not_authored
+  reused_from_m30_m31_m32: 0
+  visible_during_prompt_design: false
+decision:
+  verdict: host_bound_mutation_not_yet_qualified
+  v0.5.0_candidate_authorized: false

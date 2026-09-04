@@ -3235,3 +3235,29 @@ v0.5.0 resta non autorizzata. Report in
 `docs/reports/milestone-32-preflight.md`,
 `docs/reports/milestone-32-live-runs.json` e
 `docs/reports/milestone-32-final.md`; decisione in `docs/adr/ADR-0037.md`.
+
+---
+
+# Apertura Milestone 33 — Host-Bound Target Mutation
+
+Lo stato iniziale è `mutation_engine_safe`, `structured_output_valid`,
+`free_target_model_selection_rejected`,
+`host_bound_mutation_not_yet_qualified`, `v0.5.0_not_authorized`.
+
+M33 rimuove dal modello ogni autorità sul target. L'utente fornisce un file
+autorizzato e un intervallo di righe 1-based inclusivo; Maestro legge il file,
+estrae e congela lo span e i relativi hash prima della generazione. Lo schema
+consente al modello soltanto `propose` con `new_text` oppure `abstain`.
+
+Il fingerprint dell'approvazione lega path canonico, digest del file,
+coordinate, digest del testo selezionato e sostitutivo e digest del diff. Il
+gate richiede target conservato e preview esatta al 100%, positivi almeno 80%,
+TTY allow/deny realmente raggiunta e zero stale write, effetti fuori
+selezione, mutazioni non approvate o failure con effetti.
+
+La matrice è aperta ma non congelata e non contiene ancora evidenza live. Il
+claim v0.5.0 resta non autorizzato. Riferimenti:
+
+- `docs/milestone-33-host-bound-target-mutation-plan.md`;
+- `docs/milestone-33-host-bound-target-mutation-matrix.yaml`;
+- `docs/schemas/host-bound-mutation-decision-v1.schema.json`.
