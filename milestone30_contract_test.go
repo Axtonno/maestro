@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestMilestone30AbstentionRecoveryContractIsOpen(t *testing.T) {
+func TestMilestone30AbstentionRecoveryContractIsClosed(t *testing.T) {
 	encoded, err := os.ReadFile("docs/milestone-30-structured-mutation-abstention-recovery-matrix.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -29,10 +29,10 @@ func TestMilestone30AbstentionRecoveryContractIsOpen(t *testing.T) {
 		} `yaml:"contract"`
 		Development []struct{ ID, Class string } `yaml:"development_matrix"`
 		Holdout     struct {
-			Status  string `yaml:"status"`
-			Minimum int    `yaml:"minimum_cases"`
-			Reused  int    `yaml:"reused_from_development"`
-			Visible bool   `yaml:"visible_during_prompt_design"`
+			Status  string                       `yaml:"status"`
+			Reused  int                          `yaml:"reused_from_development"`
+			Visible bool                         `yaml:"visible_during_prompt_design"`
+			Cases   []struct{ ID, Class string } `yaml:"cases"`
 		} `yaml:"holdout"`
 		Gates struct {
 			Positive, Abstention, Valid                        float64
@@ -46,17 +46,17 @@ func TestMilestone30AbstentionRecoveryContractIsOpen(t *testing.T) {
 	if err := yaml.Unmarshal(encoded, &matrix); err != nil {
 		t.Fatal(err)
 	}
-	if matrix.Version != 1 || matrix.Status != "design_open_not_frozen" || matrix.Baseline.Engine != "controlled_mutation_engine_ready" || matrix.Baseline.Transport != "constrained_structured_output" || matrix.Baseline.Abstention != "semantic_abstention_unqualified" || matrix.Baseline.Authorized {
+	if matrix.Version != 1 || matrix.Status != "completed_rejected" || matrix.Baseline.Engine != "controlled_mutation_engine_ready" || matrix.Baseline.Transport != "constrained_structured_output" || matrix.Baseline.Abstention != "structured_mutation_abstention_rejected" || matrix.Baseline.Authorized {
 		t.Fatalf("unexpected identity: %#v", matrix.Baseline)
 	}
 	want := []string{"propose", "abstain_missing_information", "abstain_target_not_found", "abstain_target_ambiguous"}
 	if !slices.Equal(matrix.Contract.Decisions, want) || len(matrix.Development) != 9 {
 		t.Fatalf("unexpected contract or matrix: %#v", matrix.Contract)
 	}
-	if matrix.Holdout.Minimum < 5 || matrix.Holdout.Reused != 0 || matrix.Holdout.Visible {
+	if matrix.Holdout.Status != "frozen_independent" || len(matrix.Holdout.Cases) != 5 || matrix.Holdout.Reused != 0 || matrix.Holdout.Visible {
 		t.Fatalf("holdout is not independent: %#v", matrix.Holdout)
 	}
-	if matrix.Decision.Verdict != "semantic_abstention_unqualified" || matrix.Decision.Authorized {
+	if matrix.Decision.Verdict != "structured_mutation_abstention_rejected" || matrix.Decision.Authorized {
 		t.Fatalf("unexpected decision: %#v", matrix.Decision)
 	}
 }

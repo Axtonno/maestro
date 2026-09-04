@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/antonio-cafeo/maestro/docs/schemas/mutation-decision-v1.schema.json",
+  "title": "Maestro structured mutation decision v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "decision", "proposal"],
+      "properties": {
+        "version": { "const": 1 },
+        "decision": { "const": "propose" },
+        "proposal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "path", "operation", "old_text", "new_text"],
+          "properties": {
+            "version": { "const": 1 },
+            "path": { "type": "string", "minLength": 1 },
+            "operation": { "const": "replace" },
+            "old_text": { "type": "string", "minLength": 1 },
+            "new_text": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "decision"],
+      "properties": {
+        "version": { "const": 1 },
+        "decision": {
+          "enum": [
+            "abstain_missing_information",
+            "abstain_target_not_found",
+            "abstain_target_ambiguous"
+          ]
+        }
+      }
+    }
+  ]
+}

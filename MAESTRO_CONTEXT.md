@@ -3119,3 +3119,23 @@ usato nel prompt design. Riferimenti:
 - `docs/reports/milestone-29-native-arguments-offline-classification.md`;
 - `docs/milestone-30-structured-mutation-abstention-recovery-plan.md`;
 - `docs/milestone-30-structured-mutation-abstention-recovery-matrix.yaml`.
+
+---
+
+# Chiusura Milestone 30 — Abstention Recovery respinta
+
+M30 introduce l'envelope strict `mutation-decision-v1` mantenendo invariati
+proposal e engine M28. Il preflight target è PASS. Le 14 run congelate e
+uniche ottengono output validi 14/14, proposte positive corrette 5/5 e matrice
+development 9/9. Nell'holdout H03 il modello propone però su un target presente
+due volte invece di emettere `abstain_target_ambiguous`: holdout 4/5,
+astensioni 6/7 e una modifica inventata.
+
+Il compiler respinge la proposta ambigua prima di approval/apply. Zero
+`response_invalid`, zero mutazioni senza approval, zero failure con effetti e
+workspace sempre corretto. Il verdetto è
+`structured_mutation_abstention_rejected`: nessun trasporto di prodotto e
+nessun candidate v0.5.0 sono autorizzati. Report in
+`docs/reports/milestone-30-preflight.md`,
+`docs/reports/milestone-30-live-runs.json` e
+`docs/reports/milestone-30-final.md`; decisione in `docs/adr/ADR-0035.md`.

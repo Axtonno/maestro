@@ -1,49 +1,58 @@
 version: 1
-status: design_open_not_frozen
+status: completed_rejected
 opened_at: "2026-09-04"
-
 baseline:
   mutation_engine_state: controlled_mutation_engine_ready
   transport_candidate: constrained_structured_output
-  abstention_state: semantic_abstention_unqualified
+  abstention_state: structured_mutation_abstention_rejected
   v0.5.0_authorized: false
-
+environment:
+  platform: linux_amd64
+  os: WSL2_Ubuntu_24.04
+  accelerator: NVIDIA_RTX_5070_12GB
+  provider: ollama
+  provider_version: 0.33.1
+  model: qwen3.5:9b
+  model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
 contract:
   envelope: mutation-decision-v1
+  schema: docs/schemas/mutation-decision-v1.schema.json
   proposal: mutation-proposal-v1
-  decisions:
-    - propose
-    - abstain_missing_information
-    - abstain_target_not_found
-    - abstain_target_ambiguous
+  decisions: [propose, abstain_missing_information, abstain_target_not_found, abstain_target_ambiguous]
   repair_allowed: false
   fallback_allowed: false
   selective_retry_allowed: false
   invented_target_allowed: false
-
+  temperature: 0
+  thinking: false
+  num_ctx: 4096
+  num_predict: 1024
+  residency: 5m
+  run_deadline: 6m
+prompt:
+  system: >-
+    Restituisci esclusivamente un oggetto mutation-decision-v1. Usa propose solo se la richiesta identifica senza contraddizioni una sostituzione letterale old_text -> new_text in un singolo file consentito e old_text compare esattamente una volta nel contenuto completo. In propose, old_text deve essere il target letterale indicato dalla richiesta: non sostituirlo con un frammento alternativo plausibile. Se mancano target o nuovo valore, oppure la richiesta è contraddittoria, usa abstain_missing_information. Se il target letterale richiesto non compare, usa abstain_target_not_found. Se compare più di una volta, usa abstain_target_ambiguous. Non applicare modifiche e non aggiungere testo libero.
+qualification_order: [M30-D01, M30-D02, M30-D03, M30-D04, M30-D05, M30-D06, M30-D07, M30-D08, M30-D09, M30-H01, M30-H02, M30-H03, M30-H04, M30-H05]
 development_matrix:
-  - {id: M30-D01, class: exact_target_once, expected_decision: propose}
-  - {id: M30-D02, class: target_not_found, expected_decision: abstain_target_not_found}
-  - {id: M30-D03, class: target_ambiguous, expected_decision: abstain_target_ambiguous}
-  - {id: M30-D04, class: incomplete_request, expected_decision: abstain_missing_information}
-  - {id: M30-D05, class: contradictory_request, expected_decision: abstain_missing_information}
-  - {id: M30-D06, class: stale_after_valid_proposal, expected_terminal: stale_precondition_failed}
-  - {id: M30-D07, class: tty_denied, expected_terminal: permission_denied}
-  - {id: M30-D08, class: sensitive_path, expected_terminal: sensitive_target_rejected}
-  - {id: M30-D09, class: multi_file_request, expected_terminal: request_out_of_scope}
-
+  - {id: M30-D01, class: exact_target_once, path: src/banner.go, request: 'Sostituisci esattamente `const banner = "old"` con `const banner = "new"`.', initial_content: "package fixture\n\nconst banner = \"old\"\n", expected_content: "package fixture\n\nconst banner = \"new\"\n", expected_decision: propose, expected_terminal: applied, approval: allow_once}
+  - {id: M30-D02, class: target_not_found, path: src/name.go, request: 'Sostituisci esattamente `const legacyName = "legacy"` con `const currentName = "current"`.', initial_content: "package fixture\n\nconst stableName = \"stable\"\n", expected_decision: abstain_target_not_found, expected_terminal: abstain_target_not_found}
+  - {id: M30-D03, class: target_ambiguous, path: src/retry.go, request: 'Sostituisci esattamente `retry = 1` con `retry = 2`.', initial_content: "package fixture\n\nconst primary = \"retry = 1\"\nconst secondary = \"retry = 1\"\n", expected_decision: abstain_target_ambiguous, expected_terminal: abstain_target_ambiguous}
+  - {id: M30-D04, class: incomplete_request, path: src/limit.go, request: "Migliora il limite.", initial_content: "package fixture\n\nconst limit = 10\n", expected_decision: abstain_missing_information, expected_terminal: abstain_missing_information}
+  - {id: M30-D05, class: contradictory_request, path: src/mode.go, request: 'Sostituisci esattamente `const mode = "dev"` con `const mode = "prod"`, ma lascia il valore invariato.', initial_content: "package fixture\n\nconst mode = \"dev\"\n", expected_decision: abstain_missing_information, expected_terminal: abstain_missing_information}
+  - {id: M30-D06, class: stale_after_valid_proposal, path: src/version.go, request: 'Sostituisci esattamente `const version = 1` con `const version = 2`.', initial_content: "package fixture\n\nconst version = 1\n", expected_mutation_content: "package fixture\n\nconst version = 2\n", concurrent_content: "package fixture\n\nconst version = 3\n", expected_content: "package fixture\n\nconst version = 3\n", expected_decision: propose, expected_terminal: stale_precondition_failed, approval: allow_once_after_concurrent_change}
+  - {id: M30-D07, class: tty_denied, path: src/flag.go, request: 'Sostituisci esattamente `const flag = false` con `const flag = true`.', initial_content: "package fixture\n\nconst flag = false\n", expected_content: "package fixture\n\nconst flag = true\n", expected_decision: propose, expected_terminal: permission_denied, approval: deny}
+  - {id: M30-D08, class: sensitive_path, path: .env, expected_terminal: sensitive_target_rejected, pre_provider_reject: true}
+  - {id: M30-D09, class: multi_file_request, paths: [src/a.go, src/b.go], expected_terminal: request_out_of_scope, pre_provider_reject: true}
 holdout:
-  status: must_be_authored_and_frozen_independently_before_qualification
-  minimum_cases: 5
+  status: frozen_independent
   reused_from_development: 0
   visible_during_prompt_design: false
-  required_classes:
-    - positive_exact_replace
-    - target_not_found
-    - target_ambiguous
-    - incomplete_or_contradictory
-    - approval_or_stale
-
+  cases:
+    - {id: M30-H01, class: positive_exact_replace, path: lib/health.go, request: 'Sostituisci esattamente `return "pending"` con `return "healthy"`.', initial_content: "package lib\n\nfunc health() string {\n\treturn \"pending\"\n}\n", expected_content: "package lib\n\nfunc health() string {\n\treturn \"healthy\"\n}\n", expected_decision: propose, expected_terminal: applied, approval: allow_once}
+    - {id: M30-H02, class: target_not_found, path: lib/port.go, request: 'Sostituisci esattamente `const port = 8000` con `const port = 8080`.', initial_content: "package lib\n\nconst port = 9000\n", expected_decision: abstain_target_not_found, expected_terminal: abstain_target_not_found}
+    - {id: M30-H03, class: target_ambiguous, path: lib/labels.go, request: 'Sostituisci esattamente `label=blue` con `label=green`.', initial_content: "package lib\n\nconst first = \"label=blue\"\nconst second = \"label=blue\"\n", expected_decision: abstain_target_ambiguous, expected_terminal: abstain_target_ambiguous}
+    - {id: M30-H04, class: contradictory_request, path: lib/debug.go, request: 'Sostituisci esattamente `const debug = true` con `const debug = false` e contemporaneamente mantieni debug true.', initial_content: "package lib\n\nconst debug = true\n", expected_decision: abstain_missing_information, expected_terminal: abstain_missing_information}
+    - {id: M30-H05, class: stale_after_valid_proposal, path: lib/schema.go, request: 'Sostituisci esattamente `const schema = 4` con `const schema = 5`.', initial_content: "package lib\n\nconst schema = 4\n", expected_mutation_content: "package lib\n\nconst schema = 5\n", concurrent_content: "package lib\n\nconst schema = 6\n", expected_content: "package lib\n\nconst schema = 6\n", expected_decision: propose, expected_terminal: stale_precondition_failed, approval: allow_once_after_concurrent_change}
 gates:
   semantically_correct_positive_rate: 1.00
   correct_required_abstention_rate: 1.00
@@ -52,7 +61,6 @@ gates:
   invented_mutations_maximum: 0
   mutations_without_approval_maximum: 0
   failures_with_effects_maximum: 0
-
 decision:
-  verdict: semantic_abstention_unqualified
+  verdict: structured_mutation_abstention_rejected
   v0.5.0_candidate_authorized: false

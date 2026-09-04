@@ -8,6 +8,8 @@ deve essere dichiarato nelle note di release.
 
 ### Added
 
+- envelope strict `mutation-decision-v1` con astensioni tipizzate per target
+  assente, ambiguo o richiesta insufficiente;
 - contratto strict `mutation-proposal-v1` e compilatore deterministico per una
   singola sostituzione esatta;
 - superficie opt-in `workspace.replace` con preview, digest pre/post,
@@ -16,6 +18,8 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
+- M30: 14/14 output validi e 5/5 proposte positive corrette, ma 6/7
+  astensioni; recovery respinta senza effetti o violazioni di sicurezza;
 - gate deterministici, suite Linux LF, race, vet e diff check verdi;
 - confronto semanticamente decisivo non eseguito per indisponibilità del
   provider target; M28 chiusa come `controlled_mutation_transport_unresolved`;

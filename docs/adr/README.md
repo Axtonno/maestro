@@ -31,3 +31,4 @@
 - [ADR-0032 – Rinvio della Controlled Mutation dopo la qualificazione](ADR-0032.md)
 - [ADR-0033 – Modalità di interazione separate per Direct Chat e Verified Agent](ADR-0033.md)
 - [ADR-0034 – Protocollo deterministico di Controlled Mutation v1](ADR-0034.md)
+- [ADR-0035 — Decisione strutturata e astensione per Controlled Mutation](ADR-0035.md)
