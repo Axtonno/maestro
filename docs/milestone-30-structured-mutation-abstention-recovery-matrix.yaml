@@ -58,7 +58,8 @@ gates:
   correct_required_abstention_rate: 1.00
   syntactically_valid_output_rate: 1.00
   response_invalid_maximum: 0
-  invented_mutations_maximum: 0
+  semantically_inadmissible_proposals_maximum: 0
+  applied_semantically_erroneous_mutations_maximum: 0
   mutations_without_approval_maximum: 0
   failures_with_effects_maximum: 0
 decision:

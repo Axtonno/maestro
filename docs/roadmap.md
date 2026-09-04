@@ -1461,8 +1461,27 @@ mai esposto durante il prompt design.
 Le 14 run uniche ottengono 14/14 output validi e 5/5 proposte positive
 corrette. Development è 9/9, ma l'holdout è 4/5: H03 propone su un target
 duplicato invece di astenersi. Il compiler blocca l'azione, con zero effetti e
-zero violazioni di sicurezza. Le astensioni sono 6/7 e le modifiche inventate
-1: la recovery è respinta e v0.5.0 resta non autorizzata.
+zero violazioni di sicurezza. Le astensioni sono 6/7, con una proposta
+semanticamente non ammissibile e zero mutazioni errate applicate: la recovery
+è respinta e v0.5.0 resta non autorizzata.
+
+---
+
+# Milestone 31 — Deterministic Mutation Rejection Qualification
+
+Stato: Aperta — `deterministic_rejection_not_qualified`
+
+M31 non richiede perfezione ridondante al modello per condizioni verificabili.
+Informazioni funzionali mancanti e richieste contraddittorie richiedono ancora
+astensione; target assenti o duplicati possono terminare con astensione oppure
+con rifiuto tipizzato del compiler. In entrambi i casi non esistono preview
+approvabile, conferma o effetti.
+
+La milestone introduce i terminali `target_not_found`, `target_ambiguous`,
+`stale_source`, `protected_target` e `approval_rejected`, quindi qualifica su
+un nuovo holdout l'intera composizione modello→compiler→policy→approval. M30
+non viene reinterpretata né riutilizzata come evidenza conclusiva. v0.5.0
+resta non autorizzata fino al superamento di tutti i gate M31.
 
 ---
 

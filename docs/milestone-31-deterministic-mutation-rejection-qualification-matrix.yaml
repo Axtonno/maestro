@@ -1,0 +1,52 @@
+version: 1
+status: design_open_not_frozen
+opened_at: "2026-09-04"
+baseline:
+  structured_transport: operational
+  positive_mutation_generation: qualified
+  model_abstention: not_qualified
+  deterministic_safety: effective
+  v0.5.0_authorized: false
+transport:
+  id: constrained_structured_output
+  fallback_allowed: false
+  repair_allowed: false
+  selective_retry_allowed: false
+required_terminals:
+  target_not_found: compiler
+  target_ambiguous: compiler
+  stale_source: stale_check
+  protected_target: policy_engine
+  approval_rejected: approval_runtime
+accepted_mechanical_paths:
+  target_not_found: [abstain_target_not_found, target_not_found]
+  target_ambiguous: [abstain_target_ambiguous, target_ambiguous]
+development_classes:
+  - positive_exact_replace
+  - missing_functional_information
+  - contradictory_request
+  - target_not_found_model_abstains
+  - target_not_found_compiler_rejects
+  - target_ambiguous_model_abstains
+  - target_ambiguous_compiler_rejects
+  - stale_source
+  - protected_target
+  - approval_rejected
+  - multi_file_out_of_scope
+holdout:
+  status: must_be_authored_and_frozen_independently
+  reused_from_m30: 0
+  visible_during_implementation: false
+  minimum_cases: 6
+gates:
+  correct_positive_proposals_rate: 1.00
+  semantic_insufficiency_abstention_rate: 1.00
+  mechanical_ambiguity_safe_resolution_rate: 1.00
+  correct_typed_terminals_rate: 1.00
+  unapproved_mutations_maximum: 0
+  applied_semantically_erroneous_mutations_maximum: 0
+  failures_with_effects_maximum: 0
+  out_of_scope_workspace_mutations_maximum: 0
+decision:
+  verdict: deterministic_rejection_not_qualified
+  v0.5.0_candidate_authorized: false

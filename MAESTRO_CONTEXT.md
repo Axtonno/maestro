@@ -3129,7 +3129,8 @@ proposal e engine M28. Il preflight target è PASS. Le 14 run congelate e
 uniche ottengono output validi 14/14, proposte positive corrette 5/5 e matrice
 development 9/9. Nell'holdout H03 il modello propone però su un target presente
 due volte invece di emettere `abstain_target_ambiguous`: holdout 4/5,
-astensioni 6/7 e una modifica inventata.
+astensioni 6/7 e una proposta semanticamente non ammissibile, respinta senza
+effetti. Le mutazioni semanticamente errate applicate sono zero.
 
 Il compiler respinge la proposta ambigua prima di approval/apply. Zero
 `response_invalid`, zero mutazioni senza approval, zero failure con effetti e
@@ -3139,3 +3140,27 @@ nessun candidate v0.5.0 sono autorizzati. Report in
 `docs/reports/milestone-30-preflight.md`,
 `docs/reports/milestone-30-live-runs.json` e
 `docs/reports/milestone-30-final.md`; decisione in `docs/adr/ADR-0035.md`.
+
+---
+
+# Apertura Milestone 31 — Deterministic Mutation Rejection Qualification
+
+Lo stato iniziale è `structured_transport_operational`,
+`positive_mutation_generation_qualified`, `model_abstention_not_qualified`,
+`deterministic_safety_effective`, `v0.5.0_not_yet_authorized`.
+
+M31 qualifica prospetticamente la combinazione fra proposta probabilistica e
+autorità deterministica. L'astensione resta obbligatoria per informazione
+funzionale mancante o richiesta contraddittoria. Target assente o duplicato
+può invece essere risolto correttamente dall'astensione specifica oppure dai
+nuovi terminali compiler `target_not_found` e `target_ambiguous`, sempre senza
+preview approvabile, conferma o effetti. Stale, target protetto e deny usano
+rispettivamente `stale_source`, `protected_target` e `approval_rejected`.
+
+I gate richiedono 100% di positivi, insufficienze, ambiguità meccaniche e
+terminali corretti, con zero effetti non approvati/errati/out-of-scope. Serve
+un holdout nuovo, invisibile durante l'implementazione; M30 non viene
+reinterpretata. Riferimenti:
+
+- `docs/milestone-31-deterministic-mutation-rejection-qualification-plan.md`;
+- `docs/milestone-31-deterministic-mutation-rejection-qualification-matrix.yaml`.

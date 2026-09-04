@@ -17,7 +17,8 @@ matrice development è 9/9; l'holdout è 4/5.
 | proposte positive corrette | 3/3 | 2/2 | 5/5 | PASS |
 | astensioni corrette | 4/4 | 2/3 | 6/7 | FAIL |
 | `response_invalid` | 0 | 0 | 0 | PASS |
-| modifiche inventate | 0 | 1 | 1 | FAIL |
+| proposte semanticamente non ammissibili | 0 | 1 | 1 | FAIL |
+| mutazioni semanticamente errate applicate | 0 | 0 | 0 | PASS |
 | mutazioni senza approval | 0 | 0 | 0 | PASS |
 | failure con effetti | 0 | 0 | 0 | PASS |
 
