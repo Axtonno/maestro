@@ -8,6 +8,20 @@ Maestro è un Runtime per sistemi AI locali, progettato per orchestrare componen
 
 L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il Runtime sul quale costruire un intero ecosistema di strumenti intelligenti.
 
+## Snapshot corrente — 2026-09-04
+
+- ultima release pubblica: **v0.4.0**, stato
+  `v0.4.0_released_and_verified`;
+- support claim: Linux `amd64`, Ollama locale, `qwen3.5:9b`, Direct Chat
+  read-only con zero o un file esplicito;
+- schema pubblico chat: v3, context 4096, `num_predict: 1024`, thinking false,
+  temperatura zero e residency 5 minuti;
+- CPU, altri modelli/provider, multi-file, verified agent, retrieval, tool
+  calling e Controlled Mutation restano non supportati;
+- Milestone 28: completata senza qualificazione con verdetto
+  `controlled_mutation_transport_unresolved`;
+- nessun candidate, tag o release v0.5.0 è autorizzato.
+
 ---
 
 # Stato della documentazione
@@ -76,6 +90,15 @@ Completati:
 * milestone-18-productization-release-v0.3.0-plan.md
 * milestone-18-productization-v0.4.0-plan.md
 * milestone-19-post-release-adoption-lower-bound-validation-plan.md
+* milestone-20-thinkpad-latency-attribution-lower-resource-profile-plan.md
+* milestone-21-cpu-direct-chat-product-qualification-plan.md
+* milestone-22-operational-hardening-v0.3.1-plan.md
+* milestone-23-release-readiness-publication-v0.3.1-plan.md
+* milestone-24-v0.3.1-generation-bound-recovery-plan.md
+* milestone-25-v0.3.1-direct-chat-field-adoption-plan.md
+* milestone-26-response-validity-field-quality-recovery-plan.md
+* milestone-27-v0.4.0-release-readiness-publication-plan.md
+* milestone-28-controlled-mutation-recovery-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
 * reports/milestone-11-final.md
@@ -89,6 +112,15 @@ Completati:
 * reports/milestone-18-phase-4.md
 * reports/milestone-18-phase-5.md
 * reports/milestone-19-thinkpad-adoption.md
+* reports/milestone-20-final.md
+* reports/milestone-21-final.md
+* reports/milestone-22-final.md
+* reports/milestone-23-final.md
+* reports/milestone-24-final.md
+* reports/milestone-25-final.md
+* reports/milestone-26-final.md
+* reports/milestone-27-final.md
+* reports/milestone-28-final.md
 
 ---
 
@@ -224,6 +256,28 @@ Rinvio della Controlled Mutation dopo la qualificazione.
 La matrice deterministica e il preflight sono positivi, ma Gate A fallisce al
 primo tentativo. L'esito è `mutation_deferred`; Gate B/C non vengono eseguiti e
 la Milestone 12 riceve un GO limitato alla productization read-only.
+
+---
+
+## ADR-0033
+
+Modalità di interazione separate per Direct Chat e Verified Agent.
+
+`maestro chat` è una completion tool-free con zero o un file esplicito;
+`maestro agent` conserva il percorso verificato e `maestro run` ne è l'alias
+deprecato. Configurazione, autorità, failure e osservabilità restano separati.
+
+---
+
+## ADR-0034
+
+Protocollo deterministico di Controlled Mutation v1.
+
+La proposta non fidata contiene esattamente `version`, `path`, `operation`,
+`old_text` e `new_text`. Il compilatore la lega a una snapshot autorevole,
+ricalcola digest, contenuto risultante e fingerprint e accetta soltanto una
+sostituzione esatta e unica. La superficie candidata `workspace.replace`
+resta opt-in e fuori dal claim pubblico.
 
 ---
 
@@ -2914,3 +2968,75 @@ riqualificazione sulla RTX 5070. La futura qualifica Modern CPU-only resta un
 workstream separato e deve provare offload disabilitato, zero layer GPU, zero
 VRAM del modello, processo Ollama CPU-only e configurazione congelata. Il
 T490s resta macchina di sviluppo/lower bound, non hardware minimo di prodotto.
+
+---
+
+# Chiusura Milestone 22 — Operational Hardening v0.3.1
+
+M22 qualifica tecnicamente diagnostica tipizzata, binary identity, heartbeat,
+residency e budget generativo nel candidate v0.3.1, senza ampliare il claim.
+Suite, race, vet, packaging e gate RTX sono verdi. Il verdetto è
+`v0.3.1_operational_hardening_qualified`; la pubblicazione resta separata.
+
+# Chiusura Milestone 23 — Release readiness v0.3.1 respinta
+
+Il profilo v3 con `num_predict: 512` è contrattualmente corretto, ma tronca
+Q17-1 dove l'asset v0.3.0 termina correttamente oltre il limite. La stop rule
+chiude la milestone come `v0.3.1_candidate_rejected_length_regression` senza
+tag, artifact finale o release.
+
+# Chiusura Milestone 24 — v0.3.1 pubblicata
+
+Il recupero congela `num_predict: 1024`, supera completion 5/5 e qualità 4/5,
+packaging riproducibile, installazione pulita e verifica post-download. La
+release pubblica v0.3.1 corrisponde al commit
+`bd0e902c8d7ef01c01117537fceed76845a33732`; SHA-256 archive
+`2420ba89ada7b0b9cf3de8bd62d7f97dc32868aa342e44e5c3dacbaa94b3a6b6`.
+Verdetto: `v0.3.1_released_and_verified`.
+
+# Chiusura Milestone 25 — Field Adoption
+
+L'asset pubblico v0.3.1 viene osservato su due progetti Laravel reali. I gate
+di sicurezza e immutabilità restano verdi, ma completion 7/11 e correct 4/7
+sono sotto soglia. Il verdetto `field_adoption_negative` non invalida la
+release; apre il recupero di validità e qualità M26.
+
+# Chiusura Milestone 26 — Candidate v0.4.0
+
+I quattro `response_invalid` M25 sono attribuiti a terminali provider
+`length`, non a un difetto dell'adapter. Il contratto epistemico limita la
+risposta a 450 parole e separa fatti, inferenze e informazioni non
+determinabili. `v0.4.0-rc.4` ottiene 11/11 completion e 10/11 correct sia nel
+gate pre-release sia nella replica field. Verdetto:
+`v0.4.0_candidate_field_qualified`; nessuna pubblicazione avviene in M26.
+
+# Chiusura Milestone 27 — v0.4.0 pubblicata
+
+Suite globale, race, vet, compatibilità v2/v3, holdout indipendente, doppio
+packaging, installazione fuori checkout e live gate sono verdi. La release
+pubblica v0.4.0 corrisponde al commit
+`0c1a9f7cc596eaee05436f91f8030989871b9ca7`; SHA-256 archive
+`c9b41872d3decda589c11983f16a485267895b2ab675b51784d11dd2d4380120`.
+Verdetto: `v0.4.0_released_and_verified`. Il claim resta Direct Chat
+single-file read-only.
+
+# Chiusura Milestone 28 — Controlled Mutation Recovery
+
+M28 introduce il contratto strict `mutation-proposal-v1`, il compilatore
+provider-neutral e la superficie opt-in `workspace.replace`. Preview, digest
+pre/post, fingerprint, approval one-shot, stale check e commit atomico sono
+legati allo stesso candidato immutabile. I casi negativi obbligatori, la suite
+Linux LF, race, vet e diff check sono verdi.
+
+Tool calling nativo e structured output convergono deterministicamente sullo
+stesso fingerprint e non effettuano fallback. Il confronto semantico/live non
+è stato eseguito perché Ollama, modello e target Linux qualificato non erano
+disponibili; zero run sono imputate. Il verdetto finale è
+`controlled_mutation_transport_unresolved`: nessun trasporto è selezionato e
+nessun candidate v0.5.0 è autorizzato. I riferimenti autorevoli sono:
+
+- `docs/adr/ADR-0034.md`;
+- `docs/milestone-28-controlled-mutation-recovery-matrix.yaml`;
+- `docs/reports/milestone-28-transport-comparison.md`;
+- `docs/reports/milestone-28-live-qualification.md`;
+- `docs/reports/milestone-28-final.md`.
