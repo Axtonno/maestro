@@ -1,12 +1,8 @@
 version: 1
-status: design_open_not_frozen
+status: completed_rejected
 opened_at: "2026-09-04"
-baseline:
-  mutation_safety_engine: qualified
-  structured_transport: valid
-  positive_completion: unreliable
-  decision_taxonomy: overloaded
-  v0.5.0_authorized: false
+baseline: {mutation_safety_engine: qualified, structured_transport: valid, positive_completion: unreliable, decision_taxonomy: overloaded, v0.5.0_authorized: false}
+environment: {platform: linux_amd64, provider: ollama, provider_version: 0.33.1, model: "qwen3.5:9b", model_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7}
 contract:
   id: mutation-binary-decision-v1
   schema: docs/schemas/mutation-binary-decision-v1.schema.json
@@ -16,43 +12,35 @@ contract:
   fallback_allowed: false
   repair_allowed: false
   selective_retry_allowed: false
-maestro_terminals:
-  target_not_found: compiler
-  target_ambiguous: compiler
-  protected_target: policy
-  stale_source: stale_check
-  approval_rejected: approval_runtime
-required_classes:
-  - positive_exact_replace
-  - positive_preserve_surrounding_bytes
-  - semantic_information_missing
-  - semantic_request_contradictory
-  - target_not_found
-  - target_ambiguous
-  - protected_target
-  - stale_source
-  - approval_allow_real_tty
-  - approval_deny_real_tty
-  - multi_file_out_of_scope
-positive_choreography: [proposal, preview, approval_allow, atomic_apply, final_diff_verified]
-denial_choreography: [proposal, preview, real_tty_deny, approval_rejected, workspace_unchanged]
+prompt:
+  system: >-
+    Restituisci esclusivamente mutation-binary-decision-v1. Usa propose quando la richiesta contiene una sostituzione concreta old_text -> new_text in un singolo file, copiando letteralmente target e sostituzione richiesti anche se old_text sembra assente o duplicato: questi controlli spettano a Maestro. Usa abstain soltanto quando mancano le informazioni per costruire una sostituzione concreta o la richiesta è semanticamente contraddittoria. Non applicare modifiche e non aggiungere testo.
+maestro_terminals: {target_not_found: compiler, target_ambiguous: compiler, protected_target: policy, stale_source: stale_check, approval_rejected: approval_runtime}
+qualification_order: [M32-D01, M32-D02, M32-D03, M32-D04, M32-D05, M32-D06, M32-D07, M32-D08, M32-D09, M32-D10, M32-D11, M32-H01, M32-H02, M32-H03, M32-H04, M32-H05, M32-H06, M32-H07]
+development_cases:
+  - {id: M32-D01, class: positive, path: app/ready.go, request: 'Sostituisci esattamente `const ready = 0` con `const ready = 1`.', initial: "package app\n\nconst ready = 0\n", mutation: "package app\n\nconst ready = 1\n", expected: applied, approval: allow}
+  - {id: M32-D02, class: positive_preserve, path: app/status.go, request: 'Sostituisci esattamente `return "booting"` con `return "running"`.', initial: "package app\n\n// keep\nfunc status() string {\n\treturn \"booting\"\n}\n", mutation: "package app\n\n// keep\nfunc status() string {\n\treturn \"running\"\n}\n", expected: applied, approval: allow}
+  - {id: M32-D03, class: insufficient, path: app/quota.go, request: "Modifica opportunamente la quota.", initial: "package app\n\nconst quota = 8\n", expected: insufficient_information}
+  - {id: M32-D04, class: contradictory, path: app/debug.go, request: 'Sostituisci `const debug = true` con `const debug = false` ma lascia debug true.', initial: "package app\n\nconst debug = true\n", expected: insufficient_information}
+  - {id: M32-D05, class: absent, path: app/host.go, request: 'Sostituisci esattamente `const host = "old"` con `const host = "new"`.', initial: "package app\n\nconst host = \"stable\"\n", expected: target_not_found}
+  - {id: M32-D06, class: duplicate, path: app/tag.go, request: 'Sostituisci esattamente `tag=old` con `tag=new`.', initial: "package app\n\nconst x = \"tag=old\"\nconst y = \"tag=old\"\n", expected: target_ambiguous}
+  - {id: M32-D07, class: protected, path: .env, expected: protected_target, pre_reject: true}
+  - {id: M32-D08, class: stale, path: app/rev.go, request: 'Sostituisci esattamente `const rev = 2` con `const rev = 3`.', initial: "package app\n\nconst rev = 2\n", mutation: "package app\n\nconst rev = 3\n", concurrent: "package app\n\nconst rev = 4\n", expected: stale_source, approval: allow}
+  - {id: M32-D09, class: tty_allow, path: app/live.go, request: 'Sostituisci esattamente `const live = false` con `const live = true`.', initial: "package app\n\nconst live = false\n", mutation: "package app\n\nconst live = true\n", expected: applied, approval: allow}
+  - {id: M32-D10, class: tty_deny, path: app/cache.go, request: 'Sostituisci esattamente `const cache = false` con `const cache = true`.', initial: "package app\n\nconst cache = false\n", mutation: "package app\n\nconst cache = true\n", expected: approval_rejected, approval: deny}
+  - {id: M32-D11, class: multi_file, paths: [app/a.go, app/b.go], expected: request_out_of_scope, pre_reject: true}
 holdout:
-  status: must_be_authored_and_frozen_independently
+  status: frozen_independent
   reused_from_m30_or_m31: 0
   visible_during_prompt_design: false
-  minimum_cases: 7
-gates:
-  valid_output_rate: 1.00
-  correct_positive_rate: 1.00
-  semantic_insufficiency_abstention_rate: 1.00
-  absent_or_duplicate_target_block_rate: 1.00
-  expected_allow_deny_reached_rate: 1.00
-  applied_semantically_erroneous_mutations_maximum: 0
-  failures_with_effects_maximum: 0
-  out_of_scope_mutations_maximum: 0
-stop_rule:
-  repeated_binary_contract_false_negatives: controlled_mutation_model_profile_rejected
-  further_prompt_exceptions_allowed: false
-decision:
-  verdict: binary_mutation_decision_not_qualified
-  v0.5.0_candidate_authorized: false
+  cases:
+    - {id: M32-H01, class: positive, path: core/health.go, request: 'Sostituisci esattamente `return "cold"` con `return "warm"`.', initial: "package core\n\nfunc health() string { return \"cold\" }\n", mutation: "package core\n\nfunc health() string { return \"warm\" }\n", expected: applied, approval: allow}
+    - {id: M32-H02, class: insufficient, path: core/limit.go, request: "Sistema il limite.", initial: "package core\n\nconst limit = 21\n", expected: insufficient_information}
+    - {id: M32-H03, class: absent, path: core/port.go, request: 'Sostituisci esattamente `const port = 7000` con `const port = 7001`.', initial: "package core\n\nconst port = 9000\n", expected: target_not_found}
+    - {id: M32-H04, class: duplicate, path: core/node.go, request: 'Sostituisci esattamente `node=a` con `node=b`.', initial: "package core\n\nconst left = \"node=a\"\nconst right = \"node=a\"\n", expected: target_ambiguous}
+    - {id: M32-H05, class: stale, path: core/schema.go, request: 'Sostituisci esattamente `const schema = 5` con `const schema = 6`.', initial: "package core\n\nconst schema = 5\n", mutation: "package core\n\nconst schema = 6\n", concurrent: "package core\n\nconst schema = 7\n", expected: stale_source, approval: allow}
+    - {id: M32-H06, class: tty_deny, path: core/metrics.go, request: 'Sostituisci esattamente `const metrics = false` con `const metrics = true`.', initial: "package core\n\nconst metrics = false\n", mutation: "package core\n\nconst metrics = true\n", expected: approval_rejected, approval: deny}
+    - {id: M32-H07, class: positive_preserve, path: core/mode.go, request: 'Sostituisci esattamente `const mode = "legacy"` con `const mode = "current"`.', initial: "package core\n\n// retained\nconst mode = \"legacy\"\n", mutation: "package core\n\n// retained\nconst mode = \"current\"\n", expected: applied, approval: allow}
+gates: {valid_output_rate: 1.00, correct_positive_rate: 1.00, semantic_insufficiency_abstention_rate: 1.00, absent_or_duplicate_target_block_rate: 1.00, expected_allow_deny_reached_rate: 1.00, applied_semantically_erroneous_mutations_maximum: 0, failures_with_effects_maximum: 0, out_of_scope_mutations_maximum: 0}
+stop_rule: {frequent_false_negative_threshold: 0.80, repeated_binary_contract_false_negatives: controlled_mutation_model_profile_rejected, further_prompt_exceptions_allowed: false}
+decision: {verdict: binary_mutation_decision_rejected, v0.5.0_candidate_authorized: false, stop_rule_triggered: false, valid_outputs: 18/18, correct_positives: 8/9, semantic_abstentions: 3/3, mechanical_blocks: 2/6, approvals_reached: 8/9, correct_terminals: 13/18, applied_semantic_errors: 0, failures_with_effects: 0, out_of_scope_effects: 0}

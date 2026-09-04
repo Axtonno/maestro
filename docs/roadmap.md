@@ -1493,7 +1493,7 @@ v0.5.0 è autorizzato.
 
 # Milestone 32 — Mutation Decision Contract Simplification
 
-Stato: Aperta — `binary_mutation_decision_not_qualified`
+Stato: Completata — `binary_mutation_decision_rejected`
 
 M32 riduce l'output autorevole del modello a `propose` oppure `abstain`.
 L'astensione diventa il terminale generale `insufficient_information`; solo
@@ -1506,6 +1506,12 @@ mai usato in M30/M31. Se persistono falsi negativi frequenti anche col
 contratto binario, lo stop definitivo del profilo è
 `controlled_mutation_model_profile_rejected`; non verranno aggiunte eccezioni
 ad hoc al prompt.
+
+L'unica run formale ha ottenuto 18/18 output validi, 8/9 positivi e 3/3
+astensioni semantiche, ma soltanto 2/6 blocchi meccanici e 13/18 terminali
+corretti. Cinque proposte semanticamente non ammissibili non hanno prodotto
+effetti. La stop rule del profilo non scatta; v0.5.0 resta non autorizzata e
+la matrice M32 non può essere ripetuta o ritoccata.
 
 ---
 

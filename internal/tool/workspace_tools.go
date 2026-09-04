@@ -233,7 +233,7 @@ func (tool *workspaceTool) prepareReplace(ctx context.Context, invocation pkgToo
 	if err != nil {
 		return pkgTool.PreparedInvocation{}, err
 	}
-	candidate, err := mutation.Compile(normalized, mutation.Snapshot{Path: proposal.Path, Content: content, Digest: digest(content)})
+	candidate, err := mutation.CompileQualified(normalized, mutation.Snapshot{Path: proposal.Path, Content: content, Digest: digest(content)})
 	if err != nil {
 		return pkgTool.PreparedInvocation{}, fmt.Errorf("compile controlled mutation: %w: %w", err, pkgTool.ErrInvalidInvocation)
 	}

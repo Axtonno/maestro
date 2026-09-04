@@ -2,7 +2,7 @@
 
 Linea candidata: v0.5.0
 
-Stato: Aperta — `binary_mutation_decision_not_qualified`
+Stato: Completata — `binary_mutation_decision_rejected`
 
 Data: 2026-09-04
 
@@ -96,3 +96,15 @@ stesso holdout. Il passo successivo potrà valutare un modello diverso.
 
 Un PASS autorizza soltanto un candidate v0.5.0 e una release readiness
 separata; M32 non pubblica una release.
+
+## Esito
+
+L'unica esecuzione congelata ha prodotto 18/18 output validi, 8/9 proposte
+positive corrette e 3/3 astensioni semantiche. I quattro casi con target
+assente o duplicato hanno però sostituito il target richiesto con testo
+presente e hanno raggiunto una preview approvabile; sono stati negati al TTY
+senza effetti. Il gate meccanico è quindi 2/6 e i terminali 13/18.
+
+La stop rule del profilo non scatta: 8/9 positivi corretti supera la soglia
+congelata dell'80%. Il contratto binario resta comunque non qualificato e
+v0.5.0 non è autorizzata.

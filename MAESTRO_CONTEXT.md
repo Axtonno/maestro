@@ -3212,3 +3212,26 @@ tuning ad hoc di `qwen3.5:9b`. Riferimenti:
 - `docs/milestone-32-mutation-decision-contract-simplification-plan.md`;
 - `docs/milestone-32-mutation-decision-contract-simplification-matrix.yaml`;
 - `docs/schemas/mutation-binary-decision-v1.schema.json`.
+
+---
+
+# Chiusura Milestone 32 — Contratto binario respinto
+
+La singola matrice congelata ha ottenuto 18/18 output validi, 8/9 proposte
+positive corrette e 3/3 astensioni semantiche. I percorsi allow, deny e stale
+hanno esercitato preview, TTY ed esecuzione reali.
+
+Un positivo è stato respinto dal compiler per `old_text` errato. Nei quattro
+casi absent/duplicate il modello ha sostituito il target richiesto con testo
+presente o con un blocco più ampio: sono state prodotte preview semanticamente
+non ammissibili, tutte negate al TTY. Nessuna mutazione inventata è stata
+applicata, nessuna failure ha avuto effetti e nessun workspace fuori scope è
+stato modificato.
+
+Gate finali: meccanici 2/6, approval attese 8/9, terminali 13/18. Verdetto
+`binary_mutation_decision_rejected`; la stop rule del profilo non scatta
+(88,9% positivi, soglia 80%). Non sono consentiti tuning o repliche M32 e
+v0.5.0 resta non autorizzata. Report in
+`docs/reports/milestone-32-preflight.md`,
+`docs/reports/milestone-32-live-runs.json` e
+`docs/reports/milestone-32-final.md`; decisione in `docs/adr/ADR-0037.md`.

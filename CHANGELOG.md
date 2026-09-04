@@ -20,6 +20,10 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
+- M32: contratto binario 18/18 output validi, 8/9 positivi e 3/3 astensioni
+  semantiche; qualification respinta perché quattro target assenti/duplicati
+  sono stati riscritti dal modello e hanno raggiunto preview, poi negate senza
+  effetti; v0.5.0 non autorizzata;
 - M31: ambiguità meccaniche sicure 6/6 e zero effetti illeciti, ma proposte
   positive 4/6 e terminali 14/17; qualification respinta;
 - M30: 14/14 output validi e 5/5 proposte positive corrette, ma 6/7
