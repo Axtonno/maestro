@@ -8,6 +8,8 @@ deve essere dichiarato nelle note di release.
 
 ### Added
 
+- terminali mutativi redatti distinti per target assente/ambiguo, sorgente
+  stale, target protetto e approval rifiutata;
 - envelope strict `mutation-decision-v1` con astensioni tipizzate per target
   assente, ambiguo o richiesta insufficiente;
 - contratto strict `mutation-proposal-v1` e compilatore deterministico per una
@@ -18,6 +20,8 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
+- M31: ambiguità meccaniche sicure 6/6 e zero effetti illeciti, ma proposte
+  positive 4/6 e terminali 14/17; qualification respinta;
 - M30: 14/14 output validi e 5/5 proposte positive corrette, ma 6/7
   astensioni; recovery respinta senza effetti o violazioni di sicurezza;
 - gate deterministici, suite Linux LF, race, vet e diff check verdi;

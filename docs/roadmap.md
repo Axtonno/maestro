@@ -1469,7 +1469,7 @@ semanticamente non ammissibile e zero mutazioni errate applicate: la recovery
 
 # Milestone 31 — Deterministic Mutation Rejection Qualification
 
-Stato: Aperta — `deterministic_rejection_not_qualified`
+Stato: Completata — `deterministic_mutation_rejection_rejected`
 
 M31 non richiede perfezione ridondante al modello per condizioni verificabili.
 Informazioni funzionali mancanti e richieste contraddittorie richiedono ancora
@@ -1482,6 +1482,12 @@ La milestone introduce i terminali `target_not_found`, `target_ambiguous`,
 un nuovo holdout l'intera composizione modello→compiler→policy→approval. M30
 non viene reinterpretata né riutilizzata come evidenza conclusiva. v0.5.0
 resta non autorizzata fino al superamento di tutti i gate M31.
+
+Le 17 run uniche ottengono output validi 17/17, ambiguità meccaniche sicure
+6/6 e zero effetti illeciti. Falliscono però proposte positive 4/6,
+insufficienze semantiche 2/3 e terminali 14/17. La tassonomia deterministica è
+efficace ma la composizione end-to-end non è qualificata; nessun candidate
+v0.5.0 è autorizzato.
 
 ---
 

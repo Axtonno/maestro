@@ -3164,3 +3164,26 @@ reinterpretata. Riferimenti:
 
 - `docs/milestone-31-deterministic-mutation-rejection-qualification-plan.md`;
 - `docs/milestone-31-deterministic-mutation-rejection-qualification-matrix.yaml`.
+
+---
+
+# Chiusura Milestone 31 — Deterministic Rejection respinta
+
+Il compiler distingue ora target assente, target ambiguo e sorgente stale
+mantenendo compatibilità con la precondizione M28; la diagnostica redatta usa
+`target_not_found`, `target_ambiguous`, `stale_source`, `protected_target` e
+`approval_rejected`.
+
+Le 17 run congelate e uniche ottengono output validi 17/17, ambiguità
+meccaniche sicure 6/6 e zero mutazioni non approvate, semanticamente errate,
+con effetti o fuori scope. Development è 10/11 sui terminali; holdout 4/6.
+Due richieste positive holdout ricevono un'astensione errata e una richiesta
+contraddittoria riceve la classe di astensione sbagliata: proposte positive
+4/6, insufficienze 2/3, terminali 14/17.
+
+Verdetto `deterministic_mutation_rejection_rejected`. L'autorità
+deterministica è efficace e fail-safe, ma la composizione end-to-end non è
+qualificata. Nessun candidate v0.5.0 è autorizzato. Report in
+`docs/reports/milestone-31-preflight.md`,
+`docs/reports/milestone-31-live-runs.json` e
+`docs/reports/milestone-31-final.md`; decisione in `docs/adr/ADR-0036.md`.
