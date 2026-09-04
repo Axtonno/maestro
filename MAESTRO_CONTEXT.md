@@ -20,6 +20,8 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   calling e Controlled Mutation restano non supportati;
 - Milestone 28: completata senza qualificazione con verdetto
   `controlled_mutation_transport_unresolved`;
+- Milestone 29: aperta con stato `transport_not_qualified` per il confronto
+  live appaiato dei due trasporti sul profilo RTX 5070 congelato;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -99,6 +101,7 @@ Completati:
 * milestone-26-response-validity-field-quality-recovery-plan.md
 * milestone-27-v0.4.0-release-readiness-publication-plan.md
 * milestone-28-controlled-mutation-recovery-plan.md
+* milestone-29-controlled-mutation-transport-qualification-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
 * reports/milestone-11-final.md
@@ -3040,3 +3043,30 @@ nessun candidate v0.5.0 è autorizzato. I riferimenti autorevoli sono:
 - `docs/reports/milestone-28-transport-comparison.md`;
 - `docs/reports/milestone-28-live-qualification.md`;
 - `docs/reports/milestone-28-final.md`.
+
+---
+
+# Apertura Milestone 29 — Controlled Mutation Transport Qualification
+
+Lo stato iniziale è `controlled_mutation_engine_ready`,
+`transport_not_qualified`, `v0.5.0_not_authorized`. Il protocollo M28 resta
+invariato. Il target live riusa Linux `amd64`, Ollama 0.33.1,
+`qwen3.5:9b` digest
+`6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`
+e RTX 5070.
+
+La matrice congela dieci task eseguiti una sola volta per trasporto, con ordine
+alternato, fixture nuova per run e identici prompt/oracoli. Confronta tool
+calling nativo e structured output JSON senza repair, fallback o retry
+selettivi. I gate richiedono zero failure di sicurezza, zero effetti non
+autorizzati/out-of-scope/stale, proposte valide 100%, completion almeno 90%,
+correttezza semantica almeno 80% e workspace corretto dopo ogni failure.
+
+La preferenza preliminare per structured output non costituisce selezione. La
+decisione deriva esclusivamente dalle run congelate. Un PASS autorizza un
+candidate v0.5.0, non una release; nessun PASS produce
+`controlled_mutation_model_transport_rejected` e una violazione di sicurezza
+ferma immediatamente la qualification. Riferimenti:
+
+- `docs/milestone-29-controlled-mutation-transport-qualification-plan.md`;
+- `docs/milestone-29-controlled-mutation-transport-qualification-matrix.yaml`.

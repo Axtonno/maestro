@@ -1401,6 +1401,37 @@ Il dettaglio è in `reports/milestone-28-final.md`.
 
 ---
 
+# Milestone 29 — Controlled Mutation Transport Qualification
+
+Stato: Aperta — `transport_not_qualified`
+
+Linea candidata: v0.5.0
+
+Obiettivo:
+
+Confrontare sul profilo Linux `amd64`, Ollama 0.33.1, `qwen3.5:9b` con digest
+congelato e RTX 5070 i trasporti `native_tool_call` e
+`constrained_structured_output`. Il protocollo M28 resta invariato.
+
+Dieci task appaiati coprono sostituzioni positive, condizione semantica,
+conservazione del codice, richiesta insufficiente, precondizioni assenti o
+ambigue, multi-file, target sensibile, deny e stale write. Ogni task ha una
+sola run per trasporto, senza fallback, repair o retry selettivi. Sicurezza,
+approval e correttezza del workspace sono gate fail-fast; completion minima è
+90% e correttezza semantica minima 80%.
+
+La selezione è meccanica. Un solo trasporto può essere promosso e non viene
+introdotto fallback runtime. Se nessuno supera i gate, il verdetto è
+`controlled_mutation_model_transport_rejected`; una violazione di sicurezza
+interrompe immediatamente la qualification. Piano e matrice sono in
+`milestone-29-controlled-mutation-transport-qualification-plan.md` e
+`milestone-29-controlled-mutation-transport-qualification-matrix.yaml`.
+
+M29 non pubblica v0.5.0. Un eventuale PASS autorizza esclusivamente un primo
+candidate mutativo e una successiva release readiness separata.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.
