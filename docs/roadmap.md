@@ -1536,7 +1536,7 @@ Evidenze in `reports/milestone-33-final.md`; decisione in `adr/ADR-0038.md`.
 
 # Milestone 34 — Host-Bound Mutation Failure Attribution
 
-Stato: Aperta — `failure_cause_not_yet_attributed`
+Stato: Completata — `qwen3.5_9b_host_bound_mutation_profile_rejected`
 
 Attribuire le false astensioni M33 tramite audit offline di prompt, payload,
 adapter e template. Istruzioni obsolete o contraddittorie documentate
@@ -1548,11 +1548,27 @@ Direct Chat può continuare a usare `qwen3.5:9b`.
 
 L'eventuale candidate richiede proposte positive almeno 90%, holdout apply
 100%, output/target/astensioni necessarie/approval 100% e zero effetti errati,
-non approvati, stale o fuori selezione. M33 non si ripete. Nessun ramo o
-candidate ancora selezionato; v0.5.0 non autorizzata.
+non approvati, stale o fuori selezione. M33 non si ripete. L'audit conclusivo
+seleziona il ramo B: nessun conflitto concreto rilevato, nessun nuovo candidate,
+stop al tuning del profilo. Report in `reports/milestone-34-final.md`.
+v0.5.0 resta non autorizzata.
 
 Piano: `milestone-34-host-bound-mutation-failure-attribution-plan.md`.
 Gate: `milestone-34-host-bound-mutation-failure-attribution-matrix.yaml`.
+
+---
+
+# Milestone 35 — Mutation-Specific Model Selection
+
+Stato: Aperta — `mutation_model_selection_open`
+
+Selezionare un modello dedicato alla mutazione host-bound, mantenendo
+`qwen3.5:9b` per Direct Chat. Shortlist e profili non congelati; confronto di
+selezione seguito da qualifica su holdout indipendente. Gate M34 invariati:
+positivi almeno 90%, holdout apply 100% e zero effetti illeciti.
+
+Piano: `milestone-35-mutation-specific-model-selection-plan.md`.
+Nessun modello mutativo o candidate v0.5.0 autorizzato.
 
 ---
 

@@ -24,8 +24,11 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   sezioni storiche seguenti;
 - Milestone 33: completata con verdetto `host_bound_mutation_rejected`;
   target e preview 7/7, proposte positive e approval 7/10, zero effetti illeciti;
-- Milestone 34: aperta — `failure_cause_not_yet_attributed`; audit offline
-  prima di scegliere fra correzione documentata del prompt e rigetto del profilo;
+- Milestone 34: completata, ramo B —
+  `qwen3.5_9b_host_bound_mutation_profile_rejected`; stop al tuning mutativo
+  dello stesso profilo, nessuna replica M33;
+- Milestone 35: aperta — `mutation_model_selection_open`, modello dedicato
+  alla mutazione da selezionare; Direct Chat conserva `qwen3.5:9b`;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -3329,3 +3332,36 @@ Riferimenti:
 
 - `docs/milestone-34-host-bound-mutation-failure-attribution-plan.md`;
 - `docs/milestone-34-host-bound-mutation-failure-attribution-matrix.yaml`.
+
+---
+
+# Chiusura Milestone 34 — Profilo host-bound respinto
+
+Selezionato il ramo B: audit di prompt, payload, adapter e renderer coerente
+con il contratto host-bound. Gli hash M33 coincidono; le tre richieste
+positive fallite hanno selezioni e risultati attesi corretti, verificati con
+il vero adapter su HTTP in memoria. Nessun duplicato esterno era trasmesso.
+Il modello conserva il digest M33 e non dichiara istruzioni SYSTEM aggiuntive.
+
+Verdetto `qwen3.5_9b_host_bound_mutation_profile_rejected`. La causa interna
+delle astensioni non è osservabile; il rigetto riguarda il profilo operativo
+verificato, non un'impossibilità universale. Nessun conflitto concreto
+autorizza un nuovo prompt M34: stop al tuning dello stesso profilo per
+Controlled Mutation. Zero nuove generazioni, nessuna replica o modifica M33.
+
+Evidenze in `docs/reports/milestone-34-attribution.md`,
+`docs/reports/milestone-34-offline-reconstruction.json` e
+`docs/reports/milestone-34-final.md`; decisione `docs/adr/ADR-0039.md`.
+
+---
+
+# Apertura Milestone 35 — Mutation-Specific Model Selection
+
+Stato: `mutation_model_selection_open`. Selezionare un modello dedicato alla
+mutazione; `qwen3.5:9b` resta per Direct Chat. Shortlist, profili e matrice non
+sono congelati; nessun modello mutativo è scelto. Confronto di selezione e
+qualifica holdout sono separati. Gate ereditati da M34: positivi almeno 90%,
+holdout apply 100%, correttezza e sicurezza senza deroghe.
+
+Piano: `docs/milestone-35-mutation-specific-model-selection-plan.md`.
+Controlled Mutation resta fuori dal claim; v0.5.0 non autorizzata.

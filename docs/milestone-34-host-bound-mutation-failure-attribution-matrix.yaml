@@ -1,5 +1,5 @@
 version: 1
-status: design_open_not_frozen
+status: completed_profile_rejected
 opened_at: "2026-09-05"
 baseline:
   - host_bound_target_integrity_qualified
@@ -8,8 +8,11 @@ baseline:
   - failure_cause_not_yet_attributed
   - v0.5.0_not_authorized
 attribution:
-  status: pending_offline_audit
-  selected_branch: none
+  status: completed
+  selected_branch: correct_prompt_and_payload
+  report: docs/reports/milestone-34-attribution.md
+  historical_wire_capture_available: false
+  internal_model_failure_mechanism_proven: false
   required_evidence:
     - effective_prompt_and_m33_hash
     - failed_case_payload_bytes_and_expectations
@@ -36,7 +39,7 @@ branches:
       direct_chat: "qwen3.5:9b"
       controlled_mutation: model_to_be_selected
 candidate:
-  status: not_created
+  status: not_created_branch_b
   release_candidate_authorized: false
   freeze_before_generation: true
   attempts_per_case: 1
@@ -75,5 +78,10 @@ m33:
   immutable: true
   reruns_allowed: false
 decision:
-  verdict: failure_cause_not_yet_attributed
+  verdict: qwen3.5_9b_host_bound_mutation_profile_rejected
   v0.5.0_candidate_authorized: false
+  further_same_profile_tuning_allowed: false
+  m33_reruns: 0
+  new_provider_generations: 0
+  branch_a_live_gates: not_applicable_not_executed
+  next_plan: docs/milestone-35-mutation-specific-model-selection-plan.md

@@ -22,11 +22,11 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
-- M34 aperta per attribuire offline le false astensioni host-bound: correzione
-  del prompt solo in presenza di conflitti documentati; altrimenti stop al
-  tuning del profilo e selezione di un modello dedicato alla mutazione.
-  Eventuale nuovo candidate con positivi almeno 90% e holdout apply 100%;
-  nessuna replica M33 o autorizzazione v0.5.0;
+- M34 conclusa nel ramo B: `qwen3.5_9b_host_bound_mutation_profile_rejected`.
+  Audit offline di prompt/payload/adapter e renderer senza conflitti residui
+  rilevati; stop al tuning mutativo dello stesso profilo. Zero generazioni
+  nuove o repliche M33. Aperta M35 per un modello dedicato alla mutazione;
+  Direct Chat conserva `qwen3.5:9b`, v0.5.0 resta non autorizzata;
 - M33: qualifica host-bound respinta; 12/12 output live validi e 7/7 target e
   preview corretti, ma 7/10 proposte positive e approval raggiunte. Tre falsi
   negativi, zero effetti non autorizzati o fuori selezione; v0.5.0 non autorizzata;

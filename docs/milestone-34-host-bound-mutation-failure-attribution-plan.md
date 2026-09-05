@@ -1,6 +1,6 @@
 # Milestone 34 — Host-Bound Mutation Failure Attribution
 
-Stato: Aperta — `failure_cause_not_yet_attributed`
+Stato: Completata — `qwen3.5_9b_host_bound_mutation_profile_rejected`
 
 Data: 2026-09-05
 
@@ -146,3 +146,23 @@ rivalutarne retroattivamente il verdetto.
 All'apertura nessun ramo è selezionato, nessun nuovo prompt o candidate è
 congelato e nessuna generazione è autorizzata prima del gate di attribuzione.
 M33 resta chiusa; v0.5.0 resta non autorizzata.
+
+## Chiusura — 2026-09-05
+
+L'audit ha selezionato il ramo B. Prompt/schema/matrice coincidono con gli
+hash M33; i tre payload e gli splice attesi sono corretti. La ricostruzione
+con il vero adapter e HTTP fittizio non introduce istruzioni ulteriori.
+Metadata del modello coincidenti e sorgenti del renderer della versione
+dichiarata non evidenziano conflitti residui nel percorso senza tool.
+
+Verdetto `qwen3.5_9b_host_bound_mutation_profile_rejected`: stop al tuning
+del profilo mutativo, zero nuove generazioni e nessuna replica M33. La causa
+interna delle astensioni non è dimostrata; la decisione riguarda l'idoneità
+del profilo osservato. I limiti retrospettivi sono espliciti nel report.
+
+Artefatti: `reports/milestone-34-attribution.md`,
+`reports/milestone-34-offline-reconstruction.json`,
+`reports/milestone-34-model-show.json`, `reports/milestone-34-model-tags.json`,
+`reports/milestone-34-provider-version.json`, `reports/milestone-34-final.md`
+e `adr/ADR-0039.md`. Aperta M35 nel piano
+`milestone-35-mutation-specific-model-selection-plan.md`.
