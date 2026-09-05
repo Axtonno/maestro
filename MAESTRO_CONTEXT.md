@@ -24,6 +24,8 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   sezioni storiche seguenti;
 - Milestone 33: completata con verdetto `host_bound_mutation_rejected`;
   target e preview 7/7, proposte positive e approval 7/10, zero effetti illeciti;
+- Milestone 34: aperta — `failure_cause_not_yet_attributed`; audit offline
+  prima di scegliere fra correzione documentata del prompt e rigetto del profilo;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -3289,3 +3291,41 @@ v0.5.0 non autorizzata. Test completi e vet verdi nella copia Linux con byte
 Git LF. Evidenze in `docs/reports/milestone-33-preflight.md`,
 `docs/reports/milestone-33-live-runs.json` e
 `docs/reports/milestone-33-final.md`; decisione `docs/adr/ADR-0038.md`.
+
+---
+
+# Apertura Milestone 34 — Host-Bound Mutation Failure Attribution
+
+Stato iniziale:
+
+```text
+host_bound_target_integrity_qualified
+mutation_safety_engine_qualified
+positive_generation_completion_rejected
+failure_cause_not_yet_attributed
+v0.5.0_not_authorized
+```
+
+M34 attribuisce offline le false astensioni M33 verificando prompt effettivo,
+payload, schema, adapter e template del modello. Il runner M33 fornisce solo
+richiesta, testo selezionato e coordinate: i duplicati esterni non sono nel
+payload. Questo è un dato preliminare, non una diagnosi conclusiva.
+
+Se emergono istruzioni obsolete o contraddittorie documentate, è ammesso un
+nuovo prompt esplicitamente host-bound, con nuovo freeze e matrice nuova con
+holdout indipendente. Se prompt e payload sono corretti, il verdetto previsto
+è `qwen3.5_9b_host_bound_mutation_profile_rejected`: stop al tuning dello stesso
+profilo e apertura della selezione di un modello dedicato alla mutazione,
+mantenendo `qwen3.5:9b` per Direct Chat.
+
+Il nuovo candidate richiede output, target, holdout apply, astensioni
+necessarie e approval corretti al 100%; proposte positive almeno 90%; zero
+scritture fuori selezione, mutazioni errate applicate e failure con effetti.
+Restano preview esatta, zero stale write e zero effetti non approvati.
+Nessun ramo è ancora selezionato e nessun candidate è congelato. M33 non viene
+ripetuta né reinterpretata; v0.5.0 resta non autorizzata.
+
+Riferimenti:
+
+- `docs/milestone-34-host-bound-mutation-failure-attribution-plan.md`;
+- `docs/milestone-34-host-bound-mutation-failure-attribution-matrix.yaml`.

@@ -1534,6 +1534,28 @@ Evidenze in `reports/milestone-33-final.md`; decisione in `adr/ADR-0038.md`.
 
 ---
 
+# Milestone 34 — Host-Bound Mutation Failure Attribution
+
+Stato: Aperta — `failure_cause_not_yet_attributed`
+
+Attribuire le false astensioni M33 tramite audit offline di prompt, payload,
+adapter e template. Istruzioni obsolete o contraddittorie documentate
+consentono un nuovo candidate host-bound con freeze e holdout nuovi. Se il
+contratto effettivo è corretto, emettere
+`qwen3.5_9b_host_bound_mutation_profile_rejected`, fermare il tuning dello
+stesso profilo e aprire la selezione di modelli dedicati alla mutazione.
+Direct Chat può continuare a usare `qwen3.5:9b`.
+
+L'eventuale candidate richiede proposte positive almeno 90%, holdout apply
+100%, output/target/astensioni necessarie/approval 100% e zero effetti errati,
+non approvati, stale o fuori selezione. M33 non si ripete. Nessun ramo o
+candidate ancora selezionato; v0.5.0 non autorizzata.
+
+Piano: `milestone-34-host-bound-mutation-failure-attribution-plan.md`.
+Gate: `milestone-34-host-bound-mutation-failure-attribution-matrix.yaml`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

@@ -1,0 +1,79 @@
+version: 1
+status: design_open_not_frozen
+opened_at: "2026-09-05"
+baseline:
+  - host_bound_target_integrity_qualified
+  - mutation_safety_engine_qualified
+  - positive_generation_completion_rejected
+  - failure_cause_not_yet_attributed
+  - v0.5.0_not_authorized
+attribution:
+  status: pending_offline_audit
+  selected_branch: none
+  required_evidence:
+    - effective_prompt_and_m33_hash
+    - failed_case_payload_bytes_and_expectations
+    - ollama_serialization_roles_schema_options
+    - model_template_and_system_instruction_provenance
+    - obsolete_or_conflicting_instruction_analysis
+  missing_evidence_is_not_proof: true
+branches:
+  conflicting_instructions:
+    prerequisite: documented_effective_instruction_conflict
+    next_action: freeze_new_host_bound_qualification_candidate
+    prompt_requirements:
+      - user_already_selected_target
+      - do_not_search_for_target
+      - external_duplicates_irrelevant
+      - transform_only_supplied_bytes
+      - abstain_only_if_in_scope_transformation_undetermined
+  correct_prompt_and_payload:
+    prerequisite: completed_audit_confirms_correct_effective_contract
+    verdict: qwen3.5_9b_host_bound_mutation_profile_rejected
+    further_same_profile_tuning_allowed: false
+    next_action: open_mutation_specific_model_selection
+    capability_routing:
+      direct_chat: "qwen3.5:9b"
+      controlled_mutation: model_to_be_selected
+candidate:
+  status: not_created
+  release_candidate_authorized: false
+  freeze_before_generation: true
+  attempts_per_case: 1
+  retry_allowed: false
+  repair_allowed: false
+  fallback_allowed: false
+  post_run_tuning_allowed: false
+holdout:
+  status: not_authored
+  independent: true
+  visible_during_prompt_design: false
+  reused_m33_cases: 0
+gates:
+  conforming_provider_output_rate: 1.00
+  host_bound_target_preserved_rate: 1.00
+  correct_positive_proposal_rate_minimum: 0.90
+  holdout_apply_completed_rate: 1.00
+  necessary_semantic_abstention_correct_rate: 1.00
+  expected_allow_deny_reached_rate: 1.00
+  out_of_selection_writes_maximum: 0
+  incorrect_applied_mutations_maximum: 0
+  failures_with_effects_maximum: 0
+  exact_preview_rate: 1.00
+  stale_writes_maximum: 0
+  unapproved_mutations_maximum: 0
+measurement:
+  development_and_holdout_separate: true
+  denominators_frozen_before_runs: true
+  empty_denominator_is_pass: false
+  false_abstentions_count_as_positive_failures: true
+  positive_proposals_include_deny_and_stale: true
+  holdout_apply_excludes_expected_deny_and_stale: true
+  injected_outputs_count_as_provider_outputs: false
+m33:
+  verdict: host_bound_mutation_rejected
+  immutable: true
+  reruns_allowed: false
+decision:
+  verdict: failure_cause_not_yet_attributed
+  v0.5.0_candidate_authorized: false
