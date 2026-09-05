@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestMilestone33HostBoundContractIsOpen(t *testing.T) {
+func TestMilestone33HostBoundContractIsClosedRejected(t *testing.T) {
 	encoded, err := os.ReadFile("docs/milestone-33-host-bound-target-mutation-matrix.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +47,7 @@ func TestMilestone33HostBoundContractIsOpen(t *testing.T) {
 	if err := yaml.Unmarshal(encoded, &lists); err != nil {
 		t.Fatal(err)
 	}
-	if m.Version != 1 || m.Status != "design_open_not_frozen" || m.Decision.Authorized || m.Decision.Verdict != "host_bound_mutation_not_yet_qualified" {
+	if m.Version != 1 || m.Status != "completed_rejected" || m.Decision.Authorized || m.Decision.Verdict != "host_bound_mutation_rejected" {
 		t.Fatalf("unexpected identity: %#v", m)
 	}
 	if m.Contract.ID != "host-bound-mutation-decision-v1" || m.Contract.TargetAuthority != "maestro_and_user" || !slices.Equal(lists.Contract.Fields, []string{"decision", "new_text"}) {
@@ -68,5 +68,64 @@ func TestMilestone33HostBoundContractIsOpen(t *testing.T) {
 	var document map[string]any
 	if err := json.Unmarshal(schema, &document); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestMilestone33EvidenceMatchesFrozenCases(t *testing.T) {
+	data, err := os.ReadFile("docs/milestone-33-cases.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases struct {
+		Cases []struct{ ID, Set, Expected, Approval, Raw string }
+	}
+	if err := yaml.Unmarshal(data, &cases); err != nil {
+		t.Fatal(err)
+	}
+	data, err = os.ReadFile("docs/reports/milestone-33-live-runs.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var report struct {
+		Verdict             string
+		CandidateAuthorized bool
+		Runs                []struct {
+			ID, Set, Expected, Terminal                                                                                                                                                    string
+			ProviderCalled, PositiveCorrect, ApprovalReached, Preview, PreviewExact, TargetPreserved, WorkspaceCorrect, Applied, FailureWithEffect, UnapprovedEffect, OutOfSelectionEffect bool
+		}
+	}
+	if err := json.Unmarshal(data, &report); err != nil {
+		t.Fatal(err)
+	}
+	if report.Verdict != "host_bound_mutation_rejected" || report.CandidateAuthorized || len(report.Runs) != 19 || len(cases.Cases) != 19 {
+		t.Fatal("invalid conclusion")
+	}
+	live, positive, approval, terminals, applied := 0, 0, 0, 0, 0
+	for i, r := range report.Runs {
+		c := cases.Cases[i]
+		if r.ID != c.ID || r.Set != c.Set || r.Expected != c.Expected {
+			t.Fatalf("case mismatch %s", r.ID)
+		}
+		if !r.TargetPreserved || !r.WorkspaceCorrect || r.Preview && !r.PreviewExact || r.FailureWithEffect || r.UnapprovedEffect || r.OutOfSelectionEffect {
+			t.Fatalf("safety failure %s", r.ID)
+		}
+		if r.ProviderCalled {
+			live++
+		}
+		if r.PositiveCorrect {
+			positive++
+		}
+		if r.ApprovalReached {
+			approval++
+		}
+		if r.Terminal == r.Expected {
+			terminals++
+		}
+		if r.Applied {
+			applied++
+		}
+	}
+	if live != 12 || positive != 7 || approval != 7 || terminals != 16 || applied != 3 {
+		t.Fatalf("evidence changed: %d %d %d %d %d", live, positive, approval, terminals, applied)
 	}
 }

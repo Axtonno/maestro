@@ -8,7 +8,7 @@ Maestro è un Runtime per sistemi AI locali, progettato per orchestrare componen
 
 L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il Runtime sul quale costruire un intero ecosistema di strumenti intelligenti.
 
-## Snapshot corrente — 2026-09-04
+## Snapshot corrente — 2026-09-05
 
 - ultima release pubblica: **v0.4.0**, stato
   `v0.4.0_released_and_verified`;
@@ -20,8 +20,10 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   calling e Controlled Mutation restano non supportati;
 - Milestone 28: completata senza qualificazione con verdetto
   `controlled_mutation_transport_unresolved`;
-- Milestone 29: aperta con stato `transport_not_qualified` per il confronto
-  live appaiato dei due trasporti sul profilo RTX 5070 congelato;
+- Milestone 29–32: concluse con qualifica respinta, come descritto nelle
+  sezioni storiche seguenti;
+- Milestone 33: completata con verdetto `host_bound_mutation_rejected`;
+  target e preview 7/7, proposte positive e approval 7/10, zero effetti illeciti;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -3261,3 +3263,29 @@ claim v0.5.0 resta non autorizzato. Riferimenti:
 - `docs/milestone-33-host-bound-target-mutation-plan.md`;
 - `docs/milestone-33-host-bound-target-mutation-matrix.yaml`;
 - `docs/schemas/host-bound-mutation-decision-v1.schema.json`.
+
+---
+
+# Chiusura Milestone 33 — Host-Bound Target Mutation respinta
+
+Implementati selezione immutabile di righe, decoder strict con soli
+`decision`/`new_text`, fingerprint di file/coordinate/span/sostituzione/diff
+e adapter interno verso il commit atomico. Il target è congelato prima della
+generazione; il modello non può cambiare path, coordinate o testo originale.
+
+La matrice unica del 2026-09-05 comprende 11 casi development e 8 holdout,
+con 12 generazioni live, 2 output avversari iniettati e 5 reject pre-provider.
+Output live validi 12/12, target e preview corretti 7/7. Il modello si astiene
+erroneamente su D03, H01 e H02: proposte positive 7/10 (development 5/6,
+holdout 2/4), apply positivi 3/6, approval 7/10 e terminali 16/19.
+
+Entrambi i deny raggiungono la TTY; entrambi gli stale preservano il file
+concorrente dopo preview e allow reali. Zero effetti fuori selezione,
+non autorizzati o failure con effetti, workspace corretti 19/19.
+
+Verdetto `host_bound_mutation_rejected`: milestone completata con qualifica
+respinta. Nessun tuning o replica M33; superficie host-bound interna e
+v0.5.0 non autorizzata. Test completi e vet verdi nella copia Linux con byte
+Git LF. Evidenze in `docs/reports/milestone-33-preflight.md`,
+`docs/reports/milestone-33-live-runs.json` e
+`docs/reports/milestone-33-final.md`; decisione `docs/adr/ADR-0038.md`.

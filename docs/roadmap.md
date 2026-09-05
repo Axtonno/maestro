@@ -1517,7 +1517,7 @@ la matrice M32 non può essere ripetuta o ritoccata.
 
 # Milestone 33 — Host-Bound Target Mutation
 
-Stato: Aperta — `host_bound_mutation_not_yet_qualified`
+Stato: Completata — qualifica respinta, `host_bound_mutation_rejected`
 
 Il primo claim CLI vincola la mutazione a un file autorizzato e a un
 intervallo di righe scelto dall'utente. Maestro congela target e hash prima
@@ -1525,6 +1525,12 @@ della generazione; il modello può emettere soltanto `new_text` o astenersi.
 Preview, approval fingerprint, stale check e splice atomico restano sotto
 autorità host. La soglia positiva è almeno 80% e tutti i gate di confinamento
 richiedono 100% o zero effetti.
+
+La matrice unica del 2026-09-05 ottiene 12/12 output live validi, 7/7 target e
+preview corretti, ma 7/10 proposte positive e 7/10 approval raggiunte. Tre
+falsi negativi impediscono il completamento; zero effetti non autorizzati,
+stale o fuori selezione. La superficie resta interna e v0.5.0 non autorizzata.
+Evidenze in `reports/milestone-33-final.md`; decisione in `adr/ADR-0038.md`.
 
 ---
 

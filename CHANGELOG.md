@@ -8,6 +8,8 @@ deve essere dichiarato nelle note di release.
 
 ### Added
 
+- selezione host-bound immutabile, decoder `host-bound-mutation-decision-v1`,
+  fingerprint di coordinate/span/diff e adapter interno al commit atomico;
 - terminali mutativi redatti distinti per target assente/ambiguo, sorgente
   stale, target protetto e approval rifiutata;
 - envelope strict `mutation-decision-v1` con astensioni tipizzate per target
@@ -20,6 +22,9 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
+- M33: qualifica host-bound respinta; 12/12 output live validi e 7/7 target e
+  preview corretti, ma 7/10 proposte positive e approval raggiunte. Tre falsi
+  negativi, zero effetti non autorizzati o fuori selezione; v0.5.0 non autorizzata;
 - M32: contratto binario 18/18 output validi, 8/9 positivi e 3/3 astensioni
   semantiche; qualification respinta perché quattro target assenti/duplicati
   sono stati riscritti dal modello e hanno raggiunto preview, poi negate senza

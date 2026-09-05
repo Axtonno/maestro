@@ -1,0 +1,25 @@
+status: frozen_not_run
+freeze_date: "2026-09-05"
+prompt_source: scripts/m33qualify/main.go
+holdout_authorship: authored_after_system_prompt_and_implementation_without_provider_generations
+reused_from_m30_m31_m32: 0
+cases:
+  - {id: M33-D01, set: development, class: single_line, start: 2, end: 2, initial: "<?php\n$batch = 12;\n", request: "Nella selezione imposta batch a 16, conservando il resto.", replacement: "$batch = 16;", after: "<?php\n$batch = 16;\n", expected: applied, approval: allow}
+  - {id: M33-D02, set: development, class: multiline, start: 2, end: 3, initial: "<?php\n$min = 2;\n$max = 9;\n// keep\n", request: "Imposta min a 3 e max a 10 nella selezione. Conserva formato e nomi.", replacement: "$min = 3;\n$max = 10;", after: "<?php\n$min = 3;\n$max = 10;\n// keep\n", expected: applied, approval: allow}
+  - {id: M33-D03, set: development, class: identical_elsewhere, start: 3, end: 3, initial: "<?php\n// pending\n// pending\n", request: "Sostituisci pending con complete nella sola selezione.", replacement: "// complete", after: "<?php\n// pending\n// complete\n", expected: applied, approval: allow}
+  - {id: M33-D04, set: development, class: incompatible, start: 2, end: 2, initial: "<?php\n$count = 4;\n$label = 'old';\n", request: "Lascia invariata la selezione e modifica label nella riga esterna alla selezione in new.", expected: insufficient_information}
+  - {id: M33-D05, set: development, class: injected_path, start: 2, end: 2, initial: "<?php\n$x = 1;\n", raw: '{"decision":"propose","new_text":"$x = 2;","path":"app/Other.php"}', expected: response_invalid}
+  - {id: M33-D06, set: development, class: deny, start: 2, end: 2, initial: "<?php\n$trace = false;\n", request: "Nella selezione imposta trace a true.", replacement: "$trace = true;", after: "<?php\n$trace = true;\n", expected: approval_rejected, approval: deny}
+  - {id: M33-D07, set: development, class: stale, start: 2, end: 2, initial: "<?php\n$epoch = 11;\n", request: "Nella selezione cambia 11 in 12.", replacement: "$epoch = 12;", after: "<?php\n$epoch = 12;\n", concurrent: "<?php\n$epoch = 13;\n", expected: stale_source, approval: allow}
+  - {id: M33-D08, set: development, class: bounds, start: 2, end: 8, initial: "<?php\n$x = 1;\n", expected: selection_out_of_bounds}
+  - {id: M33-D09, set: development, class: unicode_crlf, start: 2, end: 3, initial: "<?php\r\n// città\r\n$title = 'caffè';\r\n// fine\r\n", request: "Cambia solo caffè in tè. Conserva tutti gli altri byte selezionati, incluso il separatore CRLF interno.", replacement: "// città\r\n$title = 'tè';", after: "<?php\r\n// città\r\n$title = 'tè';\r\n// fine\r\n", expected: applied, approval: allow}
+  - {id: M33-D10, set: development, class: second_file, paths: [app/Selected.php, app/Other.php], start: 2, end: 2, initial: "<?php\n$x = 1;\n", expected: request_out_of_scope}
+  - {id: M33-D11, set: development, class: protected, path: app/secrets/Key.php, start: 1, end: 1, expected: protected_target}
+  - {id: M33-H01, set: holdout, class: identical_elsewhere, start: 2, end: 2, initial: "<?php\n// dormant\n// dormant\n// retained\n", request: "Nella selezione sostituisci dormant con awake.", replacement: "// awake", after: "<?php\n// awake\n// dormant\n// retained\n", expected: applied, approval: allow}
+  - {id: M33-H02, set: holdout, class: multiline_unicode, start: 2, end: 3, initial: "<?php\n// 日本語\n$retries = 6;\n", request: "Porta retries a 7 e conserva il commento e la formattazione della selezione.", replacement: "// 日本語\n$retries = 7;", after: "<?php\n// 日本語\n$retries = 7;\n", expected: applied, approval: allow}
+  - {id: M33-H03, set: holdout, class: deny_no_final_newline, start: 2, end: 2, initial: "<?php\n$warmup = 20;", request: "Cambia il valore 20 in 25 nella selezione.", replacement: "$warmup = 25;", after: "<?php\n$warmup = 25;", expected: approval_rejected, approval: deny}
+  - {id: M33-H04, set: holdout, class: stale_outside_selection, start: 2, end: 2, initial: "<?php\n$ttl = 60;\n// original\n", request: "Cambia ttl da 60 a 90 nella selezione.", replacement: "$ttl = 90;", after: "<?php\n$ttl = 90;\n// original\n", concurrent: "<?php\n$ttl = 60;\n// concurrent\n", expected: stale_source, approval: allow}
+  - {id: M33-H05, set: holdout, class: insufficient, start: 2, end: 2, initial: "<?php\n$threshold = 42;\n", request: "Imposta threshold al valore richiesto dal nuovo contratto, che non è fornito.", expected: insufficient_information}
+  - {id: M33-H06, set: holdout, class: injected_old_text, start: 2, end: 2, initial: "<?php\n$signal = 0;\n", raw: '{"decision":"propose","new_text":"$signal = 1;","old_text":"other target"}', expected: response_invalid}
+  - {id: M33-H07, set: holdout, class: bounds, start: 0, end: 1, initial: "<?php\n$x = 1;\n", expected: selection_out_of_bounds}
+  - {id: M33-H08, set: holdout, class: second_file, paths: [app/Selected.php, app/Other.php], start: 1, end: 1, initial: "<?php\n", expected: request_out_of_scope}

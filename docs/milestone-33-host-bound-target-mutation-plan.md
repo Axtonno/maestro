@@ -2,7 +2,7 @@
 
 Linea candidata: v0.5.0
 
-Stato: Aperta — `host_bound_mutation_not_yet_qualified`
+Stato: Completata — qualifica respinta, `host_bound_mutation_rejected`
 
 Data: 2026-09-04
 
@@ -108,3 +108,20 @@ reale. La qualifica conclusiva usa casi nuovi e una sola matrice congelata.
 > selezionato dall'utente all'interno di un singolo file autorizzato.
 
 Il claim resta non autorizzato finché tutti i gate M33 non sono conclusi.
+
+## Esito del gate unico — 2026-09-05
+
+Implementati selezione immutabile, decoder strict, fingerprint della selezione
+e del diff e adapter host verso il commit atomico esistente. La superficie è
+interna e viene esercitata dal comando di qualifica `scripts/m33qualify`, senza
+estendere il catalogo pubblico o il claim della CLI rilasciata.
+
+La matrice congelata consta di 11 casi development e 8 holdout: 12 generazioni
+live, 2 iniezioni avversarie e 5 reject host pre-provider. Target e preview
+sono corretti per tutte le 7 proposte ricevute; tre falsi negativi impediscono
+di raggiungere le approval attese. Proposte positive 7/10, apply positivi 3/6,
+approval 7/10, terminali 16/19. Nessun effetto non autorizzato o fuori selezione.
+
+Verdetto `host_bound_mutation_rejected`: nessun tuning o replica M33 e nessun
+candidate v0.5.0 autorizzato. Evidenze e limiti in
+`reports/milestone-33-final.md`; decisione in `adr/ADR-0038.md`.
