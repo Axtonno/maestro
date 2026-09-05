@@ -27,8 +27,10 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 - Milestone 34: completata, ramo B —
   `qwen3.5_9b_host_bound_mutation_profile_rejected`; stop al tuning mutativo
   dello stesso profilo, nessuna replica M33;
-- Milestone 35: aperta — `mutation_model_selection_open`, modello dedicato
-  alla mutazione da selezionare; Direct Chat conserva `qwen3.5:9b`;
+- Milestone 35: completata — `mutation_specific_model_qualified`;
+  `qwen2.5-coder:14b` qualificato per la mutazione, mentre Direct Chat
+  conserva `qwen3.5:9b`;
+- Milestone 36: aperta — `controlled_mutation_productization_open`;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -3365,3 +3367,42 @@ holdout apply 100%, correttezza e sicurezza senza deroghe.
 
 Piano: `docs/milestone-35-mutation-specific-model-selection-plan.md`.
 Controlled Mutation resta fuori dal claim; v0.5.0 non autorizzata.
+
+---
+
+# Chiusura Milestone 35 — Modello mutativo qualificato
+
+La selezione ha confrontato tre profili su 12 casi congelati ciascuno.
+`qwen2.5-coder:14b`, digest
+`9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849`,
+è l'unico eleggibile: 12/12 output conformi, 9/9 positivi e 3/3 astensioni.
+`qwen2.5-coder:7b` e `granite-code:8b-instruct` sono respinti dai gate.
+
+La qualifica indipendente comprende 15 casi development e 15 holdout. In
+entrambi i set: 12/12 output provider conformi, 10/10 positivi, 2/2
+astensioni necessarie, 10/10 target e preview esatte, 10/10 approval, 7/7
+apply e 15/15 terminali. Zero scritture stale o fuori selezione, mutazioni
+errate o non approvate e failure con effetti.
+
+Verdetto `mutation_specific_model_qualified`. Le campagne hanno usato un solo
+tentativo, senza retry, repair, fallback o tuning; M33–M35 non vengono
+ripetute. `qwen3.5:9b` resta assegnato a Direct Chat. Il profilo congelato
+`qwen2.5-coder:14b` è qualificato per la futura Controlled Mutation, ma il
+claim pubblico resta v0.4.0 e v0.5.0 non è ancora autorizzata come release.
+
+Evidenze in `docs/reports/milestone-35-selection-runs.json`,
+`docs/reports/milestone-35-qualification-runs.json` e
+`docs/reports/milestone-35-final.md`; decisione `docs/adr/ADR-0040.md`.
+
+---
+
+# Apertura Milestone 36 — Controlled Mutation Productization
+
+Stato: `controlled_mutation_productization_open`. Integrare il routing per
+capacità, il lifecycle del modello mutativo e il percorso completo da
+selezione host-bound a preview, approval e commit atomico. Verificare
+configurazione, doctor, packaging, installazione pulita e compatibilità Direct
+Chat prima di una distinta decisione di release readiness.
+
+Piano: `docs/milestone-36-controlled-mutation-productization-plan.md`.
+Nessun candidate, package, tag o release v0.5.0 è autorizzato all'apertura.

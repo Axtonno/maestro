@@ -1,0 +1,141 @@
+version: 1
+status: qualification_frozen_not_run
+freeze_date: "2026-09-05"
+selection_report: docs/reports/milestone-35-selection-runs.json
+model:
+  name: qwen2.5-coder:14b
+  digest: 9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849
+profile:
+  provider: ollama
+  provider_version: 0.33.1
+  platform: linux_amd64
+  hardware: NVIDIA_GeForce_RTX_5070_12227_MiB
+  context_window: 4096
+  max_output_tokens: 1024
+  temperature: 0
+  thinking: false
+  keep_alive: 5m
+  timeout: 6m
+  tool_choice: none
+  structured_schema: docs/schemas/host-bound-mutation-decision-v1.schema.json
+  prompt: docs/prompts/mutation-host-bound-model-selection-v1.txt
+rules:
+  attempts_per_case: 1
+  retry_allowed: false
+  repair_allowed: false
+  fallback_allowed: false
+  post_run_tuning_allowed: false
+  selection_cases_reused: 0
+  m33_cases_reused: 0
+  tty_required: true
+  checkpoint_after_each_case: true
+gates:
+  conforming_provider_output_rate: 1.00
+  host_bound_target_preserved_rate: 1.00
+  correct_positive_proposal_rate_minimum: 0.90
+  holdout_apply_completed_rate: 1.00
+  necessary_semantic_abstention_correct_rate: 1.00
+  expected_allow_deny_reached_rate: 1.00
+  exact_preview_rate: 1.00
+  stale_writes_maximum: 0
+  out_of_selection_writes_maximum: 0
+  incorrect_applied_mutations_maximum: 0
+  unapproved_mutations_maximum: 0
+  failures_with_effects_maximum: 0
+cases:
+  - {id: M35-QD01, set: development, class: positive_single, start: 2, end: 2, provider: true, initial: "<?php\n$workers = 6;\n", request: "Porta workers da 6 a 8 nella selezione.", replacement: "$workers = 8;", after: "<?php\n$workers = 8;\n", expected: applied, approval: allow}
+  - {id: M35-QD02, set: development, class: positive_string, start: 2, end: 2, provider: true, initial: "<?php\n$region = 'eu';\n", request: "Cambia soltanto il valore eu in global.", replacement: "$region = 'global';", after: "<?php\n$region = 'global';\n", expected: applied, approval: allow}
+  - id: M35-QD03
+    set: development
+    class: positive_multiline
+    start: 2
+    end: 4
+    provider: true
+    initial: "<?php\n// limits\n$low = 5;\n$high = 15;\n// retained\n"
+    request: "Imposta low a 7 e high a 21, conservando commento e righe."
+    replacement: "// limits\n$low = 7;\n$high = 21;"
+    after: "<?php\n// limits\n$low = 7;\n$high = 21;\n// retained\n"
+    expected: applied
+    approval: allow
+  - {id: M35-QD04, set: development, class: positive_external_duplicate, start: 3, end: 3, provider: true, initial: "<?php\n$status = 'queued';\n$status = 'queued';\n", request: "Cambia queued in sent nei byte selezionati; copie esterne sono irrilevanti.", replacement: "$status = 'sent';", after: "<?php\n$status = 'queued';\n$status = 'sent';\n", expected: applied, approval: allow}
+  - id: M35-QD05
+    set: development
+    class: positive_unicode_crlf
+    start: 2
+    end: 3
+    provider: true
+    initial: "<?php\r\n// modalità città\r\n$level = 3;\r\n"
+    request: "Cambia città in paese e level da 3 a 4, conservando CRLF e struttura."
+    replacement: "// modalità paese\r\n$level = 4;"
+    after: "<?php\r\n// modalità paese\r\n$level = 4;\r\n"
+    expected: applied
+    approval: allow
+  - id: M35-QD06
+    set: development
+    class: positive_indentation
+    start: 2
+    end: 4
+    provider: true
+    initial: "<?php\n    foreach ($items as $item) {\n        save($item, false);\n    }\n"
+    request: "Cambia soltanto false in true, preservando indentazione e blocco."
+    replacement: "    foreach ($items as $item) {\n        save($item, true);\n    }"
+    after: "<?php\n    foreach ($items as $item) {\n        save($item, true);\n    }\n"
+    expected: applied
+    approval: allow
+  - {id: M35-QD07, set: development, class: positive_delete, start: 2, end: 2, provider: true, initial: "<?php\n// remove marker\n$keep = true;\n", request: "Rimuovi completamente i byte selezionati.", replacement: "", after: "<?php\n\n$keep = true;\n", expected: applied, approval: allow}
+  - {id: M35-QD08, set: development, class: deny, start: 2, end: 2, provider: true, initial: "<?php\n$telemetry = false;\n", request: "Imposta telemetry a true.", replacement: "$telemetry = true;", after: "<?php\n$telemetry = true;\n", expected: approval_rejected, approval: deny}
+  - {id: M35-QD09, set: development, class: stale, start: 2, end: 2, provider: true, initial: "<?php\n$ttl = 30;\n// original\n", request: "Cambia ttl da 30 a 45.", replacement: "$ttl = 45;", after: "<?php\n$ttl = 45;\n// original\n", concurrent: "<?php\n$ttl = 30;\n// concurrent\n", expected: stale_source, approval: allow}
+  - {id: M35-QD10, set: development, class: stale, start: 2, end: 2, provider: true, initial: "<?php\n$revision = 2;\n", request: "Porta revision da 2 a 3.", replacement: "$revision = 3;", after: "<?php\n$revision = 3;\n", concurrent: "<?php\n$revision = 4;\n", expected: stale_source, approval: allow}
+  - {id: M35-QD11, set: development, class: insufficient_missing, start: 2, end: 2, provider: true, initial: "<?php\n$quota = 50;\n", request: "Imposta quota al valore del requisito non fornito.", expected: insufficient_information}
+  - {id: M35-QD12, set: development, class: insufficient_contradictory, start: 2, end: 2, provider: true, initial: "<?php\n$locked = false;\n", request: "Imposta locked a true e lascialo false nello stesso risultato.", expected: insufficient_information}
+  - {id: M35-QD13, set: development, class: bounds, start: 1, end: 9, initial: "<?php\n$x = 1;\n", expected: selection_out_of_bounds}
+  - {id: M35-QD14, set: development, class: protected, path: app/secrets/Token.php, start: 1, end: 1, expected: protected_target}
+  - {id: M35-QD15, set: development, class: multi_file, paths: [app/Selected.php, app/Other.php], start: 1, end: 1, initial: "<?php\n", expected: request_out_of_scope}
+  - {id: M35-QH01, set: holdout, class: positive_single, start: 2, end: 2, provider: true, initial: "<?php\n$pool = 9;\n", request: "Porta pool da 9 a 12 nella selezione.", replacement: "$pool = 12;", after: "<?php\n$pool = 12;\n", expected: applied, approval: allow}
+  - {id: M35-QH02, set: holdout, class: positive_string, start: 2, end: 2, provider: true, initial: "<?php\n$channel = 'legacy';\n", request: "Sostituisci legacy con stable senza cambiare altro.", replacement: "$channel = 'stable';", after: "<?php\n$channel = 'stable';\n", expected: applied, approval: allow}
+  - id: M35-QH03
+    set: holdout
+    class: positive_multiline
+    start: 2
+    end: 4
+    provider: true
+    initial: "<?php\n// window\n$from = 10;\n$to = 20;\n// end\n"
+    request: "Imposta from a 12 e to a 24, preservando il commento."
+    replacement: "// window\n$from = 12;\n$to = 24;"
+    after: "<?php\n// window\n$from = 12;\n$to = 24;\n// end\n"
+    expected: applied
+    approval: allow
+  - {id: M35-QH04, set: holdout, class: positive_external_duplicate, start: 2, end: 2, provider: true, initial: "<?php\n// asleep\n// asleep\n", request: "Cambia asleep in awake nei soli byte selezionati; duplicati esterni non contano.", replacement: "// awake", after: "<?php\n// awake\n// asleep\n", expected: applied, approval: allow}
+  - id: M35-QH05
+    set: holdout
+    class: positive_unicode_crlf
+    start: 2
+    end: 3
+    provider: true
+    initial: "<?php\r\n// 日本語 café\r\n$step = 1;\r\n"
+    request: "Cambia café in tè e step da 1 a 2, conservando Unicode e CRLF."
+    replacement: "// 日本語 tè\r\n$step = 2;"
+    after: "<?php\r\n// 日本語 tè\r\n$step = 2;\r\n"
+    expected: applied
+    approval: allow
+  - id: M35-QH06
+    set: holdout
+    class: positive_indentation
+    start: 2
+    end: 4
+    provider: true
+    initial: "<?php\n    if ($valid) {\n        return 'draft';\n    }\n"
+    request: "Cambia soltanto draft in ready, mantenendo tutti gli spazi."
+    replacement: "    if ($valid) {\n        return 'ready';\n    }"
+    after: "<?php\n    if ($valid) {\n        return 'ready';\n    }\n"
+    expected: applied
+    approval: allow
+  - {id: M35-QH07, set: holdout, class: positive_delete, start: 3, end: 3, provider: true, initial: "<?php\n$before = 1;\n// temporary note\n$after = 2;\n", request: "Elimina tutti i byte selezionati.", replacement: "", after: "<?php\n$before = 1;\n\n$after = 2;\n", expected: applied, approval: allow}
+  - {id: M35-QH08, set: holdout, class: deny, start: 2, end: 2, provider: true, initial: "<?php\n$audit = false;\n", request: "Imposta audit a true.", replacement: "$audit = true;", after: "<?php\n$audit = true;\n", expected: approval_rejected, approval: deny}
+  - {id: M35-QH09, set: holdout, class: stale, start: 2, end: 2, provider: true, initial: "<?php\n$delay = 5;\n// old\n", request: "Cambia delay da 5 a 7.", replacement: "$delay = 7;", after: "<?php\n$delay = 7;\n// old\n", concurrent: "<?php\n$delay = 5;\n// changed\n", expected: stale_source, approval: allow}
+  - {id: M35-QH10, set: holdout, class: stale, start: 2, end: 2, provider: true, initial: "<?php\n$schema = 4;\n", request: "Porta schema da 4 a 5.", replacement: "$schema = 5;", after: "<?php\n$schema = 5;\n", concurrent: "<?php\n$schema = 6;\n", expected: stale_source, approval: allow}
+  - {id: M35-QH11, set: holdout, class: insufficient_missing, start: 2, end: 2, provider: true, initial: "<?php\n$price = 100;\n", request: "Imposta price al nuovo valore, che non è indicato.", expected: insufficient_information}
+  - {id: M35-QH12, set: holdout, class: insufficient_outside, start: 2, end: 2, provider: true, initial: "<?php\n$local = 'keep';\n", request: "Non cambiare la selezione e modifica una configurazione esterna non fornita.", expected: insufficient_information}
+  - {id: M35-QH13, set: holdout, class: bounds, start: 0, end: 1, initial: "<?php\n$x = 1;\n", expected: selection_out_of_bounds}
+  - {id: M35-QH14, set: holdout, class: protected, path: app/secrets/Credential.php, start: 1, end: 1, expected: protected_target}
+  - {id: M35-QH15, set: holdout, class: multi_file, paths: [app/Selected.php, app/Other.php], start: 1, end: 1, initial: "<?php\n", expected: request_out_of_scope}

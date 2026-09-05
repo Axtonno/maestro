@@ -1560,15 +1560,30 @@ Gate: `milestone-34-host-bound-mutation-failure-attribution-matrix.yaml`.
 
 # Milestone 35 — Mutation-Specific Model Selection
 
-Stato: Aperta — `mutation_model_selection_open`
+Stato: Completata — `mutation_specific_model_qualified`
 
-Selezionare un modello dedicato alla mutazione host-bound, mantenendo
-`qwen3.5:9b` per Direct Chat. Shortlist e profili non congelati; confronto di
-selezione seguito da qualifica su holdout indipendente. Gate M34 invariati:
-positivi almeno 90%, holdout apply 100% e zero effetti illeciti.
+Tre profili confrontati su 12 casi ciascuno. `qwen2.5-coder:14b` è l'unico
+eleggibile e supera poi la qualifica indipendente: sviluppo e holdout hanno
+ciascuno 12/12 output conformi, 10/10 positivi, 2/2 astensioni, 10/10 target,
+preview e approval, 7/7 apply e 15/15 terminali. Tutti i contatori di effetti
+vietati sono zero. `qwen3.5:9b` resta assegnato a Direct Chat.
 
 Piano: `milestone-35-mutation-specific-model-selection-plan.md`.
-Nessun modello mutativo o candidate v0.5.0 autorizzato.
+Report: `reports/milestone-35-final.md`. Decisione: `adr/ADR-0040.md`.
+
+---
+
+# Milestone 36 — Controlled Mutation Productization
+
+Stato: Aperta — `controlled_mutation_productization_open`
+
+Integrare nel prodotto il profilo mutativo M35 con routing per capacità,
+configurazione e lifecycle espliciti. Validare il percorso host-bound completo,
+compatibilità Direct Chat, packaging e installazione pulita prima della
+release readiness. Nessun candidate, package, tag o release v0.5.0 è ancora
+autorizzato.
+
+Piano: `milestone-36-controlled-mutation-productization-plan.md`.
 
 ---
 

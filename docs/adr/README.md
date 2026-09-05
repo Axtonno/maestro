@@ -33,3 +33,7 @@
 - [ADR-0034 – Protocollo deterministico di Controlled Mutation v1](ADR-0034.md)
 - [ADR-0035 — Decisione strutturata e astensione per Controlled Mutation](ADR-0035.md)
 - [ADR-0036 — Autorità deterministica e terminali di rifiuto mutativo](ADR-0036.md)
+- [ADR-0037 — Contratto binario di decisione mutativa](ADR-0037.md)
+- [ADR-0038 — Target mutativo vincolato dall'host](ADR-0038.md)
+- [ADR-0039 — Rigetto del profilo host-bound e modelli per capacità](ADR-0039.md)
+- [ADR-0040 — Modelli separati per Direct Chat e Controlled Mutation](ADR-0040.md)

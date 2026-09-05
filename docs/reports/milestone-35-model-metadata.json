@@ -1,0 +1,56 @@
+{
+  "Provider": "ollama-0.33.1",
+  "CollectedAt": "2026-09-05T14:24:03Z",
+  "Models": [
+    {
+      "Name": "qwen2.5-coder:7b",
+      "Digest": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+      "Family": "qwen2",
+      "ParameterSize": "7.6B",
+      "Quantization": "Q4_K_M",
+      "TemplateSHA256": "1e65450c30670713aa47fe23e8b9662bdf4065e81cc8e3cbfaa98924fcc0d320",
+      "SystemSHA256": "66b9ea09bd5b7099cbb4fc820f31b575c0366fa439b08245566692c6784e281e",
+      "Parameters": "",
+      "Size": 4683087561,
+      "Capabilities": [
+        "completion",
+        "tools",
+        "insert"
+      ],
+      "ApacheLicense": true
+    },
+    {
+      "Name": "qwen2.5-coder:14b",
+      "Digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+      "Family": "qwen2",
+      "ParameterSize": "14.8B",
+      "Quantization": "Q4_K_M",
+      "TemplateSHA256": "1e65450c30670713aa47fe23e8b9662bdf4065e81cc8e3cbfaa98924fcc0d320",
+      "SystemSHA256": "66b9ea09bd5b7099cbb4fc820f31b575c0366fa439b08245566692c6784e281e",
+      "Parameters": "",
+      "Size": 8988124298,
+      "Capabilities": [
+        "completion",
+        "tools",
+        "insert"
+      ],
+      "ApacheLicense": true
+    },
+    {
+      "Name": "granite-code:8b-instruct",
+      "Digest": "36c3c3b9683b411ee20ba5c6c6858df83a1d7bf3b65f9fd76a073791e98a18dd",
+      "Family": "llama",
+      "ParameterSize": "8.1B",
+      "Quantization": "Q4_0",
+      "TemplateSHA256": "977871d28ce4f49cebd5558050f5b5c527a04c68c17a468682219ceda2e70c21",
+      "SystemSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "Parameters": "stop                           \"System:\"\nstop                           \"Question:\"\nstop                           \"Answer:\"",
+      "Size": 4590918937,
+      "Capabilities": [
+        "completion",
+        "insert"
+      ],
+      "ApacheLicense": true
+    }
+  ]
+}

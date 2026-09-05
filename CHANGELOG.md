@@ -22,6 +22,11 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
+- M35 conclusa con `mutation_specific_model_qualified`: il confronto di tre
+  profili seleziona `qwen2.5-coder:14b`; qualifica development e holdout al
+  100% su output, positivi, astensioni, target, preview, approval, apply e
+  terminali, con zero effetti vietati. `qwen3.5:9b` resta per Direct Chat;
+  aperta M36 per la productization, v0.5.0 non ancora autorizzata;
 - M34 conclusa nel ramo B: `qwen3.5_9b_host_bound_mutation_profile_rejected`.
   Audit offline di prompt/payload/adapter e renderer senza conflitti residui
   rilevati; stop al tuning mutativo dello stesso profilo. Zero generazioni

@@ -1,0 +1,80 @@
+version: 1
+status: frozen_not_run
+freeze_date: "2026-09-05"
+purpose: mutation_model_selection_only
+reused_m33_cases: 0
+attempts_per_model_case: 1
+candidates:
+  - name: qwen2.5-coder:7b
+    digest: dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364
+    template_sha256: 1e65450c30670713aa47fe23e8b9662bdf4065e81cc8e3cbfaa98924fcc0d320
+    weights_bytes: 4683087561
+  - name: qwen2.5-coder:14b
+    digest: 9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849
+    template_sha256: 1e65450c30670713aa47fe23e8b9662bdf4065e81cc8e3cbfaa98924fcc0d320
+    weights_bytes: 8988124298
+  - name: granite-code:8b-instruct
+    digest: 36c3c3b9683b411ee20ba5c6c6858df83a1d7bf3b65f9fd76a073791e98a18dd
+    template_sha256: 977871d28ce4f49cebd5558050f5b5c527a04c68c17a468682219ceda2e70c21
+    weights_bytes: 4590918937
+cases:
+  - id: M35-S01
+    class: positive_single_line
+    request: "Nella selezione cambia il timeout da 15 a 25. Conserva sintassi e spaziatura."
+    selected: "$timeout = 15;"
+    replacement: "$timeout = 25;"
+  - id: M35-S02
+    class: positive_boolean
+    request: "Imposta il flag enabled a true nella selezione."
+    selected: "$enabled = false;"
+    replacement: "$enabled = true;"
+  - id: M35-S03
+    class: positive_string
+    request: "Sostituisci il valore staging con production, senza cambiare altro."
+    selected: "$environment = 'staging';"
+    replacement: "$environment = 'production';"
+  - id: M35-S04
+    class: positive_multiline
+    request: "Porta il minimo a 4 e il massimo a 18. Conserva righe e nomi."
+    selected: "$minimum = 3;\n$maximum = 12;"
+    replacement: "$minimum = 4;\n$maximum = 18;"
+  - id: M35-S05
+    class: positive_preserve_comment
+    request: "Cambia soltanto il numero di tentativi da 2 a 5."
+    selected: "// retry policy\n$attempts = 2;"
+    replacement: "// retry policy\n$attempts = 5;"
+  - id: M35-S06
+    class: positive_external_duplicate_irrelevant
+    request: "Sostituisci pending con complete nei byte selezionati. Una copia identica esiste fuori dalla selezione ed è irrilevante."
+    selected: "// pending"
+    replacement: "// complete"
+  - id: M35-S07
+    class: positive_unicode_crlf
+    request: "Cambia soltanto città in paese, conservando il CRLF interno e la seconda riga."
+    selected: "// città\r\n$mode = 'safe';"
+    replacement: "// paese\r\n$mode = 'safe';"
+  - id: M35-S08
+    class: positive_indentation
+    request: "Cambia il valore restituito da cold a warm, conservando indentazione e struttura."
+    selected: "    if ($ready) {\n        return 'cold';\n    }"
+    replacement: "    if ($ready) {\n        return 'warm';\n    }"
+  - id: M35-S09
+    class: positive_deletion
+    request: "Rimuovi completamente i byte selezionati."
+    selected: "// obsolete"
+    replacement: ""
+  - id: M35-S10
+    class: insufficient_missing_value
+    request: "Imposta il limite al valore previsto dal requisito, che non è fornito."
+    selected: "$limit = 40;"
+    decision: abstain
+  - id: M35-S11
+    class: insufficient_contradictory
+    request: "Cambia active a true e mantienilo false nello stesso risultato."
+    selected: "$active = false;"
+    decision: abstain
+  - id: M35-S12
+    class: insufficient_outside_selection
+    request: "Lascia invariata la selezione e modifica un'altra riga non fornita."
+    selected: "$local = 1;"
+    decision: abstain
