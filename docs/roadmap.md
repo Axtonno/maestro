@@ -1615,6 +1615,20 @@ Report: `reports/milestone-37-final.md`. Decisione:
 
 ---
 
+# Milestone 38 — v0.5.0 Controlled Mutation Field Adoption
+
+Stato: Aperta — `native_linux_field_adoption_pending`.
+
+La milestone usa esclusivamente l'asset pubblico v0.5.0 su Linux amd64 nativo,
+senza checkout o rebuild. Deve coprire installazione da documentazione, doctor,
+Direct Chat, selezioni semplici/multilinea/Unicode/ripetute, allow, deny,
+stale, roundtrip chat → mutation → chat, latency, qualità e utilità percepita.
+
+Piano: `milestone-38-controlled-mutation-field-adoption-plan.md`.
+Matrice: `milestone-38-controlled-mutation-field-adoption-matrix.yaml`.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

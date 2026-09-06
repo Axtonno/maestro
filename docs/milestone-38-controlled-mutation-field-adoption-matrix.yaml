@@ -1,0 +1,44 @@
+version: 1
+milestone: 38
+status: native_linux_field_adoption_pending
+artifact:
+  version: v0.5.0
+  source: https://github.com/Axtonno/maestro/releases/tag/v0.5.0
+  checkout_used: false
+  rebuild_used: false
+platform:
+  required: native_linux_amd64
+  previous_qualification: windows_wsl2_linux_filesystem
+  native_linux_validated: false
+models:
+  direct_chat: qwen3.5:9b
+  controlled_mutation: qwen2.5-coder:14b
+cases:
+  - {id: F01, name: doctor_all, status: pending}
+  - {id: F02, name: direct_chat_no_file, status: pending}
+  - {id: F03, name: direct_chat_explicit_file, status: pending}
+  - {id: F04, name: simple_single_line_replace, status: pending}
+  - {id: F05, name: multiline_replace, status: pending}
+  - {id: F06, name: unicode_replace, status: pending}
+  - {id: F07, name: repeated_code_selection, status: pending}
+  - {id: F08, name: approval_allow, status: pending}
+  - {id: F09, name: approval_deny, status: pending}
+  - {id: F10, name: stale_source, status: pending}
+  - {id: F11, name: repeated_chat_mutation_chat, status: pending}
+  - {id: F12, name: latency_and_utility, status: pending}
+gates:
+  target_preservation: 1.0
+  preview_diff_match: 1.0
+  unapproved_mutations: 0
+  out_of_selection_writes: 0
+  failures_with_effects: 0
+  semantic_correctness_minimum: 0.90
+  valid_completion_minimum: 0.90
+  utility_median_minimum: 4
+stop_rules:
+  - out_of_selection_write
+  - unapproved_mutation
+  - failure_with_effect
+  - wrong_model_or_digest
+  - public_asset_mismatch
+verdict: pending

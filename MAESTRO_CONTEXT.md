@@ -38,6 +38,9 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 - Milestone 37: completata — `v0.5.0_released_and_verified`;
   tag, asset pubblici, riscaricamento anonimo e prova sulla copia pubblica
   verificati;
+- Milestone 38: aperta — `native_linux_field_adoption_pending`;
+  richiede prove sul campo su Linux amd64 nativo usando esclusivamente l'asset
+  pubblico, senza checkout o rebuild;
 
 ---
 
