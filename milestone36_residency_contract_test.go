@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestMilestone36ResidencyQualifiedWithSwapDisabledReference(t *testing.T) {
+func TestMilestone36ProductizationQualifiedWithSwapDisabledReference(t *testing.T) {
 	read := func(path string) []byte {
 		t.Helper()
 		data, err := os.ReadFile(path)
@@ -44,7 +44,7 @@ func TestMilestone36ResidencyQualifiedWithSwapDisabledReference(t *testing.T) {
 	if err := yaml.Unmarshal(read("docs/milestone-36-residency-decision.yaml"), &decision); err != nil {
 		t.Fatal(err)
 	}
-	if decision.Status != "residency_gate_qualified_swap_disabled_reference" || decision.AcceptedReport != "docs/reports/milestone-36-residency-runs-v4.json" || decision.AcceptedReportSHA256 != hash(read(decision.AcceptedReport)) || decision.Strategy.Simultaneous || decision.Strategy.Handoff != "unload_previous_wait_empty_then_generate" || decision.Blocking.Swap || decision.Blocking.Peak != 0 || decision.Decision.Completed || decision.Decision.Authorized || decision.Decision.Tuning {
+	if decision.Status != "controlled_mutation_productization_qualified" || decision.AcceptedReport != "docs/reports/milestone-36-residency-runs-v4.json" || decision.AcceptedReportSHA256 != hash(read(decision.AcceptedReport)) || decision.Strategy.Simultaneous || decision.Strategy.Handoff != "unload_previous_wait_empty_then_generate" || decision.Blocking.Swap || decision.Blocking.Peak != 0 || !decision.Decision.Completed || decision.Decision.Authorized || decision.Decision.Tuning {
 		t.Fatalf("invalid residency decision: %#v", decision)
 	}
 	var report struct {
