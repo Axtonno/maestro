@@ -8,7 +8,7 @@ Maestro è un Runtime per sistemi AI locali, progettato per orchestrare componen
 
 L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il Runtime sul quale costruire un intero ecosistema di strumenti intelligenti.
 
-## Snapshot corrente — 2026-09-05
+## Snapshot corrente — 2026-09-06
 
 - ultima release pubblica: **v0.5.0**, stato
   `v0.5.0_released_and_verified`;
