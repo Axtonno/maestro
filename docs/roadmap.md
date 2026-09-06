@@ -1601,7 +1601,7 @@ Piano: `milestone-36-controlled-mutation-productization-plan.md`.
 
 # Milestone 37 — v0.5.0 Release Readiness & Publication
 
-Stato: In corso — `release_readiness_builder_qualified`.
+Stato: `release_artifact_qualified`.
 
 La release viene costruita in un checkout Linux dentro WSL, con Go 1.24.5,
 Ollama dentro WSL, doppio archive byte-identico, installazione fuori checkout,

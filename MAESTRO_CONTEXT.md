@@ -32,9 +32,9 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   conserva `qwen3.5:9b`;
 - Milestone 36: completata — `controlled_mutation_productization_qualified`;
   productization v4, packaging, installazione e release readiness verificati;
-- Milestone 37: in corso — `release_readiness_builder_qualified`;
-  builder Linux WSL congelato, suite, race, vet, diff check e compatibilità
-  v2/v3/v4 verdi; pubblicazione v0.5.0 ancora da completare;
+- Milestone 37: `release_artifact_qualified`;
+  builder Linux WSL congelato, suite, race, vet, diff check, compatibilità
+  v2/v3/v4, packaging e gate live verdi; pubblicazione in corso;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---

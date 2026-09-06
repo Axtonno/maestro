@@ -56,11 +56,12 @@ directory e modelli o hardware non qualificati.
 
 ## Stato della release
 
-La release deve essere costruita con doppio archive byte-identico, installata
-fuori checkout e sottoposta al gate live minimo `chat → mutation → chat`, con
-prove allow, deny, abstain e stale. Solo dopo la verifica indipendente degli
-asset pubblici il tag annotato `v0.5.0` può essere considerato verificato.
+Il packaging release ha superato il doppio archive byte-identico, checksum,
+installazione fuori checkout e `doctor --mode all`. I gate live eseguiti dalla
+copia installata hanno superato allow, deny, abstain, stale e il roundtrip
+`chat → mutation → chat`. Il manifest congela il commit, Go 1.24.5, i due
+digest qualificati e il profilo `mutation-productization`.
 
-Il verdetto di M37 è quindi separato dalla sola qualificazione M36: la
-capability è pronta per la pubblicazione quando tutti gli asset pubblici
-risultano identici al candidate costruito nel builder registrato.
+Il tag annotato `v0.5.0` e gli asset pubblici vengono creati soltanto dopo
+questo report; il riscaricamento anonimo e la prova esclusiva della copia
+pubblica chiudono M37.
