@@ -3421,6 +3421,6 @@ cicli `chat → mutation → chat`, 18/18 transizioni corrette, latenze sotto
 soglia, provider stabile e zero fallback incrociati, offload CPU, OOM, swap o
 restart. L'handoff productizzato scarica il profilo uscente e attende `/api/ps`
 vuoto prima della generazione successiva. Stato M36:
-`residency_gate_qualified_swap_disabled_reference`; restano packaging,
-installazione fuori checkout e decisione release separata. v0.5.0 resta non
-autorizzata alla pubblicazione.
+`controlled_mutation_productization_qualified`. Packaging, installazione fuori
+checkout, doctor e gate end-to-end sono verificati sul candidate `cb2a408`.
+La decisione di release v0.5.0 resta separata e non autorizzata.
