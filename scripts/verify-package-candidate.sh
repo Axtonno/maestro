@@ -224,7 +224,11 @@ if [[ "$profile_kind" == "mutation-productization" ]]; then
 	grep -Fq $'pass\tmutation_configuration\tschema_v4_profiles_separated' <<<"$doctor_output"
 	grep -Fq $'pass\tmutation_mutation_prompt\tqualified_prompt_digest' <<<"$doctor_output"
 	grep -Fq $'pass\tmutation_mutation_schema\tqualified_schema_digest' <<<"$doctor_output"
-	grep -Fq $'fail\tmutation_provider\tprovider_unavailable' <<<"$doctor_output"
+	grep -Fq $'fail\tmutation_tty\ttty_required' <<<"$doctor_output"
+	grep -Fq $'pass\tmutation_provider\tollama_available' <<<"$doctor_output"
+	grep -Fq $'fail\tmutation_direct_chat_model\tmodel_or_digest_mismatch' <<<"$doctor_output"
+	grep -Fq $'fail\tmutation_controlled_mutation_model\tmodel_or_digest_mismatch' <<<"$doctor_output"
+	grep -Fq $'fail\tmutation_capability\trequired_capability_unavailable' <<<"$doctor_output"
 else
 	grep -Fq $'pass\tconfig\tschema_v'"${schema_version}"'_chat_valid' <<<"$doctor_output"
 	grep -Fq $'pass\tworkspace\troot_available' <<<"$doctor_output"
