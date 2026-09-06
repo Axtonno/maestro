@@ -1606,8 +1606,9 @@ Stato: Completata — `v0.5.0_released_and_verified`.
 La release viene costruita in un checkout Linux dentro WSL, con Go 1.24.5,
 Ollama dentro WSL, doppio archive byte-identico, installazione fuori checkout,
 gate `chat → mutation → chat` e verifica indipendente degli asset pubblici.
-Il claim resta limitato a Linux amd64, al reference hardware e alla mutazione
-di un intervallo selezionato in un singolo file PHP sotto `app/`.
+Il target artifact è `linux_amd64`; la piattaforma qualificata è Windows → WSL2
+→ filesystem Linux con RTX 5070 da 12 GB. Linux amd64 nativo non è ancora
+validato sul campo.
 
 Report: `reports/milestone-37-final.md`. Decisione:
 `milestone-37-release-decision.yaml`.

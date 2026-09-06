@@ -10,7 +10,8 @@ deve essere dichiarato nelle note di release.
 
 - Controlled Mutation host-bound productizzata con `qwen2.5-coder:14b`,
   Direct Chat separata su `qwen3.5:9b`, routing senza fallback e CLI opt-in;
-- release qualificata su Linux amd64 e reference RTX 5070 con preview,
+- release qualificata su artifact Linux amd64 eseguito in WSL2 con reference
+  RTX 5070 da 12 GB, con preview,
   approval, apply atomico, allow/deny/abstain/stale e residency verificata;
 - claim limitato a un intervallo selezionato in un singolo file PHP sotto
   `app/`.

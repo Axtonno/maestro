@@ -12,9 +12,11 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 
 - ultima release pubblica: **v0.5.0**, stato
   `v0.5.0_released_and_verified`;
-- support claim: Linux `amd64`, hardware di riferimento, Ollama locale,
+- support claim: artifact `linux/amd64` qualificato su Windows → WSL2 →
+  filesystem Linux, hardware di riferimento RTX 5070 da 12 GB e Ollama locale;
   Direct Chat su `qwen3.5:9b` e Controlled Mutation opt-in su
   `qwen2.5-coder:14b` per un intervallo PHP selezionato sotto `app/`;
+  Linux amd64 nativo non è ancora validato sul campo;
 - schema pubblico chat: v3, context 4096, `num_predict: 1024`, thinking false,
   temperatura zero e residency 5 minuti;
 - CPU, altri modelli/provider, multi-file, verified agent, retrieval, tool

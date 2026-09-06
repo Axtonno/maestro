@@ -5,10 +5,12 @@ Titolo: **v0.5.0 Release Readiness & Publication**
 
 ## Obiettivo
 
-M37 congela la productization qualificata di M36 in un release Linux amd64
-riproducibile, installabile fuori checkout e verificabile anche dopo il
-download pubblico. Il claim è limitato al reference hardware e alla capability
-Controlled Mutation esplicitamente opt-in.
+M37 congela la productization qualificata di M36 in un release artifact Linux
+amd64 riproducibile, installabile fuori checkout e verificabile anche dopo il
+download pubblico. La qualification è stata eseguita su Windows → WSL2 →
+filesystem Linux, con Ollama dentro WSL e RTX 5070 da 12 GB. Il claim è quindi
+limitato alla piattaforma WSL2 qualificata e alla capability Controlled Mutation
+esplicitamente opt-in.
 
 ## Controlli preliminari
 
@@ -45,10 +47,14 @@ M36.
 
 ## Claim pubblico
 
-Su Linux amd64 e sul reference hardware qualificato, Maestro può modificare un
+Su Linux amd64 in WSL2, sul reference hardware qualificato con RTX 5070 da
+12 GB, Ollama locale e i modelli/digest distribuiti, Maestro può modificare un
 intervallo esplicitamente selezionato in un singolo file PHP sotto `app/`, dopo
 preview e approvazione esplicita, utilizzando il profilo dedicato
 `qwen2.5-coder:14b`.
+
+Target artifact: `linux_amd64`. Piattaforma qualificata: `WSL2`. Linux amd64
+nativo non è ancora validato sul campo.
 
 Restano fuori dal claim l'individuazione autonoma del target, il multi-file,
 gli inserimenti arbitrari, gli agent, le mutazioni senza TTY, altri linguaggi o

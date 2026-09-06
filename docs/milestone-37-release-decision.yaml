@@ -13,4 +13,7 @@ public_manifest_verified: true
 public_binary_dirty: false
 public_doctor_all_passed: true
 public_chat_mutation_chat_passed: true
-support_claim: linux_amd64_reference_hardware_single_selected_php_range
+target_artifact: linux_amd64
+qualified_platform: windows_wsl2_linux_filesystem
+native_linux_amd64_field_validated: false
+support_claim: wsl2_rtx5070_12gb_ollama_single_selected_php_range
