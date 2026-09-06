@@ -1575,7 +1575,7 @@ Report: `reports/milestone-35-final.md`. Decisione: `adr/ADR-0040.md`.
 
 # Milestone 36 — Controlled Mutation Productization
 
-Stato: In chiusura — `residency_gate_qualified_swap_disabled_reference`
+Stato: Completata — `controlled_mutation_productization_qualified`
 
 Il profilo mutativo M35 è integrato nel prodotto con routing per capacità,
 configurazione v4 separata, lifecycle esplicito, CLI opt-in, doctor dedicato e
@@ -1596,6 +1596,20 @@ installazione pulita, doctor e gate live allow/deny/stale/abstain sono verdi
 sul candidate `cb2a408`; la pubblicazione v0.5.0 resta una decisione separata.
 
 Piano: `milestone-36-controlled-mutation-productization-plan.md`.
+
+---
+
+# Milestone 37 — v0.5.0 Release Readiness & Publication
+
+Stato: In corso — `release_readiness_builder_qualified`.
+
+La release viene costruita in un checkout Linux dentro WSL, con Go 1.24.5,
+Ollama dentro WSL, doppio archive byte-identico, installazione fuori checkout,
+gate `chat → mutation → chat` e verifica indipendente degli asset pubblici.
+Il claim resta limitato a Linux amd64, al reference hardware e alla mutazione
+di un intervallo selezionato in un singolo file PHP sotto `app/`.
+
+Report: `reports/milestone-37-final.md`.
 
 ---
 

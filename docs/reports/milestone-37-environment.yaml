@@ -1,0 +1,38 @@
+milestone: 37
+name: v0.5.0 Release Readiness and Publication
+date: "2026-09-06"
+builder:
+  host: Windows 11 with WSL2
+  distribution: Ubuntu 24.04.4 LTS
+  kernel: "6.18.33.2-microsoft-standard-WSL2"
+  filesystem: Linux ext4 under /home/cafeo/src/maestro
+  go: go1.24.5
+  go_archive_sha256: 10ad9e86233e74c0f6590fe5426895de6bf388964210eac34a6d83f38918ecdc
+  git: 2.43.0
+  cgo_enabled: "1"
+  goos: linux
+  goarch: amd64
+  timezone: CEST
+  source_date_epoch: commit_timestamp
+provider:
+  topology: Ollama inside WSL
+  version: 0.33.1
+  endpoint: http://127.0.0.1:11434
+hardware:
+  gpu: NVIDIA GeForce RTX 5070
+  driver: "596.36"
+  vram_mib: 12227
+  wsl_swap_kib: 0
+models:
+  direct_chat:
+    name: qwen3.5:9b
+    digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  controlled_mutation:
+    name: qwen2.5-coder:14b
+    digest: 9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849
+build:
+  goos: linux
+  goarch: amd64
+  flags: -trimpath -buildvcs=false -ldflags=-s -w -buildid=
+  source_checkout: /home/cafeo/src/maestro
+  baseline_after_m36: 4fb91c5604698b9e0871f297b5e1402145bd11a0
