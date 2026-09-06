@@ -1,0 +1,16 @@
+version: 1
+status: v0.5.0_released_and_verified
+date: "2026-09-06"
+tag: v0.5.0
+release_commit: 86ed92495c5ce5bd2d0ec8d3c8a11b8c29a316f2
+archive: maestro-v0.5.0-linux-amd64.tar.gz
+archive_sha256: 0afcfe4d648edcde3caf4327c4f995606fb4c3974c05606e13f90dd8cff321d9
+archive_size: 3842782
+checksum_asset: maestro-v0.5.0-linux-amd64.tar.gz.sha256
+github_release: https://github.com/Axtonno/maestro/releases/tag/v0.5.0
+anonymous_download_verified: true
+public_manifest_verified: true
+public_binary_dirty: false
+public_doctor_all_passed: true
+public_chat_mutation_chat_passed: true
+support_claim: linux_amd64_reference_hardware_single_selected_php_range

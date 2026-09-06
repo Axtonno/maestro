@@ -62,6 +62,12 @@ copia installata hanno superato allow, deny, abstain, stale e il roundtrip
 `chat → mutation → chat`. Il manifest congela il commit, Go 1.24.5, i due
 digest qualificati e il profilo `mutation-productization`.
 
-Il tag annotato `v0.5.0` e gli asset pubblici vengono creati soltanto dopo
-questo report; il riscaricamento anonimo e la prova esclusiva della copia
-pubblica chiudono M37.
+Il tag annotato `v0.5.0` è stato pubblicato sul commit
+`86ed92495c5ce5bd2d0ec8d3c8a11b8c29a316f2`. L'archive pubblico
+`maestro-v0.5.0-linux-amd64.tar.gz` e il checksum sono stati riscaricati senza
+autenticazione. Lo SHA-256 verificato è
+`0afcfe4d648edcde3caf4327c4f995606fb4c3974c05606e13f90dd8cff321d9`.
+
+La copia pubblica installata ha superato `doctor --mode all` e il roundtrip
+`chat → mutation → chat`, con gli stessi modelli e digest del builder. Questo
+chiude M37 con il verdetto `v0.5.0_released_and_verified`.

@@ -10,10 +10,11 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 
 ## Snapshot corrente — 2026-09-05
 
-- ultima release pubblica: **v0.4.0**, stato
-  `v0.4.0_released_and_verified`;
-- support claim: Linux `amd64`, Ollama locale, `qwen3.5:9b`, Direct Chat
-  read-only con zero o un file esplicito;
+- ultima release pubblica: **v0.5.0**, stato
+  `v0.5.0_released_and_verified`;
+- support claim: Linux `amd64`, hardware di riferimento, Ollama locale,
+  Direct Chat su `qwen3.5:9b` e Controlled Mutation opt-in su
+  `qwen2.5-coder:14b` per un intervallo PHP selezionato sotto `app/`;
 - schema pubblico chat: v3, context 4096, `num_predict: 1024`, thinking false,
   temperatura zero e residency 5 minuti;
 - CPU, altri modelli/provider, multi-file, verified agent, retrieval, tool
@@ -32,10 +33,9 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   conserva `qwen3.5:9b`;
 - Milestone 36: completata — `controlled_mutation_productization_qualified`;
   productization v4, packaging, installazione e release readiness verificati;
-- Milestone 37: `release_artifact_qualified`;
-  builder Linux WSL congelato, suite, race, vet, diff check, compatibilità
-  v2/v3/v4, packaging e gate live verdi; pubblicazione in corso;
-- nessun candidate, tag o release v0.5.0 è autorizzato.
+- Milestone 37: completata — `v0.5.0_released_and_verified`;
+  tag, asset pubblici, riscaricamento anonimo e prova sulla copia pubblica
+  verificati;
 
 ---
 

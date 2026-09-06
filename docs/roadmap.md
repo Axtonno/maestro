@@ -1601,7 +1601,7 @@ Piano: `milestone-36-controlled-mutation-productization-plan.md`.
 
 # Milestone 37 — v0.5.0 Release Readiness & Publication
 
-Stato: `release_artifact_qualified`.
+Stato: Completata — `v0.5.0_released_and_verified`.
 
 La release viene costruita in un checkout Linux dentro WSL, con Go 1.24.5,
 Ollama dentro WSL, doppio archive byte-identico, installazione fuori checkout,
@@ -1609,7 +1609,8 @@ gate `chat → mutation → chat` e verifica indipendente degli asset pubblici.
 Il claim resta limitato a Linux amd64, al reference hardware e alla mutazione
 di un intervallo selezionato in un singolo file PHP sotto `app/`.
 
-Report: `reports/milestone-37-final.md`.
+Report: `reports/milestone-37-final.md`. Decisione:
+`milestone-37-release-decision.yaml`.
 
 ---
 
