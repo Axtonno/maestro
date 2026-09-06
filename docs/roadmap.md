@@ -1591,6 +1591,10 @@ generazione con il profilo entrante. Le run su RTX 5070 con swap WSL
 disabilitato registrano un solo modello in VRAM, latenze sotto soglia, provider
 stabile e zero fallback incrociati, offload CPU, OOM o swap.
 
+Stato M36: `controlled_mutation_productization_qualified`. Packaging,
+installazione pulita, doctor e gate live allow/deny/stale/abstain sono verdi
+sul candidate `cb2a408`; la pubblicazione v0.5.0 resta una decisione separata.
+
 Piano: `milestone-36-controlled-mutation-productization-plan.md`.
 
 ---

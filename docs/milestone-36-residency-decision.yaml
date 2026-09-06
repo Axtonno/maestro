@@ -1,5 +1,5 @@
 version: 1
-status: residency_gate_qualified_swap_disabled_reference
+status: controlled_mutation_productization_qualified
 date: "2026-09-05"
 accepted_report: docs/reports/milestone-36-residency-runs-v4.json
 accepted_report_sha256: 9cd7b4ae60fcacc9a97c62faabb2877a0ba3e0a4dc3336f910fb0cffc768c8b1
@@ -37,7 +37,7 @@ environment:
   gpu: NVIDIA GeForce RTX 5070
   gpu_memory_mib: 12227
 decision:
-  milestone36_completed: false
+  milestone36_completed: true
   v0.5.0_authorized: false
   model_or_protocol_tuning_allowed: false
-  next_required_decision: productization_e2e_and_packaging
+  next_required_decision: v0.5.0_release_authorization

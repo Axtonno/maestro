@@ -37,3 +37,12 @@ richiesta; la strategia productizzabile è eviction gestita e osservabile.
 
 Evidenza: `milestone-36-residency-runs-v4.json`, SHA-256
 `9cd7b4ae60fcacc9a97c62faabb2877a0ba3e0a4dc3336f910fb0cffc768c8b1`.
+
+## Productization gate
+
+Il candidate v4 costruito dal commit `cb2a408` supera il packaging con doppio
+archive byte-identico, installazione fuori checkout e `doctor --mode all`.
+Le prove live confermano allow applicato, deny senza effetti, abstain per
+informazione insufficiente, `stale_source` dopo modifica concorrente e il
+roundtrip `qwen3.5:9b` → `qwen2.5-coder:14b` → `qwen3.5:9b`. Nessuna prova
+usa fallback incrociato o modifica fuori selezione.

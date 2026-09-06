@@ -30,8 +30,8 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 - Milestone 35: completata — `mutation_specific_model_qualified`;
   `qwen2.5-coder:14b` qualificato per la mutazione, mentre Direct Chat
   conserva `qwen3.5:9b`;
-- Milestone 36: in chiusura — `residency_gate_qualified_swap_disabled_reference`;
-  productization v4 implementata, packaging e release readiness in verifica;
+- Milestone 36: completata — `controlled_mutation_productization_qualified`;
+  productization v4, packaging, installazione e release readiness verificati;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -3397,9 +3397,9 @@ Evidenze in `docs/reports/milestone-35-selection-runs.json`,
 
 ---
 
-# Apertura Milestone 36 — Controlled Mutation Productization
+# Chiusura Milestone 36 — Controlled Mutation Productization
 
-Stato: `controlled_mutation_productization_open`. Integrare il routing per
+Stato: `controlled_mutation_productization_qualified`. Integrare il routing per
 capacità, il lifecycle del modello mutativo e il percorso completo da
 selezione host-bound a preview, approval e commit atomico. Verificare
 configurazione, doctor, packaging, installazione pulita e compatibilità Direct
