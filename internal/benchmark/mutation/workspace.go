@@ -46,6 +46,7 @@ func MaterializeFixture(ctx context.Context, profile Profile) (*MaterializedFixt
 	if err != nil {
 		return nil, err
 	}
+	content = logicalFixtureContent(content)
 	if digestBytes(content) != profile.Fixture.InitialSHA256 ||
 		strings.Count(string(content), profile.Fixture.Old) != 1 {
 		return nil, errors.New("embedded mutation fixture differs from the frozen profile")
@@ -57,6 +58,11 @@ func MaterializeFixture(ctx context.Context, profile Profile) (*MaterializedFixt
 	root, cleanup, err := dataset.Materialize()
 	if err != nil {
 		return nil, err
+	}
+	target := filepath.Join(root, filepath.FromSlash(profile.Fixture.Target))
+	if err := os.WriteFile(target, content, 0o600); err != nil {
+		_ = cleanup()
+		return nil, fmt.Errorf("materialize mutation fixture target: %w", err)
 	}
 	snapshot, err := SnapshotWorkspace(ctx, root)
 	if err != nil {
@@ -153,6 +159,11 @@ func (snapshot WorkspaceSnapshot) Validate() error {
 }
 
 func digestBytes(content []byte) string {
+	content = logicalFixtureContent(content)
 	digest := sha256.Sum256(content)
 	return hex.EncodeToString(digest[:])
+}
+
+func logicalFixtureContent(content []byte) []byte {
+	return []byte(strings.ReplaceAll(string(content), "\r\n", "\n"))
 }

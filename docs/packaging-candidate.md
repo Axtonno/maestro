@@ -51,6 +51,19 @@ chat nell'archive con lo schema strict v3, `qwen2.5-coder:7b`,
 `num_predict: 512` e residency 5m, e registra `profile_kind` nel manifest.
 Non assegna una futura versione di release e non autorizza pubblicazione.
 
+La variante di Milestone 36 usa il profilo separato v4:
+
+```sh
+./scripts/verify-package-candidate.sh \
+  --version v0.5.0-pc.1 --status packaging-candidate \
+  --profile mutation-productization
+```
+
+L'archive include `configs/maestro.v0.5.0-candidate.yaml`, il prompt/schema
+mutativi congelati e un manifest con identità distinte per Direct Chat e
+Controlled Mutation. Questa variante verifica packaging e installazione, ma la
+pubblicazione v0.5.0 resta una decisione separata.
+
 ## Riproducibilità
 
 Il packaging richiede worktree pulito, Go 1.24.5 e GNU tar. Usa commit time
@@ -70,6 +83,10 @@ uguaglianza byte-per-byte prima di verificare checksum e contenuto.
 L’archive non include profili agentici o mutativi, benchmark, raw trace,
 report di sviluppo, prompt/response di qualificazione, secret, symlink,
 directory VCS, `vendor` o `node_modules`.
+
+La variante `mutation-productization` è un'eccezione esplicita al profilo
+chat-only: include soltanto il profilo v4 qualificato e gli artefatti
+prompt/schema necessari alla diagnostica mutativa.
 
 ## Baseline qualificata
 

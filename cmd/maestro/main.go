@@ -24,12 +24,13 @@ func run(arguments []string, stdout io.Writer, stderr io.Writer) int {
 }
 
 type commandDependencies struct {
-	application    application.Dependencies
-	buildInfo      func() buildinfo.Info
-	binaryIdentity func() (binaryIdentity, error)
-	chatHeartbeat  time.Duration
-	context        func() (context.Context, context.CancelFunc)
-	isTerminal     func(io.Reader) bool
+	application          application.Dependencies
+	buildInfo            func() buildinfo.Info
+	binaryIdentity       func() (binaryIdentity, error)
+	chatHeartbeat        time.Duration
+	context              func() (context.Context, context.CancelFunc)
+	isTerminal           func(io.Reader) bool
+	mutationAfterPreview func()
 }
 
 func defaultCommandDependencies() commandDependencies {
@@ -66,7 +67,7 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 	}
 	switch arguments[0] {
 	case "doctor":
-		return runDoctor(arguments[1:], stdout, stderr, dependencies)
+		return runDoctor(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "models":
 		return runModels(arguments[1:], stdout, stderr, dependencies)
 	case "agents":
@@ -75,6 +76,8 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 		return runAgent("maestro agent", arguments[1:], stdin, stdout, stderr, dependencies)
 	case "chat":
 		return runChat(arguments[1:], stdin, stdout, stderr, dependencies)
+	case "workspace":
+		return runWorkspace(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "run":
 		return runAgent("maestro run", arguments[1:], stdin, stdout, stderr, dependencies)
 	case "version":
@@ -160,6 +163,7 @@ func printRootUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  agents   list registered agents and capabilities")
 	fmt.Fprintln(writer, "  agent    execute the configured verified agent")
 	fmt.Fprintln(writer, "  chat     answer from one explicitly selected workspace file")
+	fmt.Fprintln(writer, "  workspace run an explicit host-bound workspace operation")
 	fmt.Fprintln(writer, "  run      deprecated alias for agent")
 	fmt.Fprintln(writer, "  version  print build version and commit")
 	fmt.Fprintln(writer, "  bench    run benchmark and evaluation commands")

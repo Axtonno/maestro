@@ -16,6 +16,18 @@ La root help può mostrare comandi storici o di sviluppo. `agent`, `run`,
 `models`, `agents` e `bench` non appartengono al support claim v0.3.1 e non
 sono fallback di Direct Chat.
 
+La linea candidata v0.5.0 aggiunge una superficie mutativa opt-in separata:
+
+```text
+maestro workspace replace --file <path> --lines <start:end> [--config path] <istruzione>
+maestro doctor --mode mutation [--config path]
+maestro doctor --mode all [--config path]
+```
+
+Questi comandi richiedono un profilo v4 con `direct_chat` e
+`controlled_mutation` distinti. Non ereditano il modello Direct Chat come
+fallback e non abilitano mutation se il profilo dedicato manca.
+
 ## `chat`
 
 ```text
@@ -96,6 +108,51 @@ come PASS in una serie di qualificazione.
 
 Il dettaglio del check config identifica lo schema caricato
 (`schema_v2_chat_valid` oppure `schema_v3_chat_valid`).
+
+## `workspace replace`
+
+```text
+maestro workspace replace --file <path> --lines <start:end> [--config path] <istruzione>
+```
+
+Esegue Controlled Mutation solo con profilo v4 qualificato. `--file` deve
+essere un path logico relativo sotto `app/`, il target deve essere un file PHP
+regolare e non symlink, e `--lines` usa un intervallo inclusivo `start:end`.
+Il comando richiede una TTY reale prima di qualsiasi I/O provider.
+
+Prima dell'approvazione mostra file, intervallo, `single_file: true`, digest,
+fingerprint e diff completo. L'utente deve scegliere esplicitamente allow-once
+o deny; invio vuoto, EOF e input sconosciuto negano la modifica.
+
+Il comando fallisce chiuso per configurazione non v4, intervallo invalido,
+path fuori `app/`, symlink, modello mutativo assente o con digest diverso,
+schema/prompt diversi da quelli qualificati, output provider non conforme,
+astensione, deny o sorgente cambiata dopo la preview.
+
+### Output Controlled Mutation
+
+```text
+mode	controlled_mutation
+terminal	applied
+model	qwen2.5-coder:14b
+file	app/Worker.php
+lines	2:2
+effect	applied
+durable	true
+```
+
+## `doctor --mode mutation`
+
+```text
+maestro doctor --mode mutation [--config path]
+```
+
+Controlla provider, workspace, modello Direct Chat e digest, modello
+Controlled Mutation e digest, prompt e schema mutativi, TTY e capability
+host-bound. Non esegue completion, non scarica modelli e non modifica file.
+
+`maestro doctor --mode all` esegue i check Direct Chat con prefisso `chat_` e
+i check mutativi con prefisso `mutation_`, sempre senza completion.
 
 ## `version`
 

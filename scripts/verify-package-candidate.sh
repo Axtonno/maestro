@@ -23,7 +23,7 @@ while (($# > 0)); do
             shift 2
             ;;
         *)
-            printf 'usage: %s [--version vX.Y.Z[-prerelease]] [--status packaging-candidate|release-candidate|release] [--profile release|cpu-qualification]\n' "$0" >&2
+                printf 'usage: %s [--version vX.Y.Z[-prerelease]] [--status packaging-candidate|release-candidate|release] [--profile release|cpu-qualification|mutation-productization]\n' "$0" >&2
             exit 2
             ;;
     esac
@@ -36,22 +36,36 @@ if [[ "$status" == "release" && "$version" == *-* ]]; then
     printf 'release status requires a final vX.Y.Z version\n' >&2
     exit 2
 fi
-if [[ "$profile_kind" != "release" && "$profile_kind" != "cpu-qualification" ]]; then
-    printf 'profile must be release or cpu-qualification\n' >&2
-    exit 2
+if [[ "$profile_kind" != "release" && "$profile_kind" != "cpu-qualification" && "$profile_kind" != "mutation-productization" ]]; then
+    printf 'profile must be release, cpu-qualification or mutation-productization\n' >&2
+	exit 2
 fi
 
 schema_version="3"
+profile_path="configs/maestro.chat.example.yaml"
 chat_model="qwen3.5:9b"
 chat_model_digest="6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
 chat_num_predict="1024"
 chat_residency="5m"
+chat_streaming="true"
+mutation_model=""
+mutation_model_digest=""
+mutation_prompt_sha256=""
+mutation_schema_sha256=""
 if [[ "$profile_kind" == "cpu-qualification" ]]; then
-    schema_version="3"
-    chat_model="qwen2.5-coder:7b"
-    chat_model_digest="dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
-    chat_num_predict="512"
-    chat_residency="5m"
+	schema_version="3"
+	chat_model="qwen2.5-coder:7b"
+	chat_model_digest="dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
+	chat_num_predict="512"
+	chat_residency="5m"
+elif [[ "$profile_kind" == "mutation-productization" ]]; then
+	schema_version="4"
+	profile_path="configs/maestro.v0.5.0-candidate.yaml"
+	chat_streaming="false"
+	mutation_model="qwen2.5-coder:14b"
+	mutation_model_digest="9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849"
+	mutation_prompt_sha256="594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
+	mutation_schema_sha256="bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
 fi
 
 repository="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -92,8 +106,8 @@ for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGE
     docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
     "$release_notes" \
-    configs/maestro.chat.example.yaml fixtures/laravel-v1/dataset.json \
-    fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
+	"$profile_path" fixtures/laravel-v1/dataset.json \
+	fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
     [[ -e "$root/$required" ]] || {
         printf 'archive is missing %s\n' "$required" >&2
         exit 1
@@ -109,7 +123,7 @@ grep -Fxq "artifact=${artifact}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "version=${version}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "commit=${commit}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "status=${status}" "$root/ARTIFACT-MANIFEST.txt"
-grep -Fxq 'profile=configs/maestro.chat.example.yaml' "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "profile=${profile_path}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "profile_kind=${profile_kind}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "chat_model=${chat_model}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "chat_model_digest=${chat_model_digest}" "$root/ARTIFACT-MANIFEST.txt"
@@ -118,6 +132,21 @@ grep -Fxq "chat_num_predict=${chat_num_predict}" "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq 'chat_thinking=false' "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq 'chat_temperature=0' "$root/ARTIFACT-MANIFEST.txt"
 grep -Fxq "chat_residency=${chat_residency}" "$root/ARTIFACT-MANIFEST.txt"
+grep -Fxq "chat_streaming=${chat_streaming}" "$root/ARTIFACT-MANIFEST.txt"
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	grep -Fxq 'controlled_mutation_enabled=true' "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq "controlled_mutation_model=${mutation_model}" "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq "controlled_mutation_model_digest=${mutation_model_digest}" "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq 'controlled_mutation_num_ctx=4096' "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq 'controlled_mutation_num_predict=1024' "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq 'controlled_mutation_thinking=false' "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq 'controlled_mutation_temperature=0' "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq 'controlled_mutation_residency=5m' "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq "controlled_mutation_prompt_sha256=${mutation_prompt_sha256}" "$root/ARTIFACT-MANIFEST.txt"
+	grep -Fxq "controlled_mutation_schema_sha256=${mutation_schema_sha256}" "$root/ARTIFACT-MANIFEST.txt"
+	[[ -e "$root/docs/prompts/mutation-host-bound-model-selection-v1.txt" ]]
+	[[ -e "$root/docs/schemas/host-bound-mutation-decision-v1.schema.json" ]]
+fi
 grep -Fq 'artifact="maestro-${version}-linux-amd64"' "$root/docs/installation.md"
 if grep -R -Fq '@MAESTRO_' "$root"; then
     printf 'archive contains an unresolved documentation token\n' >&2
@@ -125,22 +154,33 @@ if grep -R -Fq '@MAESTRO_' "$root"; then
 fi
 grep -Fq '"id": "maestro-laravel-mini"' "$root/fixtures/laravel-v1/dataset.json"
 grep -Fq '"version": "1.0.0"' "$root/fixtures/laravel-v1/dataset.json"
-profile="$root/configs/maestro.chat.example.yaml"
+profile="$root/$profile_path"
 grep -Eq "^[[:space:]]*version:[[:space:]]*${schema_version}[[:space:]]*$" "$profile"
 grep -Eq "^[[:space:]]*model:[[:space:]]*${chat_model//./\\.}[[:space:]]*$" "$profile"
-grep -Eq '^[[:space:]]*streaming:[[:space:]]*true[[:space:]]*$' "$profile"
+grep -Eq "^[[:space:]]*streaming:[[:space:]]*${chat_streaming}[[:space:]]*$" "$profile"
 grep -Eq '^[[:space:]]*num_ctx:[[:space:]]*4096[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*thinking:[[:space:]]*"false"[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*max_file_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
 grep -Eq '^[[:space:]]*max_output_bytes:[[:space:]]*1048576[[:space:]]*$' "$profile"
 grep -Eq "^[[:space:]]*num_predict:[[:space:]]*${chat_num_predict}[[:space:]]*$" "$profile"
 grep -Eq '^[[:space:]]*residency:[[:space:]]*5m[[:space:]]*$' "$profile"
-if grep -Eq 'workspace\.(write|patch)|^[[:space:]]*(agent|limits|context):' "$profile"; then
-    printf 'published configuration exposes an unsupported agent or mutation surface\n' >&2
-    exit 1
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	grep -Eq '^[[:space:]]*controlled_mutation:[[:space:]]*$' "$profile"
+	grep -Eq '^[[:space:]]*enabled:[[:space:]]*true[[:space:]]*$' "$profile"
+	grep -Eq "^[[:space:]]*model:[[:space:]]*${mutation_model//./\\.}[[:space:]]*$" "$profile"
+	grep -Eq "^[[:space:]]*digest:[[:space:]]*${mutation_model_digest}[[:space:]]*$" "$profile"
+	grep -Eq '^[[:space:]]*prompt:[[:space:]]*mutation-host-bound-model-selection-v1[[:space:]]*$' "$profile"
+	grep -Eq "^[[:space:]]*prompt_sha256:[[:space:]]*${mutation_prompt_sha256}[[:space:]]*$" "$profile"
+	grep -Eq '^[[:space:]]*schema:[[:space:]]*host-bound-mutation-decision-v1[[:space:]]*$' "$profile"
+	grep -Eq "^[[:space:]]*schema_sha256:[[:space:]]*${mutation_schema_sha256}[[:space:]]*$" "$profile"
+else
+	if grep -Eq 'workspace\.(write|patch)|^[[:space:]]*(agent|limits|context):' "$profile"; then
+		printf 'published configuration exposes an unsupported agent or mutation surface\n' >&2
+		exit 1
+	fi
+	grep -Eq '^[[:space:]]*workspace_mutate:[[:space:]]*deny[[:space:]]*$' \
+		"$profile"
 fi
-grep -Eq '^[[:space:]]*workspace_mutate:[[:space:]]*deny[[:space:]]*$' \
-    "$profile"
 for unsupported in configs/maestro.mutating.example.yaml \
     configs/maestro.example.yaml configs/maestro.interaction.example.yaml \
     docs/mutation-qualification.md docs/mutation-benchmark.md \
@@ -169,22 +209,45 @@ doctor_config="$root/configs/doctor-test.yaml"
 cp "$profile" "$doctor_config"
 sed -i 's#http://127.0.0.1:11434#http://127.0.0.1:1#' "$doctor_config"
 set +e
-doctor_output="$($root/maestro doctor --mode chat --config "$doctor_config" 2>&1)"
+doctor_mode="chat"
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	doctor_mode="all"
+fi
+doctor_output="$($root/maestro doctor --mode "$doctor_mode" --config "$doctor_config" 2>&1)"
 doctor_status=$?
 set -e
 [[ $doctor_status -eq 1 ]]
-grep -Fq $'pass\tconfig\tschema_v'"${schema_version}"'_chat_valid' <<<"$doctor_output"
-grep -Fq $'pass\tworkspace\troot_available' <<<"$doctor_output"
-grep -Fq $'pass\tcomposition\tdirect_chat_provider' <<<"$doctor_output"
-grep -Fq $'fail\tmodel\trequired_capability_unavailable' <<<"$doctor_output"
-grep -Fq $'skip\tgeneration\tmodel_unavailable' <<<"$doctor_output"
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	grep -Fq $'pass\tchat_config\tschema_v4_chat_valid' <<<"$doctor_output"
+	grep -Fq $'pass\tchat_workspace\troot_available' <<<"$doctor_output"
+	grep -Fq $'fail\tchat_model\trequired_capability_unavailable' <<<"$doctor_output"
+	grep -Fq $'pass\tmutation_configuration\tschema_v4_profiles_separated' <<<"$doctor_output"
+	grep -Fq $'pass\tmutation_mutation_prompt\tqualified_prompt_digest' <<<"$doctor_output"
+	grep -Fq $'pass\tmutation_mutation_schema\tqualified_schema_digest' <<<"$doctor_output"
+	grep -Fq $'fail\tmutation_provider\tprovider_unavailable' <<<"$doctor_output"
+else
+	grep -Fq $'pass\tconfig\tschema_v'"${schema_version}"'_chat_valid' <<<"$doctor_output"
+	grep -Fq $'pass\tworkspace\troot_available' <<<"$doctor_output"
+	grep -Fq $'pass\tcomposition\tdirect_chat_provider' <<<"$doctor_output"
+	grep -Fq $'fail\tmodel\trequired_capability_unavailable' <<<"$doctor_output"
+	grep -Fq $'skip\tgeneration\tmodel_unavailable' <<<"$doctor_output"
+fi
 
 set +e
-containment_output="$($root/maestro chat --config "$profile" --file ../outside.php Question 2>&1)"
+containment_command=(chat --config "$profile" --file ../outside.php Question)
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	containment_command=(workspace replace --config "$profile" --file ../outside.php --lines 1:1 Question)
+fi
+containment_output="$($root/maestro "${containment_command[@]}" 2>&1)"
 containment_status=$?
 set -e
-[[ $containment_status -eq 2 ]]
-[[ "$containment_output" == 'chat failed: file_not_allowed' ]]
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	[[ $containment_status -eq 3 ]]
+	[[ "$containment_output" == 'mutation failed: tty_required' ]]
+else
+	[[ $containment_status -eq 2 ]]
+	[[ "$containment_output" == 'chat failed: file_not_allowed' ]]
+fi
 
 install -m 0755 "$root/maestro" "$working/install/bin/maestro"
 (

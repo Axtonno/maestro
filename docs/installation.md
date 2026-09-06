@@ -70,6 +70,41 @@ soltanto il nome di una variabile d’ambiente.
 Agent, retrieval, tool calling, profili mutativi e approval non appartengono
 al support claim v0.3.1 e non sono inclusi nella configurazione distribuita.
 
+## Candidate v0.5.0 Controlled Mutation
+
+Il candidate v0.5.0 include un profilo v4 separato in
+`configs/maestro.v0.5.0-candidate.yaml`. Richiede Ollama locale, Direct Chat
+con `qwen3.5:9b` e digest qualificato, Controlled Mutation con
+`qwen2.5-coder:14b` e digest qualificato, prompt/schema mutativi congelati e
+TTY reale per l'approvazione.
+
+Il reference hardware qualificato per M36 è Linux `amd64` in WSL2 Ubuntu 24.04
+con NVIDIA GeForce RTX 5070 da 12 GB, circa 15 GiB RAM WSL e swap WSL
+disabilitato tramite `.wslconfig`:
+
+```ini
+[wsl2]
+swap=0
+```
+
+La residenza simultanea dei due modelli non è richiesta. Maestro scarica il
+modello uscente, attende che `/api/ps` sia vuoto e poi avvia il profilo
+entrante. Il comportamento qualificato non mostra fallback CPU, OOM, crescita
+swap o fallback incrociato.
+
+Esempi:
+
+```sh
+./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
+./maestro workspace replace --config ./configs/maestro.v0.5.0-candidate.yaml \
+  --file app/Worker.php \
+  --lines 2:2 \
+  "Imposta workers a 8"
+```
+
+La capability resta opt-in: senza profilo v4 dedicato, TTY, target sotto
+`app/` e allow-once esplicito, la mutazione fallisce chiusa.
+
 ## Upgrade
 
 Estrarre ogni nuova versione in una directory nuova e verificare checksum,

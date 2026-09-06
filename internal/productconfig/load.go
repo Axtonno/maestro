@@ -30,6 +30,11 @@ func LoadChat(path string) (Config, error) {
 	})
 }
 
+// LoadMutation accepts only the separated v4 productization profile.
+func LoadMutation(path string) (Config, error) {
+	return load(path, func(config Config) error { return config.ValidateMutationExecutionProfile() })
+}
+
 func load(path string, validate func(Config) error) (Config, error) {
 	encoded, err := os.ReadFile(path)
 	if err != nil {
@@ -85,8 +90,19 @@ func load(path string, validate func(Config) error) (Config, error) {
 			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
 		}
 		config = decoded.config()
+	case ProductizationVersion:
+		var decoded configV4
+		if field, err := unknownYAMLField(encoded, reflect.TypeOf(decoded)); err != nil {
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
+		} else if field != "" {
+			return Config{}, withDiagnostic(fmt.Errorf("configuration contains unknown field: %w", ErrInvalid), DiagnosticUnknownField, field)
+		}
+		if err := decodeStrict(encoded, &decoded); err != nil {
+			return Config{}, withDiagnostic(err, DiagnosticYAMLInvalid, "")
+		}
+		config = decoded.config()
 	default:
-		err := fieldError("version", fmt.Sprintf("must equal %d, %d or %d", Version, CandidateVersion, QualificationVersion))
+		err := fieldError("version", fmt.Sprintf("must equal %d, %d, %d or %d", Version, CandidateVersion, QualificationVersion, ProductizationVersion))
 		kind := DiagnosticInvalidValue
 		if !hasYAMLPath(encoded, "version") {
 			kind = DiagnosticMissingField
@@ -314,6 +330,21 @@ func (decoded configV3) config() Config {
 			Tools: decoded.Agent.Tools,
 		},
 		Policy: decoded.Policy, Limits: decoded.Limits, Context: decoded.Context,
+	}
+}
+
+type configV4 struct {
+	Version            int                             `yaml:"version"`
+	Provider           ProviderConfig                  `yaml:"provider"`
+	Workspace          WorkspaceConfig                 `yaml:"workspace"`
+	DirectChat         ChatProfileConfig               `yaml:"direct_chat"`
+	ControlledMutation ControlledMutationProfileConfig `yaml:"controlled_mutation"`
+}
+
+func (decoded configV4) config() Config {
+	return Config{
+		Version: decoded.Version, Provider: decoded.Provider, Workspace: decoded.Workspace,
+		DirectChat: decoded.DirectChat, ControlledMutation: decoded.ControlledMutation,
 	}
 }
 

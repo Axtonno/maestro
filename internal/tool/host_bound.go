@@ -116,7 +116,7 @@ func (h *HostBoundMutation) Prepare(ctx context.Context, bound BoundSelection, c
 	}
 	args.Fingerprint = s.Fingerprint(decision.NewText, preview.Body())
 	fields := []pkgTool.PreviewField{}
-	for _, pair := range [][2]string{{"path", s.Path()}, {"start_line", fmt.Sprint(s.StartLine())}, {"end_line", fmt.Sprint(s.EndLine())}, {"before_sha256", s.BeforeDigest()}, {"selected_sha256", digest(s.Text())}, {"replacement_sha256", digest(decision.NewText)}, {"diff_sha256", digest(preview.Body())}, {"fingerprint", args.Fingerprint}} {
+	for _, pair := range [][2]string{{"path", s.Path()}, {"start_line", fmt.Sprint(s.StartLine())}, {"end_line", fmt.Sprint(s.EndLine())}, {"single_file", "true"}, {"before_sha256", s.BeforeDigest()}, {"selected_sha256", digest(s.Text())}, {"replacement_sha256", digest(decision.NewText)}, {"diff_sha256", digest(preview.Body())}, {"fingerprint", args.Fingerprint}} {
 		field, err := pkgTool.NewPreviewField(pair[0], pair[1])
 		if err != nil {
 			return pkgTool.PreparedInvocation{}, err

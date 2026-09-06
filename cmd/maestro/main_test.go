@@ -958,6 +958,8 @@ type cliProvider struct {
 	completeDelay  time.Duration
 	inspectErr     error
 	completeErr    error
+	discovered     []pkgProvider.ModelInfo
+	unloaded       []string
 }
 
 func (provider *cliProvider) Stream(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.Stream, error) {
@@ -984,7 +986,20 @@ func (provider *cliProvider) Complete(_ context.Context, request pkgProvider.Com
 }
 
 func (provider *cliProvider) DiscoverModels(context.Context) ([]pkgProvider.ModelInfo, error) {
+	if provider.discovered != nil {
+		return append([]pkgProvider.ModelInfo(nil), provider.discovered...), nil
+	}
 	return []pkgProvider.ModelInfo{{Model: pkgProvider.Model{ID: "fixture-model"}, State: pkgProvider.ModelStateLoaded}}, nil
+}
+
+func (provider *cliProvider) UnloadModel(_ context.Context, request pkgProvider.ModelUnloadRequest) error {
+	provider.unloaded = append(provider.unloaded, request.Model)
+	for index := range provider.discovered {
+		if provider.discovered[index].Model.ID == request.Model {
+			provider.discovered[index].State = pkgProvider.ModelStateAvailable
+		}
+	}
+	return nil
 }
 
 func (provider *cliProvider) Models(context.Context) ([]pkgProvider.Model, error) {

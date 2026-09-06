@@ -21,11 +21,22 @@ import (
 )
 
 const (
-	Version              = 1
-	CandidateVersion     = 2
+	Version          = 1
+	CandidateVersion = 2
 	// QualificationVersion is the public Direct Chat schema used by v0.3.1.
 	// The name is retained internally to avoid a needless API rename in 0.x.
 	QualificationVersion = 3
+	// ProductizationVersion separates Direct Chat and Controlled Mutation.
+	ProductizationVersion = 4
+
+	QualifiedDirectChatModel  = "qwen3.5:9b"
+	QualifiedDirectChatDigest = "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
+	QualifiedMutationModel    = "qwen2.5-coder:14b"
+	QualifiedMutationDigest   = "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849"
+	MutationPromptID          = "mutation-host-bound-model-selection-v1"
+	MutationPromptSHA256      = "594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
+	MutationSchemaID          = "host-bound-mutation-decision-v1"
+	MutationSchemaSHA256      = "bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
 )
 
 var (
@@ -52,15 +63,17 @@ func (duration *Duration) UnmarshalYAML(unmarshal func(any) error) error {
 }
 
 type Config struct {
-	Version     int               `yaml:"version"`
-	Provider    ProviderConfig    `yaml:"provider"`
-	Models      ModelsConfig      `yaml:"models"`
-	Workspace   WorkspaceConfig   `yaml:"workspace"`
-	Interaction InteractionConfig `yaml:"interaction,omitempty"`
-	Agent       AgentConfig       `yaml:"agent"`
-	Policy      PolicyConfig      `yaml:"policy"`
-	Limits      LimitsConfig      `yaml:"limits"`
-	Context     ContextConfig     `yaml:"context"`
+	Version            int                             `yaml:"version"`
+	Provider           ProviderConfig                  `yaml:"provider"`
+	Models             ModelsConfig                    `yaml:"models"`
+	Workspace          WorkspaceConfig                 `yaml:"workspace"`
+	Interaction        InteractionConfig               `yaml:"interaction,omitempty"`
+	Agent              AgentConfig                     `yaml:"agent"`
+	Policy             PolicyConfig                    `yaml:"policy"`
+	Limits             LimitsConfig                    `yaml:"limits"`
+	Context            ContextConfig                   `yaml:"context"`
+	DirectChat         ChatProfileConfig               `yaml:"direct_chat"`
+	ControlledMutation ControlledMutationProfileConfig `yaml:"controlled_mutation"`
 
 	path string
 }
@@ -100,10 +113,34 @@ type ProfileConfig struct {
 
 type ChatProfileConfig struct {
 	ProfileConfig  `yaml:",inline"`
+	Digest         string   `yaml:"digest"`
 	NumPredict     int      `yaml:"num_predict"`
 	Residency      Duration `yaml:"residency"`
 	MaxFileBytes   int      `yaml:"max_file_bytes"`
 	MaxOutputBytes int      `yaml:"max_output_bytes"`
+}
+
+type ControlledMutationProfileConfig struct {
+	Enabled        bool         `yaml:"enabled"`
+	Model          string       `yaml:"model"`
+	Digest         string       `yaml:"digest"`
+	Timeout        Duration     `yaml:"timeout"`
+	NumCtx         int          `yaml:"num_ctx"`
+	NumPredict     int          `yaml:"num_predict"`
+	Thinking       ThinkingMode `yaml:"thinking"`
+	Residency      Duration     `yaml:"residency"`
+	Prompt         string       `yaml:"prompt"`
+	PromptSHA256   string       `yaml:"prompt_sha256"`
+	Schema         string       `yaml:"schema"`
+	SchemaSHA256   string       `yaml:"schema_sha256"`
+	MaxOutputBytes int          `yaml:"max_output_bytes"`
+}
+
+func (config ControlledMutationProfileConfig) GenerationOptions() pkgProvider.GenerationOptions {
+	return pkgProvider.GenerationOptions{
+		MaxTokens: config.NumPredict, ContextWindow: config.NumCtx,
+		Thinking: pkgProvider.ThinkingMode(config.Thinking),
+	}
 }
 
 type AgentProfileConfig struct {
@@ -153,12 +190,15 @@ type ContextConfig struct {
 func (config Config) Path() string { return config.path }
 
 func (config Config) HasChatProfile() bool {
-	return config.Version == CandidateVersion || config.Version == QualificationVersion
+	return config.Version == CandidateVersion || config.Version == QualificationVersion || config.Version == ProductizationVersion
 }
 
 func (config Config) ChatProfile() (ChatProfileConfig, bool) {
 	if !config.HasChatProfile() {
 		return ChatProfileConfig{}, false
+	}
+	if config.Version == ProductizationVersion {
+		return config.DirectChat, true
 	}
 	return config.Interaction.Chat, true
 }
@@ -219,8 +259,11 @@ func (config Config) ToolIDs() []pkgTool.ID {
 }
 
 func (config Config) Validate() error {
+	if config.Version == ProductizationVersion {
+		return config.ValidateProductizationProfile()
+	}
 	if config.Version != Version && config.Version != CandidateVersion && config.Version != QualificationVersion {
-		return fieldError("version", fmt.Sprintf("must equal %d, %d or %d", Version, CandidateVersion, QualificationVersion))
+		return fieldError("version", fmt.Sprintf("must equal %d, %d, %d or %d", Version, CandidateVersion, QualificationVersion, ProductizationVersion))
 	}
 	if err := validateProvider(config.Provider); err != nil {
 		return err
@@ -282,8 +325,11 @@ func (config Config) Validate() error {
 // are intentionally outside this mode and remain subject to Validate and
 // ValidateExecutionProfile when an agent command is requested.
 func (config Config) ValidateChatExecutionProfile() error {
+	if config.Version == ProductizationVersion {
+		return config.ValidateProductizationProfile()
+	}
 	if config.Version != CandidateVersion && config.Version != QualificationVersion {
-		return fieldError("version", fmt.Sprintf("direct chat requires %d or %d", CandidateVersion, QualificationVersion))
+		return fieldError("version", fmt.Sprintf("direct chat requires %d, %d or %d", CandidateVersion, QualificationVersion, ProductizationVersion))
 	}
 	if err := validateProvider(config.Provider); err != nil {
 		return err
@@ -313,6 +359,52 @@ func (config Config) ValidateChatExecutionProfile() error {
 	}
 	if config.Policy.WorkspaceMutation != "deny" {
 		return fieldError("policy.workspace_mutate", "direct chat requires deny")
+	}
+	return nil
+}
+
+func (config Config) ValidateMutationExecutionProfile() error {
+	if config.Version != ProductizationVersion {
+		return fieldError("version", fmt.Sprintf("controlled mutation requires %d", ProductizationVersion))
+	}
+	return config.ValidateProductizationProfile()
+}
+
+func (config Config) ValidateProductizationProfile() error {
+	if config.Version != ProductizationVersion {
+		return fieldError("version", fmt.Sprintf("productization profile requires %d", ProductizationVersion))
+	}
+	if err := validateProvider(config.Provider); err != nil {
+		return err
+	}
+	if config.Provider.ID != "ollama" {
+		return fieldError("provider.id", "productization profile requires ollama")
+	}
+	if err := validateWorkspace(config.Workspace); err != nil {
+		return err
+	}
+	chat := config.DirectChat
+	if err := validateProfile("direct_chat", chat.ProfileConfig, config.Provider.Timeout.Duration); err != nil {
+		return err
+	}
+	if chat.Model != QualifiedDirectChatModel || chat.Digest != QualifiedDirectChatDigest {
+		return fieldError("direct_chat", "model and digest must match the qualified Direct Chat identity")
+	}
+	if chat.NumPredict != 1024 || chat.Residency.Duration != 5*time.Minute || chat.Thinking != ThinkingDisabled || chat.Streaming || chat.MaxFileBytes != 1<<20 || chat.MaxOutputBytes != 1<<20 {
+		return fieldError("direct_chat", "generation and I/O controls must match the qualified profile")
+	}
+	mutation := config.ControlledMutation
+	if !mutation.Enabled {
+		return fieldError("controlled_mutation.enabled", "must be true for the productization profile")
+	}
+	if mutation.Model != QualifiedMutationModel || mutation.Digest != QualifiedMutationDigest || mutation.Model == chat.Model {
+		return fieldError("controlled_mutation", "model and digest must match the distinct qualified mutation identity")
+	}
+	if mutation.Timeout.Duration <= 0 || mutation.Timeout.Duration > config.Provider.Timeout.Duration || mutation.NumCtx != 4096 || mutation.NumPredict != 1024 || mutation.Thinking != ThinkingDisabled || mutation.Residency.Duration != 5*time.Minute || mutation.MaxOutputBytes < 1 || mutation.MaxOutputBytes > 1<<20 {
+		return fieldError("controlled_mutation", "generation and output controls must match the qualified profile")
+	}
+	if mutation.Prompt != MutationPromptID || mutation.PromptSHA256 != MutationPromptSHA256 || mutation.Schema != MutationSchemaID || mutation.SchemaSHA256 != MutationSchemaSHA256 {
+		return fieldError("controlled_mutation", "prompt and schema must match the qualified host-bound contract")
 	}
 	return nil
 }

@@ -261,15 +261,23 @@ func TestV2RejectsLegacyAndInvalidProfileFields(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	replaceOnce := func(value, old, replacement string) string {
+		if strings.Contains(value, old) {
+			return strings.Replace(value, old, replacement, 1)
+		}
+		old = strings.ReplaceAll(old, "\n", "\r\n")
+		replacement = strings.ReplaceAll(replacement, "\n", "\r\n")
+		return strings.Replace(value, old, replacement, 1)
+	}
 	for _, testCase := range []struct {
 		name   string
 		mutate func(string) string
 	}{
 		{name: "legacy models chat", mutate: func(value string) string {
-			return strings.Replace(value, "models:\n", "models:\n  chat: legacy\n", 1)
+			return replaceOnce(value, "models:\n", "models:\n  chat: legacy\n")
 		}},
 		{name: "legacy agent streaming", mutate: func(value string) string {
-			return strings.Replace(value, "agent:\n  id:", "agent:\n  streaming: false\n  id:", 1)
+			return replaceOnce(value, "agent:\n  id:", "agent:\n  streaming: false\n  id:")
 		}},
 		{name: "invalid thinking", mutate: func(value string) string {
 			return strings.Replace(value, "thinking: \"false\"", "thinking: sometimes", 1)
@@ -366,7 +374,7 @@ func TestValidationRejectsUnsafeOrImplicitTargets(t *testing.T) {
 		mutate func(*Config)
 		field  string
 	}{
-		{name: "version", mutate: func(c *Config) { c.Version = QualificationVersion + 1 }, field: "version"},
+		{name: "version", mutate: func(c *Config) { c.Version = ProductizationVersion + 1 }, field: "version"},
 		{name: "provider", mutate: func(c *Config) { c.Provider.ID = "auto" }, field: "provider.id"},
 		{name: "URL path", mutate: func(c *Config) { c.Provider.BaseURL = "http://localhost:11434/api" }, field: "provider.base_url"},
 		{name: "workspace ID", mutate: func(c *Config) { c.Workspace.ID = "project" }, field: "workspace.id"},

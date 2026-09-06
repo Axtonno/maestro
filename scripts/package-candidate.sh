@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate|release] [--profile release|cpu-qualification] [--output directory]\n' "$0"
+    printf 'usage: %s --version vX.Y.Z[-prerelease] [--status packaging-candidate|release-candidate|release] [--profile release|cpu-qualification|mutation-productization] [--output directory]\n' "$0"
 }
 
 version=""
@@ -56,22 +56,40 @@ if [[ "$status" == "release" && "$version" == *-* ]]; then
     printf 'release status requires a final vX.Y.Z version\n' >&2
     exit 2
 fi
-if [[ "$profile_kind" != "release" && "$profile_kind" != "cpu-qualification" ]]; then
-    printf 'profile must be release or cpu-qualification\n' >&2
-    exit 2
+if [[ "$profile_kind" != "release" && "$profile_kind" != "cpu-qualification" && "$profile_kind" != "mutation-productization" ]]; then
+    printf 'profile must be release, cpu-qualification or mutation-productization\n' >&2
+	exit 2
 fi
 
 profile_source="configs/maestro.chat.example.yaml"
+profile_target="configs/maestro.chat.example.yaml"
 chat_model="qwen3.5:9b"
 chat_model_digest="6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
 chat_num_predict="1024"
 chat_residency="5m"
+chat_streaming="true"
+mutation_model=""
+mutation_model_digest=""
+mutation_prompt=""
+mutation_prompt_sha256=""
+mutation_schema=""
+mutation_schema_sha256=""
 if [[ "$profile_kind" == "cpu-qualification" ]]; then
-    profile_source="configs/maestro.milestone-21-candidate.yaml"
-    chat_model="qwen2.5-coder:7b"
-    chat_model_digest="dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
-    chat_num_predict="512"
-    chat_residency="5m"
+	profile_source="configs/maestro.milestone-21-candidate.yaml"
+	chat_model="qwen2.5-coder:7b"
+	chat_model_digest="dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
+	chat_num_predict="512"
+	chat_residency="5m"
+elif [[ "$profile_kind" == "mutation-productization" ]]; then
+	profile_source="configs/maestro.v0.5.0-candidate.yaml"
+	profile_target="configs/maestro.v0.5.0-candidate.yaml"
+	chat_streaming="false"
+	mutation_model="qwen2.5-coder:14b"
+	mutation_model_digest="9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849"
+	mutation_prompt="mutation-host-bound-model-selection-v1"
+	mutation_prompt_sha256="594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
+	mutation_schema="host-bound-mutation-decision-v1"
+	mutation_schema_sha256="bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
 fi
 
 repository="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -135,15 +153,20 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=local GOENV=off GOFLAGS='' \
 
 cp LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGELOG.md SECURITY.md "$root/"
 cp docs/installation.md docs/configuration.md docs/cli.md \
-    docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
-    docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
-    "$root/docs/"
+	docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
+	docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
+	"$root/docs/"
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	mkdir -p "$root/docs/prompts" "$root/docs/schemas"
+	cp docs/prompts/mutation-host-bound-model-selection-v1.txt "$root/docs/prompts/"
+	cp docs/schemas/host-bound-mutation-decision-v1.schema.json "$root/docs/schemas/"
+fi
 mkdir -p "$root/docs/releases"
 cp "$release_notes" "$root/docs/releases/"
-cp "$profile_source" "$root/configs/maestro.chat.example.yaml"
+cp "$profile_source" "$root/$profile_target"
 if [[ "$profile_kind" == "cpu-qualification" ]]; then
-    sed -i 's#root: ../internal/benchmark/developer/testdata/laravel-v1#root: ../fixtures/laravel-v1#' \
-        "$root/configs/maestro.chat.example.yaml"
+	sed -i 's#root: ../internal/benchmark/developer/testdata/laravel-v1#root: ../fixtures/laravel-v1#' \
+		"$root/configs/maestro.chat.example.yaml"
 fi
 cp -R internal/benchmark/developer/testdata/laravel-v1/. "$root/fixtures/laravel-v1/"
 sed -i "s/@MAESTRO_VERSION@/${version}/g" "$root/docs/installation.md"
@@ -164,7 +187,7 @@ platform=linux/amd64
 go=${go_version}
 license=Apache-2.0
 fixture=maestro-laravel-mini@1.0.0
-profile=configs/maestro.chat.example.yaml
+profile=${profile_target}
 profile_kind=${profile_kind}
 chat_model=${chat_model}
 chat_model_digest=${chat_model_digest}
@@ -173,8 +196,25 @@ chat_num_predict=${chat_num_predict}
 chat_thinking=false
 chat_temperature=0
 chat_residency=${chat_residency}
+chat_streaming=${chat_streaming}
 status=${status}
 EOF
+if [[ "$profile_kind" == "mutation-productization" ]]; then
+	cat >>"$root/ARTIFACT-MANIFEST.txt" <<EOF
+controlled_mutation_enabled=true
+controlled_mutation_model=${mutation_model}
+controlled_mutation_model_digest=${mutation_model_digest}
+controlled_mutation_num_ctx=4096
+controlled_mutation_num_predict=1024
+controlled_mutation_thinking=false
+controlled_mutation_temperature=0
+controlled_mutation_residency=5m
+controlled_mutation_prompt=${mutation_prompt}
+controlled_mutation_prompt_sha256=${mutation_prompt_sha256}
+controlled_mutation_schema=${mutation_schema}
+controlled_mutation_schema_sha256=${mutation_schema_sha256}
+EOF
+fi
 
 find "$root" -type d -exec chmod 0755 {} +
 find "$root" -type f -exec chmod 0644 {} +

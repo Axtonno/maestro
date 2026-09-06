@@ -1575,13 +1575,21 @@ Report: `reports/milestone-35-final.md`. Decisione: `adr/ADR-0040.md`.
 
 # Milestone 36 — Controlled Mutation Productization
 
-Stato: Aperta — `controlled_mutation_productization_open`
+Stato: In chiusura — `residency_gate_qualified_swap_disabled_reference`
 
-Integrare nel prodotto il profilo mutativo M35 con routing per capacità,
-configurazione e lifecycle espliciti. Validare il percorso host-bound completo,
-compatibilità Direct Chat, packaging e installazione pulita prima della
-release readiness. Nessun candidate, package, tag o release v0.5.0 è ancora
-autorizzato.
+Il profilo mutativo M35 è integrato nel prodotto con routing per capacità,
+configurazione v4 separata, lifecycle esplicito, CLI opt-in, doctor dedicato e
+percorso host-bound completo fino a preview, approval e commit atomico.
+Packaging e installazione pulita restano gate di release readiness. Nessun tag
+o release v0.5.0 è ancora autorizzato.
+
+La RTX 5070 da 12 GB è parte del gate: tre cicli misurano VRAM, RAM, swap,
+offload, eviction e latenza cold/warm nel percorso `chat → mutation → chat`.
+I due modelli non devono restare residenti insieme. Il profilo v4 qualificato
+usa handoff esplicito: unload del modello uscente, attesa di `/api/ps` vuoto e
+generazione con il profilo entrante. Le run su RTX 5070 con swap WSL
+disabilitato registrano un solo modello in VRAM, latenze sotto soglia, provider
+stabile e zero fallback incrociati, offload CPU, OOM o swap.
 
 Piano: `milestone-36-controlled-mutation-productization-plan.md`.
 

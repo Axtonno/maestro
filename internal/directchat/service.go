@@ -78,12 +78,18 @@ type streamingProvider interface {
 	pkgProvider.Streamer
 }
 
+type residencyProvider interface {
+	pkgProvider.ModelDiscoverer
+	pkgProvider.ModelUnloader
+}
+
 type Service struct {
-	config   productconfig.Config
-	profile  productconfig.ChatProfileConfig
-	provider chatProvider
-	now      func() time.Time
-	started  func()
+	config    productconfig.Config
+	profile   productconfig.ChatProfileConfig
+	provider  chatProvider
+	residency residencyProvider
+	now       func() time.Time
+	started   func()
 }
 
 func Build(config productconfig.Config, dependencies Dependencies) (*Service, error) {
@@ -107,12 +113,19 @@ func Build(config productconfig.Config, dependencies Dependencies) (*Service, er
 	if !ok || nilValue(provider) || provider.ID() != pkgProvider.ID(config.Provider.ID) {
 		return nil, ErrCapabilityUnsupported
 	}
+	var residency residencyProvider
+	if config.Version == productconfig.ProductizationVersion {
+		residency, ok = candidate.(residencyProvider)
+		if !ok || nilValue(residency) {
+			return nil, ErrCapabilityUnsupported
+		}
+	}
 	now := dependencies.Now
 	if now == nil {
 		now = time.Now
 	}
 	return &Service{
-		config: config, profile: profile, provider: provider, now: now,
+		config: config, profile: profile, provider: provider, residency: residency, now: now,
 		started: dependencies.GenerationStarted,
 	}, nil
 }
@@ -171,6 +184,11 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 	}
 	runContext, cancel := context.WithTimeout(ctx, service.profile.Timeout.Duration)
 	defer cancel()
+	if service.config.Version == productconfig.ProductizationVersion {
+		if err := service.handoff(runContext, service.config.ControlledMutation.Model); err != nil {
+			return Result{}, executionError(runContext, err)
+		}
+	}
 	if err := service.preflight(runContext, request.Stream); err != nil {
 		return Result{}, err
 	}
@@ -316,6 +334,22 @@ func (service *Service) result(content string, duration time.Duration, usage pkg
 }
 
 func (service *Service) preflight(ctx context.Context, streaming bool) error {
+	if service.config.Version == productconfig.ProductizationVersion {
+		models, err := service.residency.DiscoverModels(ctx)
+		if err != nil {
+			return executionError(ctx, err)
+		}
+		matched := false
+		for _, model := range models {
+			if model.Model.ID == service.profile.Model {
+				matched = model.Digest == service.profile.Digest
+				break
+			}
+		}
+		if !matched {
+			return ErrProviderUnavailable
+		}
+	}
 	report, err := service.provider.InspectCapabilities(ctx, pkgProvider.CapabilityRequest{
 		Target: pkgProvider.CapabilityTargetModel, Model: service.profile.Model,
 	})
@@ -335,6 +369,30 @@ func (service *Service) preflight(ctx context.Context, streaming bool) error {
 		return ErrCapabilityUnsupported
 	}
 	return nil
+}
+
+func (service *Service) handoff(ctx context.Context, outgoing string) error {
+	if err := service.residency.UnloadModel(ctx, pkgProvider.ModelUnloadRequest{Model: outgoing}); err != nil {
+		return err
+	}
+	for {
+		models, err := service.residency.DiscoverModels(ctx)
+		if err != nil {
+			return err
+		}
+		loaded := false
+		for _, model := range models {
+			loaded = loaded || model.Model.ID == outgoing && model.State == pkgProvider.ModelStateLoaded
+		}
+		if !loaded {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(25 * time.Millisecond):
+		}
+	}
 }
 
 func (service *Service) generationOptions() pkgProvider.GenerationOptions {

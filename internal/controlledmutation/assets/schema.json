@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/antonio-cafeo/maestro/docs/schemas/host-bound-mutation-decision-v1.schema.json",
+  "title": "Maestro host-bound mutation decision v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "new_text"],
+      "properties": {
+        "decision": { "const": "propose" },
+        "new_text": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision"],
+      "properties": {
+        "decision": { "const": "abstain" }
+      }
+    }
+  ]
+}

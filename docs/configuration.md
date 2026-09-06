@@ -8,6 +8,10 @@ La v0.3.1 rende pubblici la diagnostica specifica e lo schema strict
 `version: 3`. Lo schema v2 resta decodificabile per compatibilità, ma non
 accetta i campi v3 e non riceve valori impliciti.
 
+La linea candidata v0.5.0 introduce lo schema v4 per separare Direct Chat e
+Controlled Mutation. Il support pubblico resta v0.4.0 finché la release
+v0.5.0 non viene autorizzata.
+
 ## Profilo distribuito
 
 ```yaml
@@ -165,3 +169,48 @@ Lo schema v1 e i blocchi agentici v2 rimangono contratti sperimentali del
 repository, ma non appartengono alla configurazione distribuita né alla
 compatibility promise v0.3.1. `maestro chat` non deriva un profilo da
 `models.chat` e non costruisce agent come fallback.
+
+## Profilo v4 candidato Controlled Mutation
+
+Il profilo v4 usa sezioni indipendenti:
+
+```yaml
+version: 4
+
+direct_chat:
+  model: qwen3.5:9b
+  digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  timeout: 5m
+  streaming: false
+  num_ctx: 4096
+  num_predict: 1024
+  thinking: "false"
+  residency: 5m
+  max_file_bytes: 1048576
+  max_output_bytes: 1048576
+
+controlled_mutation:
+  enabled: true
+  model: qwen2.5-coder:14b
+  digest: 9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849
+  timeout: 5m
+  num_ctx: 4096
+  num_predict: 1024
+  thinking: "false"
+  residency: 5m
+  prompt: mutation-host-bound-model-selection-v1
+  prompt_sha256: 594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732
+  schema: host-bound-mutation-decision-v1
+  schema_sha256: bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d
+  max_output_bytes: 1048576
+```
+
+Il loader v4 è strict: campi sconosciuti, duplicati o fallback impliciti sono
+invalidi. `controlled_mutation.enabled` deve essere `true` e il profilo deve
+usare modello, digest, prompt, schema e parametri qualificati. Direct Chat usa
+soltanto `direct_chat`; Controlled Mutation usa soltanto
+`controlled_mutation`.
+
+Il cambio profilo è gestito con unload esplicito del modello uscente e attesa
+di `/api/ps` vuoto prima della generazione successiva. La configurazione non
+richiede residenza simultanea dei due modelli.

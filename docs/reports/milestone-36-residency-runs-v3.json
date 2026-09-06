@@ -1,0 +1,1409 @@
+{
+  "Version": 1,
+  "Cycles": 3,
+  "ExecutedAt": "2026-09-05T15:04:57Z",
+  "ProviderVersion": "0.33.1",
+  "ProfileSHA256": "e1343bdcab53dd4b00ed36f34bbd7eb5ffbee6cca67cbffcda6a469f8e5e89b1",
+  "PromptSHA256": "594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732",
+  "SchemaSHA256": "bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d",
+  "Verdict": "dual_model_residency_rejected",
+  "DirectChat": {
+    "Name": "qwen3.5:9b",
+    "Digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
+  },
+  "ControlledMutation": {
+    "Name": "qwen2.5-coder:14b",
+    "Digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849"
+  },
+  "Snapshots": [
+    {
+      "Cycle": 1,
+      "Step": 0,
+      "Label": "baseline",
+      "Models": [],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 144,
+      "GPUFreeMiB": 11800,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 18752620,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15110548,
+      "WSLSwapUsedKiB": 0,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 65789952,
+          "Start": "166",
+          "ProviderRoot": true
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": ""
+    },
+    {
+      "Cycle": 1,
+      "Step": 1,
+      "Label": "after_direct_chat_cold",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:03.726790414+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6590,
+      "GPUFreeMiB": 5354,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 11711476,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14012948,
+      "WSLSwapUsedKiB": 0,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 63180800,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1142,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 38117 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1240842240,
+          "Start": "2276",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 2,
+      "Label": "after_direct_chat_warm",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:04.534762864+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6590,
+      "GPUFreeMiB": 5354,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 11647008,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 13943200,
+      "WSLSwapUsedKiB": 0,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 63205376,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1142,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 38117 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1293598720,
+          "Start": "2276",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 3,
+      "Label": "after_chat_to_mutation",
+      "Models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "model": "qwen2.5-coder:14b",
+          "size": 9470098799,
+          "size_vram": 9470098799,
+          "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+          "expires_at": "2026-09-05T17:10:11.939481036+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 9370,
+      "GPUFreeMiB": 2574,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6596664,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14851808,
+      "WSLSwapUsedKiB": 0,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 52588544,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1217,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed --port 34101 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 922669056,
+          "Start": "3013",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 4,
+      "Label": "after_mutation_warm",
+      "Models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "model": "qwen2.5-coder:14b",
+          "size": 9470098799,
+          "size_vram": 9470098799,
+          "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+          "expires_at": "2026-09-05T17:10:13.048951373+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 9370,
+      "GPUFreeMiB": 2574,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6594684,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14851824,
+      "WSLSwapUsedKiB": 0,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 52744192,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1217,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed --port 34101 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 922804224,
+          "Start": "3013",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 5,
+      "Label": "after_mutation_to_chat",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:17.834764776+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6590,
+      "GPUFreeMiB": 5354,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6538584,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14112428,
+      "WSLSwapUsedKiB": 0,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 64512000,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1317,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 42457 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1240748032,
+          "Start": "3865",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 6,
+      "Label": "after_returned_chat_warm",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:18.634759072+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6590,
+      "GPUFreeMiB": 5354,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6531644,
+      "HostSwapUsedKiB": 104448,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14051324,
+      "WSLSwapUsedKiB": 12,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 61415424,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1317,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 42457 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1293504512,
+          "Start": "3865",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 7,
+      "Label": "final_baseline",
+      "Models": [],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 143,
+      "GPUFreeMiB": 11801,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6689432,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15046196,
+      "WSLSwapUsedKiB": 12,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 61419520,
+          "Start": "166",
+          "ProviderRoot": true
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": ""
+    },
+    {
+      "Cycle": 2,
+      "Step": 0,
+      "Label": "baseline",
+      "Models": [],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 143,
+      "GPUFreeMiB": 11801,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6729604,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15036316,
+      "WSLSwapUsedKiB": 12,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 61419520,
+          "Start": "166",
+          "ProviderRoot": true
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": ""
+    },
+    {
+      "Cycle": 2,
+      "Step": 1,
+      "Label": "after_direct_chat_cold",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:24.560186001+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6549492,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 13915756,
+      "WSLSwapUsedKiB": 12,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 62910464,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1443,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 46779 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1240866816,
+          "Start": "4590",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 2,
+      "Label": "after_direct_chat_warm",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:25.35252156+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6546980,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 13887396,
+      "WSLSwapUsedKiB": 12,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 63090688,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1443,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 46779 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1293639680,
+          "Start": "4590",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 3,
+      "Label": "after_chat_to_mutation",
+      "Models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "model": "qwen2.5-coder:14b",
+          "size": 9470098799,
+          "size_vram": 9470098799,
+          "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+          "expires_at": "2026-09-05T17:10:32.679610814+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 9369,
+      "GPUFreeMiB": 2575,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6518412,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15127372,
+      "WSLSwapUsedKiB": 335572,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 45043712,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1512,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed --port 34481 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 415948800,
+          "Start": "5095",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 4,
+      "Label": "after_mutation_warm",
+      "Models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "model": "qwen2.5-coder:14b",
+          "size": 9470098799,
+          "size_vram": 9470098799,
+          "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+          "expires_at": "2026-09-05T17:10:33.851744092+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 9368,
+      "GPUFreeMiB": 2576,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6526528,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15127864,
+      "WSLSwapUsedKiB": 335108,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 45510656,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1512,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed --port 34481 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 416235520,
+          "Start": "5095",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 5,
+      "Label": "after_mutation_to_chat",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:38.493018172+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6568616,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14187452,
+      "WSLSwapUsedKiB": 119316,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 55099392,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1619,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 38751 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1240637440,
+          "Start": "5977",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 6,
+      "Label": "after_returned_chat_warm",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:39.280577009+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6589,
+      "GPUFreeMiB": 5355,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6564564,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14136688,
+      "WSLSwapUsedKiB": 119208,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 55173120,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1619,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 38751 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1293410304,
+          "Start": "5977",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 7,
+      "Label": "final_baseline",
+      "Models": [],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 142,
+      "GPUFreeMiB": 11802,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6674076,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15114776,
+      "WSLSwapUsedKiB": 118992,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 55230464,
+          "Start": "166",
+          "ProviderRoot": true
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": ""
+    },
+    {
+      "Cycle": 3,
+      "Step": 0,
+      "Label": "baseline",
+      "Models": [],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 142,
+      "GPUFreeMiB": 11802,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6715012,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15148648,
+      "WSLSwapUsedKiB": 118736,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 55271424,
+          "Start": "166",
+          "ProviderRoot": true
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": ""
+    },
+    {
+      "Cycle": 3,
+      "Step": 1,
+      "Label": "after_direct_chat_cold",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:46.063774841+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6549620,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14506504,
+      "WSLSwapUsedKiB": 486976,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 44933120,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1746,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 41679 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 918331392,
+          "Start": "6647",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 2,
+      "Label": "after_direct_chat_warm",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:46.978591478+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6533812,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14418180,
+      "WSLSwapUsedKiB": 486624,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 45031424,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1746,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 41679 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 990957568,
+          "Start": "6647",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 3,
+      "Label": "after_chat_to_mutation",
+      "Models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "model": "qwen2.5-coder:14b",
+          "size": 9470098799,
+          "size_vram": 9470098799,
+          "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+          "expires_at": "2026-09-05T17:10:51.269749879+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 9369,
+      "GPUFreeMiB": 2575,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6545044,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14964632,
+      "WSLSwapUsedKiB": 124144,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 49041408,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1820,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed --port 36537 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 922927104,
+          "Start": "7254",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 4,
+      "Label": "after_mutation_warm",
+      "Models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "model": "qwen2.5-coder:14b",
+          "size": 9470098799,
+          "size_vram": 9470098799,
+          "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+          "expires_at": "2026-09-05T17:10:52.365074479+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 9368,
+      "GPUFreeMiB": 2576,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6542224,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14957840,
+      "WSLSwapUsedKiB": 123884,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 49074176,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1820,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed --port 36537 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 923115520,
+          "Start": "7254",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 5,
+      "Label": "after_mutation_to_chat",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:57.843822091+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6525792,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14361736,
+      "WSLSwapUsedKiB": 335336,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 44736512,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1913,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 35525 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1047924736,
+          "Start": "7789",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 6,
+      "Label": "after_returned_chat_warm",
+      "Models": [
+        {
+          "name": "qwen3.5:9b",
+          "model": "qwen3.5:9b",
+          "size": 5490081790,
+          "size_vram": 5490081790,
+          "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+          "expires_at": "2026-09-05T17:10:58.688356323+02:00",
+          "context_length": 4096
+        }
+      ],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 6588,
+      "GPUFreeMiB": 5356,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6519568,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 14290304,
+      "WSLSwapUsedKiB": 334876,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 44974080,
+          "Start": "166",
+          "ProviderRoot": true
+        },
+        {
+          "Id": 1913,
+          "Name": "llama-server",
+          "Command": "/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --port 35525 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /usr/share/ollama/.ollama/models/blobs/sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c --flash-attn auto -b 512 -ub 512 --context-shift --keep 4 ",
+          "WorkingSet": 1100754944,
+          "Start": "7789",
+          "ProviderRoot": false
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 7,
+      "Label": "final_baseline",
+      "Models": [],
+      "GPUName": "NVIDIA GeForce RTX 5070",
+      "GPUTotalMiB": 12227,
+      "GPUUsedMiB": 142,
+      "GPUFreeMiB": 11802,
+      "HostTotalRAMKiB": 32658612,
+      "HostFreeRAMKiB": 6522876,
+      "HostSwapUsedKiB": 106496,
+      "WSLTotalRAMKiB": 15933084,
+      "WSLFreeRAMKiB": 15183632,
+      "WSLSwapUsedKiB": 123540,
+      "ProviderProcesses": [
+        {
+          "Id": 166,
+          "Name": "ollama",
+          "Command": "/usr/local/bin/ollama serve ",
+          "WorkingSet": 45244416,
+          "Start": "166",
+          "ProviderRoot": true
+        }
+      ],
+      "HostProcesses": [],
+      "ResidencyPattern": ""
+    }
+  ],
+  "Requests": [
+    {
+      "Cycle": 1,
+      "Step": 1,
+      "Kind": "direct_chat_cold",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 5745,
+      "TotalDurationMS": 5745,
+      "LoadDurationMS": 5584,
+      "PromptEvalDurationMS": 135,
+      "EvalDurationMS": 22,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 1,
+      "Step": 2,
+      "Kind": "direct_chat_warm",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 74,
+      "TotalDurationMS": 73,
+      "LoadDurationMS": 0,
+      "PromptEvalDurationMS": 56,
+      "EvalDurationMS": 14,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 1,
+      "Step": 3,
+      "Kind": "chat_to_mutation",
+      "Model": "qwen2.5-coder:14b",
+      "ObservedModel": "qwen2.5-coder:14b",
+      "Terminal": "completed",
+      "OutputSHA256": "b2b333b27582ee4413ecc7151a981e72670a16b8d772d43fe36d3efbb5f64f23",
+      "Error": "",
+      "ClientLatencyMS": 6476,
+      "TotalDurationMS": 6475,
+      "LoadDurationMS": 5967,
+      "PromptEvalDurationMS": 153,
+      "EvalDurationMS": 350,
+      "PromptTokens": 258,
+      "OutputTokens": 22,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": true,
+      "UnloadedModel": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 4,
+      "Kind": "mutation_warm",
+      "Model": "qwen2.5-coder:14b",
+      "ObservedModel": "qwen2.5-coder:14b",
+      "Terminal": "completed",
+      "OutputSHA256": "b2b333b27582ee4413ecc7151a981e72670a16b8d772d43fe36d3efbb5f64f23",
+      "Error": "",
+      "ClientLatencyMS": 362,
+      "TotalDurationMS": 361,
+      "LoadDurationMS": 0,
+      "PromptEvalDurationMS": 16,
+      "EvalDurationMS": 340,
+      "PromptTokens": 258,
+      "OutputTokens": 22,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 1,
+      "Step": 5,
+      "Kind": "mutation_to_chat",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 3969,
+      "TotalDurationMS": 3968,
+      "LoadDurationMS": 3833,
+      "PromptEvalDurationMS": 116,
+      "EvalDurationMS": 16,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": true,
+      "UnloadedModel": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 1,
+      "Step": 6,
+      "Kind": "returned_chat_warm",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 66,
+      "TotalDurationMS": 66,
+      "LoadDurationMS": 0,
+      "PromptEvalDurationMS": 49,
+      "EvalDurationMS": 14,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 2,
+      "Step": 1,
+      "Kind": "direct_chat_cold",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 3431,
+      "TotalDurationMS": 3430,
+      "LoadDurationMS": 3326,
+      "PromptEvalDurationMS": 84,
+      "EvalDurationMS": 18,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 2,
+      "Step": 2,
+      "Kind": "direct_chat_warm",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 65,
+      "TotalDurationMS": 65,
+      "LoadDurationMS": 0,
+      "PromptEvalDurationMS": 48,
+      "EvalDurationMS": 14,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 2,
+      "Step": 3,
+      "Kind": "chat_to_mutation",
+      "Model": "qwen2.5-coder:14b",
+      "ObservedModel": "qwen2.5-coder:14b",
+      "Terminal": "completed",
+      "OutputSHA256": "b2b333b27582ee4413ecc7151a981e72670a16b8d772d43fe36d3efbb5f64f23",
+      "Error": "",
+      "ClientLatencyMS": 6420,
+      "TotalDurationMS": 6406,
+      "LoadDurationMS": 5579,
+      "PromptEvalDurationMS": 213,
+      "EvalDurationMS": 364,
+      "PromptTokens": 258,
+      "OutputTokens": 22,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": true,
+      "UnloadedModel": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 4,
+      "Kind": "mutation_warm",
+      "Model": "qwen2.5-coder:14b",
+      "ObservedModel": "qwen2.5-coder:14b",
+      "Terminal": "completed",
+      "OutputSHA256": "b2b333b27582ee4413ecc7151a981e72670a16b8d772d43fe36d3efbb5f64f23",
+      "Error": "",
+      "ClientLatencyMS": 381,
+      "TotalDurationMS": 379,
+      "LoadDurationMS": 5,
+      "PromptEvalDurationMS": 17,
+      "EvalDurationMS": 347,
+      "PromptTokens": 258,
+      "OutputTokens": 22,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 2,
+      "Step": 5,
+      "Kind": "mutation_to_chat",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 3816,
+      "TotalDurationMS": 3815,
+      "LoadDurationMS": 3697,
+      "PromptEvalDurationMS": 99,
+      "EvalDurationMS": 16,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": true,
+      "UnloadedModel": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 2,
+      "Step": 6,
+      "Kind": "returned_chat_warm",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 67,
+      "TotalDurationMS": 65,
+      "LoadDurationMS": 1,
+      "PromptEvalDurationMS": 48,
+      "EvalDurationMS": 14,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 3,
+      "Step": 1,
+      "Kind": "direct_chat_cold",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 4308,
+      "TotalDurationMS": 4297,
+      "LoadDurationMS": 4123,
+      "PromptEvalDurationMS": 115,
+      "EvalDurationMS": 24,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 3,
+      "Step": 2,
+      "Kind": "direct_chat_warm",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 164,
+      "TotalDurationMS": 162,
+      "LoadDurationMS": 2,
+      "PromptEvalDurationMS": 142,
+      "EvalDurationMS": 14,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 3,
+      "Step": 3,
+      "Kind": "chat_to_mutation",
+      "Model": "qwen2.5-coder:14b",
+      "ObservedModel": "qwen2.5-coder:14b",
+      "Terminal": "completed",
+      "OutputSHA256": "b2b333b27582ee4413ecc7151a981e72670a16b8d772d43fe36d3efbb5f64f23",
+      "Error": "",
+      "ClientLatencyMS": 3414,
+      "TotalDurationMS": 3412,
+      "LoadDurationMS": 2891,
+      "PromptEvalDurationMS": 158,
+      "EvalDurationMS": 358,
+      "PromptTokens": 258,
+      "OutputTokens": 22,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": true,
+      "UnloadedModel": "qwen3.5:9b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 4,
+      "Kind": "mutation_warm",
+      "Model": "qwen2.5-coder:14b",
+      "ObservedModel": "qwen2.5-coder:14b",
+      "Terminal": "completed",
+      "OutputSHA256": "b2b333b27582ee4413ecc7151a981e72670a16b8d772d43fe36d3efbb5f64f23",
+      "Error": "",
+      "ClientLatencyMS": 370,
+      "TotalDurationMS": 368,
+      "LoadDurationMS": 0,
+      "PromptEvalDurationMS": 16,
+      "EvalDurationMS": 347,
+      "PromptTokens": 258,
+      "OutputTokens": 22,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    },
+    {
+      "Cycle": 3,
+      "Step": 5,
+      "Kind": "mutation_to_chat",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 4651,
+      "TotalDurationMS": 4639,
+      "LoadDurationMS": 4486,
+      "PromptEvalDurationMS": 107,
+      "EvalDurationMS": 17,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": true,
+      "UnloadedModel": "qwen2.5-coder:14b"
+    },
+    {
+      "Cycle": 3,
+      "Step": 6,
+      "Kind": "returned_chat_warm",
+      "Model": "qwen3.5:9b",
+      "ObservedModel": "qwen3.5:9b",
+      "Terminal": "completed",
+      "OutputSHA256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "Error": "",
+      "ClientLatencyMS": 72,
+      "TotalDurationMS": 70,
+      "LoadDurationMS": 4,
+      "PromptEvalDurationMS": 47,
+      "EvalDurationMS": 14,
+      "PromptTokens": 23,
+      "OutputTokens": 2,
+      "Correct": true,
+      "WithinLatencyLimit": true,
+      "ExplicitUnload": false,
+      "UnloadedModel": ""
+    }
+  ],
+  "Gates": {
+    "PatternsIdentical": true,
+    "ExpectedModelsLoaded": true,
+    "LatenciesWithinLimits": true,
+    "ProviderProcessObserved": true,
+    "CrossProfileFallbacks": 0,
+    "UnexpectedCPUOffloads": 0,
+    "SwapGrowthEvents": 14,
+    "OOMEvents": 0,
+    "ProviderRestarts": 0,
+    "FailedTransitions": 0,
+    "Passed": false
+  }
+}

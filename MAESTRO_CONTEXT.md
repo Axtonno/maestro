@@ -30,7 +30,8 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 - Milestone 35: completata — `mutation_specific_model_qualified`;
   `qwen2.5-coder:14b` qualificato per la mutazione, mentre Direct Chat
   conserva `qwen3.5:9b`;
-- Milestone 36: aperta — `controlled_mutation_productization_open`;
+- Milestone 36: in chiusura — `residency_gate_qualified_swap_disabled_reference`;
+  productization v4 implementata, packaging e release readiness in verifica;
 - nessun candidate, tag o release v0.5.0 è autorizzato.
 
 ---
@@ -3404,5 +3405,22 @@ selezione host-bound a preview, approval e commit atomico. Verificare
 configurazione, doctor, packaging, installazione pulita e compatibilità Direct
 Chat prima di una distinta decisione di release readiness.
 
+Il reference hardware è parte del contratto. Tre cicli indipendenti misurano
+VRAM, RAM, swap, offload, eviction e latenze cold/warm nella sequenza
+`chat → mutation → chat`. La residenza simultanea non è richiesta; la
+transizione deve essere deterministica e osservabile, senza fallback CPU o
+incrociato silenzioso. Configurazione v4, CLI `workspace replace`, preview
+completa e doctor separato sono definiti nel piano aggiornato.
+
 Piano: `docs/milestone-36-controlled-mutation-productization-plan.md`.
+Profilo residency corrente: `docs/milestone-36-residency-profile-v4.yaml`.
 Nessun candidate, package, tag o release v0.5.0 è autorizzato all'apertura.
+
+Checkpoint residency: il profilo v4 con swap WSL disabilitato qualifica tre
+cicli `chat → mutation → chat`, 18/18 transizioni corrette, latenze sotto
+soglia, provider stabile e zero fallback incrociati, offload CPU, OOM, swap o
+restart. L'handoff productizzato scarica il profilo uscente e attende `/api/ps`
+vuoto prima della generazione successiva. Stato M36:
+`residency_gate_qualified_swap_disabled_reference`; restano packaging,
+installazione fuori checkout e decisione release separata. v0.5.0 resta non
+autorizzata alla pubblicazione.

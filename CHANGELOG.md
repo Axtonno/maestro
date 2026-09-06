@@ -22,6 +22,13 @@ deve essere dichiarato nelle note di release.
 
 ### Qualification
 
+- M36 productization: profilo v4 con `qwen3.5:9b` per Direct Chat e
+  `qwen2.5-coder:14b` per Controlled Mutation, CLI opt-in
+  `workspace replace`, doctor separato/all, prompt/schema congelati e routing
+  senza fallback incrociati. La residency v4 su RTX 5070 con swap WSL
+  disabilitato qualifica tre cicli `chat → mutation → chat`: un solo modello
+  in VRAM, latenze sotto soglia, zero fallback, offload CPU, OOM o swap. La
+  pubblicazione v0.5.0 resta una decisione separata;
 - M35 conclusa con `mutation_specific_model_qualified`: il confronto di tre
   profili seleziona `qwen2.5-coder:14b`; qualifica development e holdout al
   100% su output, positivi, astensioni, target, preview, approval, apply e
