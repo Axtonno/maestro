@@ -37,16 +37,18 @@ install -m 0755 ./maestro "$HOME/.local/bin/maestro"
 
 Maestro non richiede né invoca `sudo`.
 
-## Configurazione Direct Chat
+## Configurazione v0.5.0
 
-L’archive include soltanto il profilo di prodotto chat-only v3. Punta alla
-fixture inclusa, abilita streaming opt-in e congela `qwen3.5:9b`, context 4096,
-thinking disabilitato, temperatura interna zero, `num_predict: 1024`, residency
-5 minuti e limiti da 1 MiB.
+L'archive v0.5.0 include il profilo v4
+`configs/maestro.v0.5.0-candidate.yaml`. Il nome del file è conservato per
+compatibilità con il candidate qualificato, mentre manifest e comando
+`version --diagnostic` devono dichiarare `status=release`. Il profilo separa
+Direct Chat su `qwen3.5:9b` e Controlled Mutation su
+`qwen2.5-coder:14b`, con i digest congelati nel manifest.
 
 ```sh
-./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
-./maestro chat --config ./configs/maestro.chat.example.yaml \
+./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
+./maestro chat --config ./configs/maestro.v0.5.0-candidate.yaml \
   --file routes/api.php \
   "Quali endpoint, controller e action sono dichiarati?"
 ```
@@ -59,21 +61,18 @@ Per un workspace reale:
 
 ```sh
 install -d "$HOME/.config/maestro"
-install -m 0600 ./configs/maestro.chat.example.yaml \
-  "$HOME/.config/maestro/chat.yaml"
+install -m 0600 ./configs/maestro.v0.5.0-candidate.yaml \
+  "$HOME/.config/maestro/v0.5.0.yaml"
 ```
 
-Aggiornare `workspace.root`, rieseguire doctor e indicare sempre un file
-logico esplicito. Il file YAML non contiene credenziali; `api_key_env` accetta
-soltanto il nome di una variabile d’ambiente.
+Aggiornare `workspace.root` e rieseguire doctor. Direct Chat accetta un file
+logico esplicito oppure nessun file; Controlled Mutation richiede sempre un
+target sotto `app/`. Il file YAML non contiene credenziali; `api_key_env`
+accetta soltanto il nome di una variabile d'ambiente.
 
-Agent, retrieval, tool calling, profili mutativi e approval non appartengono
-al support claim v0.3.1 e non sono inclusi nella configurazione distribuita.
+## Controlled Mutation v0.5.0
 
-## Candidate v0.5.0 Controlled Mutation
-
-Il candidate v0.5.0 include un profilo v4 separato in
-`configs/maestro.v0.5.0-candidate.yaml`. Richiede Ollama locale, Direct Chat
+La release v0.5.0 richiede Ollama locale, Direct Chat
 con `qwen3.5:9b` e digest qualificato, Controlled Mutation con
 `qwen2.5-coder:14b` e digest qualificato, prompt/schema mutativi congelati e
 TTY reale per l'approvazione.

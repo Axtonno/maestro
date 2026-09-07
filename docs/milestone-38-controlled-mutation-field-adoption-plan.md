@@ -1,6 +1,6 @@
 # Milestone 38 — v0.5.0 Controlled Mutation Field Adoption
 
-Stato: aperta — `native_linux_field_adoption_pending`.
+Stato: completata — `native_linux_field_adoption_qualified`.
 
 ## Scopo
 
@@ -73,3 +73,7 @@ del binario, l'ambiente nativo, i modelli/digest, la matrice caso per caso,
 latency cold/warm, residency, diff Git before/after e i punteggi di utilità.
 Il verdetto può essere `native_linux_field_adoption_qualified`,
 `field_adoption_mixed`, `field_adoption_negative` o `field_adoption_incident`.
+
+La serie è stata conclusa il 2026-09-07. Risultati ed evidenze sono in
+`reports/milestone-38-final.md`, `reports/milestone-38-environment.yaml` e
+`reports/milestone-38-live-runs.json`.

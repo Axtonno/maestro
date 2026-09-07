@@ -8,7 +8,7 @@ Maestro è un Runtime per sistemi AI locali, progettato per orchestrare componen
 
 L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il Runtime sul quale costruire un intero ecosistema di strumenti intelligenti.
 
-## Snapshot corrente — 2026-09-06
+## Snapshot corrente — 2026-09-07
 
 - ultima release pubblica: **v0.5.0**, stato
   `v0.5.0_released_and_verified`;
@@ -16,11 +16,12 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
   filesystem Linux, hardware di riferimento RTX 5070 da 12 GB e Ollama locale;
   Direct Chat su `qwen3.5:9b` e Controlled Mutation opt-in su
   `qwen2.5-coder:14b` per un intervallo PHP selezionato sotto `app/`;
-  Linux amd64 nativo non è ancora validato sul campo;
-- schema pubblico chat: v3, context 4096, `num_predict: 1024`, thinking false,
+  l'asset pubblico è inoltre validato sul campo su Linux amd64 nativo CPU-only
+  nel ThinkPad T490s, senza generalizzare il claim a ogni hardware;
+- schema pubblico v4, context 4096, `num_predict: 1024`, thinking false,
   temperatura zero e residency 5 minuti;
-- CPU, altri modelli/provider, multi-file, verified agent, retrieval, tool
-  calling e Controlled Mutation restano non supportati;
+- altri modelli/provider, multi-file, verified agent, retrieval e tool calling
+  restano non supportati; Controlled Mutation richiede il percorso opt-in v4;
 - Milestone 28: completata senza qualificazione con verdetto
   `controlled_mutation_transport_unresolved`;
 - Milestone 29–32: concluse con qualifica respinta, come descritto nelle
@@ -38,9 +39,9 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 - Milestone 37: completata — `v0.5.0_released_and_verified`;
   tag, asset pubblici, riscaricamento anonimo e prova sulla copia pubblica
   verificati;
-- Milestone 38: aperta — `native_linux_field_adoption_pending`;
-  richiede prove sul campo su Linux amd64 nativo usando esclusivamente l'asset
-  pubblico, senza checkout o rebuild;
+- Milestone 38: completata — `native_linux_field_adoption_qualified`;
+  asset pubblico verificato senza checkout o rebuild su Linux amd64 nativo
+  CPU-only, correttezza 11/12, completion 12/12 e zero effetti vietati;
 
 ---
 
@@ -3432,3 +3433,26 @@ vuoto prima della generazione successiva. Stato M36:
 `controlled_mutation_productization_qualified`. Packaging, installazione fuori
 checkout, doctor e gate end-to-end sono verificati sul candidate `cb2a408`.
 La decisione di release v0.5.0 resta separata e non autorizzata.
+
+---
+
+# Chiusura Milestone 38 — v0.5.0 Controlled Mutation Field Adoption
+
+Stato: `native_linux_field_adoption_qualified`. L'asset pubblico v0.5.0 è
+stato installato fuori checkout, senza rebuild, su Ubuntu 24.04.4 Linux amd64
+nativo e CPU-only nel ThinkPad T490s. Archive, binario, manifest, commit e
+digest dei modelli coincidono con M37; `doctor --mode all` passa 14/14 check.
+
+La serie F01–F12 registra target e preview esatti 8/8, sei apply autorizzati
+coincidenti col diff, deny e stale senza scritture, zero effetti fuori
+selezione o failure con effetti, routing corretto e nessun OOM o restart.
+Correttezza aggregata 11/12, completion 12/12, utilità mediana 5/5. F02 resta
+un errore semantico isolato alla domanda generica senza file; la soglia
+congelata del 90% è comunque superata senza retry.
+
+L'esecuzione Ollama è interamente CPU (`size_vram: 0`); il lieve incremento
+swap di 323.584 byte non coincide con fallback, OOM o restart. La qualifica è
+evidenza sul campo per questo hardware e non una promessa universale su ogni
+PC Linux. Report in `docs/reports/milestone-38-final.md`, ambiente in
+`docs/reports/milestone-38-environment.yaml` ed evidenza strutturata in
+`docs/reports/milestone-38-live-runs.json`.

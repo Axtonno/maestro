@@ -1617,7 +1617,7 @@ Report: `reports/milestone-37-final.md`. Decisione:
 
 # Milestone 38 — v0.5.0 Controlled Mutation Field Adoption
 
-Stato: Aperta — `native_linux_field_adoption_pending`.
+Stato: Completata — `native_linux_field_adoption_qualified`.
 
 La milestone usa esclusivamente l'asset pubblico v0.5.0 su Linux amd64 nativo,
 senza checkout o rebuild. Deve coprire installazione da documentazione, doctor,
@@ -1626,6 +1626,11 @@ stale, roundtrip chat → mutation → chat, latency, qualità e utilità percep
 
 Piano: `milestone-38-controlled-mutation-field-adoption-plan.md`.
 Matrice: `milestone-38-controlled-mutation-field-adoption-matrix.yaml`.
+Report: `reports/milestone-38-final.md`. La serie sull'asset pubblico, eseguita
+su Ubuntu 24.04.4 Linux amd64 nativo e CPU-only, qualifica tutti i gate
+aggregati: correttezza 11/12, completion 12/12, utilità mediana 5/5, sei apply
+autorizzati esatti e zero effetti vietati. F02 resta registrato come errore
+semantico isolato.
 
 ---
 

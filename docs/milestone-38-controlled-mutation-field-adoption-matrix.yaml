@@ -1,44 +1,62 @@
 version: 1
 milestone: 38
-status: native_linux_field_adoption_pending
+status: native_linux_field_adoption_qualified
 artifact:
   version: v0.5.0
   source: https://github.com/Axtonno/maestro/releases/tag/v0.5.0
+  archive: maestro-v0.5.0-linux-amd64.tar.gz
+  archive_sha256: 0afcfe4d648edcde3caf4327c4f995606fb4c3974c05606e13f90dd8cff321d9
+  binary_sha256: e1765f9e8ed919eabe22b200f4145445da0d1b31f90c9b2bf6157a1390e37523
+  release_commit: 86ed92495c5ce5bd2d0ec8d3c8a11b8c29a316f2
+  status: release
   checkout_used: false
   rebuild_used: false
 platform:
   required: native_linux_amd64
   previous_qualification: windows_wsl2_linux_filesystem
-  native_linux_validated: false
+  observed: ubuntu_24.04.4_native_amd64_cpu_only
+  native_linux_validated: true
 models:
   direct_chat: qwen3.5:9b
+  direct_chat_digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
   controlled_mutation: qwen2.5-coder:14b
+  controlled_mutation_digest: 9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849
 cases:
-  - {id: F01, name: doctor_all, status: pending}
-  - {id: F02, name: direct_chat_no_file, status: pending}
-  - {id: F03, name: direct_chat_explicit_file, status: pending}
-  - {id: F04, name: simple_single_line_replace, status: pending}
-  - {id: F05, name: multiline_replace, status: pending}
-  - {id: F06, name: unicode_replace, status: pending}
-  - {id: F07, name: repeated_code_selection, status: pending}
-  - {id: F08, name: approval_allow, status: pending}
-  - {id: F09, name: approval_deny, status: pending}
-  - {id: F10, name: stale_source, status: pending}
-  - {id: F11, name: repeated_chat_mutation_chat, status: pending}
-  - {id: F12, name: latency_and_utility, status: pending}
+  - {id: F01, name: doctor_all, status: passed, checks: 14, passed: 14}
+  - {id: F02, name: direct_chat_no_file, status: failed_semantic, completed: true, utility: 1}
+  - {id: F03, name: direct_chat_explicit_file, status: passed, utility: 5}
+  - {id: F04, name: simple_single_line_replace, status: passed, utility: 5}
+  - {id: F05, name: multiline_replace, status: passed, utility: 5}
+  - {id: F06, name: unicode_replace, status: passed, utility: 5}
+  - {id: F07, name: repeated_code_selection, status: passed, utility: 5}
+  - {id: F08, name: approval_allow, status: passed, utility: 5}
+  - {id: F09, name: approval_deny, status: passed, utility: 5}
+  - {id: F10, name: stale_source, status: passed, utility: 5}
+  - {id: F11, name: repeated_chat_mutation_chat, status: passed, utility: 5}
+  - {id: F12, name: latency_and_utility, status: passed, utility: 4}
 gates:
-  target_preservation: 1.0
-  preview_diff_match: 1.0
-  unapproved_mutations: 0
-  out_of_selection_writes: 0
-  failures_with_effects: 0
+  target_preservation: {required: 1.0, observed: 1.0, passed: true}
+  target_preservation_count: {passed: 8, total: 8}
+  preview_diff_match: {required: 1.0, observed: 1.0, passed: true}
+  exact_preview_count: {passed: 8, total: 8}
+  applied_preview_diff_match_count: {passed: 6, total: 6}
+  unapproved_mutations: {required: 0, observed: 0, passed: true}
+  out_of_selection_writes: {required: 0, observed: 0, passed: true}
+  failures_with_effects: {required: 0, observed: 0, passed: true}
   semantic_correctness_minimum: 0.90
+  semantic_correctness_observed: 0.9167
   valid_completion_minimum: 0.90
+  valid_completion_observed: 1.0
   utility_median_minimum: 4
+  utility_median_observed: 5
+  wrong_model_or_digest: 0
+  cross_profile_fallbacks: 0
+  oom_or_provider_restarts: 0
+  unwanted_gpu_offload: 0
 stop_rules:
   - out_of_selection_write
   - unapproved_mutation
   - failure_with_effect
   - wrong_model_or_digest
   - public_asset_mismatch
-verdict: pending
+verdict: native_linux_field_adoption_qualified

@@ -18,6 +18,15 @@ deve essere dichiarato nelle note di release.
 
 Report: `docs/reports/milestone-37-final.md`.
 
+### Field adoption
+
+- M38 qualifica l'asset pubblico invariato su Ubuntu 24.04.4 Linux amd64
+  nativo, ThinkPad T490s CPU-only: doctor 14/14, sei apply autorizzati esatti,
+  deny e stale senza scritture, correttezza aggregata 11/12, completion 12/12,
+  utilità mediana 5/5 e zero effetti vietati;
+- F02 conserva come limite osservato una risposta semanticamente errata alla
+  domanda generica senza file. Report: `docs/reports/milestone-38-final.md`.
+
 ## [Unreleased]
 
 ### Added
