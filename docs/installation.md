@@ -4,6 +4,10 @@ Stato: @MAESTRO_STATUS@
 
 Piattaforma verificata: Linux `amd64`
 
+Per il percorso minimo usare [Installa e prova](install-and-try.md). Prima di
+abilitare scritture leggere
+[Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
+
 ## Verifica e installazione
 
 Per una release pubblicata, scaricare archive e checksum dalla stessa GitHub
@@ -53,9 +57,9 @@ Direct Chat su `qwen3.5:9b` e Controlled Mutation su
   "Quali endpoint, controller e action sono dichiarati?"
 ```
 
-Il provider deve essere Ollama già attivo su loopback e il modello con digest
-qualificato deve essere già presente. Maestro non avvia servizi e non scarica
-modelli.
+Il provider deve essere Ollama già attivo su loopback e i modelli con digest
+qualificati devono essere già presenti. Maestro non avvia servizi e non
+scarica modelli.
 
 Per un workspace reale:
 
@@ -91,14 +95,19 @@ modello uscente, attende che `/api/ps` sia vuoto e poi avvia il profilo
 entrante. Il comportamento qualificato non mostra fallback CPU, OOM, crescita
 swap o fallback incrociato.
 
+M38 ha inoltre verificato lo stesso asset pubblico su Ubuntu 24.04.4 Linux
+`amd64` nativo, ThinkPad T490s con Intel i5-8365U e Ollama CPU-only. Questa è
+evidenza sul campo per la macchina osservata, non un requisito minimo o una
+promessa di latenza per ogni sistema Linux.
+
 Esempi:
 
 ```sh
 ./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
 ./maestro workspace replace --config ./configs/maestro.v0.5.0-candidate.yaml \
-  --file app/Worker.php \
-  --lines 2:2 \
-  "Imposta workers a 8"
+  --file app/Http/Controllers/OrderController.php \
+  --lines 22:22 \
+  "Cambia soltanto lo status HTTP da 201 a 202, preservando il resto della riga"
 ```
 
 La capability resta opt-in: senza profilo v4 dedicato, TTY, target sotto
@@ -114,7 +123,7 @@ install -m 0755 ./maestro "$HOME/.local/bin/maestro.new"
 mv "$HOME/.local/bin/maestro.new" "$HOME/.local/bin/maestro"
 ```
 
-Non riutilizzare automaticamente un profilo agentico v1 come profilo chat v3.
+Non riutilizzare automaticamente un profilo agentico v1 come profilo v4.
 
 ## Rimozione
 

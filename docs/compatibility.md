@@ -1,86 +1,91 @@
-# Maestro v0.3.1 Compatibility Matrix
+# Maestro v0.5.0 Compatibility Matrix
 
-Data: 2026-09-02
+Aggiornata: 2026-09-08
 
-Classificazione hardware aggiornata: 2026-09-01
+Questa pagina definisce il support claim corrente. Funzioni presenti nel
+repository, documenti di design e milestone future non ampliano questo
+perimetro.
 
-Questa pagina definisce l’unico support claim di v0.3.1. La presenza di altro
-codice nel repository o nel binario non equivale a qualifica.
-
-## Percorso qualificato
+## Superficie operativa
 
 | Dimensione | Stato | Confine verificato |
-|---|---|---|
-| Sistema operativo | Supportato | Linux `amd64`; gate finale su WSL2/Ubuntu 24.04 |
-| Hardware della qualifica | Verificato | NVIDIA RTX 5070; non è un requisito minimo universale |
+| --- | --- | --- |
+| Artifact | Supportato | Release pubblica Linux `amd64` v0.5.0 |
 | Provider | Supportato | Ollama 0.33.1 su `http://127.0.0.1:11434` |
-| Modello | Supportato | `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
-| Modalità | Supportata | Direct Chat tool-free, zero o un file esplicito |
-| Profilo | Supportato | schema v3 chat-only, context 4096, `num_predict` 1024, residency 5m, thinking false, temperatura zero |
-| Streaming | Supportato | opt-in, equivalente e con pubblicazione atomica |
-| Workspace | Supportato | root locale autorizzata; path logico single-file contained |
-| Mutazioni | Non supportate | policy `workspace_mutate: deny`; nessun tool nel percorso chat |
-| Isolamento | Non fornito | processo trusted in-process, nessuna sandbox |
+| Direct Chat | Supportata | Domanda senza file o su un file esplicito |
+| Modello chat | Supportato | `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
+| Controlled Mutation | Supportata, opt-in | Una sostituzione su un intervallo PHP esplicito sotto `app/` |
+| Modello mutation | Supportato | `qwen2.5-coder:14b`, digest `9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849` |
+| Configurazione | Supportata | Schema strict v4 distribuito |
+| Approval | Obbligatoria | Preview completa e allow-once in TTY reale |
+| Streaming chat | Compatibilità | Implementato nei profili storici; il profilo v4 distribuito lo disabilita |
+| Isolamento | Non fornito | Processo trusted con privilegi dell'utente, nessuna sandbox |
 
-La baseline v0.3.0 e il candidate v0.3.1 sono stati confrontati sugli stessi
-cinque task M17. Il profilo 1024 completa 5/5 con terminale `stop`, qualità
-4/5 e zero regressioni appaiate; complete e stream sono coerenti. L'esatto RC
-costruito dal commit release ha inoltre superato doctor, no-file, route,
-containment, immutabilità, identità e anti-leak fuori dal checkout.
+## Piattaforme qualificate e osservate
 
-## Confine funzionale
+| Ambiente | Stato | Significato |
+| --- | --- | --- |
+| Windows → WSL2 → filesystem Linux, RTX 5070 12 GB | Qualifica release M36–M37 | Ambiente di riferimento della productization e pubblicazione |
+| Ubuntu 24.04.4 nativo, ThinkPad T490s, i5-8365U CPU-only | Field adoption M38 | Asset pubblico verificato sul campo, inclusi chat, mutation e residency |
+| Altri PC Linux `amd64` | Non qualificati individualmente | L'artifact può essere eseguito, ma non esiste una promessa universale di latenza o memoria |
+| Linux `arm64`, macOS, Windows nativo | Non supportati | Nessun artifact o gate v0.5.0 qualificato |
 
-Il percorso supportato è:
+CPU-only sul T490s è un ambiente osservato e qualificato per M38, non un
+requisito minimo. Ollama ha riportato zero VRAM e un solo modello residente per
+volta; le latenze sono sensibilmente dipendenti dall'hardware.
+
+## Direct Chat
+
+Percorso supportato:
 
 ```text
-domanda + file opzionale esplicito
+domanda + zero o un file esplicito
   -> validazione workspace e limiti
-  -> una completion o stream provider
+  -> qwen3.5:9b
   -> risposta validata
 ```
 
-Non costruisce Context Engine, index, Agent Runtime, sessione, tool registry,
-approver o fallback. Senza `--file` non usa contesto di progetto. Con
-`--file`, disclosed soltanto quel file.
+Senza file non viene eseguita ricerca nel workspace. Con `--file` viene
+reso disponibile al provider soltanto il file indicato. Direct Chat non abilita tool,
+retrieval, agent o mutation come fallback.
 
-## Non qualificato
+## Controlled Mutation
 
-- `maestro agent`, l’alias `maestro run` e ogni reference agent;
-- retrieval o indicizzazione multi-file;
-- tool calling, tool built-in o di terze parti;
-- `workspace.write`, `workspace.patch`, approval e Controlled Mutation;
-- modelli o digest diversi dalla baseline;
-- llama.cpp, endpoint Ollama remoti o provider esposti a reti non attendibili;
-- Linux `arm64`, macOS, Windows e packaging non `linux/amd64`;
-- sandbox, remote execution, shell, Git, Docker, persistence e multi-agent.
+Percorso supportato:
 
-“Non qualificato” non significa necessariamente incompatibile: significa che
-v0.3.1 non offre una promessa operativa per quel percorso.
+```text
+file PHP sotto app/ + righe start:end + istruzione
+  -> qwen2.5-coder:14b
+  -> proposta host-bound
+  -> preview + approval allow-once
+  -> stale check + apply atomico
+```
 
-## Classificazione hardware post-M21
+Il perimetro normativo completo è in
+[Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
 
-La Milestone 21 ha respinto soltanto l'esatto candidato Direct Chat provato
-sul T490s. Non ha dimostrato che Maestro richieda necessariamente una GPU.
+## Non supportato oggi
 
-| Classe | Stato corrente | Interpretazione |
-|---|---|---|
-| Legacy CPU — ThinkPad T490s | Development-only | nessuna promessa operativa per `qwen2.5-coder:7b` e il profilo M21 |
-| Modern CPU-only | Non qualificata | richiede una nuova matrice con offload GPU disabilitato e verificato |
-| GPU reference — RTX 5070 | Supportata da v0.3.1 | vale l'esatto percorso qualificato descritto sopra, non un requisito minimo universale |
+- individuazione autonoma del target;
+- retrieval, contesto o modifiche multi-file;
+- insert/delete arbitrari e modifiche fuori dallo span selezionato;
+- mutation fuori `app/`, non PHP, senza TTY o senza allow-once;
+- altri modelli, digest o prompt/schema mutativi;
+- llama.cpp ed endpoint Ollama remoti;
+- agent autonomi, tool calling, shell, Git, Docker o remote execution;
+- sandbox, isolamento di rete, secret manager e rollback automatico;
+- plugin o tool di terze parti come superficie di prodotto.
 
-Una futura prova CPU moderna deve dimostrare zero layer sulla GPU, zero VRAM
-usata dal modello, processo Ollama CPU-only e configurazione congelata. Il
-T490s resta un lower bound osservato, non il minimo hardware supportato.
+“Non supportato” non significa impossibile nell'architettura: significa che
+v0.5.0 non offre una promessa operativa per quel percorso.
 
-## Relazione con v0.2.0
+## Evidenza
 
-v0.2.0 resta un artifact storico read-only del reference agent. La Field
-Validation successiva ha prodotto `adoption_no_go_on_reference_profile`; la
-Milestone 15 ha qualificato Direct Chat ma respinto il verified agent. v0.3.0
-non reinterpreta quelle evidenze: productizza soltanto la completion
-single-file separata.
+M38 ha verificato l'asset pubblico senza checkout o rebuild su Linux nativo:
+doctor 14/14, target e preview 8/8, sei apply esatti, deny e stale senza
+scritture, correttezza semantica 11/12 e completion 12/12. L'errore semantico
+F02 resta documentato.
 
-CLI e schema sono ancora sperimentali nella serie 0.x. Una configurazione v1
-agentica non viene convertita implicitamente nel profilo chat v3. Lo schema v2
-resta leggibile per compatibilità ma non riceve valori impliciti di generation
-limit o residency.
+CLI e schema restano versionati e possono evolvere durante la serie 0.x. Le
+capacità future sono elencate nella [Roadmap](roadmap.md), non in questa
+matrice.

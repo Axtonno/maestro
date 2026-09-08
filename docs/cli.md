@@ -1,30 +1,27 @@
-# Maestro v0.3.1 CLI
+# Maestro v0.5.0 CLI
 
-Stato: contratto pubblico sperimentale Direct Chat
+Stato: superficie operativa pubblica; interfacce versionate nella serie 0.x
 
-La v0.3.1 productizza le correzioni operative sviluppate dopo v0.3.0.
+La v0.5.0 espone Direct Chat read-only e Controlled Mutation opt-in come
+percorsi separati.
 
 ## Superficie supportata
 
 ```text
 maestro chat
 maestro doctor --mode chat
+maestro workspace replace --file <path> --lines <start:end> [--config path] <istruzione>
+maestro doctor --mode mutation [--config path]
+maestro doctor --mode all [--config path]
 maestro version
 ```
 
 La root help può mostrare comandi storici o di sviluppo. `agent`, `run`,
-`models`, `agents` e `bench` non appartengono al support claim v0.3.1 e non
+`models`, `agents` e `bench` non appartengono al support claim v0.5.0 e non
 sono fallback di Direct Chat.
 
-La linea candidata v0.5.0 aggiunge una superficie mutativa opt-in separata:
-
-```text
-maestro workspace replace --file <path> --lines <start:end> [--config path] <istruzione>
-maestro doctor --mode mutation [--config path]
-maestro doctor --mode all [--config path]
-```
-
-Questi comandi richiedono un profilo v4 con `direct_chat` e
+`workspace replace` e i modi doctor mutativi richiedono un profilo v4 con
+`direct_chat` e
 `controlled_mutation` distinti. Non ereditano il modello Direct Chat come
 fallback e non abilitano mutation se il profilo dedicato manca.
 
@@ -37,7 +34,7 @@ maestro chat [--config path] [--file logical-path] [--stream] [question]
 La domanda può essere un argomento posizionale oppure stdin bounded, mai
 entrambi. `--file` è opzionale e singolo; accetta soltanto un path logico
 relativo sotto `workspace.root`, senza glob o directory. `--stream` è opt-in e
-richiede `interaction.chat.streaming: true`.
+richiede che il profilo chat autorizzi lo streaming.
 
 Direct Chat esegue una sola completion con zero tool. Non costruisce Context
 Engine, retrieval, Agent Runtime, sessione o approver. Senza file non seleziona
@@ -64,7 +61,7 @@ L'heartbeat non contiene modello, domanda, file, path, risposta parziale,
 secret o errore remoto. Il ticker viene arrestato prima del risultato o del
 failure; stdout resta atomico.
 
-Il profilo strict v3 inoltra inoltre
+Il profilo v4 distribuito inoltra
 `num_predict: 1024` e `residency: 5m` alla stessa richiesta Ollama per complete
 e stream. Non crea timer o goroutine di lifecycle in Maestro e non scarica
 modelli posseduti da altri processi.
@@ -93,7 +90,7 @@ result
 Il risultato è intenzionalmente visibile all’utente locale. Log e failure non
 includono domanda, prompt, response completa, contenuto del file, root fisica o
 secret. Le righe `num_predict_requested` e `residency_requested` sono presenti
-nel profilo v3; l'envelope v2 storico resta invariato.
+nei profili v3 e v4; l'envelope v2 storico resta invariato.
 
 ## `doctor --mode chat`
 
@@ -106,8 +103,9 @@ probe non invoca completion, non indicizza e non modifica il workspace, non
 avvia provider e non installa modelli. `skip`, `unknown` o `fail` non valgono
 come PASS in una serie di qualificazione.
 
-Il dettaglio del check config identifica lo schema caricato
-(`schema_v2_chat_valid` oppure `schema_v3_chat_valid`).
+Il dettaglio del check config identifica lo schema caricato. La release
+distribuisce `schema_v4_chat_valid`; v2 e v3 restano leggibili per
+compatibilità Direct Chat.
 
 ## `workspace replace`
 
@@ -128,6 +126,9 @@ Il comando fallisce chiuso per configurazione non v4, intervallo invalido,
 path fuori `app/`, symlink, modello mutativo assente o con digest diverso,
 schema/prompt diversi da quelli qualificati, output provider non conforme,
 astensione, deny o sorgente cambiata dopo la preview.
+
+Il contratto completo e i casi fuori perimetro sono in
+[Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
 
 ### Output Controlled Mutation
 
@@ -180,13 +181,14 @@ sha256\t...
 
 L'output normale di `maestro version` resta invariato.
 
-## Exit code Direct Chat
+## Exit code
 
 | Codice | Significato |
 |---:|---|
 | 0 | completion conclusa con risposta valida |
 | 1 | response invalida, hard limit o failure interna |
 | 2 | uso, configurazione o file non valido/non autorizzato |
+| 3 | mutation negata, stale, astensione o altra chiusura sicura senza apply |
 | 4 | provider, modello, capability o deadline non disponibile |
 | 130 | cancellazione tramite interrupt |
 
@@ -211,3 +213,7 @@ I reason code pubblici sono `invalid_request`, `chat_profile_required`,
 `file_not_allowed`, `provider_unavailable`, `capability_unsupported`,
 `response_invalid`, `limit_exceeded`, `deadline_exceeded`, `canceled` ed
 `execution_failed`.
+
+Controlled Mutation usa terminali distinti, tra cui `applied`,
+`approval_rejected` e `stale_source`. Un terminale diverso da `applied`
+non autorizza una scrittura.

@@ -1,10 +1,10 @@
 # Maestro Philosophy
 
-Versione: 0.1.0
+Versione: 0.5.0
 
-Stato: Draft
+Stato: Current
 
-Ultimo aggiornamento: 2026-07-20
+Ultimo aggiornamento: 2026-09-08
 
 Autori:
 - Antonio Cafeo
@@ -87,7 +87,7 @@ Maestro rende possibile la collaborazione tra queste componenti.
 
 Lo sviluppatore mantiene sempre il controllo.
 
-Può decidere:
+Nel disegno complessivo può decidere:
 
 - quale provider utilizzare;
 - quale modello installare;
@@ -99,9 +99,13 @@ Maestro non impone un ecosistema.
 
 Lo rende possibile.
 
+Nella release pubblica questa libertà è limitata dalla compatibility matrix:
+soltanto provider, modelli e capability qualificati ricevono una promessa
+operativa.
+
 ---
 
-## L'hardware non è un limite
+## L'hardware è parte del contratto
 
 Ogni computer rappresenta un ambiente differente.
 
@@ -110,6 +114,10 @@ Una workstation professionale e un portatile di cinque anni devono poter utilizz
 Cambieranno le implementazioni.
 
 Non cambierà l'architettura.
+
+Le prestazioni e il supporto, invece, non vengono presunti. Ogni profilo
+hardware deve essere osservato e documentato; una prova su una macchina non
+diventa automaticamente una promessa universale.
 
 ---
 
@@ -138,6 +146,9 @@ Poi si progetta l'interfaccia.
 Infine si implementa il codice.
 
 Mai il contrario.
+
+La documentazione pubblica descrive ciò che una release fa oggi. Design e
+roadmap descrivono ciò che potrebbe fare dopo; non sono support claim.
 
 ---
 

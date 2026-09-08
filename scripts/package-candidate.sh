@@ -143,7 +143,7 @@ cleanup() {
 trap cleanup EXIT
 
 root="$working/$artifact"
-mkdir -p "$root/configs" "$root/docs" "$root/fixtures/laravel-v1"
+mkdir -p "$root/configs" "$root/docs/reports" "$root/fixtures/laravel-v1"
 
 ldflags="-s -w -buildid= -X github.com/antonio-cafeo/maestro/internal/buildinfo.Version=${version} -X github.com/antonio-cafeo/maestro/internal/buildinfo.Commit=${commit} -X github.com/antonio-cafeo/maestro/internal/buildinfo.Status=${status}"
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=local GOENV=off GOFLAGS='' \
@@ -155,7 +155,13 @@ cp LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGELOG.md SECURITY.md "$
 cp docs/installation.md docs/configuration.md docs/cli.md \
 	docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
 	docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
+	docs/install-and-try.md docs/controlled-mutation-support.md \
 	"$root/docs/"
+cp docs/milestone-38-field-adoption-freeze.yaml "$root/docs/"
+cp docs/reports/milestone-38-final.md \
+	docs/reports/milestone-38-environment.yaml \
+	docs/reports/milestone-38-live-runs.json \
+	"$root/docs/reports/"
 if [[ "$profile_kind" == "mutation-productization" ]]; then
 	mkdir -p "$root/docs/prompts" "$root/docs/schemas"
 	cp docs/prompts/mutation-host-bound-model-selection-v1.txt "$root/docs/prompts/"

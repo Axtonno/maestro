@@ -1,148 +1,77 @@
 # Maestro Vision
 
-Versione: 0.1.0
+Versione: 0.5.0
 
-Stato: Draft
+Stato: Current
 
-Ultimo aggiornamento: 2026-07-20
+Ultimo aggiornamento: 2026-09-08
 
-Autori:
-- Antonio Cafeo
-- OpenAI ChatGPT
+## Punto di partenza
 
----
+Maestro non parte più soltanto da un'architettura promettente. v0.5.0 ha un
+nucleo operativo dimostrato: Direct Chat locale e Controlled Mutation
+host-bound con approvazione umana.
 
-# Perché esiste questo documento?
+La visione cresce da questo punto senza confondere tre livelli:
 
-Questo documento descrive la direzione strategica di Maestro.
+1. capacità disponibili nella release pubblica;
+2. componenti sperimentali presenti nel repository;
+3. direzioni future della roadmap.
 
-Non definisce l'implementazione tecnica.
+## Oggi
 
-Definisce dove il progetto vuole arrivare e quale ruolo desidera ricoprire nell'ecosistema dello sviluppo software assistito dall'intelligenza artificiale.
+Maestro funziona come una workstation locale delimitata:
 
----
+- l'utente sceglie il workspace;
+- la chat usa zero o un file esplicito;
+- il write-mode usa un file PHP e un intervallo esplicito;
+- il modello propone, ma non approva;
+- Maestro mostra e verifica l'effetto prima di scrivere;
+- ogni claim operativo è legato ad artifact, modello, digest e ambiente provati.
 
-# Obiettivo
+## Direzione
 
-Costruire il runtime di riferimento per l'esecuzione di agenti AI locali dedicati allo sviluppo software.
+L'obiettivo di lungo periodo resta una workstation AI locale più completa,
+capace di comporre contesto, provider, framework e strumenti con policy
+verificabili.
 
-Maestro dovrà permettere agli sviluppatori di utilizzare qualsiasi modello, qualsiasi provider e qualsiasi framework attraverso un'unica architettura coerente.
+Possibili estensioni includono:
 
----
+- contesto e retrieval multi-file;
+- altri linguaggi e framework;
+- provider e profili hardware ulteriori;
+- workflow multi-step e plugin;
+- memoria e sessioni;
+- agent con authority graduata.
 
-# Visione
+Questi elementi non sono supportati finché una release e la relativa matrice
+non li qualificano.
 
-Immaginiamo un futuro in cui l'intelligenza artificiale farà parte dell'ambiente di sviluppo tanto quanto il compilatore, il debugger o il sistema di versionamento.
+## Metodo di avanzamento
 
-In questo scenario il problema non sarà scegliere il modello migliore.
+Ogni nuova capacità deve partire piccola, dichiarare il proprio confine,
+fallire chiusa e produrre evidenza ripetibile. L'autonomia cresce soltanto dopo
+il controllo dell'effetto, non prima.
 
-Il problema sarà orchestrare nel modo migliore tutte le componenti disponibili.
+La roadmap può cambiare; il support claim corrente è sempre definito dalla
+[Compatibility Matrix](compatibility.md).
 
-Maestro nasce per diventare questo livello di orchestrazione.
+## Posizionamento
 
----
+Maestro vuole diventare il livello locale che trasforma modelli generativi in
+strumenti di sviluppo controllabili:
 
-# La filosofia di Maestro
+```text
+sviluppatore
+  -> workstation Maestro
+  -> capacità e policy
+  -> provider locale
+  -> modello
+```
 
-Un modello AI non dovrebbe conoscere:
+Il valore non è nascondere il modello, ma rendere espliciti contesto,
+authority, preview, fallimenti e responsabilità.
 
-- Docker;
-- Laravel;
-- Composer;
-- Git;
-- PHPUnit;
-- il filesystem.
+## Motto
 
-Dovrebbe ricevere solamente il contesto corretto.
-
-Il runtime ha il compito di costruire quel contesto.
-
----
-
-# Il ruolo nell'ecosistema
-
-Maestro si colloca tra:
-
-Lo sviluppatore
-
-↓
-
-Gli strumenti
-
-↓
-
-I provider AI
-
-↓
-
-I modelli
-
-Il runtime coordina tutte queste componenti mantenendole indipendenti tra loro.
-
----
-
-# L'obiettivo a lungo termine
-
-Diventare il punto di riferimento per chi desidera costruire una AI locale realmente integrata con il proprio ambiente di sviluppo.
-
-Il progetto dovrà essere:
-
-- indipendente;
-- modulare;
-- estensibile;
-- trasparente;
-- facilmente adattabile.
-
----
-
-# Cosa Maestro non vuole essere
-
-Maestro non vuole diventare:
-
-- un editor di codice;
-- un IDE;
-- un chatbot;
-- un provider AI;
-- un framework.
-
-Vuole essere il runtime che permette a questi strumenti di collaborare.
-
----
-
-# Il futuro del progetto
-
-Nel lungo periodo Maestro dovrà supportare:
-
-- molteplici provider;
-- molteplici framework;
-- molteplici linguaggi;
-- esecuzione locale e remota;
-- plugin di terze parti;
-- sistemi di memoria;
-- pianificazione autonoma;
-- workflow personalizzati.
-
-L'architettura dovrà consentire questa evoluzione senza modificare il core.
-
----
-
-# Motto
-
-> The intelligence is in the orchestration.
-
----
-
-# Decisioni
-
-- Maestro sarà un runtime.
-- L'architettura sarà orientata all'orchestrazione.
-- Il core rimarrà indipendente dalle implementazioni.
-- L'espansione del progetto avverrà tramite plugin e capability.
-
----
-
-# Documenti dipendenti
-
-- architecture.md
-- roadmap.md
-- specifications/*
+> Build small. Orchestrate everything.

@@ -1,6 +1,8 @@
 package maestro_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"strings"
@@ -17,6 +19,10 @@ func TestMilestone38QualifiesNativeLinuxFieldAdoption(t *testing.T) {
 			t.Fatal(err)
 		}
 		return data
+	}
+	hash := func(data []byte) string {
+		sum := sha256.Sum256(data)
+		return hex.EncodeToString(sum[:])
 	}
 
 	var matrix struct {
@@ -113,6 +119,32 @@ func TestMilestone38QualifiesNativeLinuxFieldAdoption(t *testing.T) {
 	for _, required := range []string{verdict, "11/12", "12/12", "F02", "323.584 byte"} {
 		if !strings.Contains(report, required) {
 			t.Fatalf("M38 final report is missing %q", required)
+		}
+	}
+
+	var freeze struct {
+		Status   string
+		Verdict  string
+		Accepted map[string]struct {
+			Path   string
+			SHA256 string
+		} `yaml:"accepted_evidence"`
+		Policy struct {
+			RerunReplacesEvidence         bool `yaml:"rerun_replaces_evidence"`
+			ReinterpretationAllowed       bool `yaml:"reinterpretation_allowed"`
+			CorrectionsRequireNewRecord   bool `yaml:"corrections_require_new_record"`
+			FutureChangesRequireMilestone bool `yaml:"future_product_changes_require_new_milestone"`
+		}
+	}
+	if err := yaml.Unmarshal(read("docs/milestone-38-field-adoption-freeze.yaml"), &freeze); err != nil {
+		t.Fatal(err)
+	}
+	if freeze.Status != verdict || freeze.Verdict != verdict || len(freeze.Accepted) != 4 || freeze.Policy.RerunReplacesEvidence || freeze.Policy.ReinterpretationAllowed || !freeze.Policy.CorrectionsRequireNewRecord || !freeze.Policy.FutureChangesRequireMilestone {
+		t.Fatal("invalid M38 evidence freeze policy")
+	}
+	for name, artifact := range freeze.Accepted {
+		if artifact.Path == "" || artifact.SHA256 != hash(read(artifact.Path)) {
+			t.Fatalf("M38 frozen evidence mismatch for %s", name)
 		}
 	}
 }

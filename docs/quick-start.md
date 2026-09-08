@@ -1,18 +1,22 @@
 # Maestro @MAESTRO_VERSION@ Quick Start
 
-Questo percorso usa soltanto archive e checksum Linux `amd64`. Non richiede il
-checkout del repository.
+Questo percorso verifica la release Linux `amd64` sulla fixture Laravel
+inclusa, senza checkout del repository.
+
+Per una prova essenziale vedere [Installa e prova](install-and-try.md). Questa
+pagina aggiunge controlli e risultati attesi.
 
 ## Prerequisiti
 
-- Linux `amd64`;
-- Ollama 0.33.1 raggiungibile su `http://127.0.0.1:11434`;
+- Ollama 0.33.1 su `http://127.0.0.1:11434`;
 - `qwen3.5:9b`, digest
-  `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`,
-  già disponibile;
-- memoria sufficiente per il modello.
+  `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`;
+- `qwen2.5-coder:14b`, digest
+  `9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849`;
+- memoria sufficiente a caricare un modello per volta;
+- una TTY reale per il write-mode.
 
-Maestro non avvia Ollama e non esegue pull, update o sostituzioni implicite.
+Maestro non avvia Ollama, non scarica modelli e non sostituisce un digest.
 
 ## 1. Verifica ed estrazione
 
@@ -24,83 +28,78 @@ curl -fLO "${base_url}/${artifact}.tar.gz"
 curl -fLO "${base_url}/${artifact}.tar.gz.sha256"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
-cd "$artifact"
-./maestro version
+cd "${artifact}"
+./maestro version --diagnostic
 ```
 
-I due asset devono provenire dalla stessa GitHub Release. Nome archive,
-checksum, `maestro version` e `ARTIFACT-MANIFEST.txt` devono riportare la
-stessa identità e lo stato `release`. Non proseguire in caso di divergenza.
+Archive e checksum devono provenire dalla stessa GitHub Release. Nome,
+versione, commit, stato `release` e manifest devono coincidere.
 
-## 2. Verifica del modello
-
-Usare gli strumenti amministrativi di Ollama per verificare che modello e
-digest coincidano con il manifest. Se il modello non è presente, interrompere
-il quick start: l’acquisizione non fa parte della procedura supportata.
-
-## 3. Diagnostica
-
-La configurazione inclusa punta alla fixture Laravel nello stesso archive:
+## 2. Diagnostica completa
 
 ```sh
-./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
+./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
 ```
 
-Il doctor esegue cinque controlli read-only: config, workspace, composition,
-model e generation. Tutti devono essere `pass`; non effettua completion.
+Il profilo v4 punta alla fixture inclusa. I 14 check chat e mutation devono
+essere `pass`. Doctor non esegue completion e non modifica il workspace.
 
-## 4. Chat single-file
+## 3. Direct Chat con file
 
 ```sh
-./maestro chat --config ./configs/maestro.chat.example.yaml \
-  --file routes/api.php \
-  "Quali endpoint, controller e action sono dichiarati?"
+./maestro chat --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php "Quali campi valida store e quale risposta HTTP restituisce?"
 ```
 
-Il terminale deve essere `completed`, il finish reason `stop` e la risposta
-deve identificare `POST /orders` e `OrderController::store` senza inventare
-altri endpoint. L’output esatto e la latenza possono variare.
+Il terminale deve essere `completed`, il modello `qwen3.5:9b` e il finish
+reason `stop`. La risposta deve ricavare dal solo file `customer_id`,
+`items` e lo status 201.
 
-Per verificare il trasporto streaming mantenendo lo stesso contratto:
+Senza `--file`, Maestro non cerca contesto nel progetto. Una domanda che
+dipende dal workspace deve quindi essere dichiarata non determinabile.
+
+## 4. Controlled Mutation con deny
 
 ```sh
-./maestro chat --stream \
-  --config ./configs/maestro.chat.example.yaml \
-  --file routes/api.php \
-  "Quali endpoint, controller e action sono dichiarati?"
+./maestro workspace replace --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php --lines 22:22 "Cambia soltanto lo status HTTP da 201 a 202, preservando il resto della riga."
 ```
 
-I chunk non vengono esposti progressivamente: Maestro pubblica stdout soltanto
-dopo aver validato terminale, limiti e risposta completa.
+Il modello deve essere `qwen2.5-coder:14b`. Controllare preview, digest e
+fingerprint, poi digitare `d`: il terminale atteso è
+`approval_rejected`, exit code 3, con file invariato.
 
-## 5. Nessun file
+## 5. Controlled Mutation con allow-once
+
+Ripetere il comando e digitare `o` solo se la preview sostituisce esattamente
+201 con 202. Il terminale atteso è `applied`, `effect=applied` e
+`durable=true`. Verificare la riga risultante:
 
 ```sh
-./maestro chat --config ./configs/maestro.chat.example.yaml \
-  "Quali endpoint dichiara questo progetto?"
+sed -n '22p' app/Http/Controllers/OrderController.php
 ```
 
-La risposta deve dichiarare che il contesto di progetto non è disponibile.
-Maestro non seleziona file, non indicizza il workspace e non usa fallback.
+La fixture estratta può essere reinizializzata riestraendo l'archive in una
+nuova directory. Su un progetto reale usare invece il normale controllo
+versione del progetto.
 
-## 6. Progetto reale
+## 6. Configurare un progetto reale
 
 ```sh
 install -d "$HOME/.config/maestro"
-install -m 0600 ./configs/maestro.chat.example.yaml \
-  "$HOME/.config/maestro/chat.yaml"
+install -m 0600 ./configs/maestro.v0.5.0-candidate.yaml "$HOME/.config/maestro/v0.5.0.yaml"
 ```
 
-Modificare soltanto `workspace.root` verso la directory autorizzata, poi
-ripetere il doctor. Un path relativo è risolto rispetto al file YAML.
+Cambiare soltanto `workspace.root`, quindi rieseguire doctor. Un root relativo
+è risolto rispetto alla directory del file YAML.
 
-Il comando legge esclusivamente il file indicato da `--file`. Path assoluti,
-traversal, directory, symlink, file non regolari o oltre limite vengono
-rifiutati prima della disclosure.
+Direct Chat legge zero o un file esplicito. Controlled Mutation accetta un
+singolo file PHP sotto `app/` e un solo intervallo inclusivo. Per il contratto
+completo vedere [Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
 
 ## Arresto e problemi
 
 SIGINT/SIGTERM producono exit code 130; una deadline provider usa exit code 4.
-I failure stampano su stderr soltanto `chat failed: <reason_code>` e non
-pubblicano response parziali. Consultare `troubleshooting.md`,
-`security-model.md` e `compatibility.md`.
+Un deny o una sorgente stale usa exit code 3. I failure non avviano un secondo
+modello o un altro percorso.
+
+Consultare [Troubleshooting](troubleshooting.md),
+[Security Model](security-model.md) e [Compatibility Matrix](compatibility.md).

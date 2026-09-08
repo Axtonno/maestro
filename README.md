@@ -2,115 +2,119 @@
 
 > The intelligence is in the orchestration.
 
-Maestro v0.3.1 consolida una chat locale diretta per interrogare zero o un file
-esplicitamente scelto dentro un workspace. Il percorso supportato è read-only,
-non usa tool, retrieval, Agent Runtime o fallback agentici.
+Maestro è una workstation AI locale per lo sviluppo software, costruita su un
+runtime modulare. La release v0.5.0 offre un nucleo operativo verificato:
+Direct Chat sul workspace e Controlled Mutation con selezione esplicita,
+preview completa e approvazione umana prima di ogni scrittura.
 
-## v0.3.1 in breve
+Non è un agente autonomo general-purpose. Oggi esegue due flussi piccoli,
+osservabili e delimitati; l'architettura più ampia resta la direzione del
+progetto, non una promessa già disponibile.
 
-| Dimensione | Supporto ufficiale |
-|---|---|
-| Piattaforma | Linux `amd64`, qualificazione WSL2/Ubuntu 24.04/RTX 5070 |
-| Provider | Ollama locale 0.33.1 su endpoint loopback |
-| Modello | `qwen3.5:9b`, digest qualificato nel manifest |
-| Modalità | `maestro chat`, zero o un file esplicito |
-| Streaming | Opt-in con output atomico |
-| Tool/retrieval/agent | Non qualificati per v0.3.1 |
-| Mutazioni | Non supportate |
-| Isolamento | Trusted in-process, nessuna sandbox |
+## Cosa fa oggi
 
-La [compatibility matrix](docs/compatibility.md) è la fonte autorevole. Codice
-agentico o mutativo presente nel repository non amplia la promessa di prodotto.
+| Capacità | Perimetro v0.5.0 |
+| --- | --- |
+| Direct Chat | Domanda senza file oppure su un solo file esplicito |
+| Controlled Mutation | Sostituzione di un intervallo di righe in un singolo file PHP sotto `app/` |
+| Controllo della scrittura | Preview completa, allow-once in TTY, verifica stale e apply atomico |
+| Provider | Ollama locale su loopback |
+| Modelli | `qwen3.5:9b` per chat; `qwen2.5-coder:14b` per mutation |
+| Artifact | Release pubblica Linux `amd64` |
+| Evidenza | WSL2/RTX 5070 e Linux nativo CPU-only su ThinkPad T490s |
 
-## Installazione dall’artifact
+Il write-mode non sceglie autonomamente file o righe:
 
-Scaricare insieme archive e checksum dalla stessa GitHub Release:
+```text
+file + intervallo + istruzione dell'utente
+  -> proposta del modello dedicato
+  -> validazione host-bound
+  -> preview e fingerprint
+  -> allow-once o deny in TTY
+  -> controllo stale
+  -> sostituzione atomica del solo intervallo
+```
+
+## Provalo
+
+Prerequisiti: Linux `amd64`, Ollama 0.33.1 attivo su
+`127.0.0.1:11434` e i due modelli con i digest indicati nel manifest.
 
 ```sh
-version=v0.3.1
+version=v0.5.0
 artifact="maestro-${version}-linux-amd64"
 base_url="https://github.com/Axtonno/maestro/releases/download/${version}"
 curl -fLO "${base_url}/${artifact}.tar.gz"
 curl -fLO "${base_url}/${artifact}.tar.gz.sha256"
 sha256sum -c "${artifact}.tar.gz.sha256"
 tar -xzf "${artifact}.tar.gz"
-cd "$artifact"
-./maestro version
+cd "${artifact}"
+
+./maestro version --diagnostic
+./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
 ```
 
-I due download devono provenire dalla stessa release. Versione, commit e stato
-`release` devono coincidere con `ARTIFACT-MANIFEST.txt`.
-
-## Quick start
-
-Prerequisiti: Ollama già attivo su `127.0.0.1:11434` e `qwen3.5:9b` con il
-digest qualificato già disponibile. Maestro non avvia il provider e non
-scarica o sostituisce modelli.
+La configurazione distribuita punta alla fixture Laravel inclusa. Una prova
+chat non modifica il workspace:
 
 ```sh
-./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
-
-./maestro chat --config ./configs/maestro.chat.example.yaml \
-  --file routes/api.php \
-  "Quali endpoint, controller e action sono dichiarati?"
+./maestro chat --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php "Quali campi valida store e quale risposta HTTP restituisce?"
 ```
 
-La configurazione inclusa punta alla fixture dell’archive. Il doctor chat deve
-completare cinque check; la risposta deve riportare `POST /orders` e
-`OrderController::store` senza aggiungere endpoint. Per il trasporto streaming
-aggiungere `--stream`.
+Per la prova guidata del write-mode, inclusi deny e allow-once, seguire
+[Installa e prova](docs/install-and-try.md).
 
-## Contratto Direct Chat
+## Cosa non fa oggi
 
-```text
-maestro chat [--config path] [--file logical-path] [--stream] [question]
-maestro doctor --mode chat [--config path]
-maestro version
-```
+- non individua autonomamente file, righe o modifiche;
+- non modifica più file o contenuti fuori dallo span scelto;
+- non supporta altri linguaggi o directory nel write-mode;
+- non offre agent autonomi, retrieval multi-file o tool calling come prodotto;
+- non esegue shell, Git, Docker o comandi remoti per conto del modello;
+- non è una sandbox e opera con i privilegi dell'utente locale;
+- non garantisce correttezza semantica del modello.
 
-- la domanda è posizionale oppure arriva da stdin bounded, mai da entrambi;
-- `--file` accetta un solo path logico relativo e contained;
-- file assente significa nessun contesto workspace implicito;
-- complete e stream usano temperatura zero, context 4096 e thinking disabilitato;
-- il profilo v3 candidato imposta `num_predict: 1024` e residency 5 minuti;
-- stdout viene pubblicato soltanto dopo una response valida e terminale;
-- i failure non avviano retrieval, tool o agent come percorso alternativo.
+La pagina [Controlled Mutation: perimetro supportato](docs/controlled-mutation-support.md)
+è il contratto sintetico del write-mode. La
+[Compatibility Matrix](docs/compatibility.md) resta la fonte autorevole per
+piattaforme, modelli e limiti.
 
-La reference completa è in [CLI](docs/cli.md) e
-[Configurazione](docs/configuration.md).
+## Oggi e dopo
 
-## Sicurezza
+| Disponibile in v0.5.0 | Direzione successiva, non ancora supportata |
+| --- | --- |
+| Chat senza file o single-file | Contesto e retrieval multi-file |
+| Sostituzione host-bound single-range | Pianificazione e modifiche multi-step |
+| Ollama e due digest qualificati | Altri provider e modelli |
+| PHP sotto `app/` | Altri linguaggi e superfici |
+| Approvazione locale allow-once | Workflow e policy più articolati |
 
-Il file selezionato viene inviato al provider esplicitamente configurato. Il
-loader rifiuta path assoluti, traversal, symlink, file non regolari, UTF-8
-invalido e input oltre limite. Il contenuto è trattato come evidenza non
-attendibile e non può concedere autorità.
+Questa distinzione è intenzionale: codice sperimentale o architettura presente
+nel repository non amplia il support claim della release.
 
-Maestro resta un processo locale con i privilegi dell’utente: non offre
-sandbox, isolamento di rete o secret manager. Consultare il
-[Security Model](docs/security-model.md) prima di usare workspace sensibili.
+## Evidenza operativa
 
-## Limiti noti
+La Milestone 38 ha eseguito l'asset pubblico v0.5.0, senza checkout o rebuild,
+su Linux `amd64` nativo CPU-only. Risultati: doctor 14/14, target e preview
+8/8, sei apply esatti, deny e stale senza scritture, correttezza semantica
+11/12, completion 12/12 e zero effetti vietati. L'errore semantico F02 è
+documentato senza retry.
 
-- il modello è generativo: il gate di Milestone 17 ha ottenuto qualità 4/5;
-- soltanto la combinazione riportata nella compatibility matrix è qualificata;
-- agent, retrieval multi-file, tool calling e mutazioni non sono supportati;
-- non esistono installer privilegiato, auto-update o download automatici;
-- CLI e schema restano sperimentali durante la serie 0.x.
-
-Vedere [Known Issues](docs/known-issues.md) e
-[Troubleshooting](docs/troubleshooting.md).
+Vedere il [report M38](docs/reports/milestone-38-final.md) e le
+[release notes v0.5.0](docs/releases/v0.5.0.md).
 
 ## Documentazione
 
-- [Installazione](docs/installation.md)
+- [Installa e prova](docs/install-and-try.md)
+- [Controlled Mutation: perimetro supportato](docs/controlled-mutation-support.md)
+- [Installazione completa](docs/installation.md)
 - [Quick Start](docs/quick-start.md)
-- [Configurazione](docs/configuration.md)
 - [CLI](docs/cli.md)
-- [Security Model](docs/security-model.md)
+- [Configurazione](docs/configuration.md)
 - [Compatibility Matrix](docs/compatibility.md)
-- [Release Notes v0.3.1](docs/releases/v0.3.1.md)
-- [Changelog](CHANGELOG.md)
+- [Security Model](docs/security-model.md)
+- [Known Issues](docs/known-issues.md)
+- [Roadmap](docs/roadmap.md)
 
 ## Sviluppo
 
@@ -122,8 +126,8 @@ go test -race ./...
 go vet ./...
 ```
 
-I test live sono opt-in e `not_run` non equivale a PASS. Maestro e i test non
-avviano provider, non installano modelli e non modificano il catalogo.
+I test live sono opt-in e `not_run` non equivale a PASS. Maestro non avvia
+provider, non installa modelli e non amplia implicitamente le authority.
 
 ## Licenza
 

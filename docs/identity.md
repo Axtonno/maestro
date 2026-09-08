@@ -1,216 +1,77 @@
 # Maestro Identity
 
-Versione: 0.1.0
+Versione: 0.5.0
 
-Stato: Draft
+Stato: Current
 
-Ultimo aggiornamento: 2026-07-20
+Ultimo aggiornamento: 2026-09-08
 
-Autori:
-- Antonio Cafeo
-- OpenAI ChatGPT
+## Definizione
 
----
-# Perché esiste questo documento?
-Questo documento definisce l'identità del progetto Maestro. Descrive il problema che il progetto intende risolvere, il suo ruolo nell'ecosistema e i principi che ne guidano l'evoluzione. Le decisioni riportate costituiscono il riferimento per tutte le successive scelte architetturali.
+Maestro è una workstation AI locale per lo sviluppo software, costruita su un
+runtime modulare e capability-based.
 
-# Introduzione
+“Workstation” descrive ciò che l'utente può fare oggi: interrogare un workspace
+locale e applicare una modifica piccola, esplicita e approvata. “Runtime”
+descrive le fondamenta che separano provider, modelli, workspace, policy e
+capacità e che rendono possibile l'evoluzione del prodotto.
 
-L'intelligenza artificiale sta evolvendo rapidamente.
+Maestro non è un modello, un IDE o un agente autonomo general-purpose.
 
-Ogni mese vengono introdotti nuovi modelli, nuovi strumenti e nuovi paradigmi di sviluppo. Tuttavia, per la maggior parte degli sviluppatori, costruire una AI locale realmente utile rimane un processo complesso, frammentato e fortemente dipendente dagli strumenti scelti.
+## Il nucleo operativo attuale
 
-Installare un modello è semplice.
+La release v0.5.0 fornisce due capacità:
 
-Costruire un ecosistema che sappia orchestrare modelli, strumenti, framework e contesto è la vera sfida.
+- Direct Chat: una domanda senza contesto workspace oppure con un singolo file
+  scelto dall'utente;
+- Controlled Mutation: sostituzione di un intervallo di righe PHP sotto
+  `app/`, con modello dedicato, preview, allow-once, stale check e apply
+  atomico.
 
-Maestro nasce per risolvere questo problema.
+Questo nucleo è stato verificato dall'asset pubblico su WSL2/GPU e su Linux
+nativo CPU-only. È un prodotto ristretto ma operativo, non soltanto una
+proposta architetturale.
 
----
+## Il problema che risolve oggi
 
-# Che cos'è Maestro?
+Un modello locale da solo non definisce contesto, authority o confini della
+scrittura. Maestro rende espliciti:
 
-Maestro è un runtime locale, estensibile e framework-aware progettato per orchestrare agenti AI dedicati allo sviluppo software.
+- quale workspace è autorizzato;
+- quale file e quale intervallo sono coinvolti;
+- quale modello serve ogni capacità;
+- cosa viene mostrato prima di una scrittura;
+- quando un cambiamento stale o non approvato deve fallire senza effetti.
 
-Non è un Large Language Model.
+L'intelligenza resta nel modello; fiducia, composizione e controllo
+dell'effetto appartengono all'orchestrazione.
 
-Non è un chatbot.
+## Principi di prodotto
 
-Non è un'estensione per un editor.
+- locale per default;
+- authority minima ed esplicita;
+- nessun fallback silenzioso;
+- una preview comprensibile prima di ogni write;
+- failure chiusi e osservabili;
+- claim limitati alle prove realmente superate;
+- architettura estensibile senza presentare il futuro come già disponibile.
 
-Non è un IDE.
+## Cosa Maestro non è ancora
 
-Maestro è il livello di orchestrazione che permette a tutte queste componenti di collaborare in modo coerente.
+Agent autonomi, retrieval multi-file, tool calling general-purpose, altri
+provider/modelli e workflow multi-step sono direzioni successive. Il codice o
+il design di queste capacità nel repository non equivale a supporto di
+prodotto.
 
----
+La separazione autorevole fra oggi e futuro è in
+[Compatibility Matrix](compatibility.md) e [Roadmap](roadmap.md).
 
-# Missione
+## Missione
 
-Fornire agli sviluppatori un'infrastruttura aperta, modulare e indipendente dal provider, capace di trasformare un modello AI in un vero assistente di sviluppo.
+Offrire agli sviluppatori un ambiente AI locale controllabile, verificabile e
+progressivamente estensibile, nel quale il modello non riceva più authority di
+quella necessaria al compito.
 
-L'obiettivo non è sostituire lo sviluppatore.
-
-L'obiettivo è costruire il miglior ambiente possibile affinché lo sviluppatore possa lavorare insieme alla propria AI.
-
----
-
-# Il ruolo di Maestro nell'ecosistema
-
-Quando uno sviluppatore PHP pensa alla gestione delle dipendenze, pensa a Composer.
-
-Composer non sviluppa l'applicazione.
-
-Composer orchestra il suo ecosistema.
-
-Maestro vuole rappresentare lo stesso concetto nel mondo dell'AI locale.
-
-Il suo compito è orchestrare:
-
-- Provider AI
-- Plugin
-- Workspace
-- Tool
-- Context Engine
-- Agenti
-- Framework
-- Automazioni
-
-Il runtime coordina queste componenti senza imporre un particolare modello, provider o ambiente di sviluppo.
-
----
-
-# Il problema che risolve
-
-La difficoltà nell'utilizzo di una AI locale non consiste nell'installare un modello.
-
-La difficoltà consiste nel costruire un sistema capace di:
-
-- comprendere il progetto;
-- conoscere il framework utilizzato;
-- utilizzare gli strumenti disponibili;
-- adattarsi all'hardware dello sviluppatore;
-- ottimizzare il contesto inviato al modello;
-- eseguire attività complesse in autonomia.
-
-Maestro vuole fornire le fondamenta di questo sistema.
-
-Le ossa.
-
-L'architettura.
-
-Il resto rimane una scelta dello sviluppatore.
-
-Ogni utilizzatore potrà decidere:
-
-- quale modello utilizzare;
-- quale provider installare;
-- quali plugin abilitare;
-- quali strumenti integrare;
-- quali limiti imporre all'agente.
-
----
-
-# Perché Maestro è diverso
-
-Esistono già strumenti eccellenti come Continue, Aider, Claude Code e Codex CLI.
-
-Questi strumenti risolvono brillantemente il problema dell'interazione tra sviluppatore e modello AI.
-
-Maestro affronta un livello differente.
-
-L'obiettivo non è collegare uno sviluppatore ad un modello.
-
-L'obiettivo è costruire il runtime che rende possibile questa collaborazione.
-
-L'intelligenza non risiede solamente nel modello.
-
-Risiede anche nell'orchestrazione.
-
----
-
-# Filosofia
-
-Ogni componente deve avere una singola responsabilità.
-
-Ogni componente deve poter essere sostituito.
-
-Ogni provider deve poter essere cambiato.
-
-Ogni plugin deve poter essere installato o rimosso senza modificare il core.
-
-L'utente mantiene sempre il controllo del proprio ambiente.
-
-Maestro non decide al posto dello sviluppatore.
-
-Fornisce gli strumenti affinché lo sviluppatore possa costruire la propria AI locale.
-
----
-
-# Valori
-
-Il progetto si fonda su alcuni principi fondamentali.
-
-## Apertura
-
-Il runtime non deve dipendere da uno specifico provider.
-
-## Modularità
-
-Ogni componente deve poter evolvere indipendentemente.
-
-## Portabilità
-
-Il sistema deve adattarsi all'hardware disponibile.
-
-## Trasparenza
-
-Ogni decisione presa dal runtime deve essere comprensibile.
-
-## Estensibilità
-
-Nuovi provider, plugin e strumenti devono poter essere aggiunti senza modificare il core.
-
----
-
-# Visione
-
-L'obiettivo di lungo periodo è rendere Maestro il punto di riferimento per chi desidera costruire una AI locale dedicata allo sviluppo software.
-
-Non il modello migliore.
-
-Non il plugin migliore.
-
-Ma l'infrastruttura migliore.
-
----
-
-# Motto
+## Motto
 
 > The intelligence is in the orchestration.
-
----
-
-# Decisioni
-
-- Il nome ufficiale del progetto è Maestro.
-- Forge non rappresenta più il nome del progetto.
-- Gestor sarà il nome di un componente interno dedicato alla gestione delle capability.
-- Il runtime sarà completamente provider-agnostic.
-- L'architettura sarà basata su Runtime, Plugin, Provider e Tool.
-
----
-
-# Domande aperte
-
-- Definizione formale del sistema di Capability.
-- Definizione del ciclo di vita degli Agent.
-- Gestione della memoria condivisa tra plugin.
-- Sistema di eventi interno.
-
----
-
-# Prossimi passi
-
-- Scrivere principles.md.
-- Definire vision.md.
-- Progettare architecture.md.

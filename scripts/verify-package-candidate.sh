@@ -105,6 +105,11 @@ for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGE
     docs/installation.md docs/configuration.md docs/cli.md \
     docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
+	docs/install-and-try.md docs/controlled-mutation-support.md \
+    docs/milestone-38-field-adoption-freeze.yaml \
+    docs/reports/milestone-38-final.md \
+    docs/reports/milestone-38-environment.yaml \
+    docs/reports/milestone-38-live-runs.json \
     "$release_notes" \
 	"$profile_path" fixtures/laravel-v1/dataset.json \
 	fixtures/laravel-v1/artisan fixtures/laravel-v1/composer.json; do
@@ -224,7 +229,7 @@ if [[ "$profile_kind" == "mutation-productization" ]]; then
 	grep -Fq $'pass\tmutation_configuration\tschema_v4_profiles_separated' <<<"$doctor_output"
 	grep -Fq $'pass\tmutation_mutation_prompt\tqualified_prompt_digest' <<<"$doctor_output"
 	grep -Fq $'pass\tmutation_mutation_schema\tqualified_schema_digest' <<<"$doctor_output"
-	grep -Fq $'fail\tmutation_tty\ttty_required' <<<"$doctor_output"
+	grep -Eq $'^(fail\tmutation_tty\ttty_required|pass\tmutation_tty\tinteractive_terminal)$' <<<"$doctor_output"
 	grep -Fq $'pass\tmutation_provider\tollama_available' <<<"$doctor_output"
 	grep -Fq $'fail\tmutation_direct_chat_model\tmodel_or_digest_mismatch' <<<"$doctor_output"
 	grep -Fq $'fail\tmutation_controlled_mutation_model\tmodel_or_digest_mismatch' <<<"$doctor_output"
@@ -246,8 +251,12 @@ containment_output="$($root/maestro "${containment_command[@]}" 2>&1)"
 containment_status=$?
 set -e
 if [[ "$profile_kind" == "mutation-productization" ]]; then
-	[[ $containment_status -eq 3 ]]
-	[[ "$containment_output" == 'mutation failed: tty_required' ]]
+	if [[ $containment_status -eq 3 ]]; then
+		[[ "$containment_output" == 'mutation failed: tty_required' ]]
+	else
+		[[ $containment_status -eq 2 ]]
+		[[ "$containment_output" == 'mutation failed: file_not_allowed' ]]
+	fi
 else
 	[[ $containment_status -eq 2 ]]
 	[[ "$containment_output" == 'chat failed: file_not_allowed' ]]

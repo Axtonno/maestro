@@ -76,4 +76,5 @@ Il verdetto può essere `native_linux_field_adoption_qualified`,
 
 La serie è stata conclusa il 2026-09-07. Risultati ed evidenze sono in
 `reports/milestone-38-final.md`, `reports/milestone-38-environment.yaml` e
-`reports/milestone-38-live-runs.json`.
+`reports/milestone-38-live-runs.json`. Hash e policy di immutabilità sono in
+`milestone-38-field-adoption-freeze.yaml`.

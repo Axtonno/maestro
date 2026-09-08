@@ -29,6 +29,18 @@ Report: `docs/reports/milestone-37-final.md`.
 
 ## [Unreleased]
 
+### Changed
+
+- riposizionata la documentazione pubblica: Maestro è una workstation AI
+  locale con nucleo operativo Direct Chat + Controlled Mutation, costruita sul
+  runtime modulare;
+- separati esplicitamente support claim corrente e roadmap; riscritte le
+  superfici pubbliche ancora ferme a v0.3.x;
+- aggiunte le guide `docs/install-and-try.md` e
+  `docs/controlled-mutation-support.md`, incluse nell'allowlist di packaging;
+- congelata l'evidenza M38 con hash e policy di immutabilità in
+  `docs/milestone-38-field-adoption-freeze.yaml`.
+
 ### Added
 
 - selezione host-bound immutabile, decoder `host-bound-mutation-decision-v1`,

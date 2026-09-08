@@ -1,47 +1,58 @@
-# Maestro v0.3.1 Known Issues and Limitations
+# Maestro v0.5.0 Known Issues and Limitations
 
-## Qualità e prestazioni
+## Qualità del modello
 
-- `qwen3.5:9b` è generativo: formulazione, token e latenza possono variare.
-- La matrice qualitativa F6.4 ha ottenuto 4/5. Nel caso fallito il modello ha
-  motivato un refactoring con conseguenze non dimostrate dal file; proposte e
-  inferenze devono quindi essere riesaminate dall’utente.
-- Temperatura zero riduce il drift fra complete e stream ma non rende la
-  correttezza semanticamente deterministica.
-- `num_ctx_effective` e `thinking_effective` possono apparire `unknown` quando
-  l’adapter non restituisce un’attestazione per-run; doctor verifica comunque
-  che i controlli richiesti siano supportabili prima della completion.
-- Latenza e memoria dipendono dal provider, dall’hardware e dalla residenza del
-  modello. Il profilo distribuito richiede 5 minuti di residency, ma non
-  garantisce che una run sia warm e non sostituisce la verifica del provider.
+- I modelli sono generativi: temperatura zero riduce il drift ma non garantisce
+  correttezza semantica.
+- M38 ha registrato 11/12 richieste corrette. F02 ha trattato erroneamente una
+  domanda PHP generale senza file come informazione non determinabile dal
+  workspace.
+- Preview e contenimento corretti non dimostrano che la modifica sia quella
+  desiderata: l'utente deve leggere il diff prima dell'allow-once.
+- `num_ctx_effective` e `thinking_effective` possono risultare `unknown`
+  quando Ollama non fornisce un'attestazione per-run.
 
-## Supporto ristretto
+## Prestazioni e memoria
 
-- Solo Linux `amd64`, Ollama locale e l’identità modello/digest documentata
-  appartengono alla matrice qualificata.
-- È disponibile zero o un file esplicito; directory, glob, multi-file,
-  retrieval e selezione automatica non sono supportati.
-- Lo streaming è aggregato: non stampa chunk progressivi, preservando output
-  atomico in caso di errore o cancellazione.
-- Endpoint remoti, llama.cpp e altri modelli non sono qualificati.
+- Latenza e memoria dipendono da hardware, carico e residenza del modello.
+- I due profili non devono essere residenti insieme: Maestro scarica il modello
+  uscente prima di caricare quello richiesto.
+- Sul T490s CPU-only M38 ha osservato chat tra circa 64 e 172 secondi. Non è uno
+  SLA né un requisito minimo.
+- M38 ha osservato 323.584 byte di swap aggiuntivo senza OOM o restart. La
+  qualifica non promette zero swap su ogni macchina.
+
+## Perimetro del workspace
+
+- Direct Chat usa zero o un solo file esplicito; non effettua retrieval.
+- Controlled Mutation usa un solo file PHP sotto `app/` e un unico intervallo
+  inclusivo. Non supporta multi-file, directory, glob o target automatici.
+- Symlink, traversal, path assoluti, file non regolari, UTF-8 invalido e input
+  oltre limite vengono rifiutati.
+- Dopo un apply riuscito non esiste rollback automatico. Usare Git e verificare
+  i test del progetto.
 
 ## Autorità e isolamento
 
-- Maestro non è una sandbox e usa i privilegi dell’utente locale.
-- Il file selezionato e la domanda vengono inviati al provider configurato.
-- Prompt injection nel sorgente viene trattata come contenuto non attendibile,
-  ma non esiste una difesa perfetta contro output ingannevole.
-- Tool, agent, retrieval e mutazioni non fanno parte del percorso Direct Chat;
-  il codice sperimentale presente nel repository non amplia il support claim.
-- Non esistono rollback, memoria persistente o recovery dopo restart.
+- Maestro non è una sandbox e usa i privilegi dell'utente locale.
+- Domanda e file selezionato vengono inviati al provider configurato.
+- Il sorgente è trattato come input non attendibile, ma non esiste una difesa
+  perfetta contro prompt injection o output ingannevole.
+- L'allow-once autorizza esclusivamente la preview corrente; non certifica il
+  significato della modifica.
+- Non esistono shell, Git, Composer, Docker o comandi remoti eseguiti dal
+  percorso supportato.
 
 ## Prodotto ed ecosistema
 
-- CLI e schema v3 sono sperimentali durante la serie 0.x.
+- È pubblicato soltanto l'artifact Linux `amd64`.
+- Ollama locale e i due digest v0.5.0 sono l'unica combinazione qualificata.
+- CLI e schema sono versionati ma possono cambiare durante la serie 0.x.
 - Non esistono installer di sistema, auto-update o service unit.
 - Maestro non installa Ollama, modelli, PHP, Composer o dipendenze Laravel.
-- Nessun packaging generalizzato di plugin/tool di terze parti.
-- Nessun multi-agent, remote execution, shell, Git o Docker completi.
+- Agent, retrieval multi-file, tool calling, altri provider e plugin di terze
+  parti restano direzioni architetturali, non capacità di prodotto.
 
-Vedere `compatibility.md` per la matrice autorevole e `troubleshooting.md` per
-le azioni operative.
+Vedere [Compatibility Matrix](compatibility.md) per il claim autorevole,
+[Controlled Mutation](controlled-mutation-support.md) per il write-mode e
+[Troubleshooting](troubleshooting.md) per le azioni operative.

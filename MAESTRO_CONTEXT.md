@@ -4,11 +4,15 @@
 
 **Nome:** Maestro
 
-Maestro è un Runtime per sistemi AI locali, progettato per orchestrare componenti, provider, plugin e servizi attraverso un'architettura modulare, capability-based e fortemente orientata alla composizione.
+Maestro è una workstation AI locale per lo sviluppo software, fondata su un
+runtime che orchestra componenti, provider, plugin e servizi attraverso
+un'architettura modulare, capability-based e orientata alla composizione.
 
-L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il Runtime sul quale costruire un intero ecosistema di strumenti intelligenti.
+Il prodotto corrente offre Direct Chat e Controlled Mutation controllata; il
+runtime costituisce la base sulla quale far crescere capacità ulteriori senza
+presentarle come già disponibili.
 
-## Snapshot corrente — 2026-09-07
+## Snapshot corrente — 2026-09-08
 
 - ultima release pubblica: **v0.5.0**, stato
   `v0.5.0_released_and_verified`;
@@ -42,6 +46,9 @@ L'obiettivo del progetto non è fornire un singolo agente AI, ma costituire il R
 - Milestone 38: completata — `native_linux_field_adoption_qualified`;
   asset pubblico verificato senza checkout o rebuild su Linux amd64 nativo
   CPU-only, correttezza 11/12, completion 12/12 e zero effetti vietati;
+- posizionamento pubblico corrente: workstation AI locale con nucleo operativo
+  Direct Chat + Controlled Mutation; runtime, agent, retrieval e tool più ampi
+  restano distinti come architettura e roadmap;
 
 ---
 
@@ -3455,4 +3462,31 @@ swap di 323.584 byte non coincide con fallback, OOM o restart. La qualifica è
 evidenza sul campo per questo hardware e non una promessa universale su ogni
 PC Linux. Report in `docs/reports/milestone-38-final.md`, ambiente in
 `docs/reports/milestone-38-environment.yaml` ed evidenza strutturata in
-`docs/reports/milestone-38-live-runs.json`.
+`docs/reports/milestone-38-live-runs.json`. Il record immutabile e i relativi
+hash sono in `docs/milestone-38-field-adoption-freeze.yaml`.
+
+---
+
+# Riallineamento pubblico post-M38
+
+Data: 2026-09-08.
+
+M38 è congelata come prova di adozione v0.5.0 tramite
+`docs/milestone-38-field-adoption-freeze.yaml`: evidenze, ambiente, matrice e
+report hanno SHA-256 accettati e non vengono reinterpretati da modifiche
+successive.
+
+La documentazione pubblica presenta Maestro come workstation AI locale
+costruita su un runtime modulare. “Oggi” comprende Direct Chat e Controlled
+Mutation nel perimetro v0.5.0; agent, retrieval, tool, multi-file, altri
+provider e modelli restano “dopo” fino a una nuova qualifica.
+
+Nuove pagine di ingresso:
+
+- `docs/install-and-try.md`;
+- `docs/controlled-mutation-support.md`.
+
+README, identity, vision, installation, quick start, compatibility, CLI,
+configuration, security, known issues, troubleshooting e packaging sono
+allineati a v0.5.0. Le due nuove pagine entrano nell'allowlist degli artifact
+futuri. I piani e report storici restano immutati come cronologia.

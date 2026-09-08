@@ -1626,6 +1626,7 @@ stale, roundtrip chat → mutation → chat, latency, qualità e utilità percep
 
 Piano: `milestone-38-controlled-mutation-field-adoption-plan.md`.
 Matrice: `milestone-38-controlled-mutation-field-adoption-matrix.yaml`.
+Freeze: `milestone-38-field-adoption-freeze.yaml`.
 Report: `reports/milestone-38-final.md`. La serie sull'asset pubblico, eseguita
 su Ubuntu 24.04.4 Linux amd64 nativo e CPU-only, qualifica tutti i gate
 aggregati: correttezza 11/12, completion 12/12, utilità mediana 5/5, sei apply

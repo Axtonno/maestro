@@ -1,114 +1,133 @@
-# Maestro v0.3.1 Troubleshooting
+# Maestro v0.5.0 Troubleshooting
 
 ## Il checksum fallisce
 
-Non estrarre né eseguire l’archive. Recuperare nuovamente `.tar.gz` e
+Non estrarre né eseguire l'archive. Scaricare di nuovo `.tar.gz` e
 `.sha256` dalla stessa GitHub Release e ripetere `sha256sum -c`.
 
 ## Versione, commit o stato non coincidono
-
-Eseguire `./maestro version` dalla directory estratta e confrontare nome
-archive e `ARTIFACT-MANIFEST.txt`. Non rinominare un packaging candidate come
-release candidate o release.
-
-In v0.3.1 usare:
 
 ```sh
 ./maestro version --diagnostic
 ```
 
-Confrontare `version`, `status`, `commit`, path `executable` risolto e
-`sha256`. Questa forma permette di individuare un altro `maestro` precedente
-nel `PATH`.
+Confrontare versione, stato `release`, commit e SHA-256 con
+`ARTIFACT-MANIFEST.txt`. Il path `executable` aiuta a individuare un altro
+binario precedente nel `PATH`. Un candidate rinominato non diventa release.
 
-## `doctor` non completa cinque PASS
-
-Usare il modo chat esplicito:
+## `doctor --mode all` non completa 14 PASS
 
 ```sh
-./maestro doctor --mode chat --config ./configs/maestro.chat.example.yaml
+./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
 ```
 
-- `config`: verificare lo schema strict dichiarato e campi
-  duplicati/sconosciuti; v3 è il profilo v0.3.1;
-- `workspace`: verificare che `workspace.root` sia una directory reale e non
-  un symlink;
-- `composition`: verificare provider e nome della variabile secret;
-- `model`: verificare Ollama, identità e disponibilità del modello;
-- `generation`: verificare streaming, context e thinking richiesti.
+Controllare:
 
-Doctor non invoca completion, non avvia Ollama e non installa modelli.
+- schema v4 e root workspace;
+- Ollama raggiungibile su loopback;
+- presenza e digest di entrambi i modelli;
+- generation controls richiesti;
+- prompt e schema mutativi con gli SHA-256 qualificati;
+- terminale interattivo per i check mutation.
 
-## Il modello non coincide
+Doctor non esegue completion, non avvia Ollama e non installa modelli.
 
-Il percorso qualificato richiede `qwen3.5:9b` con digest
-`6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
-Confrontare il catalogo Ollama con `ARTIFACT-MANIFEST.txt`. Non sostituire o
-aggiornare il modello durante una serie di qualificazione.
+## Il modello o il digest non coincidono
+
+Il manifest richiede:
+
+- `qwen3.5:9b`:
+  `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`;
+- `qwen2.5-coder:14b`:
+  `9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849`.
+
+Non sostituire tag, digest o modello durante una serie. Maestro non effettua
+pull né fallback.
 
 ## `configuration invalid` o `chat_profile_required`
 
-Direct Chat v0.3.1 richiede il profilo distribuito strict `version: 3` con provider, workspace,
-`interaction.chat` e `policy.workspace_mutate: deny`. Un profilo agentico v1
-non viene convertito e il doctor senza `--mode chat` segue il percorso agentico.
+La release distribuisce uno schema strict v4 con `provider`, `workspace`,
+`direct_chat` e `controlled_mutation`. Correggere la categoria redatta
+`read_failed`, `yaml_invalid`, `unknown_field`, `missing_field` o
+`invalid_value`.
 
-Lo schema v3 richiede anche `interaction.chat.num_predict` e
-`interaction.chat.residency`. Devono essere
-rispettivamente positivi e una durata positiva non superiore a 10 minuti; il
-provider deve essere Ollama. Un file v2 storico resta leggibile, ma non riceve
-questi controlli implicitamente.
-
-La riga `configuration` distingue `read_failed`,
-`yaml_invalid`, `unknown_field`, `missing_field` e `invalid_value`, indicando
-solo il path logico del campo. Correggere quella categoria senza pubblicare il
-contenuto del file di configurazione.
+I profili v2/v3 possono servire Direct Chat per compatibilità, ma non abilitano
+Controlled Mutation. Un profilo agentico v1 non viene convertito.
 
 ## `file_not_allowed`
 
-`--file` accetta un solo path logico relativo. Sono rifiutati path assoluti,
+Direct Chat richiede un path logico relativo contained. Controlled Mutation
+richiede inoltre un file PHP sotto `app/`. Sono rifiutati path assoluti,
 traversal, backslash, directory, symlink, file non regolari, caratteri di
-controllo, UTF-8 invalido e file oltre `max_file_bytes`. Risolvere il problema
-nel path o nella root; non allargare il workspace per aggirare il controllo.
+controllo, UTF-8 invalido e file oltre limite.
 
-## `provider_unavailable` o `capability_unsupported`
+Correggere path o root; non allargare il workspace per aggirare il controllo.
 
-Verificare endpoint Ollama, modello e controlli generativi con doctor. Maestro
-non applica fallback ad agent, altro modello o altro provider.
+## Controlled Mutation non raggiunge la preview
 
-## `response_invalid` o `limit_exceeded`
+Verificare:
 
-Response vuota, ruolo/finish non validi, tool call inattesa, stream malformato,
-UTF-8 invalido o output oltre limite vengono scartati interamente. stdout resta
-vuoto; conservare soltanto versione, commit, reason code e durata redatti.
+- TTY reale;
+- `--file` e `--lines start:end`;
+- profilo v4 e `controlled_mutation.enabled: true`;
+- modello, digest, prompt e schema;
+- istruzione sufficientemente precisa;
+- disponibilità del provider entro il timeout.
 
-Anche una risposta terminata perché ha esaurito
-`num_predict` resta invalida/incompleta: non aumentare il budget dopo aver
-visto i risultati di una serie congelata.
+Output non conforme o astensione falliscono chiusi. Non viene applicato un
+secondo tentativo automatico.
 
-## Risposta qualitativamente dubbia
+## `approval_rejected`
 
-Il modello può proporre inferenze non sostenute. Ripetere la domanda chiedendo
-di distinguere fatti, assenze e proposte, poi verificare direttamente il file.
-Non trattare la risposta come autorizzazione a modificare il workspace.
+È il terminale atteso dopo `d`, invio vuoto, EOF o input sconosciuto. Usa exit
+code 3 e non scrive. Ripetere il comando solo se si desidera una nuova preview;
+l'approvazione precedente non viene conservata.
+
+## `stale_source`
+
+Il file è cambiato tra lettura e approval. Maestro conserva il contenuto
+corrente e non applica la preview obsoleta. Verificare il diff, poi avviare una
+nuova mutation sulla sorgente aggiornata.
+
+## La preview non è corretta
+
+Digitare `d`. Non approvare per “vedere cosa succede”: il controllo host-bound
+limita l'effetto, ma non rende semanticamente giusta una proposta.
+
+## Risposta chat dubbia
+
+Il modello può sbagliare anche con terminale valido. Verificare il file e
+riformulare la domanda chiedendo di separare fatti osservati, inferenze e dati
+non determinabili. M38 documenta un errore su una domanda generale senza file.
+
+## Latenza elevata o memoria insufficiente
+
+I modelli vengono caricati uno per volta e il cambio chat/mutation può includere
+unload e load. Controllare `/api/ps`, memoria e swap del sistema. Sul T490s
+CPU-only M38 ha osservato latenze chat fino a circa 172 secondi; non è uno SLA.
+
+Un OOM, restart del provider, modello errato o fallback rende la prova non
+valida. Ridurre il carico, non cambiare silenziosamente modello.
 
 ## Cancellazione e deadline
 
-SIGINT/SIGTERM producono exit 130 e `canceled`. Una deadline provider produce
-exit 4 e `deadline_exceeded`. Nessun output parziale deve apparire su stdout.
+SIGINT/SIGTERM producono exit code 130 e `canceled`. Una deadline provider
+produce exit code 4 e `deadline_exceeded`. Nessun output parziale deve essere
+pubblicato su stdout.
 
-Durante generation oltre 15 secondi, stderr può
-mostrare heartbeat `progress state=generating` con il solo tempo trascorso.
-Non è una risposta parziale. L'assenza di nuovi heartbeat dopo un terminale è
-parte del contratto.
+Durante generation, stderr può mostrare heartbeat con il solo tempo trascorso.
+Non sono risposta parziale.
 
-## Exit code Direct Chat
+## Exit code
 
 | Codice | Significato |
-|---:|---|
-| 0 | risposta valida completata |
+| ---: | --- |
+| 0 | risposta valida o mutation applicata |
 | 1 | response invalida, hard limit o failure interna |
-| 2 | uso, configurazione o file non ammesso |
+| 2 | uso, configurazione o target non ammesso |
+| 3 | deny, stale, astensione o chiusura mutation senza apply |
 | 4 | provider, modello, capability o deadline non disponibile |
 | 130 | cancellazione tramite interrupt |
 
-Consultare anche `known-issues.md`, `security-model.md` e `compatibility.md`.
+Consultare [Known Issues](known-issues.md), [Security Model](security-model.md)
+e [Compatibility Matrix](compatibility.md).

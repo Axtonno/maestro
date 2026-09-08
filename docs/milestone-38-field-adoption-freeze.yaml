@@ -1,0 +1,29 @@
+version: 1
+milestone: 38
+date: "2026-09-07"
+status: native_linux_field_adoption_qualified
+immutable_public_artifact:
+  release: v0.5.0
+  archive: maestro-v0.5.0-linux-amd64.tar.gz
+  archive_sha256: 0afcfe4d648edcde3caf4327c4f995606fb4c3974c05606e13f90dd8cff321d9
+  binary_sha256: e1765f9e8ed919eabe22b200f4145445da0d1b31f90c9b2bf6157a1390e37523
+  commit: 86ed92495c5ce5bd2d0ec8d3c8a11b8c29a316f2
+accepted_evidence:
+  matrix:
+    path: docs/milestone-38-controlled-mutation-field-adoption-matrix.yaml
+    sha256: 305f87364fe42f7344c5127966c580bbb5c205272186fc357820d7793e12bb96
+  live_runs:
+    path: docs/reports/milestone-38-live-runs.json
+    sha256: e4b7b82f566191da61f7f10f3aa9c2a6dd394165baa7e6066988367414984e23
+  environment:
+    path: docs/reports/milestone-38-environment.yaml
+    sha256: 616ea0b7dc2bb49d24b5e4d0d28152beae66f0e0e17e4d587dcdd2185a80ec24
+  final_report:
+    path: docs/reports/milestone-38-final.md
+    sha256: ec6d4c2c97716056c870fea562dc57fe4bd8d6c0485154e5cc83a84427a4ee53
+policy:
+  rerun_replaces_evidence: false
+  reinterpretation_allowed: false
+  corrections_require_new_record: true
+  future_product_changes_require_new_milestone: true
+verdict: native_linux_field_adoption_qualified

@@ -1,0 +1,134 @@
+package maestro_test
+
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+)
+
+func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
+	read := func(path string) string {
+		t.Helper()
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(data)
+	}
+
+	assertContains := func(path string, required ...string) {
+		t.Helper()
+		content := read(path)
+		for _, value := range required {
+			if !strings.Contains(content, value) {
+				t.Fatalf("%s is missing %q", path, value)
+			}
+		}
+	}
+
+	assertContains("README.md",
+		"workstation AI locale",
+		"## Cosa fa oggi",
+		"## Cosa non fa oggi",
+		"## Oggi e dopo",
+		"docs/install-and-try.md",
+		"docs/controlled-mutation-support.md",
+	)
+	assertContains("docs/install-and-try.md",
+		"doctor --mode all",
+		"workspace replace",
+		"approval_rejected",
+	)
+	assertContains("docs/controlled-mutation-support.md",
+		"Un file PHP regolare e non symlink sotto `app/`",
+		"allow-once",
+		"`stale_source`",
+		"Fuori perimetro oggi",
+	)
+	assertContains("docs/compatibility.md",
+		"Maestro v0.5.0 Compatibility Matrix",
+		"Controlled Mutation",
+		"Non supportato oggi",
+	)
+	assertContains("docs/identity.md",
+		"workstation AI locale",
+		"nucleo operativo attuale",
+	)
+	assertContains("docs/vision.md", "## Oggi", "## Direzione")
+
+	currentDocs := []string{
+		"README.md",
+		"docs/cli.md",
+		"docs/compatibility.md",
+		"docs/configuration.md",
+		"docs/known-issues.md",
+		"docs/quick-start.md",
+		"docs/security-model.md",
+		"docs/troubleshooting.md",
+	}
+	for _, path := range currentDocs {
+		content := read(path)
+		for _, stale := range []string{
+			"Maestro v0.3.1",
+			"Maestro v0.3.0",
+			"La linea candidata v0.5.0",
+			"mutazioni non sono supportate",
+		} {
+			if strings.Contains(content, stale) {
+				t.Fatalf("%s contains stale public positioning %q", path, stale)
+			}
+		}
+	}
+
+	for _, script := range []string{
+		"scripts/package-candidate.sh",
+		"scripts/verify-package-candidate.sh",
+	} {
+		assertContains(script,
+			"docs/install-and-try.md",
+			"docs/controlled-mutation-support.md",
+			"docs/milestone-38-field-adoption-freeze.yaml",
+			"docs/reports/milestone-38-live-runs.json",
+		)
+	}
+}
+
+func TestPublicDocumentationRelativeLinksResolve(t *testing.T) {
+	paths := []string{
+		"README.md",
+		"docs/cli.md",
+		"docs/configuration.md",
+		"docs/install-and-try.md",
+		"docs/controlled-mutation-support.md",
+		"docs/compatibility.md",
+		"docs/installation.md",
+		"docs/known-issues.md",
+		"docs/packaging-candidate.md",
+		"docs/quick-start.md",
+		"docs/security-model.md",
+		"docs/troubleshooting.md",
+		"docs/identity.md",
+		"docs/vision.md",
+		"docs/philosophy.md",
+		"docs/releases/v0.5.0.md",
+	}
+	linkPattern := regexp.MustCompile(`\[[^]]+\]\(([^)]+)\)`)
+	for _, path := range paths {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, match := range linkPattern.FindAllStringSubmatch(string(data), -1) {
+			target := strings.SplitN(match[1], "#", 2)[0]
+			if target == "" || strings.Contains(target, "://") {
+				continue
+			}
+			resolved := filepath.Clean(filepath.Join(filepath.Dir(path), target))
+			if _, err := os.Stat(resolved); err != nil {
+				t.Errorf("%s has unresolved link %q: %v", path, match[1], err)
+			}
+		}
+	}
+}

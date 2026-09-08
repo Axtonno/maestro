@@ -1,21 +1,15 @@
-# Maestro v0.3.1 Direct Chat Configuration
+# Maestro v0.5.0 Configuration
 
-Versione schema pubblica v0.3.1: 3
+Versione schema pubblica corrente: 4
 
-Stato: contratto pubblico sperimentale chat-only
-
-La v0.3.1 rende pubblici la diagnostica specifica e lo schema strict
-`version: 3`. Lo schema v2 resta decodificabile per compatibilità, ma non
-accetta i campi v3 e non riceve valori impliciti.
-
-La linea candidata v0.5.0 introduce lo schema v4 per separare Direct Chat e
-Controlled Mutation. Il support pubblico resta v0.4.0 finché la release
-v0.5.0 non viene autorizzata.
+Il profilo v4 separa Direct Chat e Controlled Mutation. Il loader è strict:
+campi sconosciuti o duplicati, documenti multipli, anchor, alias, trailing
+data e fallback impliciti sono rifiutati.
 
 ## Profilo distribuito
 
 ```yaml
-version: 3
+version: 4
 
 provider:
   id: ollama
@@ -27,155 +21,6 @@ workspace:
   id: laravel
   root: /absolute/path/to/project
   framework: laravel
-
-interaction:
-  chat:
-    model: qwen3.5:9b
-    timeout: 5m
-    streaming: true
-    num_ctx: 4096
-    num_predict: 1024
-    thinking: "false"
-    residency: 5m
-    max_file_bytes: 1048576
-    max_output_bytes: 1048576
-
-policy:
-  workspace_mutate: deny
-```
-
-La copia nell’archive usa `../fixtures/laravel-v1` come root relativa. Il
-profilo non contiene agent, tool, retrieval o budget di sessione.
-
-## Risoluzione del file
-
-L’ordine è:
-
-1. `--config <path>`;
-2. `MAESTRO_CONFIG`;
-3. `$XDG_CONFIG_HOME/maestro/config.yaml`;
-4. `$HOME/.config/maestro/config.yaml` quando XDG non è impostato.
-
-Non vengono uniti file. Un root relativo viene risolto rispetto alla directory
-del YAML e diventa assoluto prima della validazione.
-
-## Parsing strict
-
-Il loader rifiuta campi sconosciuti o duplicati, documenti multipli, anchor,
-alias, trailing data, file vuoti e file oltre 1 MiB. L'asset v0.3.1 usa
-`version: 3` con una struttura
-strict distinta. Un errore non abilita fallback verso un profilo agentico.
-
-## `provider`
-
-| Campo | Requisito |
-|---|---|
-| `id` | `ollama` nel percorso qualificato |
-| `base_url` | origine HTTP(S) senza credenziali, query, fragment o path API |
-| `timeout` | durata positiva, massimo 10 minuti |
-| `api_key_env` | vuoto per Ollama; contiene solo un nome, mai il secret |
-
-Il timeout provider è il ceiling del trasporto. Cambiare endpoint può inviare
-domanda e file a un servizio non qualificato.
-
-## `workspace`
-
-La root deve esistere, essere una directory reale e non un symlink. `--file`
-viene risolto soltanto sotto questa root. `id` e `framework` descrivono il
-workspace, ma Direct Chat non avvia plugin o detection framework.
-
-## `interaction.chat`
-
-- `model` è esatto; v0.3.1 qualifica soltanto `qwen3.5:9b` con il digest del
-  manifest;
-- `timeout` delimita la richiesta e non può superare il ceiling provider;
-- `streaming: true` autorizza `--stream`, ma non lo abilita implicitamente;
-- `num_ctx` deve essere positivo e supportabile dall’adapter;
-- `thinking` è una stringa enum: `default`, `true` o `false`;
-- `max_file_bytes` e `max_output_bytes` sono hard limit positivi.
-
-La temperatura non è configurabile: Direct Chat la imposta a zero sia per
-complete sia per stream. Un generation control non supportato fallisce il
-preflight invece di essere ignorato.
-
-### Controlli operativi v3
-
-Il profilo pubblico aggiunge due campi obbligatori:
-
-```yaml
-version: 3
-interaction:
-  chat:
-    model: qwen3.5:9b
-    timeout: 5m
-    streaming: true
-    num_ctx: 4096
-    num_predict: 1024
-    thinking: "false"
-    residency: 5m
-    max_file_bytes: 1048576
-    max_output_bytes: 1048576
-```
-
-`num_predict` deve essere positivo e viene inoltrato a Ollama come
-`options.num_predict`; `residency` deve essere positiva, non superiore a 10
-minuti e viene inoltrata come `keep_alive`. Entrambi valgono allo stesso modo
-per complete e stream. Assenza, valore invalido o provider diverso da Ollama
-fanno fallire il preflight. Un terminale per limite o un output troncato non è
-convertito in successo.
-
-Questi campi non vengono aggiunti implicitamente allo schema v2: inserirli in
-un documento v2 produce `unknown_field`. Questo preserva i profili e gli hash
-storici della qualifica v0.3.0.
-
-## `policy`
-
-`workspace_mutate: deny` è obbligatorio nel profilo chat. Non esistono tool o
-approval nel percorso, ma il deny impedisce a una configurazione chat-only di
-presentarsi come mutativa.
-
-## Secret e redazione
-
-Il YAML non contiene secret. `api_key_env` conserva soltanto il nome della
-variabile; il valore non appare in doctor, errori o output operativo.
-
-## Validazione
-
-```sh
-maestro doctor --mode chat --config /path/to/chat.yaml
-```
-
-Una configurazione invalida usa exit 2. Failure di provider o capability sono
-check operativi distinti e non vengono trasformati in PASS.
-
-In v0.3.1, CLI e doctor mantengono il reason code
-`invalid_request` e aggiungono una diagnostica redatta:
-
-| Categoria | Significato |
-|---|---|
-| `read_failed` | file assente o non leggibile |
-| `yaml_invalid` | documento YAML malformato, duplicato o strutturalmente invalido |
-| `unknown_field` | chiave non appartenente allo schema strict |
-| `missing_field` | campo obbligatorio non presente |
-| `invalid_value` | campo presente ma non valido |
-
-Quando disponibile viene mostrato soltanto il path logico allowlisted, per
-esempio `interaction.chat.num_ctx`. Non sono mostrati valore, path del file,
-secret o testo dell'errore del decoder.
-
-## Profili agentici storici
-
-Lo schema v1 e i blocchi agentici v2 rimangono contratti sperimentali del
-repository, ma non appartengono alla configurazione distribuita né alla
-compatibility promise v0.3.1. `maestro chat` non deriva un profilo da
-`models.chat` e non costruisce agent come fallback.
-
-## Profilo v4 candidato Controlled Mutation
-
-Il profilo v4 usa sezioni indipendenti:
-
-```yaml
-version: 4
 
 direct_chat:
   model: qwen3.5:9b
@@ -205,12 +50,93 @@ controlled_mutation:
   max_output_bytes: 1048576
 ```
 
-Il loader v4 è strict: campi sconosciuti, duplicati o fallback impliciti sono
-invalidi. `controlled_mutation.enabled` deve essere `true` e il profilo deve
-usare modello, digest, prompt, schema e parametri qualificati. Direct Chat usa
-soltanto `direct_chat`; Controlled Mutation usa soltanto
-`controlled_mutation`.
+Nell'archive il file si chiama
+`configs/maestro.v0.5.0-candidate.yaml`: il nome è conservato per
+compatibilità con il candidate qualificato. Il manifest e
+`version --diagnostic` distinguono la release tramite `status=release`.
+La copia distribuita usa la fixture inclusa come root relativa.
 
-Il cambio profilo è gestito con unload esplicito del modello uscente e attesa
-di `/api/ps` vuoto prima della generazione successiva. La configurazione non
-richiede residenza simultanea dei due modelli.
+## Risoluzione del file
+
+L'ordine è:
+
+1. `--config <path>`;
+2. `MAESTRO_CONFIG`;
+3. `$XDG_CONFIG_HOME/maestro/config.yaml`;
+4. `$HOME/.config/maestro/config.yaml` quando XDG non è impostato.
+
+I file non vengono uniti. Un root relativo viene risolto rispetto alla
+directory del YAML e diventa assoluto prima della validazione.
+
+## `provider`
+
+| Campo | Contratto v0.5.0 |
+| --- | --- |
+| `id` | `ollama` |
+| `base_url` | Loopback HTTP senza credenziali, query, fragment o path API |
+| `timeout` | Durata positiva, massimo 10 minuti |
+| `api_key_env` | Vuoto per Ollama; se usato contiene solo il nome della variabile |
+
+Cambiare endpoint può inviare domanda e file a un servizio non qualificato.
+
+## `workspace`
+
+La root deve essere una directory reale e non un symlink. Direct Chat risolve
+il file opzionale sotto questa root. Controlled Mutation applica un ulteriore
+vincolo: file PHP regolare, non symlink e contenuto sotto `app/`.
+
+`id` e `framework` descrivono il workspace; non attivano detection,
+retrieval o plugin.
+
+## `direct_chat`
+
+- modello e digest devono coincidere esattamente;
+- `timeout` non può superare il ceiling del provider;
+- `streaming` autorizza `--stream`, senza abilitarlo implicitamente;
+- `num_ctx`, `num_predict` e limiti byte devono essere positivi;
+- `thinking` è una stringa enum: `default`, `true` o `false`;
+- `residency` è positiva e non superiore a 10 minuti.
+
+La temperatura è fissata a zero. Un generation control non supportato fallisce
+il preflight invece di essere ignorato.
+
+## `controlled_mutation`
+
+La sezione deve essere completa e `enabled: true`. Modello, digest, prompt,
+schema e relativi SHA-256 sono parte del contratto qualificato. Non vengono
+ereditati da Direct Chat e non sono configurabili liberamente nel percorso
+supportato.
+
+Il profilo limita l'output; path, estensione, directory `app/`, coordinate,
+TTY, approval e stale check sono inoltre verificati dal comando. La
+configurazione da sola non concede authority di scrittura.
+
+Il cambio tra chat e mutation scarica esplicitamente il modello uscente e
+attende che il provider non lo riporti più residente prima della nuova
+generation. Non è richiesta residenza simultanea.
+
+## Secret e redazione
+
+Il YAML non deve contenere secret. `api_key_env` conserva soltanto il nome di
+una variabile; il valore non appare in doctor, errori o output operativo.
+
+## Validazione
+
+```sh
+maestro doctor --mode all --config /path/to/v0.5.0.yaml
+```
+
+Una configurazione invalida usa exit code 2. Failure di provider, modello,
+digest o capability restano check distinti e non diventano PASS.
+
+La diagnostica redatta usa le categorie `read_failed`, `yaml_invalid`,
+`unknown_field`, `missing_field` e `invalid_value`. Quando disponibile
+mostra soltanto il path logico del campo, mai valore, path fisico, secret o
+errore YAML grezzo.
+
+## Compatibilità precedente
+
+Gli schemi v2 e v3 restano leggibili per Direct Chat secondo il loro contratto
+storico, ma non ricevono campi o authority v4 impliciti. Non possono abilitare
+Controlled Mutation. I profili agentici v1 restano superfici di sviluppo e non
+sono convertiti automaticamente.
