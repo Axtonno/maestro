@@ -1652,7 +1652,27 @@ esatta, allow-once e un solo file nel diff Git. Report:
 `reports/milestone-39-final.md`.
 
 La direzione preferita dopo M39 è un prototipo di estensione VS Code; non è
-ancora una capability supportata né una milestone aperta.
+ancora una capability supportata.
+
+---
+
+# Milestone 40 — VS Code Controlled Surface Prototype
+
+Stato: In corso — `vscode_prototype_validation_pending`.
+
+Un'estensione dependency-free espone chat sul file attivo, mutation sulla
+selezione, doctor e identità tramite il terminale integrato. Il prototipo non
+duplica il runtime: file e righe restano espliciti, la CLI conserva preview,
+TTY, allow-once, stale check e apply atomico. Buffer dirty, multi-selection e
+target mutativi diversi da PHP sotto `app/` vengono respinti prima del lancio.
+
+I controlli statici V01, V02, V07 e V08 passano. Le unit JavaScript V03–V06 e
+la prova reale V09–V14 restano `not_run`. Nessuna pubblicazione, inclusione nel
+package o estensione del claim v0.5.0 è autorizzata.
+
+Piano: `milestone-40-vscode-controlled-surface-prototype-plan.md`.
+Matrice: `milestone-40-vscode-prototype-matrix.yaml`.
+Checkpoint: `reports/milestone-40-offline-prototype.md`.
 
 ---
 

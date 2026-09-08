@@ -1,0 +1,94 @@
+{
+  "name": "maestro-vscode-prototype",
+  "displayName": "Maestro (Prototype)",
+  "description": "Prototype bridge from an explicit VS Code file or selection to the Maestro v0.5.0 CLI.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "maestro-local",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "The prototype launches the configured local Maestro binary in a workspace terminal."
+    },
+    "virtualWorkspaces": {
+      "supported": false
+    }
+  },
+  "activationEvents": [
+    "onCommand:maestro.askActiveFile",
+    "onCommand:maestro.replaceSelection",
+    "onCommand:maestro.doctor",
+    "onCommand:maestro.version"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "maestro.askActiveFile",
+        "title": "Maestro: Ask About Active File"
+      },
+      {
+        "command": "maestro.replaceSelection",
+        "title": "Maestro: Replace Selected Lines"
+      },
+      {
+        "command": "maestro.doctor",
+        "title": "Maestro: Run Doctor"
+      },
+      {
+        "command": "maestro.version",
+        "title": "Maestro: Show Binary Identity"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "maestro.askActiveFile",
+          "group": "maestro@10",
+          "when": "resourceScheme == file"
+        },
+        {
+          "command": "maestro.replaceSelection",
+          "group": "maestro@20",
+          "when": "resourceScheme == file && editorLangId == php && editorHasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Maestro Prototype",
+      "properties": {
+        "maestro.binaryPath": {
+          "type": "string",
+          "default": "maestro",
+          "scope": "window",
+          "description": "Maestro executable name or path. The value is passed as one shell-quoted token."
+        },
+        "maestro.configPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Optional Maestro v4 configuration path, resolved by the CLI from the workspace terminal."
+        },
+        "maestro.terminalName": {
+          "type": "string",
+          "default": "Maestro",
+          "scope": "window",
+          "description": "Name used for the dedicated integrated terminal."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

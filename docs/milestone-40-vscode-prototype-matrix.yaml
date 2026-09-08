@@ -1,0 +1,54 @@
+milestone: 40
+title: VS Code Controlled Surface Prototype
+frozen_at: 2026-09-08
+status: validation_pending
+claim_policy:
+  public_v0_5_0_unchanged: true
+  marketplace_publication_authorized: false
+  release_packaging_authorized: false
+  new_runtime_authority: false
+prototype:
+  root: editors/vscode-maestro
+  vscode_minimum: "1.85.0"
+  extension_host: linux_or_remote_wsl
+  extension_kind: workspace
+  untrusted_workspaces_supported: false
+  virtual_workspaces_supported: false
+  runtime_dependencies: 0
+  transport: integrated_terminal
+  shell: /bin/sh
+  commands:
+    - maestro.askActiveFile
+    - maestro.replaceSelection
+    - maestro.doctor
+    - maestro.version
+security_gates:
+  saved_local_workspace_file_required: true
+  workspace_trust_required: true
+  mutation_single_selection_required: true
+  mutation_complete_lines_required: true
+  mutation_php_below_app_required: true
+  shell_tokens_quoted: true
+  option_terminator_before_user_prompt: true
+  token_newlines_rejected: true
+  cli_preview_required: true
+  cli_tty_approval_required: true
+  extension_auto_approval: false
+  extension_file_writes: 0
+offline_cases:
+  V01_manifest_and_activation: passed
+  V02_command_registration: passed
+  V03_shell_token_escaping: not_run
+  V04_workspace_containment: not_run
+  V05_selection_coordinate_mapping: not_run
+  V06_mutation_scope_narrowing: not_run
+  V07_dirty_and_multiselection_rejection: passed
+  V08_no_write_or_auto_approval_api: passed
+live_cases:
+  V09_extension_host_activation: not_run
+  V10_public_binary_identity: not_run
+  V11_doctor_all: not_run
+  V12_direct_chat_active_file: not_run
+  V13_mutation_deny: not_run
+  V14_mutation_allow_and_exact_diff: not_run
+verdict: vscode_prototype_validation_pending

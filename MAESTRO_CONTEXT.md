@@ -49,6 +49,10 @@ presentarle come già disponibili.
 - Milestone 39: completata —
   `documentation_onboarding_public_trial_ready`; baseline pubblica congelata
   e percorso esterno download → doctor → chat → mutation → Git verificato;
+- Milestone 40: in corso — `vscode_prototype_validation_pending`; prototipo
+  VS Code dependency-free implementato come bridge al terminale integrato,
+  controlli offline presenti e prova Extension Development Host ancora da
+  eseguire;
 - posizionamento pubblico corrente: workstation AI locale con nucleo operativo
   Direct Chat + Controlled Mutation; runtime, agent, retrieval e tool più ampi
   restano distinti come architettura e roadmap;
@@ -3534,3 +3538,26 @@ La baseline pubblica è congelata in
 `docs/reports/milestone-39-public-trial.json` e
 `docs/reports/milestone-39-final.md`. La prossima direzione preferita è un
 prototipo VS Code, ma M40 non è ancora aperta e non amplia il claim corrente.
+
+---
+
+# Apertura Milestone 40 — VS Code Controlled Surface Prototype
+
+Stato: `vscode_prototype_validation_pending`. Il prototipo in
+`editors/vscode-maestro` espone chat sul file attivo, mutation su una singola
+selezione PHP sotto `app/`, doctor e identità del binario. Ogni operazione usa
+un terminale integrato nuovo; preview, fingerprint, approval allow-once/deny,
+stale check e apply restano interamente nella CLI v0.5.0.
+
+L'estensione respinge file esterni, dirty o non locali, multi-selection e
+token con newline; non usa API di scrittura, child process o auto-approval.
+I controlli statici V01, V02, V07 e V08 passano. Le unit JavaScript V03–V06 e
+V09–V14 restano `not_run` perché l'ambiente corrente non dispone di Node.js e
+VS Code snap non avvia l'Extension Development Host a causa di `snap-confine`.
+Nessun claim, asset o packaging v0.5.0 cambia.
+
+Riferimenti:
+
+- `docs/milestone-40-vscode-controlled-surface-prototype-plan.md`;
+- `docs/milestone-40-vscode-prototype-matrix.yaml`;
+- `docs/reports/milestone-40-offline-prototype.md`.

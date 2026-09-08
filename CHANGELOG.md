@@ -29,6 +29,15 @@ Report: `docs/reports/milestone-37-final.md`.
 
 ## [Unreleased]
 
+### Prototype
+
+- aperta M40 con un prototipo VS Code dependency-free che inoltra chat sul
+  file attivo, mutation sulla selezione, doctor e identità alla CLI nel
+  terminale integrato, senza scritture o approval nell'estensione;
+- congelati perimetro e matrice M40; i controlli offline sono presenti mentre
+  la prova Extension Development Host resta `not_run`, quindi il prototipo non
+  amplia il claim v0.5.0 e non è autorizzato alla pubblicazione.
+
 ### Changed
 
 - riposizionata la documentazione pubblica: Maestro è una workstation AI
