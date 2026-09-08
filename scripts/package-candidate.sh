@@ -156,8 +156,10 @@ cp docs/installation.md docs/configuration.md docs/cli.md \
 	docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
 	docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
 	docs/install-and-try.md docs/controlled-mutation-support.md \
+	docs/current-capabilities.md \
 	"$root/docs/"
 cp docs/milestone-38-field-adoption-freeze.yaml "$root/docs/"
+cp docs/v0.5.0-public-baseline-freeze.yaml "$root/docs/"
 cp docs/reports/milestone-38-final.md \
 	docs/reports/milestone-38-environment.yaml \
 	docs/reports/milestone-38-live-runs.json \

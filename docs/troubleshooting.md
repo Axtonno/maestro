@@ -1,5 +1,8 @@
 # Maestro v0.5.0 Troubleshooting
 
+Prima della diagnosi verificare che piattaforma, provider e modelli rientrino
+nella [pagina delle capacità correnti](current-capabilities.md).
+
 ## Il checksum fallisce
 
 Non estrarre né eseguire l'archive. Scaricare di nuovo `.tar.gz` e

@@ -4,6 +4,9 @@ Controlled Mutation è il write-mode opt-in di Maestro v0.5.0. Non è
 un'autorizzazione generale a modificare il workspace: trasforma una selezione
 esplicita dell'utente in una sola sostituzione verificabile.
 
+La [pagina delle capacità correnti](current-capabilities.md) separa il nucleo
+supportato dalle superfici sperimentali e future.
+
 ## Contratto supportato
 
 Una mutation è supportata soltanto quando sono vere tutte queste condizioni:
@@ -76,6 +79,9 @@ Il percorso v0.5.0 è stato qualificato sull'artifact Linux `amd64`:
 La seconda prova è evidenza di adozione sul campo per quella macchina, non un
 requisito minimo né una promessa universale su ogni PC Linux. Latenza e memoria
 dipendono dall'hardware e dalla residenza dei modelli.
+
+Non sono supportati Windows nativo, multi-file, agent autonomi, provider o
+modelli alternativi. Ogni scrittura richiede approvazione allow-once.
 
 ## Uso consigliato
 

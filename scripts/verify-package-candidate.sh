@@ -106,7 +106,9 @@ for required in maestro LICENSE NOTICE THIRD_PARTY_LICENSES.txt README.md CHANGE
     docs/packaging-candidate.md docs/quick-start.md docs/security-model.md \
     docs/compatibility.md docs/troubleshooting.md docs/known-issues.md \
 	docs/install-and-try.md docs/controlled-mutation-support.md \
+    docs/current-capabilities.md \
     docs/milestone-38-field-adoption-freeze.yaml \
+    docs/v0.5.0-public-baseline-freeze.yaml \
     docs/reports/milestone-38-final.md \
     docs/reports/milestone-38-environment.yaml \
     docs/reports/milestone-38-live-runs.json \

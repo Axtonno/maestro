@@ -6,6 +6,9 @@ inclusa, senza checkout del repository.
 Per una prova essenziale vedere [Installa e prova](install-and-try.md). Questa
 pagina aggiunge controlli e risultati attesi.
 
+La [pagina delle capacità correnti](current-capabilities.md) è il riferimento
+autorevole per ciò che è supportato oggi e ciò che resta futuro.
+
 ## Prerequisiti
 
 - Ollama 0.33.1 su `http://127.0.0.1:11434`;
@@ -17,6 +20,9 @@ pagina aggiunge controlli e risultati attesi.
 - una TTY reale per il write-mode.
 
 Maestro non avvia Ollama, non scarica modelli e non sostituisce un digest.
+Se un modello manca, eseguire `ollama pull <nome>` e poi confrontare il digest
+di `ollama list` con quello sopra: un tag risolto a un digest diverso non è
+qualificato.
 
 ## 1. Verifica ed estrazione
 
@@ -35,7 +41,18 @@ cd "${artifact}"
 Archive e checksum devono provenire dalla stessa GitHub Release. Nome,
 versione, commit, stato `release` e manifest devono coincidere.
 
-## 2. Diagnostica completa
+## 2. Baseline Git della fixture
+
+```sh
+git -C fixtures/laravel-v1 init
+git -C fixtures/laravel-v1 add .
+git -C fixtures/laravel-v1 -c user.name="Maestro Trial" -c user.email="trial@localhost" commit -m "Trial baseline"
+git -C fixtures/laravel-v1 status --short
+```
+
+Lo stato iniziale deve essere pulito.
+
+## 3. Diagnostica completa
 
 ```sh
 ./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
@@ -44,7 +61,7 @@ versione, commit, stato `release` e manifest devono coincidere.
 Il profilo v4 punta alla fixture inclusa. I 14 check chat e mutation devono
 essere `pass`. Doctor non esegue completion e non modifica il workspace.
 
-## 3. Direct Chat con file
+## 4. Direct Chat con file
 
 ```sh
 ./maestro chat --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php "Quali campi valida store e quale risposta HTTP restituisce?"
@@ -57,7 +74,7 @@ reason `stop`. La risposta deve ricavare dal solo file `customer_id`,
 Senza `--file`, Maestro non cerca contesto nel progetto. Una domanda che
 dipende dal workspace deve quindi essere dichiarata non determinabile.
 
-## 4. Controlled Mutation con deny
+## 5. Controlled Mutation con deny
 
 ```sh
 ./maestro workspace replace --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php --lines 22:22 "Cambia soltanto lo status HTTP da 201 a 202, preservando il resto della riga."
@@ -67,7 +84,7 @@ Il modello deve essere `qwen2.5-coder:14b`. Controllare preview, digest e
 fingerprint, poi digitare `d`: il terminale atteso è
 `approval_rejected`, exit code 3, con file invariato.
 
-## 5. Controlled Mutation con allow-once
+## 6. Controlled Mutation con allow-once
 
 Ripetere il comando e digitare `o` solo se la preview sostituisce esattamente
 201 con 202. Il terminale atteso è `applied`, `effect=applied` e
@@ -77,11 +94,18 @@ Ripetere il comando e digitare `o` solo se la preview sostituisce esattamente
 sed -n '22p' app/Http/Controllers/OrderController.php
 ```
 
-La fixture estratta può essere reinizializzata riestraendo l'archive in una
-nuova directory. Su un progetto reale usare invece il normale controllo
-versione del progetto.
+Verificare inoltre il confine dell'effetto:
 
-## 6. Configurare un progetto reale
+```sh
+git -C fixtures/laravel-v1 diff -- app/Http/Controllers/OrderController.php
+git -C fixtures/laravel-v1 status --short
+```
+
+Il diff deve contenere esclusivamente `201` → `202` e lo stato deve elencare
+un solo file. La fixture può essere reinizializzata riestraendo l'archive in
+una nuova directory.
+
+## 7. Configurare un progetto reale
 
 ```sh
 install -d "$HOME/.config/maestro"

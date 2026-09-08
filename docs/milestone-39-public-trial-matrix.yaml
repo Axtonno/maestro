@@ -1,0 +1,41 @@
+milestone: 39
+title: Documentation, Onboarding & Public Trial Readiness
+frozen_at: 2026-09-08
+status: completed
+execution_policy:
+  public_asset_only: true
+  checkout_allowed: false
+  rebuild_allowed: false
+  attempts_per_completion: 1
+asset:
+  version: v0.5.0
+  platform: linux_amd64
+  archive: maestro-v0.5.0-linux-amd64.tar.gz
+  archive_sha256: 0afcfe4d648edcde3caf4327c4f995606fb4c3974c05606e13f90dd8cff321d9
+  release_commit: 86ed92495c5ce5bd2d0ec8d3c8a11b8c29a316f2
+models:
+  chat:
+    name: qwen3.5:9b
+    digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+  mutation:
+    name: qwen2.5-coder:14b
+    digest: 9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849
+trial:
+  workspace: fixtures/laravel-v1
+  file: app/Http/Controllers/OrderController.php
+  chat_question: Quali campi valida store e quale risposta HTTP restituisce?
+  mutation_lines: "22:22"
+  mutation_request: Cambia soltanto lo status HTTP da 201 a 202, preservando il resto della riga.
+  before: "        return response()->json(['data' => $order], 201);"
+  after: "        return response()->json(['data' => $order], 202);"
+  approval: allow_once
+cases:
+  P01_public_navigation: passed
+  P02_public_asset_identity: passed
+  P03_model_identity: passed
+  P04_doctor_14_of_14: passed
+  P05_direct_chat: passed
+  P06_controlled_mutation: passed
+  P07_git_diff_and_status: passed
+  P08_repository_contracts: passed
+verdict: documentation_onboarding_public_trial_ready

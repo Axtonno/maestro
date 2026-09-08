@@ -7,6 +7,9 @@ runtime modulare. La release v0.5.0 offre un nucleo operativo verificato:
 Direct Chat sul workspace e Controlled Mutation con selezione esplicita,
 preview completa e approvazione umana prima di ogni scrittura.
 
+La [pagina delle capacità correnti](docs/current-capabilities.md) è il
+riferimento sintetico autorevole per supporto, hardware e limiti.
+
 Non è un agente autonomo general-purpose. Oggi esegue due flussi piccoli,
 osservabili e delimitati; l'architettura più ampia resta la direzione del
 progetto, non una promessa già disponibile.
@@ -21,7 +24,7 @@ progetto, non una promessa già disponibile.
 | Provider | Ollama locale su loopback |
 | Modelli | `qwen3.5:9b` per chat; `qwen2.5-coder:14b` per mutation |
 | Artifact | Release pubblica Linux `amd64` |
-| Evidenza | WSL2/RTX 5070 e Linux nativo CPU-only su ThinkPad T490s |
+| Evidenza | Linux `amd64`, incluso Linux nativo CPU-only su ThinkPad T490s |
 
 Il write-mode non sceglie autonomamente file o righe:
 
@@ -76,8 +79,8 @@ Per la prova guidata del write-mode, inclusi deny e allow-once, seguire
 
 La pagina [Controlled Mutation: perimetro supportato](docs/controlled-mutation-support.md)
 è il contratto sintetico del write-mode. La
-[Compatibility Matrix](docs/compatibility.md) resta la fonte autorevole per
-piattaforme, modelli e limiti.
+[Compatibility Matrix](docs/compatibility.md) dettaglia piattaforme e modelli
+entro il claim definito dalla pagina delle capacità correnti.
 
 ## Oggi e dopo
 
@@ -103,9 +106,15 @@ documentato senza retry.
 Vedere il [report M38](docs/reports/milestone-38-final.md) e le
 [release notes v0.5.0](docs/releases/v0.5.0.md).
 
+L'archive v0.5.0 è immutabile e contiene un difetto documentale legacy; il
+binario e la configurazione sono corretti, mentre i sorgenti documentali sono
+già corretti per le release successive. Dettagli e nome del profilo effettivo
+sono nella [pagina delle capacità correnti](docs/current-capabilities.md).
+
 ## Documentazione
 
 - [Installa e prova](docs/install-and-try.md)
+- [Capacità correnti](docs/current-capabilities.md)
 - [Controlled Mutation: perimetro supportato](docs/controlled-mutation-support.md)
 - [Installazione completa](docs/installation.md)
 - [Quick Start](docs/quick-start.md)

@@ -46,6 +46,9 @@ presentarle come già disponibili.
 - Milestone 38: completata — `native_linux_field_adoption_qualified`;
   asset pubblico verificato senza checkout o rebuild su Linux amd64 nativo
   CPU-only, correttezza 11/12, completion 12/12 e zero effetti vietati;
+- Milestone 39: completata —
+  `documentation_onboarding_public_trial_ready`; baseline pubblica congelata
+  e percorso esterno download → doctor → chat → mutation → Git verificato;
 - posizionamento pubblico corrente: workstation AI locale con nucleo operativo
   Direct Chat + Controlled Mutation; runtime, agent, retrieval e tool più ampi
   restano distinti come architettura e roadmap;
@@ -3484,9 +3487,50 @@ provider e modelli restano “dopo” fino a una nuova qualifica.
 Nuove pagine di ingresso:
 
 - `docs/install-and-try.md`;
-- `docs/controlled-mutation-support.md`.
+- `docs/controlled-mutation-support.md`;
+- `docs/current-capabilities.md`, fonte autorevole per il claim corrente.
 
 README, identity, vision, installation, quick start, compatibility, CLI,
 configuration, security, known issues, troubleshooting e packaging sono
-allineati a v0.5.0. Le due nuove pagine entrano nell'allowlist degli artifact
+allineati a v0.5.0. Le pagine operative entrano nell'allowlist degli artifact
 futuri. I piani e report storici restano immutati come cronologia.
+
+---
+
+# Apertura Milestone 39 — Documentation, Onboarding & Public Trial Readiness
+
+Stato iniziale: `public_trial_pending`. M39 non aggiunge feature e non
+ricostruisce v0.5.0: congela una baseline pubblica coerente e verifica l'asset
+pubblico seguendo il flusso documentato da un ambiente esterno al checkout.
+
+La matrice P01–P08 richiede identità esatta di asset e modelli, doctor 14/14,
+una chat corretta, una mutation `201` → `202` con preview esatta e allow-once,
+un solo file nel diff Git e contratti repository/package verdi. Nessun retry
+è ammesso per le completion.
+
+Riferimenti:
+
+- `docs/milestone-39-documentation-onboarding-public-trial-readiness-plan.md`;
+- `docs/milestone-39-public-trial-matrix.yaml`;
+- `docs/current-capabilities.md`.
+
+---
+
+# Chiusura Milestone 39 — Baseline pubblica credibile
+
+Verdetto: `documentation_onboarding_public_trial_ready`. Il 2026-09-08 il
+percorso documentato è stato eseguito sull'archive pubblico v0.5.0 appena
+scaricato, senza checkout o rebuild: checksum, manifest, commit, binario e
+digest dei modelli coincidono; doctor passa 14/14; Direct Chat risponde
+correttamente al primo tentativo in 176.390 ms.
+
+Controlled Mutation propone esclusivamente `201` → `202` alla riga 22 del
+controller, viene autorizzata una sola volta e termina `applied`. Git registra
+un solo file e un diff 1/1 esatto. Test, race, vet, link, freeze e doppio
+packaging riproducibile sono verdi.
+
+La baseline pubblica è congelata in
+`docs/v0.5.0-public-baseline-freeze.yaml`; prove e verdetto sono in
+`docs/reports/milestone-39-public-trial.json` e
+`docs/reports/milestone-39-final.md`. La prossima direzione preferita è un
+prototipo VS Code, ma M40 non è ancora aperta e non amplia il claim corrente.

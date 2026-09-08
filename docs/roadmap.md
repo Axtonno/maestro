@@ -1635,6 +1635,27 @@ semantico isolato.
 
 ---
 
+# Milestone 39 — Documentation, Onboarding & Public Trial Readiness
+
+Stato: Completata — `documentation_onboarding_public_trial_ready`.
+
+La milestone congela v0.5.0 come baseline pubblica credibile, crea una pagina
+verità per capacità e limiti ed esegue il percorso completo come un utente
+esterno: README, download e checksum, modelli, doctor, chat, Controlled
+Mutation, allow-once e verifica Git. Non introduce feature runtime né modifica
+l'asset pubblico.
+
+Piano: `milestone-39-documentation-onboarding-public-trial-readiness-plan.md`.
+Matrice: `milestone-39-public-trial-matrix.yaml`. Il trial sull'asset pubblico
+passa P01–P08: doctor 14/14, chat e mutation al primo tentativo, preview
+esatta, allow-once e un solo file nel diff Git. Report:
+`reports/milestone-39-final.md`.
+
+La direzione preferita dopo M39 è un prototipo di estensione VS Code; non è
+ancora una capability supportata né una milestone aperta.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.

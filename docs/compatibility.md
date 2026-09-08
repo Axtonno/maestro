@@ -2,9 +2,11 @@
 
 Aggiornata: 2026-09-08
 
-Questa pagina definisce il support claim corrente. Funzioni presenti nel
+Questa pagina dettaglia il support claim corrente. Funzioni presenti nel
 repository, documenti di design e milestone future non ampliano questo
 perimetro.
+
+La sintesi autorevole è [Capacità correnti](current-capabilities.md).
 
 ## Superficie operativa
 

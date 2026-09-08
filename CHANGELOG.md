@@ -38,6 +38,14 @@ Report: `docs/reports/milestone-37-final.md`.
   superfici pubbliche ancora ferme a v0.3.x;
 - aggiunte le guide `docs/install-and-try.md` e
   `docs/controlled-mutation-support.md`, incluse nell'allowlist di packaging;
+- aggiunta `docs/current-capabilities.md` come pagina verità per capacità,
+  hardware consigliato, modelli, limiti e difetto legacy dell'archive v0.5.0;
+- completata M39 con verdetto
+  `documentation_onboarding_public_trial_ready`: trial dell'asset pubblico al
+  primo tentativo, doctor 14/14, chat corretta, mutation `201` → `202` con
+  allow-once e un solo file nel diff Git;
+- congelata la baseline pubblica v0.5.0 con hash dei documenti e policy di
+  evoluzione in `docs/v0.5.0-public-baseline-freeze.yaml`;
 - congelata l'evidenza M38 con hash e policy di immutabilità in
   `docs/milestone-38-field-adoption-freeze.yaml`.
 

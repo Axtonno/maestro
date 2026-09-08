@@ -35,11 +35,23 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 		"## Oggi e dopo",
 		"docs/install-and-try.md",
 		"docs/controlled-mutation-support.md",
+		"docs/current-capabilities.md",
+	)
+	assertContains("docs/current-capabilities.md",
+		"## Cosa funziona oggi",
+		"## Sperimentale, non parte del prodotto v0.5.0",
+		"## Non supportato oggi",
+		"## Hardware consigliato",
+		"Difetto documentale dell'archive v0.5.0",
+		"qwen3.5:9b",
+		"qwen2.5-coder:14b",
 	)
 	assertContains("docs/install-and-try.md",
 		"doctor --mode all",
 		"workspace replace",
 		"approval_rejected",
+		"git -C fixtures/laravel-v1 init",
+		"git -C fixtures/laravel-v1 diff",
 	)
 	assertContains("docs/controlled-mutation-support.md",
 		"Un file PHP regolare e non symlink sotto `app/`",
@@ -89,6 +101,8 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 		assertContains(script,
 			"docs/install-and-try.md",
 			"docs/controlled-mutation-support.md",
+			"docs/current-capabilities.md",
+			"docs/v0.5.0-public-baseline-freeze.yaml",
 			"docs/milestone-38-field-adoption-freeze.yaml",
 			"docs/reports/milestone-38-live-runs.json",
 		)
@@ -102,6 +116,7 @@ func TestPublicDocumentationRelativeLinksResolve(t *testing.T) {
 		"docs/configuration.md",
 		"docs/install-and-try.md",
 		"docs/controlled-mutation-support.md",
+		"docs/current-capabilities.md",
 		"docs/compatibility.md",
 		"docs/installation.md",
 		"docs/known-issues.md",
@@ -113,6 +128,8 @@ func TestPublicDocumentationRelativeLinksResolve(t *testing.T) {
 		"docs/vision.md",
 		"docs/philosophy.md",
 		"docs/releases/v0.5.0.md",
+		"docs/milestone-39-documentation-onboarding-public-trial-readiness-plan.md",
+		"docs/reports/milestone-39-final.md",
 	}
 	linkPattern := regexp.MustCompile(`\[[^]]+\]\(([^)]+)\)`)
 	for _, path := range paths {

@@ -12,6 +12,10 @@ allow-once in un terminale reale.
 La sicurezza del write-mode deriva dal controllo deterministico dell'effetto,
 non dall'autorità o dall'infallibilità del modello.
 
+La [pagina delle capacità correnti](current-capabilities.md) definisce il
+support claim pubblico: Linux `amd64`, Ollama locale, due modelli qualificati
+e nessuna promessa multi-file, agentica, Windows nativa o multi-provider.
+
 ## Confini di fiducia
 
 | Elemento | Trattamento |

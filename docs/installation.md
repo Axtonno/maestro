@@ -7,6 +7,8 @@ Piattaforma verificata: Linux `amd64`
 Per il percorso minimo usare [Installa e prova](install-and-try.md). Prima di
 abilitare scritture leggere
 [Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
+La [pagina delle capacità correnti](current-capabilities.md) è la fonte
+sintetica per piattaforme, modelli, hardware consigliato e limiti.
 
 ## Verifica e installazione
 

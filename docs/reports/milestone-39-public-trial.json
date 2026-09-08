@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "milestone": 39,
+  "date": "2026-09-08",
+  "verdict": "documentation_onboarding_public_trial_ready",
+  "execution": {
+    "mode": "external_user_public_asset",
+    "checkout_used": false,
+    "rebuild_used": false,
+    "runtime_source_tree_used": false,
+    "chat_attempts": 1,
+    "mutation_attempts": 1
+  },
+  "environment": {
+    "host": "ThinkPad T490s",
+    "kernel": "Linux 7.0.0-30-generic",
+    "architecture": "x86_64",
+    "cpu": "Intel Core i5-8365U",
+    "cores": 4,
+    "threads": 8,
+    "memory_bytes": 16403836928,
+    "swap_bytes": 4294963200,
+    "gpu_mode": "CPU-only",
+    "ollama_version": "0.33.1"
+  },
+  "asset": {
+    "name": "maestro-v0.5.0-linux-amd64.tar.gz",
+    "archive_sha256": "0afcfe4d648edcde3caf4327c4f995606fb4c3974c05606e13f90dd8cff321d9",
+    "archive_size_bytes": 3842782,
+    "binary_sha256": "e1765f9e8ed919eabe22b200f4145445da0d1b31f90c9b2bf6157a1390e37523",
+    "version": "v0.5.0",
+    "status": "release",
+    "commit": "86ed92495c5ce5bd2d0ec8d3c8a11b8c29a316f2",
+    "dirty": false,
+    "configuration_sha256": "c7dae569386abe5e5d83991701d7c385ac1c33e551ade032c0b521eb49e0fe73"
+  },
+  "models": {
+    "chat": {
+      "name": "qwen3.5:9b",
+      "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
+    },
+    "mutation": {
+      "name": "qwen2.5-coder:14b",
+      "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849"
+    }
+  },
+  "doctor": {
+    "mode": "all",
+    "passed": 14,
+    "total": 14,
+    "failed": 0
+  },
+  "chat": {
+    "terminal": "completed",
+    "model": "qwen3.5:9b",
+    "duration_ms": 176390,
+    "input_tokens": 784,
+    "output_tokens": 259,
+    "finish_reason": "stop",
+    "semantic_correct": true,
+    "observed_answer": ["customer_id", "items", "JSON HTTP 201"]
+  },
+  "controlled_mutation": {
+    "terminal": "applied",
+    "model": "qwen2.5-coder:14b",
+    "file": "app/Http/Controllers/OrderController.php",
+    "lines": "22:22",
+    "approval": "allow_once",
+    "effect": "applied",
+    "durable": true,
+    "before_sha256": "4826abe9c6c5d701133817a9dcb565f0b84f760da57e1b518d430b601520b1bd",
+    "after_sha256": "30097526418b813fef8ba74ece5825637881b83814ba0340b78f5f349c040215",
+    "selected_sha256": "b13a63942b6ec8062fdf6c1626b4407af5e60ae3bf1ac61f605898ec5bb10103",
+    "replacement_sha256": "4ce58b16f1f62785b17a58e468743b1d917e7c877a89076ebd800b32e80b33a2",
+    "diff_sha256": "714e5a81f3cc7c11623c25ecef0694db513cecef7b4c9f89dfceb67da67d5f88",
+    "fingerprint": "a78021b616088f31b8d76e06d40f66bb6973ee77e6e0a90b2bc5eec88720cbc3",
+    "before": "        return response()->json(['data' => $order], 201);",
+    "after": "        return response()->json(['data' => $order], 202);",
+    "preview_exact": true
+  },
+  "git_verification": {
+    "baseline_commit": "c71041bc3dec2472246950024e775a6a1473615c",
+    "initial_clean": true,
+    "changed_files": ["app/Http/Controllers/OrderController.php"],
+    "insertions": 1,
+    "deletions": 1,
+    "outside_selection_changes": 0
+  },
+  "repository_verification": {
+    "go_test": "passed",
+    "go_test_race": "passed",
+    "go_vet": "passed",
+    "git_diff_check": "passed",
+    "yaml_parse": "passed",
+    "shell_syntax": "passed",
+    "relative_links": "passed",
+    "reproducible_package": "passed",
+    "package_trial_version": "v0.5.0-docs.8",
+    "package_sha256": "d877c0d9311bc2307f93bca39a01ff942272425ddf13baac7ea78cdd4869d1d5",
+    "package_published": false
+  },
+  "cases": {
+    "P01": "passed",
+    "P02": "passed",
+    "P03": "passed",
+    "P04": "passed",
+    "P05": "passed",
+    "P06": "passed",
+    "P07": "passed",
+    "P08": "passed"
+  },
+  "violations": {
+    "documentation_contradictions": 0,
+    "unresolved_local_links": 0,
+    "undocumented_required_steps": 0,
+    "unauthorized_writes": 0,
+    "unexpected_changed_files": 0
+  }
+}

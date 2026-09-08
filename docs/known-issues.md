@@ -1,5 +1,17 @@
 # Maestro v0.5.0 Known Issues and Limitations
 
+La [pagina delle capacità correnti](current-capabilities.md) è il riferimento
+sintetico per ciò che v0.5.0 supporta oggi.
+
+## Archive pubblico v0.5.0
+
+- L'archive immutabile contiene un paragrafo documentale legacy sullo schema
+  v3 e non evidenzia abbastanza il nome del profilo distribuito.
+- Il profilo operativo è `configs/maestro.v0.5.0-candidate.yaml`; binario,
+  manifest e configurazione sono corretti.
+- I sorgenti documentali sono corretti per le release successive. L'asset
+  v0.5.0 non viene sostituito o ripubblicato.
+
 ## Qualità del modello
 
 - I modelli sono generativi: temperatura zero riduce il drift ma non garantisce
@@ -53,6 +65,7 @@
 - Agent, retrieval multi-file, tool calling, altri provider e plugin di terze
   parti restano direzioni architetturali, non capacità di prodotto.
 
-Vedere [Compatibility Matrix](compatibility.md) per il claim autorevole,
+Vedere [Capacità correnti](current-capabilities.md) per il claim autorevole,
+[Compatibility Matrix](compatibility.md) per il dettaglio,
 [Controlled Mutation](controlled-mutation-support.md) per il write-mode e
 [Troubleshooting](troubleshooting.md) per le azioni operative.

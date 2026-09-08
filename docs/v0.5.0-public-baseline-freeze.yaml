@@ -1,0 +1,36 @@
+version: 1
+baseline: v0.5.0_public_baseline_credible
+frozen_at: 2026-09-08
+hash_scope: source_repository_before_packaging_token_materialization
+authority:
+  primary: docs/current-capabilities.md
+  controlled_mutation: docs/controlled-mutation-support.md
+  compatibility_detail: docs/compatibility.md
+claims:
+  artifact: Linux amd64 v0.5.0
+  native_cpu_only: qualified on the Milestone 38 reference system
+  controlled_mutation: tested single-file single-range PHP scope only
+  approval: mandatory preview-bound allow-once in a real TTY
+  unsupported:
+    - multi_file
+    - autonomous_agents
+    - native_windows
+    - alternative_providers_or_models
+  public_archive_legacy_documentation_defect: declared_and_fixed_in_source_for_future_releases
+files:
+  README.md: 2bba74c51a628cfc23eaf2dc1bc804ad43d2ec18ee6f7d66e43daa3f4f9095e8
+  docs/current-capabilities.md: 4e4c3d29224a99d5408ed99f858f2acb69a55e5d1ff2033f6df15bff26c22b7f
+  docs/install-and-try.md: 8688cbe76f9a209c1c2fef8cd9275bee0b9b361035ddc66a2223a29e716ca13f
+  docs/installation.md: d154074a0029bcebe05433465c041495606d713bce4b59d10f9422d198f79943
+  docs/quick-start.md: 2c5946473a7ab3d14fe407d924a3a8e0028e245ff6cb12a66ccfd9eebd721c03
+  docs/controlled-mutation-support.md: b718a4f6e836d221c4ea3eb07deef9697f511ceeb18f15c08e8284db4ad7f966
+  docs/compatibility.md: c69f9a397babf77573fe910d10930b624cadf69862c23239bfcbfaeb2f29f499
+  docs/security-model.md: e15cdc6e9094be2921e1b82fddf27d5401d7a26702f7de1a7c940b7d7dbb6a13
+  docs/known-issues.md: 0373d41610a3c29704a928b2622663b179437afc8e75db47ad43e232b6d31281
+  docs/troubleshooting.md: 73c56a6f50b4711cc5ca158ac9bbafe7398b96cbb11ccf7989e57ae365fc9682
+  docs/releases/v0.5.0.md: b09fbcdd5c28a35cfd1a79c05bfa350fe4d5d2f21368b29a0fcd50d65a91e02b
+policy:
+  public_v0.5.0_asset_is_immutable: true
+  evidence_m38_is_immutable: true
+  baseline_changes_require_new_freeze: true
+  future_capabilities_require_new_qualification: true
