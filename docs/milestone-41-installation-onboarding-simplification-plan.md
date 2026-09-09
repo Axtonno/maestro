@@ -27,6 +27,9 @@ conoscenza dei gate interni.
 - `mutate --preview` deve avere zero authority di scrittura;
 - `doctor` resta read-only ed è documentato come troubleshooting;
 - `workspace replace` resta compatibile;
+- il setup M41 genera soltanto il profilo qualificato a due modelli; nomi come
+  `recommended`, `simple` e `advanced` appartengono alla roadmap e non sono
+  opzioni CLI supportate da questa milestone;
 - l'asset pubblico v0.5.0 e le evidenze M38/M39 restano immutabili.
 
 ## Deliverable

@@ -1,6 +1,6 @@
 # Maestro v0.5.0 Compatibility Matrix
 
-Aggiornata: 2026-09-08
+Aggiornata: 2026-09-09
 
 Questa pagina dettaglia il support claim corrente. Funzioni presenti nel
 repository, documenti di design e milestone future non ampliano questo
@@ -27,7 +27,7 @@ La sintesi autorevole è [Capacità correnti](current-capabilities.md).
 
 | Ambiente | Stato | Significato |
 | --- | --- | --- |
-| Windows → WSL2 → filesystem Linux, RTX 5070 12 GB | Qualifica release M36–M37 | Ambiente di riferimento della productization e pubblicazione |
+| Windows → WSL2 → filesystem Linux, RTX 5070 12 GB | Qualifica release M36–M37 | Ambiente esatto di productization e pubblicazione; non equivale a supporto Windows nativo o WSL2 universale |
 | Ubuntu 24.04.4 nativo, ThinkPad T490s, i5-8365U CPU-only | Field adoption M38 | Asset pubblico verificato sul campo, inclusi chat, mutation e residency |
 | Altri PC Linux `amd64` | Non qualificati individualmente | L'artifact può essere eseguito, ma non esiste una promessa universale di latenza o memoria |
 | Linux `arm64`, macOS, Windows nativo | Non supportati | Nessun artifact o gate v0.5.0 qualificato |
@@ -35,6 +35,23 @@ La sintesi autorevole è [Capacità correnti](current-capabilities.md).
 CPU-only sul T490s è un ambiente osservato e qualificato per M38, non un
 requisito minimo. Ollama ha riportato zero VRAM e un solo modello residente per
 volta; le latenze sono sensibilmente dipendenti dall'hardware.
+
+La compatibilità futura viene valutata per dimensioni indipendenti, non con la
+sola ricompilazione del binario:
+
+| Dimensione | Valori da qualificare separatamente |
+| --- | --- |
+| Architettura CPU | `amd64`, `arm64` |
+| Sistema operativo | Linux, Windows, macOS |
+| Accelerazione | CPU-only, CUDA, Metal, ROCm |
+| Risorse | RAM, swap, memoria disponibile e VRAM quando applicabile |
+| Provider runtime | Ollama, llama.cpp/GGUF, altri adapter |
+
+M38 qualifica precisamente Linux `amd64` nativo, CPU-only, sul ThinkPad T490s
+registrato. Non qualifica automaticamente Linux ARM, Windows nativo, macOS
+Intel o Apple Silicon, GPU NVIDIA generiche, AMD/ROCm, llama.cpp oppure WSL2
+come target pubblico definitivo. I target futuri e la loro priorità sono
+esplicitati nella [Roadmap](roadmap.md#direzione-post-m41-profili-e-piattaforme).
 
 ## Direct Chat
 

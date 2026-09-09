@@ -1,6 +1,6 @@
 # Capacità correnti di Maestro v0.5.0
 
-Aggiornata: 2026-09-08
+Aggiornata: 2026-09-09
 
 Questa è la pagina verità della release pubblica. Se un esempio, un documento
 storico o del codice sperimentale sembra promettere di più, prevale il
@@ -35,6 +35,21 @@ non scrive senza approvazione esplicita dell'utente.
 
 Altri tag, digest o provider non fanno parte del support claim v0.5.0. Maestro
 non scarica i modelli e si arresta se l'identità non coincide.
+
+### Perché oggi servono due modelli?
+
+Il runtime può evolvere verso profili diversi, ma lo schema di prodotto v4
+respinge deliberatamente lo stesso modello per chat e mutation. Il percorso
+raccomandato separa i due compiti perché sono stati qualificati con evidenze
+diverse: `qwen3.5:9b` per Direct Chat e `qwen2.5-coder:14b` per Controlled
+Mutation.
+
+Un solo modello ridurrebbe download, spazio su disco e cambi di profilo e può
+essere più comodo su macchine limitate. Non è tuttavia un profilo supportato
+oggi: potrebbe ridurre qualità o affidabilità in uno dei due compiti e deve
+superare una qualifica dedicata prima di entrare nel prodotto. La
+[Milestone 42](milestone-42-single-model-profile-evaluation-plan.md) definisce
+questa valutazione senza ampliare il claim corrente.
 
 ## Hardware consigliato
 

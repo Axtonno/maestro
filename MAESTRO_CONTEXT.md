@@ -3594,3 +3594,41 @@ Riferimenti:
 - `docs/milestone-41-installation-onboarding-simplification-plan.md`;
 - `docs/milestone-41-installation-onboarding-matrix.yaml`;
 - `docs/validation.md`.
+
+---
+
+# Direzione post-M41 — profili modello e piattaforme
+
+Data: 2026-09-09. Il claim corrente conserva due modelli qualificati:
+`qwen3.5:9b` per Direct Chat e `qwen2.5-coder:14b` per Controlled Mutation.
+Il runtime può evolvere verso un solo modello, ma lo schema di prodotto v4
+respinge oggi modelli coincidenti e il percorso richiede una nuova qualifica.
+I nomi previsti sono `recommended` per i modelli separati, `simple` per un solo
+modello e `advanced` per configurazione manuale; M41 non espone ancora
+`maestro setup --profile`.
+
+M42 è pianificata per la Single Model Profile Evaluation. Deve congelare
+candidato, digest, parametri, hardware, dataset e soglie prima delle run e
+coprire sia Direct Chat sia tutti i gate funzionali e di sicurezza della
+Controlled Mutation. Un eventuale PASS autorizza soltanto una successiva
+productization del profilo `simple`; non amplia direttamente una release.
+
+La compatibilità futura viene scomposta in architettura CPU, sistema operativo,
+accelerazione, RAM/swap/VRAM e provider runtime. M38 qualifica soltanto Linux
+`amd64` nativo CPU-only sull'esatto ThinkPad T490s registrato. M36–M37
+costituiscono evidenza sull'esatto ambiente Windows→WSL2→filesystem Linux con
+RTX 5070, non supporto Windows nativo o WSL2 universale.
+
+Roadmap pianificata: M42 single-model; M43 trial pubblico WSL2; M44 macOS Apple
+Silicon; M45 Windows nativo; M46 qualifica llama.cpp/GGUF. macOS Intel, Linux
+`arm64`, NVIDIA generica e AMD/ROCm restano target espliciti di backlog o di
+matrici dedicate. Poiché M40 era già aperta, l'ordine operativo preferito è
+chiudere M41, eseguire M42, completare i gate pendenti M40 e poi procedere con
+M43–M46.
+
+Riferimenti:
+
+- `docs/roadmap.md`;
+- `docs/current-capabilities.md`;
+- `docs/compatibility.md`;
+- `docs/milestone-42-single-model-profile-evaluation-plan.md`.

@@ -1696,6 +1696,120 @@ Matrice: `milestone-41-installation-onboarding-matrix.yaml`.
 
 ---
 
+# Direzione post-M41: profili e piattaforme
+
+La configurazione raccomandata continua a separare Direct Chat e Controlled
+Mutation: i due compiti hanno requisiti diversi e le evidenze correnti
+qualificano rispettivamente `qwen3.5:9b` e `qwen2.5-coder:14b`. Il runtime può
+evolvere verso un solo modello, ma lo schema di prodotto v4 oggi lo respinge
+deliberatamente. Un profilo futuro di questo tipo semplificherebbe acquisizione,
+spazio su disco e gestione locale, ma non è ancora un percorso supportato. In
+particolare, la comodità su macchine con risorse limitate non dimostra da sola
+qualità e affidabilità per entrambi i compiti.
+
+I tre profili di prodotto previsti sono:
+
+| Profilo | Modelli | Destinatario | Stato |
+| --- | --- | --- | --- |
+| `recommended` | chat e mutation separati | uso stabile | comportamento M41 corrente; il nome CLI è futuro |
+| `simple` | un solo modello | installazione rapida | candidato da qualificare in M42 |
+| `advanced` | configurazione manuale | utenti esperti | futuro, fuori dal support claim corrente |
+
+La sintassi desiderata, non ancora disponibile, è:
+
+```sh
+maestro setup --profile recommended
+maestro setup --profile simple
+```
+
+Il profilo `simple` potrà partire da un singolo modello coder, ma candidato,
+digest, parametri e hardware dovranno essere congelati dalla M42. Non verrà
+dichiarato supportato sulla sola base della compatibilità tecnica.
+
+La roadmap multipiattaforma distingue architettura CPU, sistema operativo,
+accelerazione, RAM disponibile e provider runtime. Ogni combinazione rilevante
+richiede un gate proprio, soprattutto per Controlled Mutation, che dipende da
+path, encoding, newline, permessi, shell, processi, rename atomico e lock
+concorrenti.
+
+| Target | Priorità | Nota |
+| --- | --- | --- |
+| Linux `amd64` CPU-only | già qualificato | baseline v0.5.0 sul target M38 |
+| Windows WSL2 | alta | vicino al flusso M36–M37, ma da provare come trial pubblico |
+| Windows nativo | medio-alta | richiede packaging, path e semantica filesystem dedicati |
+| macOS Apple Silicon | alta | target rilevante per Metal e Ollama |
+| macOS Intel | media | utile, meno strategico di Apple Silicon |
+| Linux `arm64` | media | mini PC e server |
+| GPU NVIDIA | alta, separata | serve una matrice oltre l'ambiente RTX 5070 già osservato |
+| AMD/ROCm | backlog | nessun gate corrente |
+| llama.cpp/GGUF | alta | runtime portabile e maggior controllo locale |
+
+L'ordine operativo preferito è: chiudere M41, qualificare il profilo a
+modello unico in M42, completare i gate pendenti del prototipo M40 e poi
+estendere le piattaforme. La numerazione conserva la cronologia: M40 era già
+stata aperta prima di M41 e M42.
+
+---
+
+# Milestone 42 — Single Model Profile Evaluation
+
+Stato: Pianificata — non aperta.
+
+Valutare un profilo `simple` nel quale lo stesso modello serve Direct Chat e
+Controlled Mutation, senza modificare i gate funzionali o di sicurezza già
+qualificati. La milestone deve misurare qualità, affidabilità, latenza,
+residency, RAM, swap e spazio su disco sul profilo hardware dichiarato.
+
+Un PASS autorizza la successiva productization di `maestro setup --profile
+simple`; un failure conserva il solo profilo separato raccomandato. Piano:
+`milestone-42-single-model-profile-evaluation-plan.md`.
+
+---
+
+# Milestone 43 — Windows WSL2 Public Trial
+
+Stato: Pianificata — non aperta.
+
+Trasformare l'evidenza di build e qualification M36–M37 in un trial pubblico
+ripetibile dell'artifact Linux dentro WSL2. Il gate deve verificare install,
+setup, chat, preview, allow-once, stale check, filesystem Linux e confini tra
+path Windows e Linux. Non autorizza supporto Windows nativo.
+
+---
+
+# Milestone 44 — macOS Apple Silicon Trial
+
+Stato: Pianificata — non aperta.
+
+Produrre e provare un artifact Darwin `arm64` con Ollama/Metal, includendo
+packaging, firma se necessaria, path, permessi, newline, lock, scrittura atomica
+e lifecycle dei modelli. Nessun claim macOS nasce dalla sola compilazione Go.
+
+---
+
+# Milestone 45 — Windows Native Trial
+
+Stato: Pianificata — non aperta.
+
+Qualificare un artifact Windows nativo e la Controlled Mutation su semantica
+Windows reale: path e drive, separator, case handling, encoding, newline,
+permessi, terminale, processi, lock e replace atomico. WSL2 non può essere
+riutilizzato come evidenza conclusiva di questo gate.
+
+---
+
+# Milestone 46 — llama.cpp / GGUF Provider Qualification
+
+Stato: Pianificata — non aperta.
+
+Qualificare il provider llama.cpp già presente a livello architetturale su un
+profilo single-model GGUF dichiarato. Server, modello, digest, capability,
+lifecycle, memoria e matrici chat/mutation devono essere attestati senza
+fallback implicito; l'esistenza dell'adapter non costituisce supporto di
+prodotto.
+
+---
+
 # Principio della roadmap
 
 La roadmap rappresenta una direzione.
@@ -1736,6 +1850,7 @@ L'ordine delle implementazioni può cambiare se emergono nuove esigenze o miglio
 - milestone-17-direct-chat-development-plan.md
 - milestone-17-mutation-qualification-plan.md
 - milestone-18-productization-v0.4.0-plan.md
+- milestone-42-single-model-profile-evaluation-plan.md
 - reports/v0.1.0-post-release-observation.md
 - configuration.md
 - cli.md
