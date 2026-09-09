@@ -1,6 +1,7 @@
 package maestro_test
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -8,19 +9,10 @@ import (
 	"testing"
 )
 
-func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
-	read := func(path string) string {
-		t.Helper()
-		data, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return string(data)
-	}
-
+func TestPublicDocumentationDescribesOperationalScope(t *testing.T) {
 	assertContains := func(path string, required ...string) {
 		t.Helper()
-		content := read(path)
+		content := readPublicDoc(t, path)
 		for _, value := range required {
 			if !strings.Contains(content, value) {
 				t.Fatalf("%s is missing %q", path, value)
@@ -32,119 +24,112 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 		"workstation AI locale",
 		"maestro setup",
 		"maestro mutate --preview",
-		"docs/quick-start.md",
-		"docs/validation.md",
 		"docs/current-capabilities.md",
+		"docs/controlled-mutation.md",
+		"docs/benchmarks.md",
+		"CONTRIBUTING.md",
 	)
 	assertContains("docs/current-capabilities.md",
 		"## Cosa funziona oggi",
 		"## Sperimentale, non parte del prodotto v0.5.0",
 		"## Non supportato oggi",
 		"## Hardware consigliato",
-		"Difetto documentale dell'archive v0.5.0",
 		"qwen3.5:9b",
 		"qwen2.5-coder:14b",
 	)
-	assertContains("docs/install-and-try.md",
-		"Quick Start",
-		"maestro setup",
-		"maestro mutate --preview",
-		"Validation Guide",
-	)
-	assertContains("docs/validation.md",
-		"Baseline Git della fixture",
-		"doctor --mode all",
-		"approval_rejected",
-		"git -C fixtures/laravel-v1 diff",
-	)
-	assertContains("docs/controlled-mutation-support.md",
+	assertContains("docs/controlled-mutation.md",
 		"Un file PHP regolare e non symlink sotto `app/`",
 		"allow-once",
 		"`stale_source`",
 		"Fuori perimetro oggi",
 	)
-	assertContains("docs/compatibility.md",
-		"Maestro v0.5.0 Compatibility Matrix",
-		"Controlled Mutation",
-		"Non supportato oggi",
+	assertContains("docs/supported-platforms.md",
+		"Linux `amd64`",
+		"Windows nativo",
+		"macOS",
 	)
-	assertContains("docs/identity.md",
-		"workstation AI locale",
-		"nucleo operativo attuale",
+	assertContains("docs/benchmarks.md",
+		"risultati sintetici e riproducibili",
+		"14/14 controlli superati",
+		"11/12 risposte",
+		"NOT_RUN",
 	)
-	assertContains("docs/vision.md", "## Oggi", "## Direzione")
+	assertContains("docs/roadmap.md",
+		"profilo single-model",
+		"Windows e macOS",
+		"Non promesso",
+	)
+}
 
-	currentDocs := []string{
-		"README.md",
-		"docs/cli.md",
-		"docs/compatibility.md",
-		"docs/configuration.md",
-		"docs/known-issues.md",
-		"docs/quick-start.md",
-		"docs/security-model.md",
-		"docs/troubleshooting.md",
-		"docs/validation.md",
+func TestPublicDocumentationAllowlist(t *testing.T) {
+	allowedFiles := map[string]bool{
+		"architecture.md":                        true,
+		"benchmarks.md":                          true,
+		"cli.md":                                 true,
+		"configuration.md":                       true,
+		"controlled-mutation.md":                 true,
+		"current-capabilities.md":                true,
+		"developer-benchmark-manifest.yaml":      true,
+		"installation.md":                        true,
+		"known-issues.md":                        true,
+		"provider-smoke-benchmark-manifest.yaml": true,
+		"quick-start.md":                         true,
+		"roadmap.md":                             true,
+		"runtime-benchmark-manifest.yaml":        true,
+		"security-model.md":                      true,
+		"supported-platforms.md":                 true,
+		"troubleshooting.md":                     true,
 	}
-	for _, path := range currentDocs {
-		content := read(path)
-		for _, stale := range []string{
-			"Maestro v0.3.1",
-			"Maestro v0.3.0",
-			"La linea candidata v0.5.0",
-			"mutazioni non sono supportate",
-		} {
-			if strings.Contains(content, stale) {
-				t.Fatalf("%s contains stale public positioning %q", path, stale)
+	allowedDirectories := map[string]bool{"releases": true, "schemas": true}
+
+	entries, err := os.ReadDir("docs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			if !allowedDirectories[entry.Name()] {
+				t.Errorf("docs/%s is outside the public allowlist", entry.Name())
 			}
+			continue
+		}
+		if !allowedFiles[entry.Name()] {
+			t.Errorf("docs/%s is outside the public allowlist", entry.Name())
 		}
 	}
 
-	for _, script := range []string{
-		"scripts/package-candidate.sh",
-		"scripts/verify-package-candidate.sh",
+	for _, forbidden := range []string{
+		"MAESTRO_CONTEXT.md",
+		"docs/reports",
+		"docs/adr",
+		"docs/prompts",
+		"scripts",
 	} {
-		assertContains(script,
-			"docs/install-and-try.md",
-			"docs/validation.md",
-			"docs/controlled-mutation-support.md",
-			"docs/current-capabilities.md",
-			"docs/v0.5.0-public-baseline-freeze.yaml",
-			"docs/milestone-38-field-adoption-freeze.yaml",
-			"docs/reports/milestone-38-live-runs.json",
-		)
+		if _, err := os.Stat(forbidden); !os.IsNotExist(err) {
+			t.Errorf("internal-only path is present in public tree: %s", forbidden)
+		}
 	}
 }
 
 func TestPublicDocumentationRelativeLinksResolve(t *testing.T) {
-	paths := []string{
-		"README.md",
-		"docs/cli.md",
-		"docs/configuration.md",
-		"docs/install-and-try.md",
-		"docs/controlled-mutation-support.md",
-		"docs/current-capabilities.md",
-		"docs/compatibility.md",
-		"docs/installation.md",
-		"docs/known-issues.md",
-		"docs/packaging-candidate.md",
-		"docs/quick-start.md",
-		"docs/security-model.md",
-		"docs/troubleshooting.md",
-		"docs/identity.md",
-		"docs/vision.md",
-		"docs/philosophy.md",
-		"docs/releases/v0.5.0.md",
-		"docs/milestone-39-documentation-onboarding-public-trial-readiness-plan.md",
-		"docs/reports/milestone-39-final.md",
-		"docs/milestone-41-installation-onboarding-simplification-plan.md",
-	}
 	linkPattern := regexp.MustCompile(`\[[^]]+\]\(([^)]+)\)`)
-	for _, path := range paths {
-		data, err := os.ReadFile(path)
+	paths := []string{"README.md", "CONTRIBUTING.md", "CHANGELOG.md", "SECURITY.md"}
+	err := filepath.WalkDir("docs", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
-			t.Fatal(err)
+			return err
 		}
-		for _, match := range linkPattern.FindAllStringSubmatch(string(data), -1) {
+		if !entry.IsDir() && strings.HasSuffix(path, ".md") {
+			paths = append(paths, path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, path := range paths {
+		content := readPublicDoc(t, path)
+		for _, match := range linkPattern.FindAllStringSubmatch(content, -1) {
 			target := strings.SplitN(match[1], "#", 2)[0]
 			if target == "" || strings.Contains(target, "://") {
 				continue
@@ -155,4 +140,39 @@ func TestPublicDocumentationRelativeLinksResolve(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestPublicMarkdownDoesNotLinkInternalArtifacts(t *testing.T) {
+	forbidden := []string{
+		"docs/reports/",
+		"../reports/",
+		"MAESTRO_CONTEXT",
+		"controlled-mutation-support.md",
+		"compatibility.md",
+		"validation.md",
+	}
+	err := filepath.WalkDir("docs", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() || !strings.HasSuffix(path, ".md") {
+			return err
+		}
+		content := readPublicDoc(t, path)
+		for _, value := range forbidden {
+			if strings.Contains(content, value) {
+				t.Errorf("%s references internal or retired path %q", path, value)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func readPublicDoc(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
 }

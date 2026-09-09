@@ -101,7 +101,9 @@ func TestChatExampleLoadsWithoutAgentConfiguration(t *testing.T) {
 }
 
 func TestQualificationChatProfileRequiresGenerationBudgetAndResidency(t *testing.T) {
-	config, err := LoadChat("../../configs/maestro.milestone-21-candidate.yaml")
+	path := filepath.Join(t.TempDir(), "qualification.yaml")
+	writeConfig(t, path, validQualificationChatYAML(t.TempDir()))
+	config, err := LoadChat(path)
 	if err != nil {
 		t.Fatalf("qualification profile is invalid: %v", err)
 	}
@@ -241,18 +243,15 @@ func TestConfigurationDiagnosticsAreSpecificAndRedacted(t *testing.T) {
 	}
 }
 
-func TestMilestone14CandidateProfileIsFrozenAndValid(t *testing.T) {
-	config, err := Load("../../configs/maestro.milestone-14-candidate.yaml")
+func TestInteractionExampleIsValid(t *testing.T) {
+	config, err := Load("../../configs/maestro.interaction.example.yaml")
 	if err != nil {
-		t.Fatalf("candidate profile is invalid: %v", err)
+		t.Fatalf("interaction example is invalid: %v", err)
 	}
 	chat, ok := config.ChatProfile()
-	if !ok || chat.Model != "qwen2.5-coder:7b" || !chat.Streaming ||
-		chat.NumCtx != 4096 || chat.Thinking != ThinkingDisabled ||
-		chat.Timeout.Duration != 5*time.Minute || chat.MaxFileBytes != 1<<20 ||
-		chat.MaxOutputBytes != 1<<20 ||
-		filepath.Base(config.Workspace.Root) != "laravel-v1" {
-		t.Fatalf("candidate profile drifted: %#v %#v", chat, config.Workspace)
+	if !ok || chat.Model == "" || chat.NumCtx < 512 || chat.MaxFileBytes <= 0 ||
+		chat.MaxOutputBytes <= 0 || config.Workspace.Root == "" {
+		t.Fatalf("interaction example is incomplete: %#v %#v", chat, config.Workspace)
 	}
 }
 

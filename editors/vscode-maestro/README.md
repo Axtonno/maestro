@@ -1,6 +1,6 @@
 # Maestro VS Code Prototype
 
-Questo prototipo M40 espone in VS Code il perimetro già controllato di Maestro
+Questo prototipo espone in VS Code il perimetro già controllato di Maestro
 v0.5.0. Non incorpora il runtime, non interpreta l'output del modello e non
 scrive file: apre un terminale integrato `/bin/sh` nel workspace e vi invia un
 comando CLI con argomenti shell-quoted.
@@ -51,5 +51,5 @@ npm test
 - nessun webview, background process, shell autonoma, test runner o multi-file.
 
 Il prototipo non è incluso nell'archive v0.5.0, non è pubblicato nel
-Marketplace e non costituisce una capability supportata. Il piano e i gate
-sono in [Milestone 40](../../docs/milestone-40-vscode-controlled-surface-prototype-plan.md).
+Marketplace e non costituisce una capability supportata. La sua eventuale
+pubblicazione richiederà una qualifica separata.

@@ -1,6 +1,6 @@
 version: 1
-owner: milestone-3-smoke-benchmark
-source_milestone: provider-layer
+owner: public-provider-smoke-benchmark
+source_milestone: public-benchmark-suite
 report_redaction:
   exclude:
     - prompts

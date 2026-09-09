@@ -175,8 +175,7 @@ func DecodeProfile(reader io.Reader) (Profile, error) {
 
 func (profile Profile) Validate() error {
 	if profile.Version != ProfileVersion || profile.Status != "candidate_not_supported" ||
-		profile.Owner != "milestone-11-mutation-qualification" ||
-		profile.SourceMilestone != "milestone-10-controlled-mutation" {
+		strings.TrimSpace(profile.Owner) == "" || strings.TrimSpace(profile.SourceMilestone) == "" {
 		return errors.New("mutation qualification profile identity is invalid")
 	}
 	if profile.Target.Platform != "linux_amd64" || profile.Target.Provider != "ollama" ||

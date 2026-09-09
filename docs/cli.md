@@ -150,7 +150,7 @@ schema/prompt diversi da quelli qualificati, output provider non conforme,
 astensione, deny o sorgente cambiata dopo la preview.
 
 Il contratto completo e i casi fuori perimetro sono in
-[Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
+[Controlled Mutation: perimetro supportato](controlled-mutation.md).
 
 ## `mutate`
 

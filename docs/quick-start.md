@@ -5,7 +5,7 @@ una procedura di qualificazione della release e non richiede Git.
 
 > Nota di disponibilità: i comandi `setup` e `mutate` sono presenti nel branch
 > principale dopo v0.5.0. L'archive pubblico v0.5.0 resta immutabile; la nuova
-> esperienza diventerà pubblica con il primo artifact che supererà il gate M41.
+> esperienza diventerà pubblica con una release successiva qualificata.
 
 ## Prerequisiti
 
@@ -81,5 +81,5 @@ L'apply richiede una TTY reale e una conferma allow-once sulla preview esatta.
 ## Se qualcosa non va
 
 Esegui `maestro doctor --mode all` e consulta
-[Troubleshooting](troubleshooting.md). I controlli avanzati, i digest di
-release e le prove riproducibili sono nella [Validation Guide](validation.md).
+[Troubleshooting](troubleshooting.md). I risultati e la procedura minima
+riproducibile sono nella pagina [Benchmark](benchmarks.md).

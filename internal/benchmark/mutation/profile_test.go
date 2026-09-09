@@ -7,11 +7,11 @@ import (
 )
 
 func TestPublishedProfileIsStrictAndFrozen(t *testing.T) {
-	profile, err := LoadProfile("../../../docs/mutation-qualification-profile.yaml")
+	profile, err := LoadProfile("testdata/profile.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if profile.Digest() == "" || profile.Target.Model != "ibm/granite4.1:8b" {
+	if profile.Digest() == "" || profile.Target.Model != "test-model" {
 		t.Fatalf("unexpected published profile: %#v", profile)
 	}
 	if gate, ok := profile.Gate(GateC); !ok || gate.RequiredPasses != 3 || !gate.FailFast {
@@ -36,7 +36,7 @@ func TestProfileRejectsUnknownFieldsAndFrozenGateChanges(t *testing.T) {
 
 func readPublishedProfile(t *testing.T) string {
 	t.Helper()
-	content, err := os.ReadFile("../../../docs/mutation-qualification-profile.yaml")
+	content, err := os.ReadFile("testdata/profile.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}

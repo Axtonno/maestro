@@ -68,5 +68,5 @@ rm "$HOME/.local/bin/maestro"
 ```
 
 Per il primo utilizzo proseguire con il [Quick Start](quick-start.md). Per
-identità completa di artifact e procedure di release consultare la
-[Validation Guide](validation.md).
+identità dell’artifact e procedura riproducibile consultare
+[Benchmark](benchmarks.md).

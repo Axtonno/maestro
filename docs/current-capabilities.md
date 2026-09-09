@@ -2,29 +2,21 @@
 
 Aggiornata: 2026-09-09
 
-Questa è la pagina verità della release pubblica. Se un esempio, un documento
-storico o del codice sperimentale sembra promettere di più, prevale il
-perimetro descritto qui.
-
-Maestro v0.5.0 è qualificato sull'asset Linux `amd64`, incluso un ciclo di
-adozione su Linux nativo CPU-only. La prova nativa M38 è stata eseguita su un
-ThinkPad T490s specifico: non equivale a una garanzia universale per ogni PC
-Linux.
+Questa pagina definisce il support claim pubblico. Codice sperimentale,
+esempi e direzioni future non ampliano questo perimetro.
 
 ## Cosa funziona oggi
 
 | Capacità | Perimetro supportato |
 | --- | --- |
 | Direct Chat | Domanda senza file oppure su un solo file scelto esplicitamente |
-| Controlled Mutation | Una sostituzione su un solo intervallo di un file PHP regolare sotto `app/` |
-| Autorizzazione | Preview completa e approvazione allow-once obbligatoria in una TTY reale |
+| Controlled Mutation | Una sostituzione su un intervallo di un file PHP regolare sotto `app/` |
+| Autorizzazione | Preview completa e allow-once obbligatoria in una TTY reale |
 | Integrità | Controllo stale, fingerprint della preview e sostituzione atomica |
-| Provider | Ollama 0.33.1 locale su `127.0.0.1:11434` |
+| Provider | Ollama 0.33.1 locale su loopback |
 | Artifact | `maestro-v0.5.0-linux-amd64.tar.gz` |
 
-Controlled Mutation è supportato soltanto nel
-[perimetro testato](controlled-mutation-support.md). Non individua il target e
-non scrive senza approvazione esplicita dell'utente.
+Controlled Mutation è supportato soltanto nel [perimetro dichiarato](controlled-mutation.md).
 
 ## Modelli qualificati
 
@@ -33,27 +25,12 @@ non scrive senza approvazione esplicita dell'utente.
 | Chat | `qwen3.5:9b` | `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
 | Mutation | `qwen2.5-coder:14b` | `9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849` |
 
-Altri tag, digest o provider non fanno parte del support claim v0.5.0. Maestro
-non scarica i modelli e si arresta se l'identità non coincide.
-
-### Perché oggi servono due modelli?
-
-Il runtime può evolvere verso profili diversi, ma lo schema di prodotto v4
-respinge deliberatamente lo stesso modello per chat e mutation. Il percorso
-raccomandato separa i due compiti perché sono stati qualificati con evidenze
-diverse: `qwen3.5:9b` per Direct Chat e `qwen2.5-coder:14b` per Controlled
-Mutation.
-
-Un solo modello ridurrebbe download, spazio su disco e cambi di profilo e può
-essere più comodo su macchine limitate. Non è tuttavia un profilo supportato
-oggi: potrebbe ridurre qualità o affidabilità in uno dei due compiti e deve
-superare una qualifica dedicata prima di entrare nel prodotto. La
-[Milestone 42](milestone-42-single-model-profile-evaluation-plan.md) definisce
-questa valutazione senza ampliare il claim corrente.
+Altri modelli, digest o provider non fanno parte del support claim v0.5.0. Un
+profilo single-model è in valutazione, ma non è supportato oggi.
 
 ## Hardware consigliato
 
-Come punto di partenza pratico, non come minimo universale qualificato:
+Come punto di partenza pratico, non come minimo universale:
 
 - Linux `amd64` nativo;
 - CPU x86-64 con almeno 4 core / 8 thread;
@@ -61,17 +38,15 @@ Come punto di partenza pratico, non come minimo universale qualificato:
 - circa 20 GiB liberi per archive, modelli e margine operativo;
 - swap disponibile; GPU discreta opzionale.
 
-M38 ha completato i gate su Ubuntu 24.04.4, ThinkPad T490s, Intel i5-8365U,
-16,4 GB di RAM e inferenza CPU-only. L'ambiente WSL2 con RTX 5070 resta il
-riferimento più veloce della qualifica di release. Latenza e memoria cambiano
-sensibilmente con l'hardware.
+La release è stata qualificata anche su Linux nativo CPU-only. Latenza e
+memoria dipendono dall’hardware; vedere [Benchmark](benchmarks.md).
 
 ## Sperimentale, non parte del prodotto v0.5.0
 
-- componenti agent, context e tool presenti nel repository;
-- streaming nei profili storici, disabilitato nel profilo v4 distribuito;
-- profili di packaging diversi da quello mutation-productization;
-- design e milestone future descritti nella roadmap.
+- componenti agent, context e tool presenti nel codice;
+- streaming nei profili storici;
+- integrazione editor;
+- profilo single-model.
 
 La presenza del codice non costituisce una promessa operativa.
 
@@ -81,24 +56,16 @@ La presenza del codice non costituisce una promessa operativa.
 - scelta autonoma di file, righe o azioni;
 - agent autonomi, retrieval multi-file e tool calling come prodotto;
 - Windows nativo, macOS e Linux `arm64`;
-- provider alternativi, endpoint remoti o modelli diversi dai due digest;
+- endpoint remoti o modelli diversi da quelli qualificati;
 - mutation fuori `app/`, su linguaggi non PHP o senza TTY;
 - esecuzione di shell, Git, Docker, Composer o test da parte del modello;
 - sandbox, rollback automatico o garanzia di correttezza semantica.
 
-## Difetto documentale dell'archive v0.5.0
-
-L'archive pubblico, già pubblicato e quindi immutabile, contiene un paragrafo
-legacy con posizionamento schema v3 e non rende abbastanza evidente il nome
-reale del profilo distribuito. Il file operativo corretto è
-`configs/maestro.v0.5.0-candidate.yaml`. Il difetto non interessa binario,
-manifest o configurazione ed è corretto nei sorgenti per le release
-successive; v0.5.0 non viene ripubblicata o sovrascritta.
+Windows e macOS sono [direzioni in valutazione](roadmap.md), non piattaforme
+promesse.
 
 ## Da dove iniziare
 
-Per il branch corrente seguire il [Quick Start](quick-start.md). L'archive
-pubblico v0.5.0 precede il nuovo comando `setup` e conserva le proprie
-[release notes](releases/v0.5.0.md). Per diagnosi usare
-[Troubleshooting](troubleshooting.md); le prove M38/M39, la baseline Git e i
-gate di release sono separati nella [Validation Guide](validation.md).
+Seguire il [Quick Start](quick-start.md). Per l’archive pubblico v0.5.0 usare
+le [note di release](releases/v0.5.0.md); per diagnosi consultare
+[Troubleshooting](troubleshooting.md).

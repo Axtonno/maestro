@@ -162,7 +162,7 @@ func TestBenchMutationValidatesFrozenProfileAndFixture(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	exitCode := run(
-		[]string{"bench", "mutation", "--profile", "../../docs/mutation-qualification-profile.yaml"},
+		[]string{"bench", "mutation", "--profile", "../../internal/benchmark/mutation/testdata/profile.yaml"},
 		&stdout,
 		&stderr,
 	)
@@ -170,7 +170,7 @@ func TestBenchMutationValidatesFrozenProfileAndFixture(t *testing.T) {
 		t.Fatalf("exit=%d stderr=%q", exitCode, stderr.String())
 	}
 	if output := stdout.String(); !strings.Contains(output, "version=1 gates=3 scenarios=15") ||
-		!strings.Contains(output, "linux_amd64/ollama\tibm/granite4.1:8b") {
+		!strings.Contains(output, "linux_amd64/ollama\ttest-model") {
 		t.Fatalf("unexpected mutation validation output: %q", output)
 	}
 }
@@ -182,7 +182,7 @@ func TestBenchMutationGateCRejectsNonInteractiveInputBeforeProviderIO(t *testing
 	dependencies.isTerminal = func(io.Reader) bool { return false }
 	exitCode := runWithIO(
 		[]string{
-			"bench", "mutation", "--profile", "../../docs/mutation-qualification-profile.yaml",
+			"bench", "mutation", "--profile", "../../internal/benchmark/mutation/testdata/profile.yaml",
 			"--mode", "gate-c",
 		},
 		strings.NewReader("o\n"), &stdout, &stderr, dependencies,

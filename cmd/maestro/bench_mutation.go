@@ -35,7 +35,7 @@ func runBenchMutation(
 	flags.SetOutput(stderr)
 	profilePath := flags.String(
 		"profile",
-		"docs/mutation-qualification-profile.yaml",
+		"",
 		"path to the mutation qualification profile",
 	)
 	mode := flags.String("mode", "validate", "execution mode: validate, deterministic, preflight, gate-a, gate-b, or gate-c")
@@ -49,6 +49,10 @@ func runBenchMutation(
 	}
 	if flags.NArg() != 0 {
 		fmt.Fprintln(stderr, "maestro bench mutation does not accept positional arguments")
+		return 2
+	}
+	if strings.TrimSpace(*profilePath) == "" {
+		fmt.Fprintln(stderr, "maestro bench mutation requires --profile")
 		return 2
 	}
 	profile, err := mutation.LoadProfile(*profilePath)

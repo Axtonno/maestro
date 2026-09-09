@@ -119,13 +119,14 @@ limita l'effetto, ma non rende semanticamente giusta una proposta.
 
 Il modello può sbagliare anche con terminale valido. Verificare il file e
 riformulare la domanda chiedendo di separare fatti osservati, inferenze e dati
-non determinabili. M38 documenta un errore su una domanda generale senza file.
+non determinabili. Il benchmark pubblico include un errore osservato su una
+domanda generale senza file.
 
 ## Latenza elevata o memoria insufficiente
 
 I modelli vengono caricati uno per volta e il cambio chat/mutation può includere
 unload e load. Controllare `/api/ps`, memoria e swap del sistema. Sul T490s
-CPU-only M38 ha osservato latenze chat fino a circa 172 secondi; non è uno SLA.
+CPU-only sono state osservate latenze chat fino a circa 172 secondi; non è uno SLA.
 
 Un OOM, restart del provider, modello errato o fallback rende la prova non
 valida. Ridurre il carico, non cambiare silenziosamente modello.
@@ -151,4 +152,4 @@ Non sono risposta parziale.
 | 130 | cancellazione tramite interrupt |
 
 Consultare [Known Issues](known-issues.md), [Security Model](security-model.md)
-e [Compatibility Matrix](compatibility.md).
+e [Piattaforme supportate](supported-platforms.md).

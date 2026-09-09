@@ -1,6 +1,6 @@
 version: 1
-owner: milestone-3-runtime-benchmark
-source_milestone: benchmark-evaluation-layer
+owner: public-runtime-benchmark
+source_milestone: public-benchmark-suite
 report_redaction:
   exclude:
     - prompts

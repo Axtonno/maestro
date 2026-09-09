@@ -13,7 +13,7 @@ import (
 )
 
 func TestRunnerIsFailFastAndReportRoundTrips(t *testing.T) {
-	profile, err := LoadProfile("../../../docs/mutation-qualification-profile.yaml")
+	profile, err := LoadProfile("testdata/profile.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestRunnerIsFailFastAndReportRoundTrips(t *testing.T) {
 }
 
 func TestReportWriterUsesPrivatePermissions(t *testing.T) {
-	profile, err := LoadProfile("../../../docs/mutation-qualification-profile.yaml")
+	profile, err := LoadProfile("testdata/profile.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -104,7 +104,7 @@ distinzione non rende sicuro un provider non attendibile.
 - non inserire credenziali nella configurazione o nelle fixture.
 
 Il contratto sintetico del write-mode è in
-[Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
+[Controlled Mutation: perimetro supportato](controlled-mutation.md).
 
 ## Segnalazione vulnerabilità
 

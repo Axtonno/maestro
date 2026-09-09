@@ -16,7 +16,7 @@ sintetico per ciò che v0.5.0 supporta oggi.
 
 - I modelli sono generativi: temperatura zero riduce il drift ma non garantisce
   correttezza semantica.
-- M38 ha registrato 11/12 richieste corrette. F02 ha trattato erroneamente una
+- Il benchmark pubblico ha registrato 11/12 richieste corrette. Un caso ha trattato erroneamente una
   domanda PHP generale senza file come informazione non determinabile dal
   workspace.
 - Preview e contenimento corretti non dimostrano che la modifica sia quella
@@ -29,9 +29,9 @@ sintetico per ciò che v0.5.0 supporta oggi.
 - Latenza e memoria dipendono da hardware, carico e residenza del modello.
 - I due profili non devono essere residenti insieme: Maestro scarica il modello
   uscente prima di caricare quello richiesto.
-- Sul T490s CPU-only M38 ha osservato chat tra circa 64 e 172 secondi. Non è uno
+- Sul T490s CPU-only sono state osservate chat tra circa 64 e 172 secondi. Non è uno
   SLA né un requisito minimo.
-- M38 ha osservato 323.584 byte di swap aggiuntivo senza OOM o restart. La
+- La prova ha osservato 323.584 byte di swap aggiuntivo senza OOM o restart. La
   qualifica non promette zero swap su ogni macchina.
 
 ## Perimetro del workspace
@@ -66,6 +66,6 @@ sintetico per ciò che v0.5.0 supporta oggi.
   parti restano direzioni architetturali, non capacità di prodotto.
 
 Vedere [Capacità correnti](current-capabilities.md) per il claim autorevole,
-[Compatibility Matrix](compatibility.md) per il dettaglio,
-[Controlled Mutation](controlled-mutation-support.md) per il write-mode e
+[Piattaforme supportate](supported-platforms.md) per il dettaglio,
+[Controlled Mutation](controlled-mutation.md) per il write-mode e
 [Troubleshooting](troubleshooting.md) per le azioni operative.

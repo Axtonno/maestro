@@ -14,7 +14,7 @@ import (
 )
 
 func TestLiveGateExecutorsTraverseDirectReadOnlyAndControlledMutationPaths(t *testing.T) {
-	profile, err := LoadProfile("../../../docs/mutation-qualification-profile.yaml")
+	profile, err := LoadProfile("testdata/profile.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
