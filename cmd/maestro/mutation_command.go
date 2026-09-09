@@ -32,13 +32,38 @@ func runWorkspace(arguments []string, stdin io.Reader, stdout io.Writer, stderr 
 }
 
 func runWorkspaceReplace(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	return runControlledMutation("maestro workspace replace", arguments, false, stdin, stdout, stderr, dependencies)
+}
+
+func runMutate(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
+	preview := false
+	filtered := make([]string, 0, len(arguments))
+	for _, argument := range arguments {
+		if argument == "--preview" {
+			if preview {
+				fmt.Fprintln(stderr, "mutation failed: invalid_request")
+				return 2
+			}
+			preview = true
+			continue
+		}
+		filtered = append(filtered, argument)
+	}
+	return runControlledMutation("maestro mutate", filtered, preview, stdin, stdout, stderr, dependencies)
+}
+
+func runControlledMutation(name string, arguments []string, previewOnly bool, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
 	if duplicateMutationFlag(arguments) {
 		fmt.Fprintln(stderr, "mutation failed: invalid_request")
 		return 2
 	}
-	flags := flag.NewFlagSet("maestro workspace replace", flag.ContinueOnError)
+	flags := flag.NewFlagSet(name, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	usage := func() {
+		if name == "maestro mutate" {
+			fmt.Fprintln(stdout, "usage: maestro mutate [--preview] --file <path> --lines <start:end> [--config path] <instruction>")
+			return
+		}
 		fmt.Fprintln(stdout, "usage: maestro workspace replace --file <path> --lines <start:end> [--config path] <instruction>")
 	}
 	configPath := flags.String("config", "", "path to Maestro configuration")
@@ -52,7 +77,7 @@ func runWorkspaceReplace(arguments []string, stdin io.Reader, stdout io.Writer, 
 		fmt.Fprintln(stderr, "mutation failed: invalid_request")
 		return 2
 	}
-	if dependencies.isTerminal == nil || !dependencies.isTerminal(stdin) {
+	if !previewOnly && (dependencies.isTerminal == nil || !dependencies.isTerminal(stdin)) {
 		fmt.Fprintln(stderr, "mutation failed: tty_required")
 		return 3
 	}
@@ -75,9 +100,26 @@ func runWorkspaceReplace(arguments []string, stdin io.Reader, stdout io.Writer, 
 	}
 	ctx, cancel := commandContext(dependencies)
 	defer cancel()
-	approver := application.NewTerminalApprover(bufio.NewReader(stdin), stderr, true)
+	var approver pkgTool.Approver
+	var previewer *application.PreviewApprover
+	if previewOnly {
+		previewer = application.NewPreviewApprover(stderr)
+		approver = previewer
+	} else {
+		approver = application.NewTerminalApprover(bufio.NewReader(stdin), stderr, true)
+	}
 	result, err := service.Execute(ctx, controlledmutation.Request{File: *logical, StartLine: start, EndLine: end, Instruction: instruction, Approver: approver})
 	if err != nil {
+		if previewOnly && errors.Is(err, controlledmutation.ErrApprovalRejected) && previewer.Previewed() {
+			fmt.Fprintln(stdout, "mode\tcontrolled_mutation")
+			fmt.Fprintln(stdout, "terminal\tpreviewed")
+			fmt.Fprintf(stdout, "model\t%s\n", result.Model)
+			fmt.Fprintf(stdout, "file\t%s\n", *logical)
+			fmt.Fprintf(stdout, "lines\t%d:%d\n", start, end)
+			fmt.Fprintln(stdout, "effect\tunchanged")
+			fmt.Fprintln(stdout, "durable\tfalse")
+			return 0
+		}
 		fmt.Fprintf(stderr, "mutation failed: %s\n", mutationFailureCode(ctx, err))
 		return mutationExitCode(ctx, err)
 	}

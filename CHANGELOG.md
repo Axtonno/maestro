@@ -29,6 +29,18 @@ Report: `docs/reports/milestone-37-final.md`.
 
 ## [Unreleased]
 
+### Onboarding
+
+- aperta M41 con `maestro setup`: configurazione v4 privata e idempotente,
+  verifica Ollama/modelli, consenso prima del pull e rifiuto di digest o
+  workspace inattesi;
+- aggiunto `maestro mutate --preview`, dry-run non interattivo con approver
+  deny-only, diff completo e zero authority di scrittura;
+- ridotti README, installazione e Quick Start al percorso utente; spostati
+  baseline Git, fixture, doctor completo e gate in `docs/validation.md`;
+- l'archive v0.5.0 resta immutabile; packaging e clean install del prossimo
+  artifact sono ancora `not_run`.
+
 ### Prototype
 
 - aperta M40 con un prototipo VS Code dependency-free che inoltra chat sul

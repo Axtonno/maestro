@@ -12,7 +12,7 @@ Il prodotto corrente offre Direct Chat e Controlled Mutation controllata; il
 runtime costituisce la base sulla quale far crescere capacità ulteriori senza
 presentarle come già disponibili.
 
-## Snapshot corrente — 2026-09-08
+## Snapshot corrente — 2026-09-09
 
 - ultima release pubblica: **v0.5.0**, stato
   `v0.5.0_released_and_verified`;
@@ -53,6 +53,10 @@ presentarle come già disponibili.
   VS Code dependency-free implementato come bridge al terminale integrato,
   controlli offline presenti e prova Extension Development Host ancora da
   eseguire;
+- Milestone 41: in corso — `implementation_complete_validation_pending`;
+  onboarding separato dalla qualifica, `maestro setup` e
+  `maestro mutate --preview` implementati e verificati in isolamento; packaging
+  e clean install live del prossimo artifact restano da eseguire;
 - posizionamento pubblico corrente: workstation AI locale con nucleo operativo
   Direct Chat + Controlled Mutation; runtime, agent, retrieval e tool più ampi
   restano distinti come architettura e roadmap;
@@ -111,6 +115,9 @@ Completati:
 * cli.md
 * operational-experience.md
 * installation.md
+* quick-start.md
+* troubleshooting.md
+* validation.md
 * packaging-candidate.md
 * v0.2.0-development-plan.md
 * milestone-10-development-plan.md
@@ -135,6 +142,7 @@ Completati:
 * milestone-27-v0.4.0-release-readiness-publication-plan.md
 * milestone-28-controlled-mutation-recovery-plan.md
 * milestone-29-controlled-mutation-transport-qualification-plan.md
+* milestone-41-installation-onboarding-simplification-plan.md
 * mutation-qualification.md
 * mutation-benchmark.md
 * reports/milestone-11-final.md
@@ -3561,3 +3569,28 @@ Riferimenti:
 - `docs/milestone-40-vscode-controlled-surface-prototype-plan.md`;
 - `docs/milestone-40-vscode-prototype-matrix.yaml`;
 - `docs/reports/milestone-40-offline-prototype.md`.
+
+---
+
+# Apertura Milestone 41 — Installation & Onboarding Simplification
+
+Stato: `implementation_complete_validation_pending`. Il percorso utente viene
+separato da diagnosi e qualification: README, installazione e Quick Start non
+richiedono Git o materiale di benchmark; baseline, digest, replay e gate sono
+concentrati in `docs/validation.md`.
+
+La CLI aggiunge `maestro setup`, che crea un profilo v4 `0600`, verifica
+Ollama e i digest, chiede consenso prima di scaricare modelli e non sovrascrive
+configurazioni esistenti. `maestro mutate --preview` usa un approver deny-only,
+funziona senza TTY e termina `previewed` con zero scritture. L'alias storico
+`workspace replace` resta invariato.
+
+Test, race detector e vet sono verdi. Non sono ancora stati eseguiti il doppio
+packaging riproducibile e il clean install live del nuovo artifact; la release
+successiva e un eventuale installer `curl | sh` non sono autorizzati.
+
+Riferimenti:
+
+- `docs/milestone-41-installation-onboarding-simplification-plan.md`;
+- `docs/milestone-41-installation-onboarding-matrix.yaml`;
+- `docs/validation.md`.

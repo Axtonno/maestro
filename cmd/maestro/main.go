@@ -66,6 +66,8 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 		return runWithIO([]string{arguments[1], "--help"}, stdin, stdout, stderr, dependencies)
 	}
 	switch arguments[0] {
+	case "setup":
+		return runSetup(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "doctor":
 		return runDoctor(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "models":
@@ -78,6 +80,8 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 		return runChat(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "workspace":
 		return runWorkspace(arguments[1:], stdin, stdout, stderr, dependencies)
+	case "mutate":
+		return runMutate(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "run":
 		return runAgent("maestro run", arguments[1:], stdin, stdout, stderr, dependencies)
 	case "version":
@@ -158,11 +162,13 @@ func printRootUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "usage: maestro <command>")
 	fmt.Fprintln(writer)
 	fmt.Fprintln(writer, "commands:")
+	fmt.Fprintln(writer, "  setup    configure Maestro for the current workspace")
+	fmt.Fprintln(writer, "  chat     answer a question, optionally from one selected file")
+	fmt.Fprintln(writer, "  mutate   preview or run an explicit controlled mutation")
 	fmt.Fprintln(writer, "  doctor   validate configuration and operational prerequisites")
 	fmt.Fprintln(writer, "  models   list models from the explicitly configured provider")
 	fmt.Fprintln(writer, "  agents   list registered agents and capabilities")
 	fmt.Fprintln(writer, "  agent    execute the configured verified agent")
-	fmt.Fprintln(writer, "  chat     answer from one explicitly selected workspace file")
 	fmt.Fprintln(writer, "  workspace run an explicit host-bound workspace operation")
 	fmt.Fprintln(writer, "  run      deprecated alias for agent")
 	fmt.Fprintln(writer, "  version  print build version and commit")

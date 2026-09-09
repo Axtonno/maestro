@@ -4,7 +4,7 @@ Versione: 0.2.0
 
 Stato: Living Document
 
-Ultimo aggiornamento: 2026-08-21
+Ultimo aggiornamento: 2026-09-09
 
 Autori:
 - Antonio Cafeo
@@ -1673,6 +1673,26 @@ package o estensione del claim v0.5.0 è autorizzata.
 Piano: `milestone-40-vscode-controlled-surface-prototype-plan.md`.
 Matrice: `milestone-40-vscode-prototype-matrix.yaml`.
 Checkpoint: `reports/milestone-40-offline-prototype.md`.
+
+---
+
+# Milestone 41 — Installation & Onboarding Simplification
+
+Stato: In corso — `implementation_complete_validation_pending`.
+
+Il primo avvio viene ridotto a installazione, `maestro setup`, Direct Chat e
+`maestro mutate --preview`. Setup crea una configurazione privata e
+idempotente, verifica Ollama e i digest e richiede consenso prima di acquisire
+modelli. La preview non richiede TTY e usa un approver deny-only, quindi non può
+scrivere.
+
+Il materiale di qualificazione è spostato nella Validation Guide; `doctor`
+resta per troubleshooting, CI e supporto. L'archive pubblico v0.5.0 non viene
+modificato. Packaging riproducibile e clean install live del prossimo artifact
+restano i gate di chiusura.
+
+Piano: `milestone-41-installation-onboarding-simplification-plan.md`.
+Matrice: `milestone-41-installation-onboarding-matrix.yaml`.
 
 ---
 

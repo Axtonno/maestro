@@ -1,7 +1,25 @@
-# Maestro v0.5.0 Troubleshooting
+# Maestro Troubleshooting
 
-Prima della diagnosi verificare che piattaforma, provider e modelli rientrino
-nella [pagina delle capacità correnti](current-capabilities.md).
+Questa pagina entra in gioco quando installazione, `setup`, chat o mutation non
+completano il percorso atteso. `doctor` è uno strumento di diagnosi e supporto,
+non un prerequisito del primo utilizzo.
+
+## `setup` non completa
+
+Controllare che Ollama sia avviato su `127.0.0.1:11434`. Se i modelli mancano,
+rilanciare il setup in una TTY e confermare il download, oppure autorizzarlo in
+modo esplicito:
+
+```sh
+maestro setup --pull
+```
+
+Una configurazione esistente non viene sovrascritta. Correggerla o indicare un
+nuovo percorso con `--config`; un modello con digest diverso non viene
+sostituito automaticamente.
+
+Prima della diagnosi avanzata verificare che piattaforma, provider e modelli
+rientrino nella [pagina delle capacità correnti](current-capabilities.md).
 
 ## Il checksum fallisce
 

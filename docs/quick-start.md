@@ -1,129 +1,85 @@
 # Maestro @MAESTRO_VERSION@ Quick Start
 
-Questo percorso verifica la release Linux `amd64` sulla fixture Laravel
-inclusa, senza checkout del repository.
+Questo è il percorso per iniziare a usare Maestro in un progetto reale. Non è
+una procedura di qualificazione della release e non richiede Git.
 
-Per una prova essenziale vedere [Installa e prova](install-and-try.md). Questa
-pagina aggiunge controlli e risultati attesi.
-
-La [pagina delle capacità correnti](current-capabilities.md) è il riferimento
-autorevole per ciò che è supportato oggi e ciò che resta futuro.
+> Nota di disponibilità: i comandi `setup` e `mutate` sono presenti nel branch
+> principale dopo v0.5.0. L'archive pubblico v0.5.0 resta immutabile; la nuova
+> esperienza diventerà pubblica con il primo artifact che supererà il gate M41.
 
 ## Prerequisiti
 
-- Ollama 0.33.1 su `http://127.0.0.1:11434`;
-- `qwen3.5:9b`, digest
-  `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`;
-- `qwen2.5-coder:14b`, digest
-  `9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849`;
-- memoria sufficiente a caricare un modello per volta;
-- una TTY reale per il write-mode.
+- Linux `amd64`;
+- [Ollama](https://ollama.com/download) installato e avviato;
+- spazio sufficiente per i due modelli consigliati;
+- un progetto locale, con Controlled Mutation oggi limitata a PHP sotto
+  `app/`.
 
-Maestro non avvia Ollama, non scarica modelli e non sostituisce un digest.
-Se un modello manca, eseguire `ollama pull <nome>` e poi confrontare il digest
-di `ollama list` con quello sopra: un tag risolto a un digest diverso non è
-qualificato.
+## 1. Installa Maestro
 
-## 1. Verifica ed estrazione
+Scarica e installa il binario seguendo la guida di
+[installazione](installation.md), quindi entra nel progetto:
 
 ```sh
-version=@MAESTRO_VERSION@
-artifact="maestro-${version}-linux-amd64"
-base_url="https://github.com/Axtonno/maestro/releases/download/${version}"
-curl -fLO "${base_url}/${artifact}.tar.gz"
-curl -fLO "${base_url}/${artifact}.tar.gz.sha256"
-sha256sum -c "${artifact}.tar.gz.sha256"
-tar -xzf "${artifact}.tar.gz"
-cd "${artifact}"
-./maestro version --diagnostic
+cd /percorso/del/progetto
 ```
 
-Archive e checksum devono provenire dalla stessa GitHub Release. Nome,
-versione, commit, stato `release` e manifest devono coincidere.
-
-## 2. Baseline Git della fixture
+## 2. Configura
 
 ```sh
-git -C fixtures/laravel-v1 init
-git -C fixtures/laravel-v1 add .
-git -C fixtures/laravel-v1 -c user.name="Maestro Trial" -c user.email="trial@localhost" commit -m "Trial baseline"
-git -C fixtures/laravel-v1 status --short
+maestro setup
 ```
 
-Lo stato iniziale deve essere pulito.
+`setup`:
 
-## 3. Diagnostica completa
+- crea `~/.config/maestro/config.yaml` con permessi `0600`;
+- usa la directory corrente come workspace;
+- verifica che Ollama risponda;
+- verifica nome e digest dei modelli chat e mutation;
+- chiede conferma prima di scaricare un modello mancante;
+- non sostituisce una configurazione esistente o un digest diverso.
+
+In un terminale non interattivo, un modello mancante produce un'indicazione
+esplicita. `maestro setup --pull` autorizza il download senza prompt.
+
+## 3. Chat
 
 ```sh
-./maestro doctor --mode all --config ./configs/maestro.v0.5.0-candidate.yaml
+maestro chat "Come puoi aiutarmi?"
 ```
 
-Il profilo v4 punta alla fixture inclusa. I 14 check chat e mutation devono
-essere `pass`. Doctor non esegue completion e non modifica il workspace.
-
-## 4. Direct Chat con file
+Senza `--file`, Maestro non cerca automaticamente nei file del progetto. Per
+fare una domanda su un file specifico:
 
 ```sh
-./maestro chat --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php "Quali campi valida store e quale risposta HTTP restituisce?"
+maestro chat --file app/Services/Example.php "Riassumi responsabilità e dipendenze"
 ```
 
-Il terminale deve essere `completed`, il modello `qwen3.5:9b` e il finish
-reason `stop`. La risposta deve ricavare dal solo file `customer_id`,
-`items` e lo status 201.
+## Prima Controlled Mutation
 
-Senza `--file`, Maestro non cerca contesto nel progetto. Una domanda che
-dipende dal workspace deve quindi essere dichiarata non determinabile.
-
-## 5. Controlled Mutation con deny
+Scegli un file PHP sotto `app/` e un intervallo di righe completo:
 
 ```sh
-./maestro workspace replace --config ./configs/maestro.v0.5.0-candidate.yaml --file app/Http/Controllers/OrderController.php --lines 22:22 "Cambia soltanto lo status HTTP da 201 a 202, preservando il resto della riga."
+maestro mutate --preview \
+  --file app/Services/Example.php \
+  --lines 10:12 \
+  "Semplifica questo blocco senza cambiarne il comportamento"
 ```
 
-Il modello deve essere `qwen2.5-coder:14b`. Controllare preview, digest e
-fingerprint, poi digitare `d`: il terminale atteso è
-`approval_rejected`, exit code 3, con file invariato.
-
-## 6. Controlled Mutation con allow-once
-
-Ripetere il comando e digitare `o` solo se la preview sostituisce esattamente
-201 con 202. Il terminale atteso è `applied`, `effect=applied` e
-`durable=true`. Verificare la riga risultante:
+La preview non richiede TTY, non chiede approvazione e non scrive. Se il diff
+è corretto, ripeti senza `--preview`:
 
 ```sh
-sed -n '22p' app/Http/Controllers/OrderController.php
+maestro mutate \
+  --file app/Services/Example.php \
+  --lines 10:12 \
+  "Semplifica questo blocco senza cambiarne il comportamento"
 ```
 
-Verificare inoltre il confine dell'effetto:
+L'apply richiede una TTY reale e una conferma allow-once sulla preview esatta.
 
-```sh
-git -C fixtures/laravel-v1 diff -- app/Http/Controllers/OrderController.php
-git -C fixtures/laravel-v1 status --short
-```
+## Se qualcosa non va
 
-Il diff deve contenere esclusivamente `201` → `202` e lo stato deve elencare
-un solo file. La fixture può essere reinizializzata riestraendo l'archive in
-una nuova directory.
-
-## 7. Configurare un progetto reale
-
-```sh
-install -d "$HOME/.config/maestro"
-install -m 0600 ./configs/maestro.v0.5.0-candidate.yaml "$HOME/.config/maestro/v0.5.0.yaml"
-```
-
-Cambiare soltanto `workspace.root`, quindi rieseguire doctor. Un root relativo
-è risolto rispetto alla directory del file YAML.
-
-Direct Chat legge zero o un file esplicito. Controlled Mutation accetta un
-singolo file PHP sotto `app/` e un solo intervallo inclusivo. Per il contratto
-completo vedere [Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
-
-## Arresto e problemi
-
-SIGINT/SIGTERM producono exit code 130; una deadline provider usa exit code 4.
-Un deny o una sorgente stale usa exit code 3. I failure non avviano un secondo
-modello o un altro percorso.
-
-Consultare [Troubleshooting](troubleshooting.md),
-[Security Model](security-model.md) e [Compatibility Matrix](compatibility.md).
+Esegui `maestro doctor --mode all` e consulta
+[Troubleshooting](troubleshooting.md). I controlli avanzati, i digest di
+release e le prove riproducibili sono nella [Validation Guide](validation.md).

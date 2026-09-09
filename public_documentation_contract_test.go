@@ -30,11 +30,10 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 
 	assertContains("README.md",
 		"workstation AI locale",
-		"## Cosa fa oggi",
-		"## Cosa non fa oggi",
-		"## Oggi e dopo",
-		"docs/install-and-try.md",
-		"docs/controlled-mutation-support.md",
+		"maestro setup",
+		"maestro mutate --preview",
+		"docs/quick-start.md",
+		"docs/validation.md",
 		"docs/current-capabilities.md",
 	)
 	assertContains("docs/current-capabilities.md",
@@ -47,10 +46,15 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 		"qwen2.5-coder:14b",
 	)
 	assertContains("docs/install-and-try.md",
+		"Quick Start",
+		"maestro setup",
+		"maestro mutate --preview",
+		"Validation Guide",
+	)
+	assertContains("docs/validation.md",
+		"Baseline Git della fixture",
 		"doctor --mode all",
-		"workspace replace",
 		"approval_rejected",
-		"git -C fixtures/laravel-v1 init",
 		"git -C fixtures/laravel-v1 diff",
 	)
 	assertContains("docs/controlled-mutation-support.md",
@@ -79,6 +83,7 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 		"docs/quick-start.md",
 		"docs/security-model.md",
 		"docs/troubleshooting.md",
+		"docs/validation.md",
 	}
 	for _, path := range currentDocs {
 		content := read(path)
@@ -100,6 +105,7 @@ func TestPublicDocumentationDescribesV050OperationalScope(t *testing.T) {
 	} {
 		assertContains(script,
 			"docs/install-and-try.md",
+			"docs/validation.md",
 			"docs/controlled-mutation-support.md",
 			"docs/current-capabilities.md",
 			"docs/v0.5.0-public-baseline-freeze.yaml",
@@ -130,6 +136,7 @@ func TestPublicDocumentationRelativeLinksResolve(t *testing.T) {
 		"docs/releases/v0.5.0.md",
 		"docs/milestone-39-documentation-onboarding-public-trial-readiness-plan.md",
 		"docs/reports/milestone-39-final.md",
+		"docs/milestone-41-installation-onboarding-simplification-plan.md",
 	}
 	linkPattern := regexp.MustCompile(`\[[^]]+\]\(([^)]+)\)`)
 	for _, path := range paths {

@@ -82,8 +82,8 @@ successive; v0.5.0 non viene ripubblicata o sovrascritta.
 
 ## Da dove iniziare
 
-Seguire [Installa e prova](install-and-try.md), quindi consultare la
-[Compatibility Matrix](compatibility.md), il
-[Security Model](security-model.md) e le [evidenze M38](reports/milestone-38-final.md).
-Le capacità future sono separate nella [Roadmap](roadmap.md).
-
+Per il branch corrente seguire il [Quick Start](quick-start.md). L'archive
+pubblico v0.5.0 precede il nuovo comando `setup` e conserva le proprie
+[release notes](releases/v0.5.0.md). Per diagnosi usare
+[Troubleshooting](troubleshooting.md); le prove M38/M39, la baseline Git e i
+gate di release sono separati nella [Validation Guide](validation.md).

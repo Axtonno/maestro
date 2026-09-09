@@ -24,6 +24,16 @@ type TerminalApprover struct {
 	mu          sync.Mutex
 }
 
+// PreviewApprover renders the exact prepared mutation and always denies it.
+// It is the non-interactive adapter used by dry-run commands: reaching this
+// approver proves that a preview exists, while its result makes writes
+// impossible even if a caller accidentally continues the normal flow.
+type PreviewApprover struct {
+	output    io.Writer
+	mu        sync.Mutex
+	previewed bool
+}
+
 func NewTerminalApprover(input io.Reader, output io.Writer, interactive bool) *TerminalApprover {
 	if input == nil {
 		input = strings.NewReader("")
@@ -35,6 +45,43 @@ func NewTerminalApprover(input io.Reader, output io.Writer, interactive bool) *T
 		input: bufio.NewReaderSize(input, maxApprovalInputBytes), output: output,
 		interactive: interactive,
 	}
+}
+
+func NewPreviewApprover(output io.Writer) *PreviewApprover {
+	if output == nil {
+		output = io.Discard
+	}
+	return &PreviewApprover{output: output}
+}
+
+func (approver *PreviewApprover) Approve(ctx context.Context, request pkgTool.PermissionRequest) (pkgTool.Approval, error) {
+	if approver == nil || ctx == nil || request.Validate() != nil || !requestHasMutation(request) {
+		return pkgTool.Approval{}, pkgTool.ErrInvalidPermissionRequest
+	}
+	if err := ctx.Err(); err != nil {
+		return pkgTool.Approval{}, err
+	}
+	prepared, ok := request.Prepared()
+	if !ok {
+		return pkgTool.Approval{}, pkgTool.ErrInvalidPermissionRequest
+	}
+	if _, ok := prepared.Preview(); !ok {
+		return pkgTool.Approval{}, pkgTool.ErrInvalidPermissionRequest
+	}
+	approver.mu.Lock()
+	defer approver.mu.Unlock()
+	renderPermissionRequest(approver.output, request, false)
+	approver.previewed = true
+	return denyApproval("preview_only")
+}
+
+func (approver *PreviewApprover) Previewed() bool {
+	if approver == nil {
+		return false
+	}
+	approver.mu.Lock()
+	defer approver.mu.Unlock()
+	return approver.previewed
 }
 
 func (approver *TerminalApprover) Approve(ctx context.Context, request pkgTool.PermissionRequest) (pkgTool.Approval, error) {
@@ -60,7 +107,7 @@ func (approver *TerminalApprover) Approve(ctx context.Context, request pkgTool.P
 		}
 	}
 
-	approver.render(request)
+	renderPermissionRequest(approver.output, request, true)
 	line, err := approver.readLine(ctx)
 	if err != nil {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
@@ -83,12 +130,16 @@ func (approver *TerminalApprover) Approve(ctx context.Context, request pkgTool.P
 	}
 }
 
-func (approver *TerminalApprover) render(request pkgTool.PermissionRequest) {
+func renderPermissionRequest(output io.Writer, request pkgTool.PermissionRequest, prompt bool) {
 	safeWrite := func(format string, values ...any) {
 		defer func() { _ = recover() }()
-		_, _ = fmt.Fprintf(approver.output, format, values...)
+		_, _ = fmt.Fprintf(output, format, values...)
 	}
-	safeWrite("approval required\n")
+	if prompt {
+		safeWrite("approval required\n")
+	} else {
+		safeWrite("preview only (no changes will be written)\n")
+	}
 	safeWrite("  subject: %s\n", request.Subject())
 	if target, ok := request.ModelTarget(); ok {
 		safeWrite("  model: %s/%s\n", target.Provider(), target.Model())
@@ -120,6 +171,9 @@ func (approver *TerminalApprover) render(request pkgTool.PermissionRequest) {
 		} else {
 			safeWrite("  action %d: %s resource=%s\n", index+1, action.Effect(), action.Resource())
 		}
+	}
+	if !prompt {
+		return
 	}
 	if requestHasMutation(request) {
 		safeWrite("allow this exact patch? [d]eny/[o]nce (default deny): ")

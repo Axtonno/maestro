@@ -1,10 +1,18 @@
-# Maestro v0.5.0 Configuration
+# Maestro Configuration
 
 Versione schema pubblica corrente: 4
 
 Il profilo v4 separa Direct Chat e Controlled Mutation. Il loader è strict:
 campi sconosciuti o duplicati, documenti multipli, anchor, alias, trailing
 data e fallback impliciti sono rifiutati.
+
+Per il primo utilizzo non è necessario scrivere questo YAML a mano:
+
+```sh
+maestro setup
+```
+
+Il riferimento seguente serve per personalizzazione, supporto e automazione.
 
 ## Profilo distribuito
 
@@ -50,11 +58,10 @@ controlled_mutation:
   max_output_bytes: 1048576
 ```
 
-Nell'archive il file si chiama
-`configs/maestro.v0.5.0-candidate.yaml`: il nome è conservato per
-compatibilità con il candidate qualificato. Il manifest e
-`version --diagnostic` distinguono la release tramite `status=release`.
-La copia distribuita usa la fixture inclusa come root relativa.
+Nell'archive v0.5.0 il profilo storico si chiama
+`configs/maestro.v0.5.0-candidate.yaml`. Il nome è conservato per compatibilità
+con il candidate qualificato; il manifest e `version --diagnostic`
+distinguono la release tramite `status=release`.
 
 ## Risoluzione del file
 

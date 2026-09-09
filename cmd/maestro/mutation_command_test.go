@@ -105,6 +105,43 @@ func TestWorkspaceReplaceAllowDenyStaleAndAbstain(t *testing.T) {
 	}
 }
 
+func TestMutatePreviewRendersExactDiffWithoutTTYOrWrite(t *testing.T) {
+	config, file := newCLIV4Config(t)
+	provider := newCLIMutationProvider(`{"decision":"propose","new_text":"$workers = 8;"}`)
+	dependencies := cliTestDependencies(provider)
+	dependencies.isTerminal = func(io.Reader) bool { return false }
+	var stdout, stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"mutate", "--preview", "--config", config, "--file", "app/Worker.php", "--lines", "2:2", "set workers to 8"},
+		strings.NewReader(""), &stdout, &stderr, dependencies,
+	)
+	if code != 0 || !strings.Contains(stdout.String(), "terminal\tpreviewed") ||
+		!strings.Contains(stdout.String(), "effect\tunchanged") ||
+		!strings.Contains(stderr.String(), "preview only (no changes will be written)") ||
+		!strings.Contains(stderr.String(), "-$workers = 4;") ||
+		!strings.Contains(stderr.String(), "+$workers = 8;") ||
+		strings.Contains(stderr.String(), "allow this exact patch?") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	assertFile(t, file, "<?php\n$workers = 4;\nreturn $workers;\n")
+}
+
+func TestMutateWithoutPreviewPreservesInteractiveApproval(t *testing.T) {
+	config, file := newCLIV4Config(t)
+	provider := newCLIMutationProvider(`{"decision":"propose","new_text":"$workers = 8;"}`)
+	dependencies := cliTestDependencies(provider)
+	dependencies.isTerminal = func(io.Reader) bool { return true }
+	var stdout, stderr bytes.Buffer
+	code := runWithIO(
+		[]string{"mutate", "--config", config, "--file", "app/Worker.php", "--lines", "2:2", "set workers to 8"},
+		strings.NewReader("o\n"), &stdout, &stderr, dependencies,
+	)
+	if code != 0 || !strings.Contains(stdout.String(), "terminal\tapplied") || !strings.Contains(stderr.String(), "allow this exact patch?") {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	assertFile(t, file, "<?php\n$workers = 8;\nreturn $workers;\n")
+}
+
 func TestMutationDoctorChecksSeparatedIdentityAndTTYWithoutCompletion(t *testing.T) {
 	config, _ := newCLIV4Config(t)
 	provider := newCLIMutationProvider(`{"decision":"abstain"}`)

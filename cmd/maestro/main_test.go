@@ -958,6 +958,7 @@ type cliProvider struct {
 	completeDelay  time.Duration
 	inspectErr     error
 	completeErr    error
+	discoverErr    error
 	discovered     []pkgProvider.ModelInfo
 	unloaded       []string
 }
@@ -986,6 +987,9 @@ func (provider *cliProvider) Complete(_ context.Context, request pkgProvider.Com
 }
 
 func (provider *cliProvider) DiscoverModels(context.Context) ([]pkgProvider.ModelInfo, error) {
+	if provider.discoverErr != nil {
+		return nil, provider.discoverErr
+	}
 	if provider.discovered != nil {
 		return append([]pkgProvider.ModelInfo(nil), provider.discovered...), nil
 	}

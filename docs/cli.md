@@ -1,14 +1,19 @@
-# Maestro v0.5.0 CLI
+# Maestro CLI
 
-Stato: superficie operativa pubblica; interfacce versionate nella serie 0.x
+Stato: superficie corrente nel branch principale; interfacce versionate nella
+serie 0.x
 
-La v0.5.0 espone Direct Chat read-only e Controlled Mutation opt-in come
-percorsi separati.
+L'archive pubblico v0.5.0 precede `setup` e l'alias `mutate`; resta immutabile.
+Questi comandi entreranno nel support claim con il primo artifact successivo
+che supera i gate della Milestone 41.
 
 ## Superficie supportata
 
 ```text
+maestro setup [--config path] [--workspace path] [--pull]
 maestro chat
+maestro mutate --preview --file <path> --lines <start:end> [--config path] <istruzione>
+maestro mutate --file <path> --lines <start:end> [--config path] <istruzione>
 maestro doctor --mode chat
 maestro workspace replace --file <path> --lines <start:end> [--config path] <istruzione>
 maestro doctor --mode mutation [--config path]
@@ -24,6 +29,23 @@ sono fallback di Direct Chat.
 `direct_chat` e
 `controlled_mutation` distinti. Non ereditano il modello Direct Chat come
 fallback e non abilitano mutation se il profilo dedicato manca.
+
+## `setup`
+
+```text
+maestro setup [--config path] [--workspace path] [--pull]
+```
+
+Crea un profilo v4 nella posizione standard
+`~/.config/maestro/config.yaml`, con permessi `0600`, usando la directory
+corrente come workspace. `--config` e `--workspace` cambiano esplicitamente i
+due percorsi.
+
+Il comando è idempotente: carica una configurazione già valida e non la
+sovrascrive. Verifica che Ollama risponda e che i due modelli abbiano identità
+e digest qualificati. In TTY chiede conferma prima dei download mancanti;
+`--pull` li autorizza senza prompt, utile in automazione. Un digest diverso
+fallisce chiuso e non viene sostituito.
 
 ## `chat`
 
@@ -129,6 +151,24 @@ astensione, deny o sorgente cambiata dopo la preview.
 
 Il contratto completo e i casi fuori perimetro sono in
 [Controlled Mutation: perimetro supportato](controlled-mutation-support.md).
+
+## `mutate`
+
+`maestro mutate` è l'alias orientato all'utente di `workspace replace` e
+mantiene gli stessi vincoli di file, righe, modello e configurazione.
+
+Con `--preview`, Maestro esegue generazione e validazione host-bound, stampa il
+diff completo e termina con:
+
+```text
+terminal	previewed
+effect	unchanged
+durable	false
+```
+
+Il dry-run non richiede una TTY, non mostra un prompt di approval e usa un
+approver interno che può soltanto negare: nessun ramo di scrittura è
+raggiungibile. Senza `--preview`, restano obbligatori TTY e allow-once.
 
 ### Output Controlled Mutation
 
