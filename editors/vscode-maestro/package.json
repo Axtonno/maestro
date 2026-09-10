@@ -7,6 +7,7 @@
   "publisher": "maestro-local",
   "license": "Apache-2.0",
   "engines": {
+    "node": ">=22.12.0",
     "vscode": "^1.85.0"
   },
   "categories": [
@@ -89,6 +90,13 @@
     }
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "npm run test:unit",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:unit": "node --test test/*.test.js",
+    "test:integration": "node test/run-integration.js"
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "3.1.0",
+    "mocha": "12.0.0"
   }
 }

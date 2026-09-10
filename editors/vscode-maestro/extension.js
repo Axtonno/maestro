@@ -46,15 +46,17 @@ function launch(folder, settings, command) {
   terminal.sendText(command, true);
 }
 
-async function askActiveFile() {
+async function askActiveFile(providedQuestion) {
   requireLinux();
   const target = activeWorkspaceEditor();
-  const question = await vscode.window.showInputBox({
-    title: 'Maestro: Ask About Active File',
-    prompt: `Question for ${target.logicalPath}`,
-    ignoreFocusOut: true,
-    validateInput: value => value.trim() === '' ? 'Enter a question.' : undefined
-  });
+  const question = typeof providedQuestion === 'string'
+    ? providedQuestion
+    : await vscode.window.showInputBox({
+      title: 'Maestro: Ask About Active File',
+      prompt: `Question for ${target.logicalPath}`,
+      ignoreFocusOut: true,
+      validateInput: value => value.trim() === '' ? 'Enter a question.' : undefined
+    });
   if (question === undefined) {
     return;
   }
@@ -62,7 +64,7 @@ async function askActiveFile() {
   launch(target.folder, settings, commands.buildChatCommand(settings, target.logicalPath, question));
 }
 
-async function replaceSelection() {
+async function replaceSelection(providedInstruction) {
   requireLinux();
   const target = activeWorkspaceEditor({ mutation: true });
   if (target.editor.selections.length !== 1) {
@@ -70,13 +72,15 @@ async function replaceSelection() {
   }
   requireWholeLineSelection(target.editor);
   const lines = commands.inclusiveSelectedLines(target.editor.selection);
-  const instruction = await vscode.window.showInputBox({
-    title: 'Maestro: Replace Selected Lines',
-    prompt: `Instruction for ${target.logicalPath}:${lines}`,
-    placeHolder: 'Describe only the replacement for the selected lines.',
-    ignoreFocusOut: true,
-    validateInput: value => value.trim() === '' ? 'Enter a mutation instruction.' : undefined
-  });
+  const instruction = typeof providedInstruction === 'string'
+    ? providedInstruction
+    : await vscode.window.showInputBox({
+      title: 'Maestro: Replace Selected Lines',
+      prompt: `Instruction for ${target.logicalPath}:${lines}`,
+      placeHolder: 'Describe only the replacement for the selected lines.',
+      ignoreFocusOut: true,
+      validateInput: value => value.trim() === '' ? 'Enter a mutation instruction.' : undefined
+    });
   if (instruction === undefined) {
     return;
   }
@@ -126,9 +130,9 @@ function requireWorkspaceFolder() {
 }
 
 function guarded(handler) {
-  return async () => {
+  return async (...args) => {
     try {
-      await handler();
+      await handler(...args);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unexpected prototype failure';
       vscode.window.showErrorMessage(`Maestro: ${message}`);

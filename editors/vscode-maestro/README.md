@@ -30,11 +30,26 @@ L'estensione non invia `y`, non applica patch e non offre approval automatica.
    `maestro.configPath`.
 5. Eseguire prima `Maestro: Show Binary Identity` e `Maestro: Run Doctor`.
 
-Per i test puri del compilatore dei comandi serve Node.js:
+Per le unit del compilatore dei comandi serve Node.js `22.12.0` o successivo:
 
 ```sh
-npm test
+npm run test:unit
 ```
+
+`npm test` mantiene lo stesso gate locale e non richiede download o GUI.
+
+La suite d'integrazione richiede inoltre il percorso di un eseguibile VS Code
+Linux non già in uso:
+
+```sh
+MAESTRO_VSCODE_EXECUTABLE=/percorso/VSCode-linux-x64/code \
+  npm run test:integration
+```
+
+Con lo stesso prerequisito, `npm run test:all` esegue entrambi i gate.
+
+La qualifica della Milestone 40 e gli input congelati sono registrati in
+[`VALIDATION.md`](VALIDATION.md).
 
 ## Vincoli intenzionali
 
