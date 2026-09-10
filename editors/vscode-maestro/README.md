@@ -48,9 +48,6 @@ MAESTRO_VSCODE_EXECUTABLE=/percorso/VSCode-linux-x64/code \
 
 Con lo stesso prerequisito, `npm run test:all` esegue entrambi i gate.
 
-La qualifica della Milestone 40 e gli input congelati sono registrati in
-[`VALIDATION.md`](VALIDATION.md).
-
 ## Vincoli intenzionali
 
 - extension host Linux, incluso Remote WSL;
