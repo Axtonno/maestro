@@ -18,7 +18,7 @@ type v4Provider struct {
 func (provider *v4Provider) ID() pkgProvider.ID { return "ollama" }
 func (provider *v4Provider) Complete(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
 	provider.requests = append(provider.requests, request)
-	return pkgProvider.CompletionResponse{Model: productconfig.QualifiedDirectChatModel, Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Observed facts\nReady\n\nPossible inferences\nNone\n\nInformation not determinable\nNone"}, FinishReason: pkgProvider.FinishReasonStop}, nil
+	return pkgProvider.CompletionResponse{Model: request.Model, Message: pkgProvider.Message{Role: pkgProvider.RoleAssistant, Content: "Observed facts\nReady\n\nPossible inferences\nNone\n\nInformation not determinable\nNone"}, FinishReason: pkgProvider.FinishReasonStop}, nil
 }
 func (provider *v4Provider) DiscoverModels(context.Context) ([]pkgProvider.ModelInfo, error) {
 	return append([]pkgProvider.ModelInfo(nil), provider.models...), nil

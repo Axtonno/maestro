@@ -78,7 +78,7 @@ func TestSetupCreatesPrivateIdempotentConfiguration(t *testing.T) {
 	}
 
 	config, err := productconfig.LoadMutation(configPath)
-	if err != nil || config.Workspace.Root != workspace {
+	if err != nil || config.Workspace.Root != workspace || config.ProductProfile() != productconfig.ProductProfileRecommended {
 		t.Fatalf("config=%#v err=%v", config, err)
 	}
 	info, err := os.Stat(configPath)

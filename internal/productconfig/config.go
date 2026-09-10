@@ -33,10 +33,15 @@ const (
 	QualifiedDirectChatDigest = "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7"
 	QualifiedMutationModel    = "qwen2.5-coder:14b"
 	QualifiedMutationDigest   = "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849"
-	MutationPromptID          = "mutation-host-bound-model-selection-v1"
-	MutationPromptSHA256      = "594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
-	MutationSchemaID          = "host-bound-mutation-decision-v1"
-	MutationSchemaSHA256      = "bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
+	// SingleModelEvaluationModel is the frozen M42 candidate. It aliases the
+	// already-qualified mutation identity so the experiment changes only the
+	// Direct Chat model and does not weaken the mutation contract.
+	SingleModelEvaluationModel  = QualifiedMutationModel
+	SingleModelEvaluationDigest = QualifiedMutationDigest
+	MutationPromptID            = "mutation-host-bound-model-selection-v1"
+	MutationPromptSHA256        = "594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
+	MutationSchemaID            = "host-bound-mutation-decision-v1"
+	MutationSchemaSHA256        = "bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
 )
 
 var (
@@ -77,6 +82,14 @@ type Config struct {
 
 	path string
 }
+
+type ProductProfile string
+
+const (
+	ProductProfileUnknown               ProductProfile = ""
+	ProductProfileRecommended           ProductProfile = "recommended"
+	ProductProfileSingleModelEvaluation ProductProfile = "single_model_evaluation"
+)
 
 type ProviderConfig struct {
 	ID        string   `yaml:"id"`
@@ -188,6 +201,27 @@ type ContextConfig struct {
 }
 
 func (config Config) Path() string { return config.path }
+
+// ProductProfile identifies only exact, frozen v4 model combinations. The
+// single-model value describes an evaluation candidate, not a supported setup
+// profile; whether it may execute is controlled by the M42 evaluation build.
+func (config Config) ProductProfile() ProductProfile {
+	if config.Version != ProductizationVersion {
+		return ProductProfileUnknown
+	}
+	chat, mutation := config.DirectChat, config.ControlledMutation
+	switch {
+	case chat.Model == QualifiedDirectChatModel && chat.Digest == QualifiedDirectChatDigest &&
+		mutation.Model == QualifiedMutationModel && mutation.Digest == QualifiedMutationDigest &&
+		chat.Model != mutation.Model:
+		return ProductProfileRecommended
+	case chat.Model == SingleModelEvaluationModel && chat.Digest == SingleModelEvaluationDigest &&
+		mutation.Model == SingleModelEvaluationModel && mutation.Digest == SingleModelEvaluationDigest:
+		return ProductProfileSingleModelEvaluation
+	default:
+		return ProductProfileUnknown
+	}
+}
 
 func (config Config) HasChatProfile() bool {
 	return config.Version == CandidateVersion || config.Version == QualificationVersion || config.Version == ProductizationVersion
@@ -388,7 +422,9 @@ func (config Config) ValidateProductizationProfile() error {
 		return err
 	}
 	if chat.Model != QualifiedDirectChatModel || chat.Digest != QualifiedDirectChatDigest {
-		return fieldError("direct_chat", "model and digest must match the qualified Direct Chat identity")
+		if !singleModelEvaluationEnabled || chat.Model != SingleModelEvaluationModel || chat.Digest != SingleModelEvaluationDigest {
+			return fieldError("direct_chat", "model and digest must match the qualified Direct Chat identity")
+		}
 	}
 	if chat.NumPredict != 1024 || chat.Residency.Duration != 5*time.Minute || chat.Thinking != ThinkingDisabled || chat.Streaming || chat.MaxFileBytes != 1<<20 || chat.MaxOutputBytes != 1<<20 {
 		return fieldError("direct_chat", "generation and I/O controls must match the qualified profile")
@@ -397,7 +433,8 @@ func (config Config) ValidateProductizationProfile() error {
 	if !mutation.Enabled {
 		return fieldError("controlled_mutation.enabled", "must be true for the productization profile")
 	}
-	if mutation.Model != QualifiedMutationModel || mutation.Digest != QualifiedMutationDigest || mutation.Model == chat.Model {
+	if mutation.Model != QualifiedMutationModel || mutation.Digest != QualifiedMutationDigest ||
+		(mutation.Model == chat.Model && (!singleModelEvaluationEnabled || config.ProductProfile() != ProductProfileSingleModelEvaluation)) {
 		return fieldError("controlled_mutation", "model and digest must match the distinct qualified mutation identity")
 	}
 	if mutation.Timeout.Duration <= 0 || mutation.Timeout.Duration > config.Provider.Timeout.Duration || mutation.NumCtx != 4096 || mutation.NumPredict != 1024 || mutation.Thinking != ThinkingDisabled || mutation.Residency.Duration != 5*time.Minute || mutation.MaxOutputBytes < 1 || mutation.MaxOutputBytes > 1<<20 {

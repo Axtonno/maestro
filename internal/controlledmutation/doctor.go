@@ -32,7 +32,11 @@ func Doctor(ctx context.Context, config productconfig.Config, dependencies Depen
 		checks = append(checks, Check{Name: name, Status: status, Detail: detail})
 	}
 	valid := ctx != nil && config.ValidateMutationExecutionProfile() == nil
-	add("configuration", valid, "schema_v4_profiles_separated", "configuration_invalid")
+	configurationDetail := "schema_v4_profiles_separated"
+	if config.ProductProfile() == productconfig.ProductProfileSingleModelEvaluation {
+		configurationDetail = "schema_v4_single_model_evaluation"
+	}
+	add("configuration", valid, configurationDetail, "configuration_invalid")
 	add("mutation_prompt", PromptSHA256() == productconfig.MutationPromptSHA256, "qualified_prompt_digest", "prompt_digest_mismatch")
 	add("mutation_schema", SchemaSHA256() == productconfig.MutationSchemaSHA256, "qualified_schema_digest", "schema_digest_mismatch")
 	add("tty", terminal, "interactive_terminal", "tty_required")

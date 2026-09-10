@@ -185,8 +185,11 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 	runContext, cancel := context.WithTimeout(ctx, service.profile.Timeout.Duration)
 	defer cancel()
 	if service.config.Version == productconfig.ProductizationVersion {
-		if err := service.handoff(runContext, service.config.ControlledMutation.Model); err != nil {
-			return Result{}, executionError(runContext, err)
+		outgoing := service.config.ControlledMutation.Model
+		if outgoing != service.profile.Model {
+			if err := service.handoff(runContext, outgoing); err != nil {
+				return Result{}, executionError(runContext, err)
+			}
 		}
 	}
 	if err := service.preflight(runContext, request.Stream); err != nil {

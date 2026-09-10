@@ -146,8 +146,10 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 	if err := service.preflight(runContext); err != nil {
 		return Result{}, err
 	}
-	if err := handoff(runContext, service.provider, service.config.DirectChat.Model); err != nil {
-		return Result{}, executionError(runContext, err)
+	if outgoing := service.config.DirectChat.Model; outgoing != service.profile.Model {
+		if err := handoff(runContext, service.provider, outgoing); err != nil {
+			return Result{}, executionError(runContext, err)
+		}
 	}
 	payload, err := json.Marshal(struct {
 		Request, SelectedText string

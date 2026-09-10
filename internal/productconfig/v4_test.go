@@ -16,7 +16,7 @@ func TestV4LoadsSeparatedQualifiedProfiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	chat, ok := config.ChatProfile()
-	if !ok || config.Version != ProductizationVersion || chat.Model != QualifiedDirectChatModel || chat.Digest != QualifiedDirectChatDigest || config.ControlledMutation.Model != QualifiedMutationModel || config.ControlledMutation.Digest != QualifiedMutationDigest {
+	if !ok || config.Version != ProductizationVersion || config.ProductProfile() != ProductProfileRecommended || chat.Model != QualifiedDirectChatModel || chat.Digest != QualifiedDirectChatDigest || config.ControlledMutation.Model != QualifiedMutationModel || config.ControlledMutation.Digest != QualifiedMutationDigest {
 		t.Fatalf("unexpected v4 profile: %#v", config)
 	}
 	if _, err := LoadChat(path); err != nil {
@@ -96,4 +96,10 @@ controlled_mutation:
   schema_sha256: %s
   max_output_bytes: 1048576
 `, root, QualifiedDirectChatModel, QualifiedDirectChatDigest, QualifiedMutationModel, QualifiedMutationDigest, MutationPromptID, MutationPromptSHA256, MutationSchemaID, MutationSchemaSHA256)
+}
+
+func singleModelV4(root string) string {
+	value := validV4(root)
+	value = strings.Replace(value, QualifiedDirectChatModel, SingleModelEvaluationModel, 1)
+	return strings.Replace(value, QualifiedDirectChatDigest, SingleModelEvaluationDigest, 1)
 }
