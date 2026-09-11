@@ -1,6 +1,6 @@
 # Capacità correnti di Maestro v0.5.0
 
-Aggiornata: 2026-09-09
+Aggiornata: 2026-09-11
 
 Questa pagina definisce il support claim pubblico. Codice sperimentale,
 esempi e direzioni future non ampliano questo perimetro.
@@ -25,8 +25,9 @@ Controlled Mutation è supportato soltanto nel [perimetro dichiarato](controlled
 | Chat | `qwen3.5:9b` | `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7` |
 | Mutation | `qwen2.5-coder:14b` | `9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849` |
 
-Altri modelli, digest o provider non fanno parte del support claim v0.5.0. Un
-profilo single-model è in valutazione, ma non è supportato oggi.
+Altri modelli, digest o provider non fanno parte del support claim v0.5.0. Il
+candidato single-model valutato dopo v0.5.0 non ha superato il gate di qualità
+Direct Chat e non è supportato.
 
 ## Hardware consigliato
 
@@ -46,7 +47,7 @@ memoria dipendono dall’hardware; vedere [Benchmark](benchmarks.md).
 - componenti agent, context e tool presenti nel codice;
 - streaming nei profili storici;
 - integrazione editor;
-- profilo single-model.
+- percorso single-model disponibile soltanto in una build di valutazione.
 
 La presenza del codice non costituisce una promessa operativa.
 

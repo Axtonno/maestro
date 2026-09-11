@@ -19,6 +19,9 @@ sintetico per ciò che v0.5.0 supporta oggi.
 - Il benchmark pubblico ha registrato 11/12 richieste corrette. Un caso ha trattato erroneamente una
   domanda PHP generale senza file come informazione non determinabile dal
   workspace.
+- La successiva valutazione single-model con `qwen2.5-coder:14b` ha ripetuto
+  questo errore su una domanda PHP autosufficiente. Il candidato non è stato
+  qualificato per Direct Chat e il profilo a due modelli resta necessario.
 - Preview e contenimento corretti non dimostrano che la modifica sia quella
   desiderata: l'utente deve leggere il diff prima dell'allow-once.
 - `num_ctx_effective` e `thinking_effective` possono risultare `unknown`

@@ -19,7 +19,9 @@ dichiarato nelle note di release.
 - documentazione pubblica riorganizzata attorno a installazione, capacità,
   limiti, sicurezza, piattaforme e benchmark riproducibili;
 - documentazione strategica, report intermedi e roadmap tattica separati dal
-  repository pubblico.
+  repository pubblico;
+- valutato e respinto il candidato single-model `qwen2.5-coder:14b` per qualità
+  Direct Chat insufficiente; setup e support claim restano a due modelli.
 
 ## [0.5.0] - 2026-09-06
 
