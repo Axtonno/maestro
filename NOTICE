@@ -1,6 +1,7 @@
 Maestro
 
 This product includes software from gopkg.in/yaml.v3.
+This product includes software from golang.org/x/sys.
 
 Copyright 2011-2016 Canonical Ltd.
 

@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 package tool
 
@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var errAtomicReplaceUnsupported = errors.New("atomic workspace patch is supported only on linux")
+var errAtomicReplaceUnsupported = errors.New("atomic workspace patch is unsupported on this platform")
 
 func defaultAtomicFileOps() atomicFileOps { return unsupportedAtomicFileOps{} }
 
