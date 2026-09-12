@@ -1,27 +1,18 @@
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
+const { PreviewError } = require('./errors');
 
-const FORBIDDEN_TOKEN_BYTES = /[\u0000\r\n]/;
-
-function shellQuote(value, field = 'argument') {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new Error(`${field} must not be empty`);
-  }
-  if (FORBIDDEN_TOKEN_BYTES.test(value)) {
-    throw new Error(`${field} contains a forbidden control character`);
-  }
-  return "'" + value.replace(/'/g, "'\"'\"'") + "'";
-}
+const FORBIDDEN_ARGUMENT_BYTES = /[\u0000\r\n]/;
 
 function safeLogicalPath(workspaceRoot, filePath) {
   const relative = path.relative(workspaceRoot, filePath);
   if (relative === '' || path.isAbsolute(relative)) {
-    throw new Error('the active editor is not a workspace file');
+    throw new PreviewError('file_outside_workspace');
   }
   const logical = relative.split(path.sep).join('/');
-  if (logical === '..' || logical.startsWith('../') || FORBIDDEN_TOKEN_BYTES.test(logical)) {
-    throw new Error('the active editor is outside the workspace');
+  if (logical === '..' || logical.startsWith('../') || FORBIDDEN_ARGUMENT_BYTES.test(logical)) {
+    throw new PreviewError('file_outside_workspace');
   }
   return logical;
 }
@@ -29,81 +20,83 @@ function safeLogicalPath(workspaceRoot, filePath) {
 function mutationLogicalPath(workspaceRoot, filePath) {
   const logical = safeLogicalPath(workspaceRoot, filePath);
   if (!logical.startsWith('app/') || path.posix.extname(logical).toLowerCase() !== '.php') {
-    throw new Error('Controlled Mutation requires a PHP file below app/');
+    throw new PreviewError('mutation_target_invalid');
   }
   return logical;
 }
 
 function inclusiveSelectedLines(selection) {
   if (!selection || selection.isEmpty) {
-    throw new Error('select at least one character');
+    throw new PreviewError('selection_empty');
   }
   const start = selection.start.line + 1;
   const end = selection.end.character === 0 && selection.end.line > selection.start.line
     ? selection.end.line
     : selection.end.line + 1;
   if (start < 1 || end < start) {
-    throw new Error('the editor selection is invalid');
+    throw new PreviewError('selection_invalid');
   }
   return `${start}:${end}`;
 }
 
-function configuredTokens(settings) {
-  const binary = settings.binaryPath.trim();
-  const config = settings.configPath.trim();
-  const tokens = [shellQuote(binary, 'maestro.binaryPath')];
-  if (config !== '') {
-    tokens.push('--config', shellQuote(config, 'maestro.configPath'));
+function checkedArgument(value, field) {
+  if (typeof value !== 'string' || value.length === 0 || FORBIDDEN_ARGUMENT_BYTES.test(value)) {
+    throw new PreviewError(field);
   }
-  return { binary: tokens[0], config: tokens.slice(1) };
+  return value;
 }
 
-function buildChatCommand(settings, logicalPath, question) {
-  const configured = configuredTokens(settings);
-  return [
-    configured.binary,
+function checkedUserText(value, emptyCode, invalidCode) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new PreviewError(emptyCode);
+  }
+  const cleaned = value.trim();
+  if (FORBIDDEN_ARGUMENT_BYTES.test(cleaned)) {
+    throw new PreviewError(invalidCode);
+  }
+  return cleaned;
+}
+
+function buildChatInvocation(resolved, logicalPath, question) {
+  return invocation(resolved.binaryPath, [
     'chat',
-    ...configured.config,
-    '--file',
-    shellQuote(logicalPath, 'file'),
-    '--',
-    shellQuote(question.trim(), 'question')
-  ].join(' ');
+    '--config', resolved.configPath,
+    '--file', checkedArgument(logicalPath, 'file_outside_workspace'),
+    '--', checkedUserText(question, 'question_empty', 'question_invalid')
+  ]);
 }
 
-function buildMutationCommand(settings, logicalPath, lines, instruction) {
-  const configured = configuredTokens(settings);
-  return [
-    configured.binary,
-    'workspace',
-    'replace',
-    '--file',
-    shellQuote(logicalPath, 'file'),
-    '--lines',
-    shellQuote(lines, 'lines'),
-    ...configured.config,
-    '--',
-    shellQuote(instruction.trim(), 'instruction')
-  ].join(' ');
+function buildMutationInvocation(resolved, logicalPath, lines, instruction) {
+  return invocation(resolved.binaryPath, [
+    'workspace', 'replace',
+    '--file', checkedArgument(logicalPath, 'file_outside_workspace'),
+    '--lines', checkedArgument(lines, 'selection_invalid'),
+    '--config', resolved.configPath,
+    '--', checkedUserText(instruction, 'instruction_empty', 'instruction_invalid')
+  ]);
 }
 
-function buildDoctorCommand(settings) {
-  const configured = configuredTokens(settings);
-  return [configured.binary, 'doctor', '--mode', 'all', ...configured.config].join(' ');
+function buildDoctorInvocation(resolved) {
+  return invocation(resolved.binaryPath, ['doctor', '--mode', 'all', '--config', resolved.configPath]);
 }
 
-function buildVersionCommand(settings) {
-  const configured = configuredTokens(settings);
-  return [configured.binary, 'version', '--diagnostic'].join(' ');
+function buildVersionInvocation(resolved) {
+  return invocation(resolved.binaryPath, ['version', '--diagnostic']);
+}
+
+function invocation(executable, args) {
+  return Object.freeze({
+    executable: checkedArgument(executable, 'binary_not_executable'),
+    args: Object.freeze(args.map(value => checkedArgument(value, 'command_unavailable')))
+  });
 }
 
 module.exports = {
-  buildChatCommand,
-  buildDoctorCommand,
-  buildMutationCommand,
-  buildVersionCommand,
+  buildChatInvocation,
+  buildDoctorInvocation,
+  buildMutationInvocation,
+  buildVersionInvocation,
   inclusiveSelectedLines,
   mutationLogicalPath,
-  safeLogicalPath,
-  shellQuote
+  safeLogicalPath
 };

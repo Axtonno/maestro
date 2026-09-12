@@ -1,0 +1,14 @@
+{
+  "name": "maestro-vsix-test-harness",
+  "displayName": "Maestro VSIX Test Harness",
+  "version": "0.0.0",
+  "private": true,
+  "publisher": "maestro-local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "*"
+  ]
+}

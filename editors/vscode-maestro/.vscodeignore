@@ -1,0 +1,10 @@
+**/*
+!CHANGELOG.md
+!LICENSE
+!README.md
+!command-builder.js
+!diagnostics.js
+!errors.js
+!extension.js
+!package.json
+!path-resolver.js

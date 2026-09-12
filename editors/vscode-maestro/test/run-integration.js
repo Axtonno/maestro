@@ -19,6 +19,7 @@ async function main() {
   const extensions = path.join(temporary, 'extensions');
   fs.mkdirSync(path.join(workspace, 'app'), { recursive: true });
   fs.writeFileSync(path.join(workspace, 'app', 'Example.php'), "<?php\nreturn 201;\n", 'utf8');
+  fs.writeFileSync(path.join(workspace, 'maestro.yaml'), 'version: 4\n', 'utf8');
 
   // Codex may itself run inside an extension host. Those variables would make
   // the downloaded Electron binary start in Node/CLI mode instead of opening

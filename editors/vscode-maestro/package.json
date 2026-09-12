@@ -1,11 +1,16 @@
 {
-  "name": "maestro-vscode-prototype",
-  "displayName": "Maestro (Prototype)",
-  "description": "Prototype bridge from an explicit VS Code file or selection to the Maestro v0.5.0 CLI.",
-  "version": "0.0.1",
+  "name": "maestro-vscode-preview",
+  "displayName": "Maestro (Preview)",
+  "description": "Local VS Code Preview for explicit chat and Controlled Mutation through the Maestro CLI.",
+  "version": "0.1.0",
   "private": true,
   "publisher": "maestro-local",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Axtonno/maestro.git",
+    "directory": "editors/vscode-maestro"
+  },
   "engines": {
     "node": ">=22.12.0",
     "vscode": "^1.85.0"
@@ -20,7 +25,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": false,
-      "description": "The prototype launches the configured local Maestro binary in a workspace terminal."
+      "description": "The Preview launches the resolved local Maestro binary in a workspace terminal."
     },
     "virtualWorkspaces": {
       "supported": false
@@ -66,19 +71,19 @@
       ]
     },
     "configuration": {
-      "title": "Maestro Prototype",
+      "title": "Maestro Preview",
       "properties": {
         "maestro.binaryPath": {
           "type": "string",
-          "default": "maestro",
+          "default": "",
           "scope": "window",
-          "description": "Maestro executable name or path. The value is passed as one shell-quoted token."
+          "description": "Optional Maestro executable path. Relative paths resolve from the selected workspace; when empty, the extension searches the exact extension-host PATH without a shell."
         },
         "maestro.configPath": {
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Optional Maestro v4 configuration path, resolved by the CLI from the workspace terminal."
+          "description": "Maestro v4 configuration file. Relative paths resolve from the selected workspace and the resolved file must remain inside that workspace."
         },
         "maestro.terminalName": {
           "type": "string",
@@ -92,11 +97,15 @@
   "scripts": {
     "test": "npm run test:unit",
     "test:all": "npm run test:unit && npm run test:integration",
-    "test:unit": "node --test test/*.test.js",
-    "test:integration": "node test/run-integration.js"
+    "package:vsix": "vsce package --no-dependencies --out dist/maestro-vscode-preview-0.1.0.vsix",
+    "package:list": "vsce ls --no-dependencies",
+    "test:unit": "node --test --test-isolation=none test/*.test.js",
+    "test:integration": "node test/run-integration.js",
+    "test:vsix": "node test/run-vsix-integration.js"
   },
   "devDependencies": {
     "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "3.9.2",
     "mocha": "12.0.0"
   }
 }

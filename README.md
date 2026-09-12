@@ -40,6 +40,11 @@ conto del modello, non applica modifiche multi-file e non è una sandbox. La
 [matrice delle capacità](docs/current-capabilities.md) definisce il perimetro
 supportato e prevale sugli esempi e sul codice sperimentale.
 
+Una [VS Code Preview locale](editors/vscode-maestro/README.md) è disponibile
+per trial controllati su extension host Linux o Remote WSL. Si installa da un
+VSIX locale, conserva preview e approval nel terminale Maestro e non è
+pubblicata nel Marketplace; non amplia il support claim corrente.
+
 ## Documentazione
 
 - [Quick Start](docs/quick-start.md)
@@ -52,6 +57,7 @@ supportato e prevale sugli esempi e sul codice sperimentale.
 - [Troubleshooting](docs/troubleshooting.md)
 - [CLI](docs/cli.md) e [configurazione](docs/configuration.md)
 - [Roadmap pubblica](docs/roadmap.md)
+- [VS Code Preview locale](editors/vscode-maestro/README.md)
 - [Contribuire](CONTRIBUTING.md)
 
 ## Sviluppo
