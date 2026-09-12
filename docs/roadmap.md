@@ -9,9 +9,14 @@ nella [matrice delle capacità correnti](current-capabilities.md).
 Maestro supporta Direct Chat e Controlled Mutation nel perimetro dichiarato
 per v0.5.0 su Linux `amd64` con Ollama locale.
 
+Il percorso di onboarding post-v0.5 ha superato un trial su Windows 11 → WSL2
+con filesystem Linux e Ollama interno. Il candidate resta non pubblicato e il
+risultato non equivale a supporto Windows nativo.
+
 ## In valutazione
 
-- distribuzione e qualifica su Windows e macOS;
+- distribuzione e qualifica su Windows e macOS; dopo il trial WSL2, il target
+  Windows ancora in valutazione è quello nativo;
 - miglioramenti dell’esperienza editor mantenendo preview e approvazione nella
   superficie controllata.
 

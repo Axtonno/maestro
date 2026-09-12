@@ -4,8 +4,9 @@ Questo è il percorso per iniziare a usare Maestro in un progetto reale. Non è
 una procedura di qualificazione della release e non richiede Git.
 
 > Nota di disponibilità: i comandi `setup` e `mutate` sono presenti nel branch
-> principale dopo v0.5.0. L'archive pubblico v0.5.0 resta immutabile; la nuova
-> esperienza diventerà pubblica con una release successiva qualificata.
+> principale dopo v0.5.0 e il percorso ha superato un trial su packaging
+> candidate in WSL2. L'archive pubblico v0.5.0 resta immutabile; la nuova
+> esperienza diventerà pubblica soltanto con una release successiva.
 
 ## Prerequisiti
 

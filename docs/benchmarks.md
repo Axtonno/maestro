@@ -21,6 +21,27 @@ Questi numeri descrivono la matrice pubblicata, non una garanzia universale.
 Il caso semanticamente errato riguardava una domanda generica senza file; i
 controlli di contenimento non hanno prodotto scritture indesiderate.
 
+## Trial WSL2 post-v0.5
+
+Il 2026-09-12 il percorso di onboarding corrente è stato eseguito da clean
+install su Windows 11 → WSL2 → Ubuntu 24.04, interamente su filesystem Linux,
+con Ollama 0.33.1 interno alla distro e il profilo raccomandato a due modelli.
+
+| Verifica | Risultato |
+| --- | --- |
+| Setup | configurazione `0600`, seconda esecuzione idempotente |
+| Doctor | 14/14 check superati in TTY reale |
+| Chat | risposta sul file esplicito semanticamente corretta |
+| Preview e deny | nessuna scrittura |
+| Allow-once | unica sostituzione attesa |
+| Stale | preview obsoleta rifiutata senza sovrascrivere la modifica concorrente |
+| Confine path | `/mnt/c`, path Windows lessicale e symlink esterno rifiutati |
+| Contratti repository | test, race detector, vet e `git diff --check` superati |
+
+Il candidate è locale e non pubblicato. Il trial chiude il gate operativo
+WSL2, ma non costituisce una release, non modifica l'asset v0.5.0 e non
+autorizza supporto Windows nativo.
+
 ## Riproduzione minima
 
 Scaricare archive e checksum dalla stessa GitHub Release, quindi verificare

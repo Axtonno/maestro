@@ -21,7 +21,11 @@ dichiarato nelle note di release.
 - documentazione strategica, report intermedi e roadmap tattica separati dal
   repository pubblico;
 - valutato e respinto il candidato single-model `qwen2.5-coder:14b` per qualità
-  Direct Chat insufficiente; setup e support claim restano a due modelli.
+  Direct Chat insufficiente; setup e support claim restano a due modelli;
+- qualificato su Windows 11 → WSL2, filesystem Linux e Ollama interno il
+  percorso post-v0.5 `setup → chat → preview → allow-once`, inclusi deny,
+  stale e rifiuto dei path Windows. Il candidate non è pubblicato e non
+  autorizza supporto Windows nativo.
 
 ## [0.5.0] - 2026-09-06
 

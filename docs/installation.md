@@ -49,6 +49,35 @@ maestro setup --pull
 `setup` non installa o avvia Ollama e non sostituisce automaticamente un tag
 che risolve a un digest diverso da quello qualificato.
 
+## Windows 11 con WSL2
+
+Il binario Linux deve essere eseguito dentro una distro WSL2 e il progetto deve
+risiedere sul filesystem Linux, per esempio sotto `/home/<utente>/src`. Ollama
+deve essere installato e avviato nella stessa distro su
+`http://127.0.0.1:11434`.
+
+Da PowerShell verificare che la distro usi WSL2:
+
+```powershell
+wsl --status
+wsl --list --verbose
+```
+
+Poi, dentro WSL:
+
+```sh
+uname -m
+findmnt -T "$PWD"
+ollama --version
+curl -fsS http://127.0.0.1:11434/api/version
+```
+
+Il target atteso è `x86_64`, con un filesystem Linux come `ext4`, e Ollama
+0.33.1. Non usare un progetto sotto `/mnt/c` per dedurre compatibilità: path,
+permessi e replace atomico sarebbero quelli del filesystem montato da Windows,
+fuori dal trial qualificato. Il package resta Linux `amd64`; non va eseguito
+come binario Windows.
+
 ## Upgrade
 
 Verifica il nuovo checksum, quindi sostituisci il binario in modo atomico:
