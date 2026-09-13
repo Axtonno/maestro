@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	goRuntime "runtime"
 	"strings"
 	"testing"
 	"time"
@@ -209,20 +210,32 @@ func TestWorkspaceToolsRejectTraversalAbsolutePathsAndSymlinks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "inside.txt"), []byte("inside"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	symlinksAvailable := true
 	if err := os.Symlink(outside, filepath.Join(root, "external-link")); err != nil {
-		t.Fatal(err)
+		if goRuntime.GOOS != "windows" {
+			t.Fatal(err)
+		}
+		t.Logf("symlink checks skipped: %v", err)
+		symlinksAvailable = false
 	}
-	if err := os.Symlink("inside.txt", filepath.Join(root, "internal-link")); err != nil {
-		t.Fatal(err)
+	if symlinksAvailable {
+		if err := os.Symlink("inside.txt", filepath.Join(root, "internal-link")); err != nil {
+			t.Fatal(err)
+		}
 	}
 	runtime, _, run := workspaceRuntime(t, root)
 
-	for index, arguments := range []json.RawMessage{
+	unsafePaths := []json.RawMessage{
 		json.RawMessage(`{"path":"../outside.txt"}`),
 		json.RawMessage(`{"path":"/etc/passwd"}`),
-		json.RawMessage(`{"path":"external-link"}`),
-		json.RawMessage(`{"path":"internal-link"}`),
-	} {
+	}
+	if symlinksAvailable {
+		unsafePaths = append(unsafePaths,
+			json.RawMessage(`{"path":"external-link"}`),
+			json.RawMessage(`{"path":"internal-link"}`),
+		)
+	}
+	for index, arguments := range unsafePaths {
 		invocation, _ := pkgTool.NewInvocation(WorkspaceReadID, pkgTool.CallID(fmt.Sprintf("call-unsafe-%d", index)), run, arguments)
 		execution, _ := pkgTool.NewExecutionRequest(invocation, "policy.test", nil, workspaceExecutionLimits())
 		if _, err := runtime.Invoke(context.Background(), execution); err == nil {
@@ -230,11 +243,13 @@ func TestWorkspaceToolsRejectTraversalAbsolutePathsAndSymlinks(t *testing.T) {
 		}
 	}
 
-	arguments := json.RawMessage(`{"path":"external-link","content":"changed","expected_digest":"absent"}`)
-	invocation, _ := pkgTool.NewInvocation(WorkspaceWriteID, "call-write-link", run, arguments)
-	execution, _ := pkgTool.NewExecutionRequest(invocation, "policy.test", nil, workspaceExecutionLimits())
-	if _, err := runtime.Invoke(context.Background(), execution); err == nil {
-		t.Fatal("write through symlink was accepted")
+	if symlinksAvailable {
+		arguments := json.RawMessage(`{"path":"external-link","content":"changed","expected_digest":"absent"}`)
+		invocation, _ := pkgTool.NewInvocation(WorkspaceWriteID, "call-write-link", run, arguments)
+		execution, _ := pkgTool.NewExecutionRequest(invocation, "policy.test", nil, workspaceExecutionLimits())
+		if _, err := runtime.Invoke(context.Background(), execution); err == nil {
+			t.Fatal("write through symlink was accepted")
+		}
 	}
 	content, _ := os.ReadFile(outside)
 	if string(content) != "secret" {

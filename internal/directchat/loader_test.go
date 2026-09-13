@@ -6,7 +6,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"syscall"
 	"testing"
 )
 
@@ -25,10 +24,15 @@ func TestFileLoaderRejectsPhysicalPathTypes(t *testing.T) {
 	if err := os.Symlink(outside, filepath.Join(root, "escape")); err != nil {
 		t.Fatal(err)
 	}
-	if err := syscall.Mkfifo(filepath.Join(root, "pipe"), 0o600); err != nil {
+	pipeAvailable, err := createFileLoaderPipe(filepath.Join(root, "pipe"))
+	if err != nil {
 		t.Fatal(err)
 	}
-	for _, logical := range []string{"internal/file.php", "escape/file.php", "pipe"} {
+	physicalPaths := []string{"internal/file.php", "escape/file.php"}
+	if pipeAvailable {
+		physicalPaths = append(physicalPaths, "pipe")
+	}
+	for _, logical := range physicalPaths {
 		t.Run(logical, func(t *testing.T) {
 			if _, err := loadFile(t.Context(), root, logical, 1024); !errors.Is(err, ErrFileNotAllowed) {
 				t.Fatalf("%q was accepted: %v", logical, err)

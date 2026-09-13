@@ -58,8 +58,9 @@ func (linuxAtomicFileOps) createTemp(parent *os.File, mode os.FileMode) (*os.Fil
 	return nil, "", errors.New("allocate unique patch temporary")
 }
 
-func (linuxAtomicFileOps) rename(parent *os.File, source, target string) error {
-	return syscall.Renameat(int(parent.Fd()), source, int(parent.Fd()), target)
+func (linuxAtomicFileOps) rename(parent *os.File, source, target string) (bool, error) {
+	err := syscall.Renameat(int(parent.Fd()), source, int(parent.Fd()), target)
+	return err == nil, err
 }
 
 func (linuxAtomicFileOps) remove(parent *os.File, name string) error {

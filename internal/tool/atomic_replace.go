@@ -24,7 +24,7 @@ type atomicFileOps interface {
 	write(*os.File, []byte) error
 	chmod(*os.File, os.FileMode) error
 	syncFile(*os.File) error
-	rename(*os.File, string, string) error
+	rename(*os.File, string, string) (bool, error)
 	syncDirectory(*os.File) error
 	remove(*os.File, string) error
 }
@@ -118,11 +118,17 @@ func replacePhysicalFileAtomically(
 	if err := ctx.Err(); err != nil {
 		return outcome, err
 	}
-	if err := ops.rename(parent, temporaryName, baseName); err != nil {
-		return outcome, err
+	committed, renameErr := ops.rename(parent, temporaryName, baseName)
+	if committed {
+		cleanup = false
+		outcome.committed = true
 	}
-	cleanup = false
-	outcome.committed = true
+	if renameErr != nil {
+		return outcome, renameErr
+	}
+	if !committed {
+		return outcome, fmt.Errorf("atomic rename did not commit: %w", pkgTool.ErrExecutionFailed)
+	}
 	if syncErr := ops.syncDirectory(parent); syncErr != nil {
 		return outcome, syncErr
 	}

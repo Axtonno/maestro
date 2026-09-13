@@ -1,4 +1,4 @@
-//go:build linux || darwin
+//go:build linux || darwin || windows
 
 package tool
 
@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -18,7 +19,7 @@ import (
 
 var errInjectedAtomicFault = errors.New("injected atomic filesystem fault")
 
-func TestAtomicReplaceCommitsNewInodePreservesModeAndNeverExposesPartialContent(t *testing.T) {
+func TestAtomicReplaceCommitsReplacementPreservesModeAndNeverExposesPartialContent(t *testing.T) {
 	rootPath, logical, original := atomicFixture(t)
 	target := filepath.Join(rootPath, filepath.FromSlash(logical))
 	if err := os.Chmod(target, 0o640); err != nil {
@@ -44,7 +45,7 @@ func TestAtomicReplaceCommitsNewInodePreservesModeAndNeverExposesPartialContent(
 					return
 				default:
 				}
-				content, err := os.ReadFile(target)
+				content, err := readAtomicTestFile(target)
 				if err != nil {
 					select {
 					case readerErrors <- err:
@@ -84,8 +85,10 @@ func TestAtomicReplaceCommitsNewInodePreservesModeAndNeverExposesPartialContent(
 	}
 	after, _ := os.ReadFile(target)
 	afterInfo, _ := os.Stat(target)
-	if string(after) != proposed || afterInfo.Mode().Perm() != 0o640 || os.SameFile(beforeInfo, afterInfo) {
-		t.Fatalf("atomic replacement mismatch: mode=%o same_inode=%t", afterInfo.Mode().Perm(), os.SameFile(beforeInfo, afterInfo))
+	sameIdentity := os.SameFile(beforeInfo, afterInfo)
+	if string(after) != proposed || afterInfo.Mode().Perm() != beforeInfo.Mode().Perm() ||
+		(runtime.GOOS != "windows" && sameIdentity) {
+		t.Fatalf("atomic replacement mismatch: mode=%o same_identity=%t", afterInfo.Mode().Perm(), sameIdentity)
 	}
 	assertNoAtomicTemps(t, rootPath)
 }
@@ -423,17 +426,18 @@ func (ops *faultAtomicFileOps) syncFile(file *os.File) error {
 	return ops.delegate.syncFile(file)
 }
 
-func (ops *faultAtomicFileOps) rename(parent *os.File, source, target string) error {
+func (ops *faultAtomicFileOps) rename(parent *os.File, source, target string) (bool, error) {
 	if err := ops.failure("rename"); err != nil {
-		return err
+		return false, err
 	}
-	if err := ops.delegate.rename(parent, source, target); err != nil {
-		return err
+	committed, err := ops.delegate.rename(parent, source, target)
+	if err != nil {
+		return committed, err
 	}
 	if ops.cancelAfterRename != nil {
 		ops.cancelAfterRename()
 	}
-	return nil
+	return committed, nil
 }
 
 func (ops *faultAtomicFileOps) syncDirectory(directory *os.File) error {

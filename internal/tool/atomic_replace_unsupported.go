@@ -1,4 +1,4 @@
-//go:build !linux && !darwin
+//go:build !linux && !darwin && !windows
 
 package tool
 
@@ -19,8 +19,8 @@ func (unsupportedAtomicFileOps) openTarget(*os.File, string) (*os.File, error) {
 func (unsupportedAtomicFileOps) createTemp(*os.File, os.FileMode) (*os.File, string, error) {
 	return nil, "", errAtomicReplaceUnsupported
 }
-func (unsupportedAtomicFileOps) rename(*os.File, string, string) error {
-	return errAtomicReplaceUnsupported
+func (unsupportedAtomicFileOps) rename(*os.File, string, string) (bool, error) {
+	return false, errAtomicReplaceUnsupported
 }
 func (unsupportedAtomicFileOps) remove(*os.File, string) error {
 	return errAtomicReplaceUnsupported

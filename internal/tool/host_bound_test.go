@@ -15,8 +15,8 @@ import (
 )
 
 func TestHostBoundPhysicalSpliceAndStale(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("atomic commit requires Linux")
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
+		t.Skip("atomic commit requires Linux, Darwin, or Windows")
 	}
 	for _, stale := range []bool{false, true} {
 		t.Run(map[bool]string{false: "apply", true: "stale"}[stale], func(t *testing.T) {
@@ -82,6 +82,10 @@ func TestHostBoundPhysicalSpliceAndStale(t *testing.T) {
 				t.Fatal(err)
 			}
 			if err := os.Symlink(file, filepath.Join(root, "app", "Link.php")); err != nil {
+				if runtime.GOOS == "windows" {
+					t.Logf("symlink boundary check skipped: %v", err)
+					return
+				}
 				t.Fatal(err)
 			}
 			if _, err := h.Capture(context.Background(), "run", []string{"app/Link.php"}, 1, 1); err == nil {

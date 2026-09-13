@@ -59,8 +59,9 @@ func (darwinAtomicFileOps) createTemp(parent *os.File, mode os.FileMode) (*os.Fi
 	return nil, "", errors.New("allocate unique patch temporary")
 }
 
-func (darwinAtomicFileOps) rename(parent *os.File, source, target string) error {
-	return unix.Renameat(int(parent.Fd()), source, int(parent.Fd()), target)
+func (darwinAtomicFileOps) rename(parent *os.File, source, target string) (bool, error) {
+	err := unix.Renameat(int(parent.Fd()), source, int(parent.Fd()), target)
+	return err == nil, err
 }
 
 func (darwinAtomicFileOps) remove(parent *os.File, name string) error {
