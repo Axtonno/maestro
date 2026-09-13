@@ -215,6 +215,7 @@ func TestDirectChatRejectsUnsafeFilesBeforeProviderIO(t *testing.T) {
 	config.Interaction.Chat.MaxFileBytes = 64
 	for _, logical := range []string{
 		"/absolute.php", "../outside.php", `dir\file.php`, "line\nbreak.php",
+		"C:relative.php", "file.php:stream.php", "CON.php", "dir/file.php.", "dir/file.php ",
 		"bidi\u202efile.php", "dir", "large.php", "invalid.php", "link.php", "missing.php",
 	} {
 		t.Run(strings.ReplaceAll(logical, "/", "_"), func(t *testing.T) {

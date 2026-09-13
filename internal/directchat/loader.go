@@ -93,7 +93,29 @@ func validLogicalPath(logical string) bool {
 			return false
 		}
 	}
+	for _, component := range strings.Split(logical, "/") {
+		if !portablePathComponent(component) {
+			return false
+		}
+	}
 	return true
+}
+
+func portablePathComponent(component string) bool {
+	if strings.Contains(component, ":") || strings.HasSuffix(component, ".") || strings.HasSuffix(component, " ") {
+		return false
+	}
+	base, _, _ := strings.Cut(component, ".")
+	base = strings.ToUpper(strings.TrimRight(base, " "))
+	switch base {
+	case "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$":
+		return false
+	}
+	if len(base) == 4 && (strings.HasPrefix(base, "COM") || strings.HasPrefix(base, "LPT")) && base[3] >= '1' && base[3] <= '9' {
+		return false
+	}
+	return base != "COM¹" && base != "COM²" && base != "COM³" &&
+		base != "LPT¹" && base != "LPT²" && base != "LPT³"
 }
 
 func validatePhysicalPath(root *os.Root, logical string) error {

@@ -91,7 +91,10 @@ func TestDocumentIdentityAndValidation(t *testing.T) {
 		t.Fatalf("unexpected document: path=%q size=%d digest=%q", document.Path(), document.SizeBytes(), document.Digest())
 	}
 
-	invalidPaths := []contextengine.DocumentPath{"", ".", "/absolute", "../escape", "a/../b", `a\b`, "bad\x00path"}
+	invalidPaths := []contextengine.DocumentPath{
+		"", ".", "/absolute", "../escape", "a/../b", `a\b`, "bad\x00path", "bad\npath",
+		"C:relative", "file:stream", "dir/file.", "dir/file ", "CON", "nul.txt", "dir/COM1.php", "CONIN$",
+	}
 	for _, documentPath := range invalidPaths {
 		if _, err := contextengine.NewDocument(documentPath, "text/plain", "", "text"); !errors.Is(err, contextengine.ErrInvalidPath) {
 			t.Errorf("path %q: expected invalid path, got %v", documentPath, err)

@@ -228,6 +228,11 @@ func TestWorkspaceToolsRejectTraversalAbsolutePathsAndSymlinks(t *testing.T) {
 	unsafePaths := []json.RawMessage{
 		json.RawMessage(`{"path":"../outside.txt"}`),
 		json.RawMessage(`{"path":"/etc/passwd"}`),
+		json.RawMessage(`{"path":"C:relative.txt"}`),
+		json.RawMessage(`{"path":"inside.txt:stream.txt"}`),
+		json.RawMessage(`{"path":"CON.txt"}`),
+		json.RawMessage(`{"path":"inside.txt."}`),
+		json.RawMessage(`{"path":"inside.txt "}`),
 	}
 	if symlinksAvailable {
 		unsafePaths = append(unsafePaths,
