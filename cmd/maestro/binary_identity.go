@@ -22,7 +22,7 @@ func currentBinaryIdentity() (binaryIdentity, error) {
 	if err != nil {
 		return binaryIdentity{}, fmt.Errorf("resolve executable path: %w", err)
 	}
-	resolved, err := filepath.EvalSymlinks(executable)
+	resolved, err := resolveExecutableForIdentity(executable)
 	if err != nil {
 		return binaryIdentity{}, fmt.Errorf("resolve executable symlinks: %w", err)
 	}
