@@ -6,6 +6,7 @@ package productconfig
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -36,12 +37,15 @@ const (
 	// SingleModelEvaluationModel is the frozen M42 candidate. It aliases the
 	// already-qualified mutation identity so the experiment changes only the
 	// Direct Chat model and does not weaken the mutation contract.
-	SingleModelEvaluationModel  = QualifiedMutationModel
-	SingleModelEvaluationDigest = QualifiedMutationDigest
-	MutationPromptID            = "mutation-host-bound-model-selection-v1"
-	MutationPromptSHA256        = "594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
-	MutationSchemaID            = "host-bound-mutation-decision-v1"
-	MutationSchemaSHA256        = "bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
+	SingleModelEvaluationModel   = QualifiedMutationModel
+	SingleModelEvaluationDigest  = QualifiedMutationDigest
+	QualifiedLlamaCPPGGUFModel   = "qwen2.5-coder:14b"
+	QualifiedLlamaCPPGGUFDigest  = "ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed"
+	QualifiedLlamaCPPServerBuild = "b1-0f3a71be1"
+	MutationPromptID             = "mutation-host-bound-model-selection-v1"
+	MutationPromptSHA256         = "594659d52ec6142a5ef79c36dc0db4899e7ef1bb3f99d05017410f68bc1ba732"
+	MutationSchemaID             = "host-bound-mutation-decision-v1"
+	MutationSchemaSHA256         = "bc3432a8f19867eec8e153adaa4434b688974cf34d24b6bd770e887e0dd7557d"
 )
 
 var (
@@ -89,13 +93,16 @@ const (
 	ProductProfileUnknown               ProductProfile = ""
 	ProductProfileRecommended           ProductProfile = "recommended"
 	ProductProfileSingleModelEvaluation ProductProfile = "single_model_evaluation"
+	ProductProfileLlamaCPPGGUF          ProductProfile = "llamacpp_gguf"
 )
 
 type ProviderConfig struct {
-	ID        string   `yaml:"id"`
-	BaseURL   string   `yaml:"base_url"`
-	Timeout   Duration `yaml:"timeout"`
-	APIKeyEnv string   `yaml:"api_key_env"`
+	ID          string   `yaml:"id"`
+	BaseURL     string   `yaml:"base_url"`
+	Timeout     Duration `yaml:"timeout"`
+	APIKeyEnv   string   `yaml:"api_key_env"`
+	ModelPath   string   `yaml:"model_path,omitempty"`
+	ServerBuild string   `yaml:"server_build,omitempty"`
 }
 
 type ModelsConfig struct {
@@ -211,13 +218,17 @@ func (config Config) ProductProfile() ProductProfile {
 	}
 	chat, mutation := config.DirectChat, config.ControlledMutation
 	switch {
-	case chat.Model == QualifiedDirectChatModel && chat.Digest == QualifiedDirectChatDigest &&
+	case config.Provider.ID == "ollama" && chat.Model == QualifiedDirectChatModel && chat.Digest == QualifiedDirectChatDigest &&
 		mutation.Model == QualifiedMutationModel && mutation.Digest == QualifiedMutationDigest &&
 		chat.Model != mutation.Model:
 		return ProductProfileRecommended
-	case chat.Model == SingleModelEvaluationModel && chat.Digest == SingleModelEvaluationDigest &&
+	case config.Provider.ID == "ollama" && chat.Model == SingleModelEvaluationModel && chat.Digest == SingleModelEvaluationDigest &&
 		mutation.Model == SingleModelEvaluationModel && mutation.Digest == SingleModelEvaluationDigest:
 		return ProductProfileSingleModelEvaluation
+	case config.Provider.ID == "llama.cpp" &&
+		chat.Model == QualifiedLlamaCPPGGUFModel && chat.Digest == QualifiedLlamaCPPGGUFDigest &&
+		mutation.Model == QualifiedLlamaCPPGGUFModel && mutation.Digest == QualifiedLlamaCPPGGUFDigest:
+		return ProductProfileLlamaCPPGGUF
 	default:
 		return ProductProfileUnknown
 	}
@@ -411,11 +422,14 @@ func (config Config) ValidateProductizationProfile() error {
 	if err := validateProvider(config.Provider); err != nil {
 		return err
 	}
-	if config.Provider.ID != "ollama" {
-		return fieldError("provider.id", "productization profile requires ollama")
-	}
 	if err := validateWorkspace(config.Workspace); err != nil {
 		return err
+	}
+	if config.Provider.ID == "llama.cpp" {
+		return config.validateLlamaCPPGGUFProfile()
+	}
+	if config.Provider.ID != "ollama" {
+		return fieldError("provider.id", "productization profile requires a qualified provider")
 	}
 	chat := config.DirectChat
 	if err := validateProfile("direct_chat", chat.ProfileConfig, config.Provider.Timeout.Duration); err != nil {
@@ -444,6 +458,48 @@ func (config Config) ValidateProductizationProfile() error {
 		return fieldError("controlled_mutation", "prompt and schema must match the qualified host-bound contract")
 	}
 	return nil
+}
+
+func (config Config) validateLlamaCPPGGUFProfile() error {
+	chat, mutation := config.DirectChat, config.ControlledMutation
+	if chat.Model != QualifiedLlamaCPPGGUFModel || chat.Digest != QualifiedLlamaCPPGGUFDigest ||
+		mutation.Model != QualifiedLlamaCPPGGUFModel || mutation.Digest != QualifiedLlamaCPPGGUFDigest {
+		return fieldError("direct_chat", "chat and mutation must use the qualified single-model GGUF identity")
+	}
+	parsed, _ := url.Parse(config.Provider.BaseURL)
+	if parsed.Scheme != "http" || !loopbackHostname(parsed.Hostname()) {
+		return fieldError("provider.base_url", "qualified llama.cpp requires loopback HTTP")
+	}
+	if config.Provider.APIKeyEnv != "" {
+		return fieldError("provider.api_key_env", "qualified local llama.cpp does not use an API key")
+	}
+	if config.Provider.ServerBuild != QualifiedLlamaCPPServerBuild {
+		return fieldError("provider.server_build", "must match the qualified llama.cpp build")
+	}
+	if config.Provider.ModelPath == "" || !filepath.IsAbs(config.Provider.ModelPath) || filepath.Clean(config.Provider.ModelPath) != config.Provider.ModelPath {
+		return fieldError("provider.model_path", "must be an absolute normalized local GGUF path")
+	}
+	if err := validateProfile("direct_chat", chat.ProfileConfig, config.Provider.Timeout.Duration); err != nil {
+		return err
+	}
+	if chat.NumPredict != 1024 || chat.Residency.Duration != 0 || chat.Thinking != ThinkingDefault || chat.Streaming || chat.MaxFileBytes != 1<<20 || chat.MaxOutputBytes != 1<<20 || chat.NumCtx != 4096 {
+		return fieldError("direct_chat", "controls must match the qualified server-bound GGUF profile")
+	}
+	if !mutation.Enabled || mutation.Timeout.Duration <= 0 || mutation.Timeout.Duration > config.Provider.Timeout.Duration || mutation.NumCtx != 4096 || mutation.NumPredict != 1024 || mutation.Thinking != ThinkingDefault || mutation.Residency.Duration != 0 || mutation.MaxOutputBytes < 1 || mutation.MaxOutputBytes > 1<<20 {
+		return fieldError("controlled_mutation", "controls must match the qualified server-bound GGUF profile")
+	}
+	if mutation.Prompt != MutationPromptID || mutation.PromptSHA256 != MutationPromptSHA256 || mutation.Schema != MutationSchemaID || mutation.SchemaSHA256 != MutationSchemaSHA256 {
+		return fieldError("controlled_mutation", "prompt and schema must match the qualified host-bound contract")
+	}
+	return nil
+}
+
+func loopbackHostname(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func validateWorkspace(config WorkspaceConfig) error {
@@ -563,6 +619,9 @@ func validateProvider(config ProviderConfig) error {
 	}
 	if id == "ollama" && config.APIKeyEnv != "" {
 		return fieldError("provider.api_key_env", "is supported only by llama.cpp")
+	}
+	if id == "ollama" && (config.ModelPath != "" || config.ServerBuild != "") {
+		return fieldError("provider", "model_path and server_build are supported only by llama.cpp")
 	}
 	return nil
 }

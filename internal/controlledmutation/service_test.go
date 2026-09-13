@@ -15,6 +15,7 @@ import (
 )
 
 type fixtureProvider struct {
+	id       pkgProvider.ID
 	response pkgProvider.CompletionResponse
 	models   []pkgProvider.ModelInfo
 	requests []pkgProvider.CompletionRequest
@@ -22,7 +23,12 @@ type fixtureProvider struct {
 	complete int
 }
 
-func (provider *fixtureProvider) ID() pkgProvider.ID { return "ollama" }
+func (provider *fixtureProvider) ID() pkgProvider.ID {
+	if provider.id == "" {
+		return "ollama"
+	}
+	return provider.id
+}
 func (provider *fixtureProvider) Complete(_ context.Context, request pkgProvider.CompletionRequest) (pkgProvider.CompletionResponse, error) {
 	provider.complete++
 	provider.requests = append(provider.requests, request)
@@ -45,7 +51,41 @@ func (provider *fixtureProvider) InspectCapabilities(_ context.Context, request 
 	for _, capability := range pkgProvider.KnownCapabilities() {
 		descriptors = append(descriptors, pkgProvider.CapabilityDescriptor{Capability: capability, Support: pkgProvider.CapabilitySupported, Availability: pkgProvider.CapabilityAvailabilityAvailable})
 	}
-	return pkgProvider.CapabilityReport{Provider: "ollama", Target: request.Target, Model: request.Model, Capabilities: descriptors}, nil
+	return pkgProvider.CapabilityReport{Provider: provider.ID(), Target: request.Target, Model: request.Model, Capabilities: descriptors}, nil
+}
+
+func TestLlamaCPPGGUFMutationUsesServerBoundControlsWithoutHandoff(t *testing.T) {
+	root, _ := mutationWorkspace(t)
+	config := fixtureConfig(root)
+	config.Provider = productconfig.ProviderConfig{ID: "llama.cpp", BaseURL: "http://127.0.0.1:18080", Timeout: productconfig.Duration{Duration: 5 * time.Minute}, ModelPath: filepath.Join(root, "model.gguf"), ServerBuild: productconfig.QualifiedLlamaCPPServerBuild}
+	config.DirectChat.Model = productconfig.QualifiedLlamaCPPGGUFModel
+	config.DirectChat.Digest = productconfig.QualifiedLlamaCPPGGUFDigest
+	config.DirectChat.Thinking = productconfig.ThinkingDefault
+	config.DirectChat.Residency.Duration = 0
+	config.ControlledMutation.Model = productconfig.QualifiedLlamaCPPGGUFModel
+	config.ControlledMutation.Digest = productconfig.QualifiedLlamaCPPGGUFDigest
+	config.ControlledMutation.Thinking = productconfig.ThinkingDefault
+	config.ControlledMutation.Residency.Duration = 0
+	provider := qualifiedProvider(`{"decision":"abstain"}`)
+	provider.id = "llama.cpp"
+	provider.response.Model = productconfig.QualifiedLlamaCPPGGUFModel
+	provider.models = []pkgProvider.ModelInfo{{Model: pkgProvider.Model{ID: productconfig.QualifiedLlamaCPPGGUFModel}, Digest: productconfig.QualifiedLlamaCPPGGUFDigest, State: pkgProvider.ModelStateLoaded}}
+	service, err := Build(config, Dependencies{ProviderFactory: func(productconfig.Config, string) (pkgProvider.Provider, error) { return provider, nil }, RunID: func() (pkgTool.RunID, error) { return "m46-test", nil }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = service.Execute(context.Background(), Request{File: "app/Worker.php", StartLine: 2, EndLine: 2, Instruction: "do not change without a value", Approver: approverFunc(func(context.Context, pkgTool.PermissionRequest) (pkgTool.Approval, error) {
+		t.Fatal("abstention reached approval")
+		return pkgTool.Approval{}, nil
+	})})
+	if !errors.Is(err, ErrInsufficientInfo) || len(provider.requests) != 1 || len(provider.unloads) != 0 {
+		t.Fatalf("result err=%v requests=%#v unloads=%v", err, provider.requests, provider.unloads)
+	}
+	request := provider.requests[0]
+	if request.KeepAlive != 0 || request.Options.ContextWindow != 0 ||
+		request.Options.Thinking != "" || request.Options.MaxTokens != 1024 {
+		t.Fatalf("llama.cpp controls drifted: %#v", request)
+	}
 }
 
 type approverFunc func(context.Context, pkgTool.PermissionRequest) (pkgTool.Approval, error)

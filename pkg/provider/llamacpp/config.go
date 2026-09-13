@@ -23,6 +23,20 @@ type Config struct {
 
 	DefaultModel string
 
+	// LocalModelPath enables local GGUF attestation. When set, model
+	// discovery verifies that llama-server loaded this exact regular file.
+	LocalModelPath string
+
+	// ModelDigest is the lowercase SHA-256 expected for LocalModelPath.
+	ModelDigest string
+
+	// ServerBuild is the exact llama-server build_info expected from /props.
+	ServerBuild string
+
+	// ContextWindow is the effective server-side context window expected from
+	// /props. A zero value does not constrain it.
+	ContextWindow int
+
 	// APIKey enables Bearer authentication when it is not empty.
 	APIKey string
 

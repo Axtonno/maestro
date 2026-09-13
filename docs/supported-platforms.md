@@ -37,3 +37,13 @@ release pubblica: questa evidenza non amplia il support claim v0.5.0 e non vale
 per esecuzione o filesystem Windows nativi.
 
 Il perimetro funzionale completo è nella pagina [Capacità correnti](current-capabilities.md).
+
+## Trial llama.cpp / GGUF post-v0.5
+
+M46 ha qualificato su Windows 11 `amd64` il profilo single-model dichiarato in
+`configs/maestro.llamacpp-gguf.example.yaml`: `llama-server` build
+`b1-0f3a71be1`, GGUF SHA-256 `ac9bc7a…b1ed`, alias
+`qwen2.5-coder:14b`, context window 4096 e endpoint loopback. Doctor, chat,
+preview, deny, allow-once e stale sono stati provati senza fallback o cambio
+modello. È un candidate locale post-release: non modifica la matrice v0.5.0 e
+non qualifica altre build, altri GGUF, router mode o endpoint remoti.

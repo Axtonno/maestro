@@ -50,6 +50,69 @@ func TestV4RejectsIdentityFallbackAndContractDrift(t *testing.T) {
 	}
 }
 
+func TestV4AcceptsOnlyFrozenLlamaCPPGGUFProfile(t *testing.T) {
+	root := t.TempDir()
+	modelPath := filepath.Join(root, "model.gguf")
+	value := fmt.Sprintf(`version: 4
+provider:
+  id: llama.cpp
+  base_url: http://127.0.0.1:18080
+  timeout: 5m
+  api_key_env: ""
+  model_path: %s
+  server_build: %s
+workspace:
+  id: laravel
+  root: %s
+  framework: laravel
+direct_chat:
+  model: %s
+  digest: %s
+  timeout: 5m
+  streaming: false
+  num_ctx: 4096
+  num_predict: 1024
+  thinking: default
+  residency: 0s
+  max_file_bytes: 1048576
+  max_output_bytes: 1048576
+controlled_mutation:
+  enabled: true
+  model: %s
+  digest: %s
+  timeout: 5m
+  num_ctx: 4096
+  num_predict: 1024
+  thinking: default
+  residency: 0s
+  prompt: %s
+  prompt_sha256: %s
+  schema: %s
+  schema_sha256: %s
+  max_output_bytes: 1048576
+`, modelPath, QualifiedLlamaCPPServerBuild, root, QualifiedLlamaCPPGGUFModel,
+		QualifiedLlamaCPPGGUFDigest, QualifiedLlamaCPPGGUFModel,
+		QualifiedLlamaCPPGGUFDigest, MutationPromptID, MutationPromptSHA256,
+		MutationSchemaID, MutationSchemaSHA256)
+	config, err := LoadMutation(writeV4(t, value))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.ProductProfile() != ProductProfileLlamaCPPGGUF {
+		t.Fatalf("unexpected profile %q", config.ProductProfile())
+	}
+	for _, drift := range []string{
+		strings.Replace(value, "127.0.0.1", "example.com", 1),
+		strings.Replace(value, QualifiedLlamaCPPServerBuild, "other-build", 1),
+		strings.Replace(value, "residency: 0s", "residency: 5m", 1),
+		strings.Replace(value, QualifiedLlamaCPPGGUFDigest, strings.Repeat("0", 64), 1),
+	} {
+		if _, err := LoadMutation(writeV4(t, drift)); !errors.Is(err, ErrInvalid) {
+			t.Fatalf("llama.cpp drift accepted: %v", err)
+		}
+	}
+}
+
 func writeV4(t *testing.T, value string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "config.yaml")

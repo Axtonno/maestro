@@ -71,6 +71,12 @@ func New(config Config) (*Provider, error) {
 		config.DefaultModel,
 		config.APIKey,
 		client,
+		internalLlamaCPP.Attestation{
+			ModelPath:     config.LocalModelPath,
+			ModelDigest:   config.ModelDigest,
+			ServerBuild:   config.ServerBuild,
+			ContextWindow: config.ContextWindow,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf(

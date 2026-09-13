@@ -72,7 +72,11 @@ func (p *Provider) DiscoverModels(
 		return nil, err
 	}
 
-	return translateModelInfos(models)
+	infos, err := translateModelInfos(models)
+	if err != nil {
+		return nil, err
+	}
+	return p.attestLocalModel(ctx, infos)
 }
 
 func (p *Provider) modelCatalog(

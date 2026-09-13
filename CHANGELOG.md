@@ -26,6 +26,10 @@ dichiarato nelle note di release.
   percorso post-v0.5 `setup → chat → preview → allow-once`, inclusi deny,
   stale e rifiuto dei path Windows. Il candidate non è pubblicato e non
   autorizza supporto Windows nativo.
+- qualificato il profilo post-release llama.cpp/GGUF single-model con
+  attestazione fail-closed di build server, alias, path, magic, digest e
+  context window; i controlli server-bound non vengono tradotti in opzioni
+  Ollama e non esistono handoff o fallback impliciti.
 
 ## [0.5.0] - 2026-09-06
 

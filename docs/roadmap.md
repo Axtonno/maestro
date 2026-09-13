@@ -19,6 +19,8 @@ risultato non equivale a supporto Windows nativo.
   Windows ancora in valutazione è quello nativo;
 - miglioramenti dell’esperienza editor mantenendo preview e approvazione nella
   superficie controllata.
+- productizzazione successiva del profilo llama.cpp/GGUF qualificato da M46,
+  senza estendere implicitamente la release v0.5.0.
 
 ## Non promesso
 
@@ -27,8 +29,9 @@ risultato non equivale a supporto Windows nativo.
 - agent autonomi e tool calling come superficie di prodotto;
 - esecuzione automatica di shell, Git, build o test;
 - supporto di provider e modelli non qualificati;
-- un profilo single-model senza una nuova qualifica: il candidato già valutato
-  ha conservato i gate mutativi, ma non ha raggiunto la qualità Direct Chat.
+- un profilo single-model diverso dall'identità llama.cpp/GGUF qualificata da
+  M46: il precedente candidato Ollama ha conservato i gate mutativi, ma non ha
+  raggiunto la qualità Direct Chat.
 
 Le priorità possono cambiare sulla base di sicurezza, affidabilità e riscontri
 degli utenti. I piani tattici e i report intermedi non fanno parte della

@@ -154,10 +154,14 @@ func defaultProvider(config productconfig.Config, secret string) (pkgProvider.Pr
 		})
 	case "llama.cpp":
 		return pkgLlamaCPP.New(pkgLlamaCPP.Config{
-			BaseURL:      config.Provider.BaseURL,
-			Timeout:      config.Provider.Timeout.Duration,
-			DefaultModel: profile.Model,
-			APIKey:       secret,
+			BaseURL:        config.Provider.BaseURL,
+			Timeout:        config.Provider.Timeout.Duration,
+			DefaultModel:   profile.Model,
+			APIKey:         secret,
+			LocalModelPath: config.Provider.ModelPath,
+			ModelDigest:    profile.Digest,
+			ServerBuild:    config.Provider.ServerBuild,
+			ContextWindow:  profile.NumCtx,
 		})
 	default:
 		return nil, fmt.Errorf("direct chat provider %q is not implemented", config.Provider.ID)
@@ -199,8 +203,10 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 		Model:      service.profile.Model,
 		Messages:   chatMessages(request.Question, request.File, content),
 		Options:    service.generationOptions(),
-		KeepAlive:  service.profile.Residency.Duration,
 		ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceNone},
+	}
+	if service.config.ProductProfile() != productconfig.ProductProfileLlamaCPPGGUF {
+		completionRequest.KeepAlive = service.profile.Residency.Duration
 	}
 	if service.started != nil {
 		service.started()
@@ -400,6 +406,13 @@ func (service *Service) handoff(ctx context.Context, outgoing string) error {
 
 func (service *Service) generationOptions() pkgProvider.GenerationOptions {
 	options := service.profile.GenerationOptions()
+	if service.config.ProductProfile() == productconfig.ProductProfileLlamaCPPGGUF {
+		// llama.cpp owns context and thinking at process startup; the qualified
+		// profile attests them through /props instead of sending unsupported
+		// per-request controls.
+		options.ContextWindow = 0
+		options.Thinking = ""
+	}
 	temperature := directChatTemperature
 	options.Temperature = &temperature
 	return options

@@ -47,7 +47,10 @@ memoria dipendono dall’hardware; vedere [Benchmark](benchmarks.md).
 - componenti agent, context e tool presenti nel codice;
 - streaming nei profili storici;
 - integrazione editor;
-- percorso single-model disponibile soltanto in una build di valutazione.
+- percorso Ollama single-model M42 disponibile soltanto in una build di
+  valutazione e respinto dal relativo gate di qualità.
+- profilo llama.cpp/GGUF single-model qualificato dal trial M46 sul target
+  dichiarato; è post-release, non viene creato da setup e non amplia v0.5.0.
 
 La presenza del codice non costituisce una promessa operativa.
 

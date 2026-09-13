@@ -30,6 +30,16 @@ type Provider struct {
 	defaultModel string
 	apiKey       string
 	client       *http.Client
+	attestation  Attestation
+}
+
+// Attestation binds a loopback llama-server process to one exact local GGUF.
+// Its zero value preserves the transport-only adapter behavior.
+type Attestation struct {
+	ModelPath     string
+	ModelDigest   string
+	ServerBuild   string
+	ContextWindow int
 }
 
 func New(
@@ -37,6 +47,7 @@ func New(
 	defaultModel string,
 	apiKey string,
 	client *http.Client,
+	attestation ...Attestation,
 ) (*Provider, error) {
 	normalizedBaseURL, err := normalizeBaseURL(baseURL)
 	if err != nil {
@@ -55,11 +66,23 @@ func New(
 		return nil, fmt.Errorf("API key contains surrounding whitespace")
 	}
 
+	var expected Attestation
+	if len(attestation) > 1 {
+		return nil, fmt.Errorf("multiple llama.cpp attestations")
+	}
+	if len(attestation) == 1 {
+		expected = attestation[0]
+		if err := expected.validate(normalizedBaseURL, defaultModel); err != nil {
+			return nil, err
+		}
+	}
+
 	return &Provider{
 		baseURL:      normalizedBaseURL,
 		defaultModel: defaultModel,
 		apiKey:       apiKey,
 		client:       client,
+		attestation:  expected,
 	}, nil
 }
 

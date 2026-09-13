@@ -116,6 +116,16 @@ type modelMeta struct {
 	ContextLen int   `json:"n_ctx_train"`
 }
 
+type serverProps struct {
+	ModelAlias string `json:"model_alias"`
+	ModelPath  string `json:"model_path"`
+	ModelFType string `json:"model_ftype"`
+	BuildInfo  string `json:"build_info"`
+	Settings   struct {
+		ContextWindow int `json:"n_ctx"`
+	} `json:"default_generation_settings"`
+}
+
 type modelLifecycleRequest struct {
 	Model string `json:"model"`
 }

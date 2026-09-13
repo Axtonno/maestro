@@ -35,6 +35,8 @@ func Doctor(ctx context.Context, config productconfig.Config, dependencies Depen
 	configurationDetail := "schema_v4_profiles_separated"
 	if config.ProductProfile() == productconfig.ProductProfileSingleModelEvaluation {
 		configurationDetail = "schema_v4_single_model_evaluation"
+	} else if config.ProductProfile() == productconfig.ProductProfileLlamaCPPGGUF {
+		configurationDetail = "schema_v4_llamacpp_gguf_single_model"
 	}
 	add("configuration", valid, configurationDetail, "configuration_invalid")
 	add("mutation_prompt", PromptSHA256() == productconfig.MutationPromptSHA256, "qualified_prompt_digest", "prompt_digest_mismatch")
@@ -60,7 +62,8 @@ func Doctor(ctx context.Context, config productconfig.Config, dependencies Depen
 	candidate, providerErr := dependencies.ProviderFactory(config, secret)
 	provider, ok := candidate.(mutationProvider)
 	providerOK := secretErr == nil && providerErr == nil && ok && !nilValue(provider) && provider.ID() == pkgProvider.ID(config.Provider.ID)
-	add("provider", providerOK, "ollama_available", "provider_unavailable")
+	providerDetail := config.Provider.ID + "_available"
+	add("provider", providerOK, providerDetail, "provider_unavailable")
 	if !providerOK {
 		add("direct_chat_model", false, "", "provider_unavailable")
 		add("controlled_mutation_model", false, "", "provider_unavailable")
@@ -83,7 +86,11 @@ func Doctor(ctx context.Context, config productconfig.Config, dependencies Depen
 	add("controlled_mutation_model", identity(config.ControlledMutation.Model, config.ControlledMutation.Digest), "qualified_model_digest", "model_or_digest_mismatch")
 	report, capabilityErr := provider.InspectCapabilities(ctx, pkgProvider.CapabilityRequest{Target: pkgProvider.CapabilityTargetModel, Model: config.ControlledMutation.Model})
 	capabilityOK := capabilityErr == nil
-	for _, capability := range []pkgProvider.Capability{pkgProvider.CapabilityCompletion, pkgProvider.CapabilityStructuredOutput, pkgProvider.CapabilityModelDiscovery, pkgProvider.CapabilityModelUnload, pkgProvider.CapabilityContextWindowControl, pkgProvider.CapabilityThinkingControl} {
+	required := []pkgProvider.Capability{pkgProvider.CapabilityCompletion, pkgProvider.CapabilityStructuredOutput, pkgProvider.CapabilityModelDiscovery}
+	if config.ProductProfile() != productconfig.ProductProfileLlamaCPPGGUF {
+		required = append(required, pkgProvider.CapabilityModelUnload, pkgProvider.CapabilityContextWindowControl, pkgProvider.CapabilityThinkingControl)
+	}
+	for _, capability := range required {
 		capabilityOK = capabilityOK && capabilityAvailable(report, capability)
 	}
 	add("capability", capabilityOK, "host_bound_mutation_available", "required_capability_unavailable")

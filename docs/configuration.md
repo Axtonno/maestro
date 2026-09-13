@@ -86,6 +86,43 @@ directory del YAML e diventa assoluto prima della validazione.
 
 Cambiare endpoint può inviare domanda e file a un servizio non qualificato.
 
+### Profilo llama.cpp / GGUF post-v0.5
+
+Il trial M46 ha qualificato un secondo profilo v4, distribuito come
+`configs/maestro.llamacpp-gguf.example.yaml`. Non modifica il support claim
+dell'archive v0.5.0 e non viene creato da `maestro setup`.
+
+Il profilo richiede simultaneamente:
+
+- `llama-server` su HTTP loopback e build esatta `b1-0f3a71be1`;
+- alias API esatto `qwen2.5-coder:14b`;
+- un file GGUF locale regolare con SHA-256
+  `ac9bc7a69dab38da1c790838955f1293420b55ab555ef6b4615efa1c1507b1ed`;
+- `model_path` assoluto e normalizzato, coincidente con quello osservato da
+  `/props`;
+- context window server-side 4096, un solo modello e nessuna API key.
+
+Avvio equivalente sul target Windows qualificato:
+
+```powershell
+& C:\path\to\llama-server.exe `
+  --model C:\path\to\qwen2.5-coder-14b-q4_k_m.gguf `
+  --alias qwen2.5-coder:14b --host 127.0.0.1 --port 18080 `
+  --ctx-size 4096 --parallel 1 --jinja --no-webui
+maestro doctor --mode all --config .\configs\maestro.llamacpp-gguf.example.yaml
+```
+
+Maestro legge il file dichiarato, verifica magic GGUF e digest SHA-256, quindi
+confronta alias, path, build e context window con `/models` e `/props`. Un
+valore assente o diverso fallisce il preflight. Il path non viene derivato da
+una risposta server non fidata e l'attestazione locale non è ammessa su un
+endpoint remoto.
+
+In questo profilo `num_ctx` attesta il valore di startup del server;
+`thinking: default` e `residency: 0s` dichiarano che Maestro non invia i
+controlli Ollama `thinking` e `keep_alive`. Il processo single-model non espone
+load/unload: chat e mutation usano la stessa identità senza handoff o fallback.
+
 ## `workspace`
 
 La root deve essere una directory reale e non un symlink. Direct Chat risolve

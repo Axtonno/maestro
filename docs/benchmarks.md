@@ -42,6 +42,29 @@ Il candidate è locale e non pubblicato. Il trial chiude il gate operativo
 WSL2, ma non costituisce una release, non modifica l'asset v0.5.0 e non
 autorizza supporto Windows nativo.
 
+## Trial llama.cpp / GGUF post-v0.5
+
+Il 2026-09-13 il profilo M46 è stato eseguito su Windows 11 `amd64` con un
+processo `llama-server` single-model su loopback e il GGUF congelato di
+`qwen2.5-coder:14b`.
+
+| Verifica | Risultato |
+| --- | --- |
+| Identità | build, alias, path locale, magic GGUF, SHA-256 e context 4096 attestati |
+| Doctor | 14/14 check superati in TTY reale |
+| Chat | modello osservato esatto, nessun fallback |
+| Preview e deny | nessuna scrittura |
+| Allow-once | unica sostituzione attesa e durevole |
+| Stale | modifica concorrente preservata |
+| Lifecycle | singolo modello residente; load/unload non richiesti e endpoint router assente |
+| Memoria osservata | file 8.988.110.784 byte; private bytes 7.692.800.000 |
+| Contratti repository | test, race detector, vet e `git diff --check` superati |
+
+La qualifica vale soltanto per l'identità congelata. Il server ha riportato un
+working set massimo osservato di 16.042.967.040 byte sul target; è quindi
+necessario conservare margine di memoria e swap. Il risultato non autorizza
+fallback, router mode o download gestito da Maestro.
+
 ## Riproduzione minima
 
 Scaricare archive e checksum dalla stessa GitHub Release, quindi verificare

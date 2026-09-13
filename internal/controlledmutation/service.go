@@ -20,6 +20,7 @@ import (
 	internalTool "github.com/antonio-cafeo/maestro/internal/tool"
 	pkgContext "github.com/antonio-cafeo/maestro/pkg/contextengine"
 	pkgProvider "github.com/antonio-cafeo/maestro/pkg/provider"
+	pkgLlamaCPP "github.com/antonio-cafeo/maestro/pkg/provider/llamacpp"
 	pkgOllama "github.com/antonio-cafeo/maestro/pkg/provider/ollama"
 	pkgTool "github.com/antonio-cafeo/maestro/pkg/tool"
 )
@@ -107,8 +108,22 @@ func Build(config productconfig.Config, dependencies Dependencies) (*Service, er
 	return &Service{config: config, profile: config.ControlledMutation, provider: provider, runID: dependencies.RunID, after: dependencies.AfterPreview}, nil
 }
 
-func defaultProvider(config productconfig.Config, _ string) (pkgProvider.Provider, error) {
-	return pkgOllama.New(pkgOllama.Config{BaseURL: config.Provider.BaseURL, Timeout: config.Provider.Timeout.Duration, DefaultModel: config.ControlledMutation.Model})
+func defaultProvider(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
+	switch config.Provider.ID {
+	case "ollama":
+		return pkgOllama.New(pkgOllama.Config{BaseURL: config.Provider.BaseURL, Timeout: config.Provider.Timeout.Duration, DefaultModel: config.ControlledMutation.Model})
+	case "llama.cpp":
+		return pkgLlamaCPP.New(pkgLlamaCPP.Config{
+			BaseURL: config.Provider.BaseURL, Timeout: config.Provider.Timeout.Duration,
+			DefaultModel: config.ControlledMutation.Model, APIKey: secret,
+			LocalModelPath: config.Provider.ModelPath,
+			ModelDigest:    config.ControlledMutation.Digest,
+			ServerBuild:    config.Provider.ServerBuild,
+			ContextWindow:  config.ControlledMutation.NumCtx,
+		})
+	default:
+		return nil, fmt.Errorf("controlled mutation provider %q is not implemented", config.Provider.ID)
+	}
 }
 
 func (service *Service) Execute(ctx context.Context, request Request) (Result, error) {
@@ -159,15 +174,19 @@ func (service *Service) Execute(ctx context.Context, request Request) (Result, e
 		return Result{}, ErrExecutionFailed
 	}
 	temperature := 0.0
-	options := service.profile.GenerationOptions()
+	options := service.generationOptions()
 	options.Temperature = &temperature
-	response, err := service.provider.Complete(runContext, pkgProvider.CompletionRequest{
-		Model:    service.profile.Model,
-		Messages: []pkgProvider.Message{{Role: pkgProvider.RoleSystem, Content: string(prompt)}, {Role: pkgProvider.RoleUser, Content: string(payload)}},
-		Options:  options, KeepAlive: service.profile.Residency.Duration,
+	completionRequest := pkgProvider.CompletionRequest{
+		Model:      service.profile.Model,
+		Messages:   []pkgProvider.Message{{Role: pkgProvider.RoleSystem, Content: string(prompt)}, {Role: pkgProvider.RoleUser, Content: string(payload)}},
+		Options:    options,
 		ToolChoice: pkgProvider.ToolChoice{Mode: pkgProvider.ToolChoiceNone},
 		Output:     &pkgProvider.StructuredOutput{Mode: pkgProvider.StructuredOutputJSONSchema, Schema: append(json.RawMessage(nil), schema...)},
-	})
+	}
+	if service.config.ProductProfile() != productconfig.ProductProfileLlamaCPPGGUF {
+		completionRequest.KeepAlive = service.profile.Residency.Duration
+	}
+	response, err := service.provider.Complete(runContext, completionRequest)
 	if err != nil {
 		return Result{}, executionError(runContext, err)
 	}
@@ -220,15 +239,28 @@ func (service *Service) preflight(ctx context.Context) error {
 	if err != nil {
 		return executionError(ctx, err)
 	}
-	for _, capability := range []pkgProvider.Capability{pkgProvider.CapabilityCompletion, pkgProvider.CapabilityStructuredOutput, pkgProvider.CapabilityModelDiscovery, pkgProvider.CapabilityModelUnload} {
+	required := []pkgProvider.Capability{pkgProvider.CapabilityCompletion, pkgProvider.CapabilityStructuredOutput, pkgProvider.CapabilityModelDiscovery}
+	if service.config.ProductProfile() != productconfig.ProductProfileLlamaCPPGGUF {
+		required = append(required, pkgProvider.CapabilityModelUnload)
+	}
+	for _, capability := range required {
 		if !capabilityAvailable(report, capability) {
 			return ErrCapabilityUnsupported
 		}
 	}
-	if err := pkgProvider.ValidateGenerationCapabilities(report, service.profile.GenerationOptions()); err != nil {
+	if err := pkgProvider.ValidateGenerationCapabilities(report, service.generationOptions()); err != nil {
 		return ErrCapabilityUnsupported
 	}
 	return nil
+}
+
+func (service *Service) generationOptions() pkgProvider.GenerationOptions {
+	options := service.profile.GenerationOptions()
+	if service.config.ProductProfile() == productconfig.ProductProfileLlamaCPPGGUF {
+		options.ContextWindow = 0
+		options.Thinking = ""
+	}
+	return options
 }
 
 func verifyIdentity(ctx context.Context, provider pkgProvider.ModelDiscoverer, model, digest string) error {

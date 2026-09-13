@@ -222,19 +222,27 @@ func normalizeDependencies(dependencies Dependencies) Dependencies {
 
 func defaultProvider(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
 	agentProfile := config.AgentProfile()
+	defaultModel := agentProfile.Model
+	if chat, exists := config.ChatProfile(); exists && defaultModel == "" {
+		defaultModel = chat.Model
+	}
 	switch config.Provider.ID {
 	case "ollama":
 		return pkgOllama.New(pkgOllama.Config{
 			BaseURL:      config.Provider.BaseURL,
 			Timeout:      config.Provider.Timeout.Duration,
-			DefaultModel: agentProfile.Model,
+			DefaultModel: defaultModel,
 		})
 	case "llama.cpp":
 		return pkgLlamaCPP.New(pkgLlamaCPP.Config{
-			BaseURL:      config.Provider.BaseURL,
-			Timeout:      config.Provider.Timeout.Duration,
-			DefaultModel: agentProfile.Model,
-			APIKey:       secret,
+			BaseURL:        config.Provider.BaseURL,
+			Timeout:        config.Provider.Timeout.Duration,
+			DefaultModel:   defaultModel,
+			APIKey:         secret,
+			LocalModelPath: config.Provider.ModelPath,
+			ModelDigest:    config.DirectChat.Digest,
+			ServerBuild:    config.Provider.ServerBuild,
+			ContextWindow:  config.DirectChat.NumCtx,
 		})
 	default:
 		return nil, fmt.Errorf("provider %q is not implemented", config.Provider.ID)
@@ -254,11 +262,15 @@ func randomRunID() (pkgAgent.RunID, error) {
 func HTTPClientProviderFactory(client *http.Client) ProviderFactory {
 	return func(config productconfig.Config, secret string) (pkgProvider.Provider, error) {
 		agentProfile := config.AgentProfile()
+		defaultModel := agentProfile.Model
+		if chat, exists := config.ChatProfile(); exists && defaultModel == "" {
+			defaultModel = chat.Model
+		}
 		switch config.Provider.ID {
 		case "ollama":
-			return pkgOllama.New(pkgOllama.Config{BaseURL: config.Provider.BaseURL, DefaultModel: agentProfile.Model, HTTPClient: client})
+			return pkgOllama.New(pkgOllama.Config{BaseURL: config.Provider.BaseURL, DefaultModel: defaultModel, HTTPClient: client})
 		case "llama.cpp":
-			return pkgLlamaCPP.New(pkgLlamaCPP.Config{BaseURL: config.Provider.BaseURL, DefaultModel: agentProfile.Model, APIKey: secret, HTTPClient: client})
+			return pkgLlamaCPP.New(pkgLlamaCPP.Config{BaseURL: config.Provider.BaseURL, DefaultModel: defaultModel, APIKey: secret, HTTPClient: client, LocalModelPath: config.Provider.ModelPath, ModelDigest: config.DirectChat.Digest, ServerBuild: config.Provider.ServerBuild, ContextWindow: config.DirectChat.NumCtx})
 		default:
 			return nil, fmt.Errorf("provider %q is not implemented", config.Provider.ID)
 		}
