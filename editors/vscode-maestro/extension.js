@@ -56,7 +56,7 @@ function resolveRuntime(folder, options = {}) {
     hostPath: process.env.PATH,
     hostCwd: process.cwd()
   });
-  const config = options.configRequired
+  const config = options.configRequired && settings.configPath.trim() !== ''
     ? resolveConfigPath(settings.configPath, folder.uri.fsPath)
     : undefined;
   return {
@@ -205,7 +205,7 @@ async function launch(folder, runtime, invocation, metadata) {
     definition,
     folder,
     runtime.terminalName,
-    'Maestro Preview',
+    'Maestro',
     execution,
     []
   );
@@ -260,7 +260,7 @@ function showResolution(runtime) {
     ? `; config from Settings: ${runtime.configPath}`
     : '';
   vscode.window.setStatusBarMessage(
-    `Maestro Preview — binary from ${origin}: ${runtime.binaryPath}${config}`,
+    `Maestro — binary from ${origin}: ${runtime.binaryPath}${config}`,
     10000
   );
 }
@@ -276,7 +276,7 @@ async function presentError(error) {
     error.action
   );
   if (selected === SETTINGS_ACTION) {
-    await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:maestro-local.maestro-vscode-preview');
+    await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:axtonno.maestro-local-ai');
   } else if (selected === GUIDE_ACTION) {
     await vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.joinPath(extensionContext.extensionUri, 'README.md'));
   } else if (selected === 'Save File') {

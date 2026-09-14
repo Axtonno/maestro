@@ -60,7 +60,7 @@ function checkedUserText(value, emptyCode, invalidCode) {
 function buildChatInvocation(resolved, logicalPath, question) {
   return invocation(resolved.binaryPath, [
     'chat',
-    '--config', resolved.configPath,
+    ...configArguments(resolved),
     '--file', checkedArgument(logicalPath, 'file_outside_workspace'),
     '--', checkedUserText(question, 'question_empty', 'question_invalid')
   ]);
@@ -71,13 +71,13 @@ function buildMutationInvocation(resolved, logicalPath, lines, instruction) {
     'workspace', 'replace',
     '--file', checkedArgument(logicalPath, 'file_outside_workspace'),
     '--lines', checkedArgument(lines, 'selection_invalid'),
-    '--config', resolved.configPath,
+    ...configArguments(resolved),
     '--', checkedUserText(instruction, 'instruction_empty', 'instruction_invalid')
   ]);
 }
 
 function buildDoctorInvocation(resolved) {
-  return invocation(resolved.binaryPath, ['doctor', '--mode', 'all', '--config', resolved.configPath]);
+  return invocation(resolved.binaryPath, ['doctor', '--mode', 'all', ...configArguments(resolved)]);
 }
 
 function buildVersionInvocation(resolved) {
@@ -89,6 +89,10 @@ function invocation(executable, args) {
     executable: checkedArgument(executable, 'binary_not_executable'),
     args: Object.freeze(args.map(value => checkedArgument(value, 'command_unavailable')))
   });
+}
+
+function configArguments(resolved) {
+  return resolved.configPath ? ['--config', resolved.configPath] : [];
 }
 
 module.exports = {

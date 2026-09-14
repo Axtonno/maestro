@@ -1,22 +1,42 @@
 {
-  "name": "maestro-vscode-preview",
-  "displayName": "Maestro (Preview)",
-  "description": "Local VS Code Preview for explicit chat and Controlled Mutation through the Maestro CLI.",
-  "version": "0.1.0",
-  "private": true,
-  "publisher": "maestro-local",
-  "license": "Apache-2.0",
+  "name": "maestro-local-ai",
+  "displayName": "Maestro for VS Code",
+  "description": "Run explicit local AI chat and Controlled Mutation workflows through the Maestro CLI.",
+  "version": "0.1.1",
+  "publisher": "axtonno",
+  "preview": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#08111f",
+    "theme": "dark"
+  },
+  "pricing": "Free",
   "repository": {
     "type": "git",
     "url": "https://github.com/Axtonno/maestro.git",
     "directory": "editors/vscode-maestro"
   },
+  "bugs": {
+    "url": "https://github.com/Axtonno/maestro/issues"
+  },
+  "homepage": "https://github.com/Axtonno/maestro/tree/master/editors/vscode-maestro#readme",
   "engines": {
     "node": ">=22.12.0",
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Machine Learning",
     "Other"
+  ],
+  "keywords": [
+    "local ai",
+    "ollama",
+    "php",
+    "laravel",
+    "code assistant",
+    "controlled mutation",
+    "privacy"
   ],
   "main": "./extension.js",
   "extensionKind": [
@@ -25,7 +45,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": false,
-      "description": "The Preview launches the resolved local Maestro binary in a workspace terminal."
+      "description": "The extension launches the resolved local Maestro binary in a workspace terminal."
     },
     "virtualWorkspaces": {
       "supported": false
@@ -71,7 +91,7 @@
       ]
     },
     "configuration": {
-      "title": "Maestro Preview",
+      "title": "Maestro",
       "properties": {
         "maestro.binaryPath": {
           "type": "string",
@@ -83,7 +103,7 @@
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Maestro v4 configuration file. Relative paths resolve from the selected workspace and the resolved file must remain inside that workspace."
+          "description": "Optional Maestro v4 configuration file. When empty, the CLI uses the configuration created by maestro setup. Relative paths resolve inside the selected workspace."
         },
         "maestro.terminalName": {
           "type": "string",
@@ -97,7 +117,7 @@
   "scripts": {
     "test": "npm run test:unit",
     "test:all": "npm run test:unit && npm run test:integration",
-    "package:vsix": "vsce package --no-dependencies --out dist/maestro-vscode-preview-0.1.0.vsix",
+    "package:vsix": "node test/package-vsix.js",
     "package:list": "vsce ls --no-dependencies",
     "test:unit": "node --test --test-isolation=none test/*.test.js",
     "test:integration": "node test/run-integration.js",
@@ -106,6 +126,8 @@
   "devDependencies": {
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "3.9.2",
-    "mocha": "12.0.0"
+    "mocha": "12.0.0",
+    "yauzl": "3.4.0",
+    "yazl": "2.5.1"
   }
 }

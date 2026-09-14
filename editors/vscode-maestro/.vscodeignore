@@ -2,9 +2,13 @@
 !CHANGELOG.md
 !LICENSE
 !README.md
+!SECURITY.md
+!SUPPORT.md
+!ASSET_PROVENANCE.md
 !command-builder.js
 !diagnostics.js
 !errors.js
 !extension.js
+!media/icon.png
 !package.json
 !path-resolver.js

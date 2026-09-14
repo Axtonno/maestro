@@ -11,10 +11,10 @@ const commandIDs = [
   'maestro.version'
 ];
 
-suite('Maestro VS Code Preview', () => {
+suite('Maestro for VS Code', () => {
 
   test('activates and registers the complete command surface', async () => {
-    const extension = vscode.extensions.getExtension('maestro-local.maestro-vscode-preview');
+    const extension = vscode.extensions.getExtension('axtonno.maestro-local-ai');
     assert.ok(extension, 'development extension was not discovered');
     await extension.activate();
     assert.equal(extension.isActive, true);
@@ -28,6 +28,15 @@ suite('Maestro VS Code Preview', () => {
     await configureHarmlessBinary();
     const task = await executeAndObserve('maestro.version');
     assertTask(task, ['version', '--diagnostic']);
+  });
+
+  test('delegates the default setup configuration to the CLI', async () => {
+    const workspace = process.env.MAESTRO_VSCODE_TEST_WORKSPACE;
+    const configuration = vscode.workspace.getConfiguration('maestro');
+    await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+    await configuration.update('configPath', '', vscode.ConfigurationTarget.Workspace);
+    const task = await executeAndObserve('maestro.doctor');
+    assertTask(task, ['doctor', '--mode', 'all']);
   });
 
   test('binds chat and mutation to the saved active file and selection', async () => {

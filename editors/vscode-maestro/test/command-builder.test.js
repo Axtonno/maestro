@@ -67,6 +67,20 @@ test('doctor and identity keep fixed argument vectors', () => {
   });
 });
 
+test('omits the config flag so the CLI can use the maestro setup default', () => {
+  const defaultConfig = { binaryPath: '/usr/local/bin/maestro' };
+  assert.deepEqual(buildDoctorInvocation(defaultConfig), {
+    executable: '/usr/local/bin/maestro',
+    args: ['doctor', '--mode', 'all']
+  });
+  assert.deepEqual(buildChatInvocation(defaultConfig, 'app/Order.php', 'What is returned?').args, [
+    'chat', '--file', 'app/Order.php', '--', 'What is returned?'
+  ]);
+  assert.deepEqual(buildMutationInvocation(defaultConfig, 'app/Order.php', '2:2', 'Return 202.').args, [
+    'workspace', 'replace', '--file', 'app/Order.php', '--lines', '2:2', '--', 'Return 202.'
+  ]);
+});
+
 test('rejects control bytes and empty direct command input', () => {
   assert.throws(
     () => buildChatInvocation(resolved, 'app/Order.php', '  '),

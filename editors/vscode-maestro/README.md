@@ -1,154 +1,131 @@
-# Maestro for VS Code — Preview
+# Maestro for VS Code
 
-Maestro Preview exposes four explicit Maestro CLI workflows in VS Code while
-leaving authority with the CLI. It does not write files, inspect model output,
-approve a mutation, download software, or run when a workspace opens.
+Maestro for VS Code runs four explicit [Maestro](https://github.com/Axtonno/maestro)
+CLI workflows from the editor: binary identity, doctor, chat about the active
+file, and Controlled Mutation of selected lines.
 
-This is a local Preview for controlled trials. It is not available in the
-Visual Studio Marketplace and is not a statement of general editor support.
+This is an unpublished pre-release candidate. It is installable from a local
+VSIX for qualification, but it is not yet available in the Visual Studio
+Marketplace. The extension never writes files itself, approves a mutation,
+downloads software, or starts work when a workspace opens.
 
-## Qualified environment and prerequisites
+## Requirements
 
-The Preview is intended for a Linux extension host, including VS Code connected
-through Remote WSL. The installable trial was qualified on Ubuntu 24.04 x86-64
-with VS Code 1.137.0, Maestro v0.5.0, and Ollama 0.33.1. Windows-native, macOS,
-and web extension hosts are not qualified.
+- a trusted local workspace on a Linux extension host, including Remote WSL;
+- VS Code 1.85.0 or later;
+- Ollama 0.33.1 and the models selected by `maestro setup`;
+- Maestro v0.5.0 on the extension-host `PATH`.
 
-Install and configure these separately before using the extension:
+The qualified extension environment is Ubuntu 24.04 x86-64 with VS Code
+Stable. Windows-native, macOS, web, Dev Containers, and Remote SSH extension
+hosts are not qualified by this candidate. The VSIX contains no Maestro
+binary, provider, model, user configuration, or telemetry client.
 
-- a Maestro v0.5.0 binary executable by the VS Code extension host;
-- a Maestro v4 configuration file inside the workspace;
-- Ollama and the models named by that configuration;
-- a trusted, local workspace with the files referenced by the configuration.
+## First run
 
-The VSIX contains none of those prerequisites and does not modify them. If this
-is a new Maestro environment, run `maestro setup` in a terminal and review its
-consent and model-download steps before configuring the extension.
-
-## Install the local VSIX
-
-Use an isolated VS Code profile for a trial when possible:
+From the project you want Maestro to use, install the pinned CLI and run setup:
 
 ```sh
-code --user-data-dir /path/to/clean-profile \
-  --extensions-dir /path/to/clean-extensions \
-  --install-extension /path/to/maestro-vscode-preview-0.1.0.vsix
+install -d "$HOME/.local/bin" && curl -fsSL https://github.com/Axtonno/maestro/releases/download/v0.5.0/maestro-v0.5.0-linux-amd64.tar.gz | tar -xz --strip-components=1 -C "$HOME/.local/bin" maestro-v0.5.0-linux-amd64/maestro
+maestro setup
 ```
 
-The VS Code command palette action **Extensions: Install from VSIX...** is an
-equivalent manual route. Installing a local VSIX does not publish it.
+The first line is the one supported short installation command for this
+candidate. It installs only the pinned v0.5.0 binary and never invokes
+`sudo`. The checksum-oriented archive procedure remains available in the
+[v0.5.0 release notes](https://github.com/Axtonno/maestro/blob/master/docs/releases/v0.5.0.md).
+`maestro setup` owns configuration and any consent for model downloads; the
+extension does not reproduce either operation.
 
-## Configure path resolution
+Install the local candidate into VS Code:
 
-Open Settings and search for `Maestro Preview`.
+```sh
+code --install-extension maestro-local-ai-0.1.1.vsix
+```
 
-- **Maestro: Binary Path** (`maestro.binaryPath`) takes precedence when set.
-  An absolute path is used directly; a relative path is resolved from the
-  selected workspace folder. The result must be a regular executable file.
-- When **Binary Path** is empty, the extension searches for a file named
-  `maestro` in the exact `PATH` inherited by the extension host, in order. It
-  does not invoke a shell or scan the filesystem.
-- **Maestro: Config Path** (`maestro.configPath`) is required by doctor, chat,
-  and mutation. Relative paths resolve from the selected workspace folder. The
-  resolved regular, readable file must stay inside that folder.
+Then open the Command Palette and run these commands in order:
 
-In a multi-root workspace, file commands use the folder containing the active
-file. Diagnostic commands use the only folder, or the folder containing the
-focused file; otherwise the Preview asks you to remove the ambiguity.
+1. **Maestro: Show Binary Identity**
+2. **Maestro: Run Doctor**
+3. **Maestro: Ask About Active File**
+4. **Maestro: Replace Selected Lines**
 
-**Maestro: Show Binary Identity** displays the resolved binary path and whether
-it came from Settings or the extension-host `PATH`, then runs the identity
-command in the terminal. The extension performs no background identity probe.
-Configuration content is never read or logged.
+The first two commands establish which binary and runtime are in use. Chat
+passes one saved local file chosen by you. Controlled Mutation accepts one
+complete selection in a saved PHP file below `app/`.
 
-## Recommended first run
+## Settings
 
-Run the commands in this order:
+- `maestro.binaryPath`: optional executable path. A relative path resolves
+  from the selected workspace; when empty, the exact extension-host `PATH` is
+  searched without a shell.
+- `maestro.configPath`: optional v4 configuration path. When empty, Maestro
+  uses the default created by `maestro setup`. A relative explicit path
+  resolves inside the selected workspace.
+- `maestro.terminalName`: name of the dedicated integrated terminal.
 
-1. **Maestro: Show Binary Identity** — runs `version --diagnostic`.
-2. **Maestro: Run Doctor** — runs `doctor --mode all` with the resolved config.
-3. **Maestro: Ask About Active File** — sends one saved, local active file and
-   your question to `maestro chat`.
-4. **Maestro: Replace Selected Lines** — sends one complete selection in one
-   saved PHP file below `app/` to `maestro workspace replace`.
+In multi-root workspaces, file commands use the folder containing the active
+file. Other commands require an unambiguous focused folder.
 
-Each command runs as a process task in a new integrated terminal. Arguments are
-passed directly, without a shell. The terminal is the authoritative source for
-CLI output and errors.
+## Controlled Mutation and security
 
-For Controlled Mutation, read the complete CLI preview in that terminal. Deny
-there to leave the workspace unchanged, or allow once there to apply exactly
-the displayed single-file diff. The extension never enters a response, applies
-an edit, or bypasses the CLI preview.
+Every command runs as a direct process task with separate arguments in a new
+integrated terminal. The terminal is authoritative for CLI output and errors.
 
-## Diagnostics and troubleshooting
+For mutation, review the complete CLI preview in that terminal. Deny to leave
+the workspace unchanged, or allow once to apply exactly the displayed
+single-file diff. The extension cannot enter the approval, apply an edit, or
+bypass Maestro's stale-source check.
 
-The **Maestro** output channel contains only redacted lifecycle events: event
-and command codes, status, duration, exit status, binary-path origin, and an
-already-authorized workspace-relative target path. It never contains prompts,
-source, diffs, provider output, secrets, the environment, home paths,
-configuration content, or reconstructed commands.
+The `Maestro` output channel records only redacted lifecycle fields. It never
+records prompts, file contents, diffs, provider output, secrets, configuration
+contents, home paths, or the environment. See [SECURITY.md](SECURITY.md) for
+the reporting route and trust boundary.
 
-Errors have a stable code and one suggested action:
+## Troubleshooting
 
-| Code | What to do |
+| Error | Next action |
 | --- | --- |
-| `binary_not_found` | Set **Maestro: Binary Path**, or add `maestro` to the extension-host `PATH`, then retry identity. |
-| `binary_not_executable` | Point **Binary Path** at a regular executable Maestro file. |
-| `config_not_set` | Set **Maestro: Config Path** for the selected workspace. |
-| `config_not_found` | Correct the configured path and verify it is a regular file. |
-| `config_not_readable` | Grant the extension host read access to the config. |
-| `config_outside_expected_scope` | Move or select the config inside the chosen workspace. |
+| `binary_not_found` | Set `maestro.binaryPath` or expose `maestro` on the extension-host `PATH`. |
+| `binary_not_executable` | Select a regular executable Maestro file. |
+| `config_not_found`, `config_not_readable` | Correct the explicit config path or its permissions. |
+| `config_outside_expected_scope` | Use the CLI default or move the explicit config into the workspace. |
 | `workspace_untrusted` | Review and trust the workspace before invoking a local binary. |
-| `workspace_virtual` | Reopen it through a local Linux or Remote WSL filesystem. |
-| `workspace_not_open`, `workspace_ambiguous` | Open one folder or focus a file in the intended folder. |
-| `file_not_local`, `file_outside_workspace` | Focus a local file contained by the intended workspace folder. |
+| `workspace_virtual`, `platform_unsupported` | Use a local Linux or Remote WSL extension host. |
 | `file_dirty` | Save the active file and retry. |
-| `selection_empty`, `selection_partial`, `selection_multiple`, `selection_invalid` | Select exactly one range made of complete lines. |
-| `mutation_target_invalid` | Use one PHP file below `app/`. |
-| `question_empty`, `instruction_empty` | Enter non-empty text in the corresponding prompt. |
-| `question_invalid`, `instruction_invalid` | Remove line breaks or control characters from the input. |
-| `command_unavailable` | Verify the extension host and retry the command from this guide. |
-| `cli_exit_nonzero` | Read the terminal for the authoritative CLI failure, correct it, and retry. |
-| `terminal_name_invalid` | Set a non-empty terminal name without control characters. |
-| `platform_unsupported` | Use a Linux extension host or Remote WSL. |
+| `selection_empty`, `selection_partial`, `selection_multiple` | Select exactly one range of complete lines. |
+| `mutation_target_invalid` | Select a PHP file below `app/`. |
+| `cli_exit_nonzero` | Read the terminal, correct the CLI failure, and retry. |
 
-A Controlled Mutation denial uses the CLI's intentional exit status and is
-recorded as `denied`, not as `cli_exit_nonzero`.
+A mutation denial is reported as `denied`, not as a failure. More help and the
+information to include in a report are in [SUPPORT.md](SUPPORT.md).
 
-## Uninstall
+## Updates and removal
 
-With the same profile and extensions directory used for installation:
+No update is downloaded or installed by the extension. Before Marketplace
+publication, upgrade by installing a newer signed-off VSIX with
+`code --install-extension <file.vsix> --force`.
+
+Remove this candidate with:
 
 ```sh
-code --user-data-dir /path/to/clean-profile \
-  --extensions-dir /path/to/clean-extensions \
-  --uninstall-extension maestro-local.maestro-vscode-preview
+code --uninstall-extension axtonno.maestro-local-ai
 ```
 
-You can also uninstall **Maestro (Preview)** from the Extensions view. The
-extension creates no workspace configuration and performs no migration or
-cleanup of Maestro, Ollama, models, or user files.
+Uninstalling the extension does not remove Maestro, Ollama, models,
+configuration, or project files. Versioning, update, and rollback policy are
+documented in [SUPPORT.md](SUPPORT.md).
 
-## Development gates
+## Development
 
-Packaging uses the official `@vscode/vsce` 3.9.2 tool pinned by the npm
-lockfile. Unit tests need Node.js 22.12.0 or later:
+Packaging uses the lockfile-pinned `@vscode/vsce`:
 
 ```sh
-npm ci
+npm ci --ignore-scripts
 npm test
 npm run package:list
 npm run package:vsix
 ```
 
-Extension-host and installed-VSIX tests additionally require a VS Code Linux
-executable:
-
-```sh
-MAESTRO_VSCODE_EXECUTABLE=/path/to/VSCode-linux-x64/code npm run test:integration
-MAESTRO_VSCODE_EXECUTABLE=/path/to/VSCode-linux-x64/code npm run test:vsix
-```
-
-Marketplace publishing, publisher creation, signing, and an update channel are
-intentionally absent from this Preview.
+Publishing credentials and a `publish` script are intentionally absent. Asset
+origin and license are recorded in [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md).

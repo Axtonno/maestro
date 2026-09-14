@@ -6,7 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { runTests } = require('@vscode/test-electron');
 
-const extensionID = 'maestro-local.maestro-vscode-preview';
+const extensionID = 'axtonno.maestro-local-ai';
+const extensionVersion = '0.1.1';
 
 async function main() {
   const vscodeExecutablePath = process.env.MAESTRO_VSCODE_EXECUTABLE;
@@ -18,7 +19,7 @@ async function main() {
     throw new Error(`VS Code CLI does not exist: ${vscodeCLIPath}`);
   }
   const vsixPath = path.resolve(
-    process.env.MAESTRO_VSIX_PATH || path.join(__dirname, '..', 'dist', 'maestro-vscode-preview-0.1.0.vsix')
+    process.env.MAESTRO_VSIX_PATH || path.join(__dirname, '..', 'dist', 'maestro-local-ai-0.1.1.vsix')
   );
   if (!fs.statSync(vsixPath).isFile()) {
     throw new Error(`VSIX does not exist: ${vsixPath}`);
@@ -61,8 +62,17 @@ async function main() {
   ], { env: cleanEnvironment, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 });
 
   try {
+    const previousVSIX = process.env.MAESTRO_PREVIOUS_VSIX_PATH;
+    if (previousVSIX) {
+      if (!fs.statSync(previousVSIX).isFile()) {
+        throw new Error(`previous VSIX does not exist: ${previousVSIX}`);
+      }
+      cli('--install-extension', path.resolve(previousVSIX), '--force');
+      assertListed(cli('--list-extensions', '--show-versions'), true, '0.1.0');
+    }
     cli('--install-extension', vsixPath, '--force');
     assertListed(cli('--list-extensions', '--show-versions'), true);
+    assertListed(cli('--list-extensions', '--show-versions'), false, '0.1.0');
     cli('--uninstall-extension', extensionID);
     assertListed(cli('--list-extensions', '--show-versions'), false);
     cli('--install-extension', vsixPath, '--force');
@@ -97,8 +107,8 @@ async function main() {
   }
 }
 
-function assertListed(output, expected) {
-  const listed = output.split(/\r?\n/).some(line => line.trim() === `${extensionID}@0.1.0`);
+function assertListed(output, expected, version = extensionVersion) {
+  const listed = output.split(/\r?\n/).some(line => line.trim() === `${extensionID}@${version}`);
   if (listed !== expected) {
     throw new Error(`extension listing mismatch: expected listed=${expected}`);
   }

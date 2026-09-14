@@ -7,7 +7,7 @@ const vscode = require('vscode');
 
 suite('Installed Maestro VSIX', () => {
   test('activates the packaged extension and registers all commands', async () => {
-    const extension = vscode.extensions.getExtension('maestro-local.maestro-vscode-preview');
+    const extension = vscode.extensions.getExtension('axtonno.maestro-local-ai');
     assert.ok(extension, 'installed VSIX was not discovered');
     assert.doesNotMatch(extension.extensionPath, /vscode-maestro$/);
     await extension.activate();
@@ -37,6 +37,22 @@ suite('Installed Maestro VSIX', () => {
     assert.ok(task.execution instanceof vscode.ProcessExecution);
     assert.equal(task.execution.process, binary);
     assert.deepEqual(task.execution.args, ['version', '--diagnostic']);
+    const event = await ended;
+    assert.equal(event.exitCode, 0);
+  });
+
+  test('uses the CLI default configuration after maestro setup', async () => {
+    const binary = process.env.MAESTRO_VSCODE_TEST_BINARY;
+    const configuration = vscode.workspace.getConfiguration('maestro');
+    await configuration.update('binaryPath', binary, vscode.ConfigurationTarget.Workspace);
+    await configuration.update('configPath', '', vscode.ConfigurationTarget.Workspace);
+    const started = observeTask();
+    const ended = observeTaskEnd('doctor');
+    await vscode.commands.executeCommand('maestro.doctor');
+    const task = await started;
+    assert.ok(task.execution instanceof vscode.ProcessExecution);
+    assert.equal(task.execution.process, binary);
+    assert.deepEqual(task.execution.args, ['doctor', '--mode', 'all']);
     const event = await ended;
     assert.equal(event.exitCode, 0);
   });

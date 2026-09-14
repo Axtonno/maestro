@@ -11,8 +11,10 @@ dichiarato nelle note di release.
 - `maestro setup` per creare una configurazione locale, verificare Ollama e
   richiedere consenso prima del download dei modelli;
 - `maestro mutate --preview` per generare un diff senza autorità di scrittura;
-- prototipo VS Code locale che inoltra comandi alla CLI nel terminale
-  integrato; resta sperimentale e non amplia il support claim.
+- candidate `Maestro for VS Code` con identità Marketplace congelata,
+  manifest completo, icona con provenienza, documenti di supporto/sicurezza e
+  VSIX pre-release byte-riproducibile; non è ancora pubblicato e non amplia il
+  support claim.
 
 ### Changed
 
@@ -30,6 +32,9 @@ dichiarato nelle note di release.
   attestazione fail-closed di build server, alias, path, magic, digest e
   context window; i controlli server-bound non vengono tradotti in opzioni
   Ollama e non esistono handoff o fallback impliciti.
+- reso opzionale `maestro.configPath` nell'estensione: quando è vuoto la CLI
+  usa la configurazione creata da `maestro setup`, mentre i path espliciti
+  restano confinati al workspace.
 
 ## [0.5.0] - 2026-09-06
 
