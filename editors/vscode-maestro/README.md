@@ -4,7 +4,7 @@ Maestro for VS Code runs four explicit [Maestro](https://github.com/Axtonno/maes
 CLI workflows from the editor: binary identity, doctor, chat about the active
 file, and Controlled Mutation of selected lines.
 
-This is an unpublished pre-release candidate. It is installable from a local
+This is an unpublished pre-release candidate. Version 0.2.0 is installable from a local
 VSIX for qualification, but it is not yet available in the Visual Studio
 Marketplace. The extension never writes files itself, approves a mutation,
 downloads software, or starts work when a workspace opens.
@@ -40,15 +40,20 @@ extension does not reproduce either operation.
 Install the local candidate into VS Code:
 
 ```sh
-code --install-extension maestro-local-ai-0.1.1.vsix
+code --install-extension maestro-local-ai-0.2.0.vsix
 ```
 
-Then open the Command Palette and run these commands in order:
+VS Code opens the native **Set up Maestro** walkthrough after installation.
+You can reopen it at any time with **Maestro: Open Setup Guide**. Its five
+steps complete only when their local readiness or command outcome is verified.
+
+The Command Palette exposes these stable actions:
 
 1. **Maestro: Show Binary Identity**
-2. **Maestro: Run Doctor**
-3. **Maestro: Ask About Active File**
-4. **Maestro: Replace Selected Lines**
+2. **Maestro: Doctor**
+3. **Maestro: Chat About Active File**
+4. **Maestro: Mutate Selection**
+5. **Maestro: Open Setup Guide**
 
 The first two commands establish which binary and runtime are in use. Chat
 passes one saved local file chosen by you. Controlled Mutation accepts one
@@ -56,16 +61,23 @@ complete selection in a saved PHP file below `app/`.
 
 ## Settings
 
-- `maestro.binaryPath`: optional executable path. A relative path resolves
-  from the selected workspace; when empty, the exact extension-host `PATH` is
-  searched without a shell.
-- `maestro.configPath`: optional v4 configuration path. When empty, Maestro
-  uses the default created by `maestro setup`. A relative explicit path
-  resolves inside the selected workspace.
+- `maestro.binaryPath` (window scope, default empty): optional executable
+  path, for example `/home/me/.local/bin/maestro` or `./bin/maestro`. An
+  explicit value takes precedence; otherwise the exact extension-host `PATH`
+  is searched without a shell.
+- `maestro.configPath` (resource scope, default empty): optional v4 path, for
+  example `./maestro.yaml`. An explicit workspace-contained value takes
+  precedence; otherwise the CLI uses `MAESTRO_CONFIG`, `XDG_CONFIG_HOME`, then
+  `~/.config/maestro/config.yaml` as created by `maestro setup`.
 - `maestro.terminalName`: name of the dedicated integrated terminal.
 
 In multi-root workspaces, file commands use the folder containing the active
 file. Other commands require an unambiguous focused folder.
+
+One lightweight status bar item performs only passive local checks and shows
+`Ready`, `Config missing`, or `Binary missing`. Selecting it always opens the
+next action: Doctor, the setup guide, or the binary-path setting. It never runs
+the CLI, accesses the network, or starts model work when the workspace opens.
 
 ## Controlled Mutation and security
 

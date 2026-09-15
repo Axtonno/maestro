@@ -8,7 +8,8 @@ const commandIDs = [
   'maestro.askActiveFile',
   'maestro.replaceSelection',
   'maestro.doctor',
-  'maestro.version'
+  'maestro.version',
+  'maestro.openSetupGuide'
 ];
 
 suite('Maestro for VS Code', () => {
@@ -28,6 +29,21 @@ suite('Maestro for VS Code', () => {
     await configureHarmlessBinary();
     const task = await executeAndObserve('maestro.version');
     assertTask(task, ['version', '--diagnostic']);
+  });
+
+  test('opens the setup walkthrough and recovers missing binary and config', async () => {
+    await vscode.commands.executeCommand('maestro.openSetupGuide');
+    const configuration = vscode.workspace.getConfiguration('maestro');
+    await configuration.update('binaryPath', '/definitely/missing/maestro', vscode.ConfigurationTarget.Workspace);
+    await expectNoTask('maestro.version');
+    await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+    await configuration.update('configPath', './missing.yaml', vscode.ConfigurationTarget.Workspace);
+    assertTask(await executeAndObserve('maestro.version'), ['version', '--diagnostic']);
+    await expectNoTask('maestro.doctor');
+    await configuration.update('configPath', './maestro.yaml', vscode.ConfigurationTarget.Workspace);
+    assertTask(await executeAndObserve('maestro.doctor'), [
+      'doctor', '--mode', 'all', '--config', path.join(process.env.MAESTRO_VSCODE_TEST_WORKSPACE, 'maestro.yaml')
+    ]);
   });
 
   test('delegates the default setup configuration to the CLI', async () => {
@@ -125,4 +141,17 @@ async function executeAndObserve(command, ...args) {
   });
   await vscode.commands.executeCommand(command, ...args);
   return started;
+}
+
+async function expectNoTask(command) {
+  let started = false;
+  const listener = vscode.tasks.onDidStartTask(event => {
+    if (event.execution.task.definition.type === 'maestro-preview') {
+      started = true;
+    }
+  });
+  await vscode.commands.executeCommand(command);
+  await new Promise(resolve => setTimeout(resolve, 250));
+  listener.dispose();
+  assert.equal(started, false, `${command} unexpectedly launched a task`);
 }

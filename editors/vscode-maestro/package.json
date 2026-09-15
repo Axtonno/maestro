@@ -2,7 +2,7 @@
   "name": "maestro-local-ai",
   "displayName": "Maestro for VS Code",
   "description": "Run explicit local AI chat and Controlled Mutation workflows through the Maestro CLI.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "axtonno",
   "preview": true,
   "license": "SEE LICENSE IN LICENSE",
@@ -52,28 +52,100 @@
     }
   },
   "activationEvents": [
+    "onStartupFinished",
     "onCommand:maestro.askActiveFile",
     "onCommand:maestro.replaceSelection",
     "onCommand:maestro.doctor",
-    "onCommand:maestro.version"
+    "onCommand:maestro.version",
+    "onCommand:maestro.openSetupGuide"
   ],
   "contributes": {
     "commands": [
       {
         "command": "maestro.askActiveFile",
-        "title": "Maestro: Ask About Active File"
+        "title": "Maestro: Chat About Active File"
       },
       {
         "command": "maestro.replaceSelection",
-        "title": "Maestro: Replace Selected Lines"
+        "title": "Maestro: Mutate Selection"
       },
       {
         "command": "maestro.doctor",
-        "title": "Maestro: Run Doctor"
+        "title": "Maestro: Doctor"
       },
       {
         "command": "maestro.version",
         "title": "Maestro: Show Binary Identity"
+      },
+      {
+        "command": "maestro.openSetupGuide",
+        "title": "Maestro: Open Setup Guide"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "maestro.setup",
+        "title": "Set up Maestro",
+        "description": "Go from a local CLI to a reviewed chat and Controlled Mutation without leaving VS Code.",
+        "when": "workspacePlatform == 'linux'",
+        "steps": [
+          {
+            "id": "maestro.setup.locate",
+            "title": "Install or locate Maestro CLI",
+            "description": "Install and configure the pinned CLI, then [show its binary identity](command:maestro.version).",
+            "media": {
+              "markdown": "media/walkthrough/install.md"
+            },
+            "completionEvents": [
+              "onContext:maestro.binaryReady"
+            ]
+          },
+          {
+            "id": "maestro.setup.doctor",
+            "title": "Verify the runtime",
+            "description": "[Run Maestro Doctor](command:maestro.doctor) and review the authoritative result in the terminal.",
+            "media": {
+              "markdown": "media/walkthrough/doctor.md"
+            },
+            "completionEvents": [
+              "onContext:maestro.doctorPassed"
+            ]
+          },
+          {
+            "id": "maestro.setup.binaryPath",
+            "title": "Recover binary detection",
+            "description": "If detection fails, [open the binary path setting](command:workbench.action.openSettings?%22%40ext%3Aaxtonno.maestro-local-ai%20maestro.binaryPath%22).",
+            "media": {
+              "markdown": "media/walkthrough/binary-path.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:maestro.binaryPath",
+              "onContext:maestro.binaryReady"
+            ]
+          },
+          {
+            "id": "maestro.setup.chat",
+            "title": "Chat about the active file",
+            "description": "Open a saved local file, then [start a focused chat](command:maestro.askActiveFile).",
+            "media": {
+              "markdown": "media/walkthrough/chat.md"
+            },
+            "completionEvents": [
+              "onContext:maestro.chatPassed"
+            ]
+          },
+          {
+            "id": "maestro.setup.mutation",
+            "title": "Review a Controlled Mutation",
+            "description": "Select complete lines in a saved `app/*.php` file, then [preview a mutation](command:maestro.replaceSelection).",
+            "media": {
+              "markdown": "media/walkthrough/mutation.md"
+            },
+            "completionEvents": [
+              "onContext:maestro.mutationReviewed"
+            ]
+          }
+        ]
       }
     ],
     "menus": {
@@ -97,13 +169,13 @@
           "type": "string",
           "default": "",
           "scope": "window",
-          "description": "Optional Maestro executable path. Relative paths resolve from the selected workspace; when empty, the extension searches the exact extension-host PATH without a shell."
+          "markdownDescription": "Optional Maestro executable path. Default: empty. Example: `/home/me/.local/bin/maestro` or `./bin/maestro`. An explicit path takes precedence over the exact extension-host `PATH`; relative paths resolve from the selected workspace."
         },
         "maestro.configPath": {
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Optional Maestro v4 configuration file. When empty, the CLI uses the configuration created by maestro setup. Relative paths resolve inside the selected workspace."
+          "markdownDescription": "Optional Maestro v4 configuration file. Default: empty. Example: `./maestro.yaml`. An explicit workspace-contained path takes precedence; when empty, the CLI uses `MAESTRO_CONFIG`, `XDG_CONFIG_HOME`, then `~/.config/maestro/config.yaml` as created by `maestro setup`."
         },
         "maestro.terminalName": {
           "type": "string",

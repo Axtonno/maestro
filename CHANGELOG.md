@@ -14,7 +14,9 @@ dichiarato nelle note di release.
 - candidate `Maestro for VS Code` con identità Marketplace congelata,
   manifest completo, icona con provenienza, documenti di supporto/sicurezza e
   VSIX pre-release byte-riproducibile; non è ancora pubblicato e non amplia il
-  support claim.
+  support claim;
+- onboarding VS Code nativo con walkthrough verificabile, cinque azioni stabili
+  in Command Palette e una status bar passiva con recovery a singola azione.
 
 ### Changed
 

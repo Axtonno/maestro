@@ -2,7 +2,7 @@
 
 ## Supported candidate
 
-The current unpublished candidate is `axtonno.maestro-local-ai` 0.1.1. It is
+The current unpublished candidate is `axtonno.maestro-local-ai` 0.2.0. It is
 qualified only on a Linux extension host, including VS Code Remote WSL, with
 VS Code 1.85.0 or later and the Maestro v0.5.0 Ollama profile documented in
 the README.
@@ -30,8 +30,9 @@ through the private route in [SECURITY.md](SECURITY.md).
 
 - Versions use `major.minor.patch`; SemVer suffixes are not used because the
   Marketplace pre-release channel does not support them.
-- `0.1.x` is the first pre-release line. Every Marketplace upload, if later
-  authorized, receives a new patch version.
+- `0.1.x` established Marketplace readiness; `0.2.x` adds the guided
+  onboarding surface. Every Marketplace upload, if later authorized, receives
+  a new patch version.
 - VS Code automatic updates will be accepted only after the private/public
   release milestone authorizes publication. This extension never implements
   a separate updater or downloads the Maestro CLI.

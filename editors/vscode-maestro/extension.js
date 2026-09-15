@@ -4,12 +4,15 @@ const vscode = require('vscode');
 const commands = require('./command-builder');
 const { formatEvent } = require('./diagnostics');
 const { PreviewError, normalizeError } = require('./errors');
+const { ONBOARDING_STATES, inspectOnboarding } = require('./onboarding');
 const { resolveBinaryPath, resolveConfigPath } = require('./path-resolver');
 
-const GUIDE_ACTION = 'Open Preview Guide';
+const EXTENSION_ID = 'axtonno.maestro-local-ai';
+const WALKTHROUGH_ID = `${EXTENSION_ID}#maestro.setup`;
+const GUIDE_ACTION = 'Open Setup Guide';
 const SETTINGS_ACTION = 'Open Settings';
 let outputChannel;
-let extensionContext;
+let statusItem;
 
 function settingsFor(scope) {
   const configuration = vscode.workspace.getConfiguration('maestro', scope);
@@ -75,7 +78,7 @@ async function askActiveFile(providedQuestion) {
   const question = typeof providedQuestion === 'string'
     ? providedQuestion
     : await vscode.window.showInputBox({
-      title: 'Maestro: Ask About Active File',
+      title: 'Maestro: Chat About Active File',
       prompt: `Question for ${target.logicalPath}`,
       ignoreFocusOut: true,
       validateInput: value => value.trim() === '' ? 'Enter a question.' : undefined
@@ -105,7 +108,7 @@ async function replaceSelection(providedInstruction) {
   const instruction = typeof providedInstruction === 'string'
     ? providedInstruction
     : await vscode.window.showInputBox({
-      title: 'Maestro: Replace Selected Lines',
+      title: 'Maestro: Mutate Selection',
       prompt: `Instruction for ${target.logicalPath}:${lines}`,
       placeHolder: 'Describe only the replacement for the selected lines.',
       ignoreFocusOut: true,
@@ -154,6 +157,10 @@ async function version() {
   const runtime = resolveRuntime(folder);
   showResolution(runtime);
   await launch(folder, runtime, commands.buildVersionInvocation(runtime), { command: 'version' });
+}
+
+async function openSetupGuide() {
+  await vscode.commands.executeCommand('workbench.action.openWalkthrough', WALKTHROUGH_ID, false);
 }
 
 function requireWorkspaceFolder() {
@@ -252,6 +259,16 @@ function onTaskEnded(event) {
   if (!passed && !denied) {
     void presentError(new PreviewError('cli_exit_nonzero'));
   }
+  if (passed && definition.command === 'doctor') {
+    void vscode.commands.executeCommand('setContext', 'maestro.doctorPassed', true);
+  }
+  if (passed && definition.command === 'chat') {
+    void vscode.commands.executeCommand('setContext', 'maestro.chatPassed', true);
+  }
+  if ((passed || denied) && definition.command === 'mutation') {
+    void vscode.commands.executeCommand('setContext', 'maestro.mutationReviewed', true);
+  }
+  void refreshOnboardingStatus();
 }
 
 function showResolution(runtime) {
@@ -276,14 +293,72 @@ async function presentError(error) {
     error.action
   );
   if (selected === SETTINGS_ACTION) {
-    await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:axtonno.maestro-local-ai');
+    await vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${EXTENSION_ID}`);
   } else if (selected === GUIDE_ACTION) {
-    await vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.joinPath(extensionContext.extensionUri, 'README.md'));
+    await openSetupGuide();
   } else if (selected === 'Save File') {
     await vscode.commands.executeCommand('workbench.action.files.save');
   } else if (selected === 'Manage Workspace Trust') {
     await vscode.commands.executeCommand('workbench.trust.manage');
   }
+}
+
+function statusWorkspaceFolder() {
+  const folders = vscode.workspace.workspaceFolders;
+  if (!folders || folders.length === 0) {
+    return undefined;
+  }
+  const editor = vscode.window.activeTextEditor;
+  const active = editor && editor.document.uri.scheme === 'file'
+    ? vscode.workspace.getWorkspaceFolder(editor.document.uri)
+    : undefined;
+  return active || folders[0];
+}
+
+async function refreshOnboardingStatus() {
+  if (!statusItem) {
+    return;
+  }
+  const folder = statusWorkspaceFolder();
+  if (process.platform !== 'linux' || !vscode.workspace.isTrusted || !folder || folder.uri.scheme !== 'file') {
+    statusItem.hide();
+    await setReadinessContexts(false, false);
+    return;
+  }
+  const result = inspectOnboarding({
+    settings: settingsFor(folder.uri),
+    workspaceRoot: folder.uri.fsPath,
+    hostPath: process.env.PATH,
+    hostCwd: process.cwd(),
+    environment: process.env
+  });
+  await setReadinessContexts(result.binaryReady, result.configReady);
+  statusItem.name = 'Maestro onboarding status';
+  if (result.state === ONBOARDING_STATES.BINARY_MISSING) {
+    statusItem.text = '$(warning) Maestro: Binary missing';
+    statusItem.tooltip = 'No executable Maestro CLI was found. Open the binaryPath setting.';
+    statusItem.command = {
+      command: 'workbench.action.openSettings',
+      title: 'Set Maestro Binary Path',
+      arguments: [`@ext:${EXTENSION_ID} maestro.binaryPath`]
+    };
+  } else if (result.state === ONBOARDING_STATES.CONFIG_MISSING) {
+    statusItem.text = '$(warning) Maestro: Config missing';
+    statusItem.tooltip = 'No readable Maestro configuration was found. Open the setup guide.';
+    statusItem.command = 'maestro.openSetupGuide';
+  } else {
+    statusItem.text = '$(check) Maestro: Ready';
+    statusItem.tooltip = 'Maestro CLI and configuration are available. Run Doctor.';
+    statusItem.command = 'maestro.doctor';
+  }
+  statusItem.show();
+}
+
+async function setReadinessContexts(binaryReady, configReady) {
+  await Promise.all([
+    vscode.commands.executeCommand('setContext', 'maestro.binaryReady', binaryReady),
+    vscode.commands.executeCommand('setContext', 'maestro.configReady', configReady)
+  ]);
 }
 
 function guarded(handler) {
@@ -297,18 +372,36 @@ function guarded(handler) {
 }
 
 function activate(context) {
-  extensionContext = context;
   outputChannel = vscode.window.createOutputChannel('Maestro');
-  context.subscriptions.push(outputChannel, vscode.tasks.onDidEndTaskProcess(onTaskEnded));
+  statusItem = vscode.window.createStatusBarItem('maestro.onboarding', vscode.StatusBarAlignment.Left, 50);
+  context.subscriptions.push(
+    outputChannel,
+    statusItem,
+    vscode.tasks.onDidEndTaskProcess(onTaskEnded),
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('maestro')) {
+        void refreshOnboardingStatus();
+      }
+    }),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => void refreshOnboardingStatus()),
+    vscode.window.onDidChangeActiveTextEditor(() => void refreshOnboardingStatus())
+  );
   const registrations = [
     ['maestro.askActiveFile', askActiveFile],
     ['maestro.replaceSelection', replaceSelection],
     ['maestro.doctor', doctor],
-    ['maestro.version', version]
+    ['maestro.version', version],
+    ['maestro.openSetupGuide', openSetupGuide]
   ];
   for (const [name, handler] of registrations) {
     context.subscriptions.push(vscode.commands.registerCommand(name, guarded(handler)));
   }
+  void Promise.all([
+    vscode.commands.executeCommand('setContext', 'maestro.doctorPassed', false),
+    vscode.commands.executeCommand('setContext', 'maestro.chatPassed', false),
+    vscode.commands.executeCommand('setContext', 'maestro.mutationReviewed', false),
+    refreshOnboardingStatus()
+  ]);
 }
 
 function deactivate() {}

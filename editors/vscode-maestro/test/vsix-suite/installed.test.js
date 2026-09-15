@@ -17,10 +17,39 @@ suite('Installed Maestro VSIX', () => {
       'maestro.askActiveFile',
       'maestro.replaceSelection',
       'maestro.doctor',
-      'maestro.version'
+      'maestro.version',
+      'maestro.openSetupGuide'
     ]) {
       assert.ok(commands.includes(command), `${command} was not registered`);
     }
+  });
+
+  test('packages and opens the five-step setup walkthrough', async () => {
+    const extension = vscode.extensions.getExtension('axtonno.maestro-local-ai');
+    const walkthroughs = extension.packageJSON.contributes.walkthroughs;
+    assert.equal(walkthroughs.length, 1);
+    assert.equal(walkthroughs[0].id, 'maestro.setup');
+    assert.equal(walkthroughs[0].steps.length, 5);
+    await vscode.commands.executeCommand('maestro.openSetupGuide');
+  });
+
+  test('recovers missing binary and configuration with one next action', async () => {
+    const workspace = process.env.MAESTRO_VSCODE_TEST_WORKSPACE;
+    const configuration = vscode.workspace.getConfiguration('maestro');
+    await configuration.update('binaryPath', '/definitely/missing/maestro', vscode.ConfigurationTarget.Workspace);
+    await expectNoTask('maestro.version');
+    await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+    await configuration.update('configPath', './missing.yaml', vscode.ConfigurationTarget.Workspace);
+    const versionStarted = observeTask();
+    await vscode.commands.executeCommand('maestro.version');
+    assert.deepEqual((await versionStarted).execution.args, ['version', '--diagnostic']);
+    await expectNoTask('maestro.doctor');
+    await configuration.update('configPath', './maestro.yaml', vscode.ConfigurationTarget.Workspace);
+    const doctorStarted = observeTask();
+    await vscode.commands.executeCommand('maestro.doctor');
+    assert.deepEqual((await doctorStarted).execution.args, [
+      'doctor', '--mode', 'all', '--config', path.join(workspace, 'maestro.yaml')
+    ]);
   });
 
   test('starts the installed identity command from explicit binary resolution', async () => {
@@ -53,6 +82,26 @@ suite('Installed Maestro VSIX', () => {
     assert.ok(task.execution instanceof vscode.ProcessExecution);
     assert.equal(task.execution.process, binary);
     assert.deepEqual(task.execution.args, ['doctor', '--mode', 'all']);
+    const event = await ended;
+    assert.equal(event.exitCode, 0);
+  });
+
+  test('runs a focused chat from the clean installed profile', async () => {
+    const workspace = process.env.MAESTRO_VSCODE_TEST_WORKSPACE;
+    const binary = process.env.MAESTRO_VSCODE_TEST_BINARY;
+    const configuration = vscode.workspace.getConfiguration('maestro');
+    await configuration.update('binaryPath', binary, vscode.ConfigurationTarget.Workspace);
+    await configuration.update('configPath', './maestro.yaml', vscode.ConfigurationTarget.Workspace);
+    const document = await vscode.workspace.openTextDocument(path.join(workspace, 'app', 'Example.php'));
+    await vscode.window.showTextDocument(document);
+    const started = observeTask();
+    const ended = observeTaskEnd('chat');
+    await vscode.commands.executeCommand('maestro.askActiveFile', 'Which status is returned?');
+    const task = await started;
+    assert.deepEqual(task.execution.args, [
+      'chat', '--config', path.join(workspace, 'maestro.yaml'),
+      '--file', 'app/Example.php', '--', 'Which status is returned?'
+    ]);
     const event = await ended;
     assert.equal(event.exitCode, 0);
   });
@@ -147,4 +196,17 @@ function observeTerminal() {
       resolve(terminal);
     });
   });
+}
+
+async function expectNoTask(command) {
+  let started = false;
+  const listener = vscode.tasks.onDidStartTask(event => {
+    if (event.execution.task.definition.type === 'maestro-preview') {
+      started = true;
+    }
+  });
+  await vscode.commands.executeCommand(command);
+  await new Promise(resolve => setTimeout(resolve, 250));
+  listener.dispose();
+  assert.equal(started, false, `${command} unexpectedly launched a task`);
 }

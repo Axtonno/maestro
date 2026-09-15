@@ -16,7 +16,8 @@ const commandIDs = [
   'maestro.askActiveFile',
   'maestro.replaceSelection',
   'maestro.doctor',
-  'maestro.version'
+  'maestro.version',
+  'maestro.openSetupGuide'
 ];
 const packagedFiles = [
   'CHANGELOG.md',
@@ -30,6 +31,12 @@ const packagedFiles = [
   'errors.js',
   'extension.js',
   'media/icon.png',
+  'media/walkthrough/binary-path.md',
+  'media/walkthrough/chat.md',
+  'media/walkthrough/doctor.md',
+  'media/walkthrough/install.md',
+  'media/walkthrough/mutation.md',
+  'onboarding.js',
   'package.json',
   'path-resolver.js'
 ];
@@ -37,7 +44,7 @@ const packagedFiles = [
 test('manifest freezes the Marketplace candidate identity and four-command workspace surface', () => {
   assert.equal(manifest.name, 'maestro-local-ai');
   assert.equal(manifest.displayName, 'Maestro for VS Code');
-  assert.equal(manifest.version, '0.1.1');
+  assert.equal(manifest.version, '0.2.0');
   assert.equal(manifest.publisher, 'axtonno');
   assert.equal(manifest.private, undefined);
   assert.equal(manifest.preview, true);
@@ -57,10 +64,44 @@ test('manifest freezes the Marketplace candidate identity and four-command works
     manifest.contributes.commands.map(entry => entry.command).sort(),
     [...commandIDs].sort()
   );
-  assert.deepEqual(
-    manifest.activationEvents.map(entry => entry.replace('onCommand:', '')).sort(),
-    [...commandIDs].sort()
-  );
+  assert.ok(manifest.activationEvents.includes('onStartupFinished'));
+  assert.deepEqual(manifest.activationEvents
+    .filter(entry => entry.startsWith('onCommand:'))
+    .map(entry => entry.replace('onCommand:', '')).sort(), [...commandIDs].sort());
+  assert.deepEqual(Object.fromEntries(manifest.contributes.commands.map(command => [command.command, command.title])), {
+    'maestro.askActiveFile': 'Maestro: Chat About Active File',
+    'maestro.replaceSelection': 'Maestro: Mutate Selection',
+    'maestro.doctor': 'Maestro: Doctor',
+    'maestro.version': 'Maestro: Show Binary Identity',
+    'maestro.openSetupGuide': 'Maestro: Open Setup Guide'
+  });
+});
+
+test('walkthrough and settings encode verifiable onboarding without a profile claim', () => {
+  assert.equal(manifest.contributes.walkthroughs.length, 1);
+  const walkthrough = manifest.contributes.walkthroughs[0];
+  assert.equal(walkthrough.id, 'maestro.setup');
+  assert.equal(walkthrough.when, "workspacePlatform == 'linux'");
+  assert.deepEqual(walkthrough.steps.map(step => step.id), [
+    'maestro.setup.locate',
+    'maestro.setup.doctor',
+    'maestro.setup.binaryPath',
+    'maestro.setup.chat',
+    'maestro.setup.mutation'
+  ]);
+  for (const step of walkthrough.steps) {
+    assert.ok(step.media.markdown);
+    assert.ok(step.completionEvents.length > 0);
+    assert.ok(fs.statSync(path.join(root, step.media.markdown)).isFile());
+  }
+  const properties = manifest.contributes.configuration.properties;
+  assert.equal(properties['maestro.binaryPath'].default, '');
+  assert.equal(properties['maestro.binaryPath'].scope, 'window');
+  assert.match(properties['maestro.binaryPath'].markdownDescription, /Example:.*takes precedence/s);
+  assert.equal(properties['maestro.configPath'].default, '');
+  assert.equal(properties['maestro.configPath'].scope, 'resource');
+  assert.match(properties['maestro.configPath'].markdownDescription, /Example:.*takes precedence/s);
+  assert.equal(properties['maestro.profile'], undefined);
 });
 
 test('packaging is allowlisted and has no publication script', () => {
@@ -104,6 +145,18 @@ test('extension delegates mutation and never writes or approves', () => {
   assert.match(commandBuilder, /'workspace', 'replace'/);
   assert.match(source, /complete preview in the terminal/);
   assert.match(source, /new vscode\.ProcessExecution/);
+  assert.doesNotMatch(source, /telemetry|createWebview|registerWebview|createTreeView/i);
+});
+
+test('one passive status item exposes the required states and next actions', () => {
+  assert.equal((source.match(/createStatusBarItem\(/g) || []).length, 1);
+  for (const label of ['Maestro: Ready', 'Maestro: Config missing', 'Maestro: Binary missing']) {
+    assert.ok(source.includes(label), `missing status label: ${label}`);
+  }
+  assert.match(source, /statusItem\.command = 'maestro\.doctor'/);
+  assert.match(source, /statusItem\.command = 'maestro\.openSetupGuide'/);
+  assert.match(source, /command: 'workbench\.action\.openSettings'/);
+  assert.doesNotMatch(source, /statusBarItem\.(backgroundColor|color)/);
 });
 
 test('public docs preserve the claim boundary and define support and updates', () => {
@@ -115,6 +168,6 @@ test('public docs preserve the claim boundary and define support and updates', (
   assert.match(readme, /releases\/download\/v0\.5\.0\/maestro-v0\.5\.0-linux-amd64\.tar\.gz/);
   assert.match(readme, /tar -xz --strip-components=1/);
   assert.match(readme, /uninstall-extension axtonno\.maestro-local-ai/);
-  assert.match(support, /`0\.1\.x` is the first pre-release line/);
+  assert.match(support, /`0\.2\.x` adds the guided\s+onboarding surface/);
   assert.match(support, /higher patch containing the revert/);
 });

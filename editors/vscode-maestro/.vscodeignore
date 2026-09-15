@@ -10,5 +10,11 @@
 !errors.js
 !extension.js
 !media/icon.png
+!media/walkthrough/binary-path.md
+!media/walkthrough/chat.md
+!media/walkthrough/doctor.md
+!media/walkthrough/install.md
+!media/walkthrough/mutation.md
+!onboarding.js
 !package.json
 !path-resolver.js

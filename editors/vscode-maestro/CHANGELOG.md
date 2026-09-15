@@ -3,6 +3,19 @@
 All notable changes to Maestro for VS Code are recorded here. Versions follow
 the policy in [SUPPORT.md](SUPPORT.md).
 
+## 0.2.0 — VS Code onboarding candidate
+
+- Add a native five-step walkthrough with verifiable completion for CLI
+  discovery, Doctor, path recovery, focused chat, and reviewed mutation.
+- Add one passive status bar item with `Ready`, `Config missing`, and `Binary
+  missing` states, each linked to its next recovery action.
+- Rename Command Palette labels to the stable M49 vocabulary while preserving
+  the four M47 command IDs, and add `maestro.openSetupGuide`.
+- Document setting defaults, scopes, examples, and precedence without exposing
+  the rejected `maestro.profile` setting.
+- Preserve the CLI-only runtime, terminal approval boundary, zero-write
+  extension authority, and absence of telemetry or automatic downloads.
+
 ## 0.1.1 — Marketplace readiness candidate
 
 - Freeze the prospective public identity as `axtonno.maestro-local-ai` and
@@ -26,4 +39,4 @@ the policy in [SUPPORT.md](SUPPORT.md).
 - Keep chat, preview, deny, and allow-once in an integrated terminal controlled
   by the Maestro CLI.
 
-Neither version has been uploaded to the Visual Studio Marketplace.
+No version has been uploaded to the Visual Studio Marketplace.

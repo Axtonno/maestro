@@ -40,11 +40,11 @@ conto del modello, non applica modifiche multi-file e non è una sandbox. La
 [matrice delle capacità](docs/current-capabilities.md) definisce il perimetro
 supportato e prevale sugli esempi e sul codice sperimentale.
 
-Il candidate [Maestro for VS Code](editors/vscode-maestro/README.md) ha
-completato la readiness Marketplace su extension host Linux o Remote WSL. Si
-installa ancora da un VSIX locale, conserva preview e approval nel terminale
-Maestro e non è pubblicato nel Marketplace; non amplia il support claim
-corrente.
+Il candidate [Maestro for VS Code](editors/vscode-maestro/README.md) include un
+walkthrough verificabile e una status bar passiva su extension host Linux o
+Remote WSL. Si installa ancora da un VSIX locale, conserva preview e approval
+nel terminale Maestro e non è pubblicato nel Marketplace; non amplia il
+support claim corrente.
 
 ## Documentazione
 
