@@ -24,9 +24,12 @@ const maxInstructionBytes = 1 << 20
 func runDoctor(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
 	flags := flag.NewFlagSet("maestro doctor", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
-	usage := func() { fmt.Fprintln(stdout, "usage: maestro doctor [--config path] [--mode agent|chat|mutation|all]") }
+	usage := func() {
+		fmt.Fprintln(stdout, "usage: maestro doctor [--config path] [--workspace-current] [--mode agent|chat|mutation|all]")
+	}
 	flags.Usage = func() {}
 	configPath := flags.String("config", "", "path to Maestro configuration")
+	workspaceCurrent := flags.Bool("workspace-current", false, "use the current working directory as workspace root")
 	mode := flags.String("mode", "agent", "execution mode to validate")
 	if err := flags.Parse(arguments); err != nil {
 		if err == flag.ErrHelp {
@@ -57,6 +60,20 @@ func runDoctor(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 		}
 		renderConfigurationDiagnostic(stderr, err)
 		return 2
+	}
+	if *workspaceCurrent {
+		validate := productconfig.Config.Validate
+		if *mode == "chat" {
+			validate = productconfig.Config.ValidateChatExecutionProfile
+		} else if *mode == "mutation" || *mode == "all" {
+			validate = productconfig.Config.ValidateMutationExecutionProfile
+		}
+		config, err = applyCurrentWorkspace(config, true, dependencies, validate)
+		if err != nil {
+			fmt.Fprintln(stderr, "doctor failed: invalid_request")
+			renderConfigurationDiagnostic(stderr, err)
+			return 2
+		}
 	}
 	ctx, cancel := commandContext(dependencies)
 	defer cancel()

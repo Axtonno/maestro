@@ -20,6 +20,18 @@ async function main() {
   fs.mkdirSync(path.join(workspace, 'app'), { recursive: true });
   fs.writeFileSync(path.join(workspace, 'app', 'Example.php'), "<?php\nreturn 201;\n", 'utf8');
   fs.writeFileSync(path.join(workspace, 'maestro.yaml'), 'version: 4\n', 'utf8');
+  const binary = path.join(workspace, 'maestro-cli-probe');
+  fs.writeFileSync(binary, [
+    '#!/bin/sh',
+    'case "$1" in',
+    '  profile) printf \'%s\\n\' \'{"schema_version":1,"profile":"recommended","provider":"ollama","chat_model":"qwen3.5:9b","mutation_model":"qwen2.5-coder:14b"}\' ;;',
+    '  chat) case " $* " in *" -- "*) : ;; *) cat >/dev/null ;; esac; printf \'mode\\tchat\\nterminal\\tcompleted\\nmodel\\tqwen3.5:9b\\nfinish_reason\\tstop\\nresult\\nNative chat response.\\n\' ;;',
+    '  doctor) printf \'pass\\tmutation_provider\\tollama_available\\npass\\tmutation_direct_chat_model\\tqualified_model_digest\\npass\\tmutation_controlled_mutation_model\\tqualified_model_digest\\n\' ;;',
+    '  *) exit 0 ;;',
+    'esac',
+    ''
+  ].join('\n'), 'utf8');
+  fs.chmodSync(binary, 0o755);
 
   // Codex may itself run inside an extension host. Those variables would make
   // the downloaded Electron binary start in Node/CLI mode instead of opening
@@ -44,7 +56,9 @@ async function main() {
         `--extensions-dir=${extensions}`
       ],
       extensionTestsEnv: {
-        MAESTRO_VSCODE_TEST_WORKSPACE: workspace
+        MAESTRO_VSCODE_TEST_WORKSPACE: workspace,
+        MAESTRO_VSCODE_TEST_BINARY: binary,
+        MAESTRO_VSCODE_TEST_MODE: '1'
       }
     });
   } finally {

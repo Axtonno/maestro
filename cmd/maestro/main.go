@@ -31,6 +31,7 @@ type commandDependencies struct {
 	context              func() (context.Context, context.CancelFunc)
 	isTerminal           func(io.Reader) bool
 	mutationAfterPreview func()
+	workingDirectory     func() (string, error)
 }
 
 func defaultCommandDependencies() commandDependencies {
@@ -44,7 +45,8 @@ func defaultCommandDependencies() commandDependencies {
 		context: func() (context.Context, context.CancelFunc) {
 			return signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		},
-		isTerminal: isTerminalReader,
+		isTerminal:       isTerminalReader,
+		workingDirectory: os.Getwd,
 	}
 }
 
@@ -72,6 +74,8 @@ func runWithIO(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.
 		return runDoctor(arguments[1:], stdin, stdout, stderr, dependencies)
 	case "models":
 		return runModels(arguments[1:], stdout, stderr, dependencies)
+	case "profile":
+		return runProfile(arguments[1:], stdout, stderr, dependencies)
 	case "agents":
 		return runAgents(arguments[1:], stdout, stderr, dependencies)
 	case "agent":
@@ -167,6 +171,7 @@ func printRootUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  mutate   preview or run an explicit controlled mutation")
 	fmt.Fprintln(writer, "  doctor   validate configuration and operational prerequisites")
 	fmt.Fprintln(writer, "  models   list models from the explicitly configured provider")
+	fmt.Fprintln(writer, "  profile  print the effective qualified profile and model roles")
 	fmt.Fprintln(writer, "  agents   list registered agents and capabilities")
 	fmt.Fprintln(writer, "  agent    execute the configured verified agent")
 	fmt.Fprintln(writer, "  workspace run an explicit host-bound workspace operation")

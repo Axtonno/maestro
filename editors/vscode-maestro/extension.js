@@ -1,14 +1,19 @@
 'use strict';
 
+const os = require('node:os');
 const vscode = require('vscode');
+const { runCli } = require('./cli-runner');
+const { classifyCliFailure, classifyDoctorOutput, parseChatEnvelope, parseProfileIdentity } = require('./chat-protocol');
 const commands = require('./command-builder');
 const { formatEvent } = require('./diagnostics');
 const { PreviewError, normalizeError } = require('./errors');
 const { ONBOARDING_STATES, inspectOnboarding } = require('./onboarding');
 const { resolveBinaryPath, resolveConfigPath } = require('./path-resolver');
+const { classifyWorkspaceContext } = require('./workspace-context');
 
 const EXTENSION_ID = 'axtonno.maestro-local-ai';
 const WALKTHROUGH_ID = `${EXTENSION_ID}#maestro.setup`;
+const CHAT_PARTICIPANT_ID = 'maestro.chat';
 const GUIDE_ACTION = 'Open Setup Guide';
 const SETTINGS_ACTION = 'Open Settings';
 let outputChannel;
@@ -19,6 +24,7 @@ function settingsFor(scope) {
   return {
     binaryPath: configuration.get('binaryPath', ''),
     configPath: configuration.get('configPath', ''),
+    profile: configuration.get('profile', 'recommended'),
     terminalName: configuration.get('terminalName', 'Maestro')
   };
 }
@@ -52,15 +58,20 @@ function activeWorkspaceEditor(options = {}) {
 }
 
 function resolveRuntime(folder, options = {}) {
-  const settings = settingsFor(folder.uri);
+  const scope = folder && folder.uri;
+  const settings = settingsFor(scope);
+  const workspaceRoot = folder ? folder.uri.fsPath : undefined;
+  if (!workspaceRoot && settings.configPath.trim() !== '') {
+    throw new PreviewError('workspace_not_open');
+  }
   const binary = resolveBinaryPath({
     configuredPath: settings.binaryPath,
-    workspaceRoot: folder.uri.fsPath,
+    workspaceRoot: workspaceRoot || process.cwd(),
     hostPath: process.env.PATH,
     hostCwd: process.cwd()
   });
   const config = options.configRequired && settings.configPath.trim() !== ''
-    ? resolveConfigPath(settings.configPath, folder.uri.fsPath)
+    ? resolveConfigPath(settings.configPath, workspaceRoot)
     : undefined;
   return {
     binaryPath: binary.path,
@@ -68,6 +79,7 @@ function resolveRuntime(folder, options = {}) {
     configPath: config && config.path,
     configLogicalPath: config && config.logicalPath,
     configOrigin: config && config.origin,
+    profile: settings.profile,
     terminalName: validateTerminalName(settings.terminalName)
   };
 }
@@ -145,7 +157,10 @@ function requireWholeLineSelection(editor) {
 
 async function doctor() {
   requireSupportedHost();
-  const folder = requireWorkspaceFolder();
+  const folder = await selectWorkspaceFolder();
+  if (!folder) {
+    return;
+  }
   const runtime = resolveRuntime(folder, { configRequired: true });
   showResolution(runtime);
   await launch(folder, runtime, commands.buildDoctorInvocation(runtime), { command: 'doctor' });
@@ -153,7 +168,10 @@ async function doctor() {
 
 async function version() {
   requireSupportedHost();
-  const folder = requireWorkspaceFolder();
+  const folder = await selectWorkspaceFolder();
+  if (!folder) {
+    return;
+  }
   const runtime = resolveRuntime(folder);
   showResolution(runtime);
   await launch(folder, runtime, commands.buildVersionInvocation(runtime), { command: 'version' });
@@ -163,7 +181,20 @@ async function openSetupGuide() {
   await vscode.commands.executeCommand('workbench.action.openWalkthrough', WALKTHROUGH_ID, false);
 }
 
-function requireWorkspaceFolder() {
+async function openNativeChat() {
+  await vscode.commands.executeCommand('workbench.action.chat.open', { query: '@maestro ', isPartialQuery: true });
+}
+
+async function openTroubleshooting() {
+  const extension = vscode.extensions.getExtension(EXTENSION_ID);
+  if (!extension) {
+    throw new PreviewError('command_unavailable');
+  }
+  const document = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(extension.extensionUri, 'README.md'));
+  await vscode.window.showTextDocument(document, { preview: true });
+}
+
+async function selectWorkspaceFolder() {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) {
     throw new PreviewError('workspace_not_open');
@@ -177,7 +208,15 @@ function requireWorkspaceFolder() {
     ? vscode.workspace.getWorkspaceFolder(editor.document.uri)
     : undefined;
   if (!active) {
-    throw new PreviewError('workspace_ambiguous');
+    const selected = await vscode.window.showQuickPick(
+      folders.map(folder => ({ label: folder.name, description: folder.uri.fsPath, folder })),
+      { title: 'Select the workspace folder Maestro should use', placeHolder: 'Workspace root' }
+    );
+    if (!selected) {
+      return undefined;
+    }
+    requireLocalFolder(selected.folder);
+    return selected.folder;
   }
   requireLocalFolder(active);
   return active;
@@ -282,6 +321,202 @@ function showResolution(runtime) {
   );
 }
 
+async function nativeChatTarget() {
+  requireSupportedHost();
+  const editor = vscode.window.activeTextEditor;
+  const folders = vscode.workspace.workspaceFolders;
+  const activeFolder = editor && editor.document.uri.scheme === 'file'
+    ? vscode.workspace.getWorkspaceFolder(editor.document.uri)
+    : undefined;
+  const decision = classifyWorkspaceContext({
+    folderCount: folders ? folders.length : 0,
+    hasEditor: Boolean(editor),
+    activeScheme: editor && editor.document.uri.scheme,
+    activeFolderFound: Boolean(activeFolder)
+  });
+  if (decision.kind === 'error') {
+    throw new PreviewError(decision.code);
+  }
+  if (decision.kind === 'active') {
+    const folder = activeFolder;
+    requireLocalFolder(folder);
+    if (editor.document.isDirty) {
+      throw new PreviewError('file_dirty');
+    }
+    const selection = editor.selection && !editor.selection.isEmpty
+      ? commands.inclusiveSelectedLines(editor.selection)
+      : undefined;
+    return {
+      folder,
+      logicalPath: commands.safeLogicalPath(folder.uri.fsPath, editor.document.uri.fsPath),
+      selection,
+      workspaceName: folder.name
+    };
+  }
+  if (decision.kind === 'generic') {
+    return { folder: undefined, logicalPath: undefined, selection: undefined, workspaceName: 'none' };
+  }
+  const folder = await selectWorkspaceFolder();
+  if (!folder) {
+    return undefined;
+  }
+  return { folder, logicalPath: undefined, selection: undefined, workspaceName: folder.name };
+}
+
+async function inspectEffectiveProfile(target, runtime, token) {
+  const result = await runCli(commands.buildProfileInvocation(runtime, Boolean(target.folder)), {
+    cwd: target.folder ? target.folder.uri.fsPath : os.homedir(),
+    timeoutMs: 10000,
+    token
+  });
+  if (result.exitCode !== 0) {
+    throw classifyCliFailure(result.stderr);
+  }
+  const identity = parseProfileIdentity(result.stdout);
+  if (identity.profile !== runtime.profile) {
+    throw new PreviewError('profile_mismatch');
+  }
+  return identity;
+}
+
+function renderIdentity(stream, identity, target, mode) {
+  const rows = [
+    ['Profile', identity.profile],
+    ['Chat model', identity.chatModel],
+    ['Mutation model', identity.mutationModel],
+    ['Workspace', target.workspaceName],
+    ['Mode', mode]
+  ];
+  if (target.logicalPath) {
+    rows.push(['Context', target.selection ? `${target.logicalPath}:${target.selection}` : target.logicalPath]);
+  }
+  const table = ['| Maestro | Active value |', '| --- | --- |', ...rows.map(([key, value]) => `| ${key} | ${escapeTable(value)} |`)].join('\n');
+  stream.markdown(`${table}\n\n`);
+}
+
+async function handleNativeChat(request, stream, token) {
+  try {
+    const target = await nativeChatTarget();
+    if (!target) {
+      return { metadata: { command: request.command || '', status: 'canceled' } };
+    }
+    if (request.command === 'preview') {
+      const mutation = activeWorkspaceEditor({ mutation: true });
+      if (mutation.editor.selections.length !== 1) {
+        throw new PreviewError('selection_multiple');
+      }
+      requireWholeLineSelection(mutation.editor);
+      const selectedLines = commands.inclusiveSelectedLines(mutation.editor.selection);
+      const runtime = resolveRuntime(mutation.folder, { configRequired: true });
+      const identity = await inspectEffectiveProfile({
+        folder: mutation.folder,
+        logicalPath: mutation.logicalPath,
+        selection: selectedLines,
+        workspaceName: mutation.folder.name
+      }, runtime, token);
+      renderIdentity(stream, identity, {
+        folder: mutation.folder,
+        logicalPath: mutation.logicalPath,
+        selection: selectedLines,
+        workspaceName: mutation.folder.name
+      }, 'preview → controlled mutation');
+      await replaceSelection(request.prompt);
+      stream.markdown('The authoritative preview and **allow once / deny** decision are open in the Maestro terminal. The extension cannot approve or apply the change.');
+      return { metadata: { command: 'preview', status: 'terminal' } };
+    }
+    if (request.command === 'doctor') {
+      if (!target.folder) {
+        throw new PreviewError('workspace_not_open');
+      }
+      await doctor();
+      stream.markdown('Doctor is running in the Maestro terminal, which contains the authoritative diagnostics.');
+      return { metadata: { command: 'doctor', status: 'terminal' } };
+    }
+
+    const runtime = resolveRuntime(target.folder, { configRequired: true });
+    const identity = await inspectEffectiveProfile(target, runtime, token);
+    renderIdentity(stream, identity, target, request.command === 'status' ? 'diagnostics' : 'chat');
+    if (request.command === 'status') {
+      stream.progress('Checking the local provider and qualified models…');
+      const diagnostic = await runCli(commands.buildCapturedDoctorInvocation(runtime, Boolean(target.folder)), {
+        cwd: target.folder ? target.folder.uri.fsPath : os.homedir(),
+        timeoutMs: 30000,
+        token
+      });
+      const issue = classifyDoctorOutput(diagnostic.stdout, diagnostic.stderr);
+      if (issue) {
+        throw new PreviewError(issue);
+      }
+      stream.markdown('Configuration, provider, Direct Chat model, and Controlled Mutation model are available.');
+      stream.button({ command: 'maestro.doctor', title: 'Run full Doctor in terminal' });
+      return { metadata: { command: 'status', status: 'ready' } };
+    }
+
+    if (typeof request.prompt !== 'string' || request.prompt.trim() === '') {
+      throw new PreviewError('question_empty');
+    }
+    const question = target.selection
+      ? `Focus on lines ${target.selection} of ${target.logicalPath}.\n\n${request.prompt.trim()}`
+      : request.prompt.trim();
+    stream.progress('Asking the local Maestro model…');
+    writeEvent('chat_request_started', {
+      command: 'native_chat', status: 'started', binary_origin: runtime.binaryOrigin,
+      logical_path: target.logicalPath
+    });
+    const started = Date.now();
+    const result = await runCli(commands.buildCapturedChatInvocation(runtime, target.logicalPath, Boolean(target.folder)), {
+      cwd: target.folder ? target.folder.uri.fsPath : os.homedir(),
+      input: question,
+      token
+    });
+    if (result.exitCode !== 0) {
+      throw classifyCliFailure(result.stderr);
+    }
+    const response = parseChatEnvelope(result.stdout);
+    if (response.model !== identity.chatModel) {
+      throw new PreviewError('cli_incompatible');
+    }
+    const markdown = new vscode.MarkdownString();
+    markdown.isTrusted = false;
+    markdown.supportHtml = false;
+    markdown.appendText(response.content);
+    stream.markdown(markdown);
+    writeEvent('chat_request_finished', {
+      command: 'native_chat', status: 'passed', duration_ms: Date.now() - started,
+      binary_origin: runtime.binaryOrigin, logical_path: target.logicalPath
+    });
+    await vscode.commands.executeCommand('setContext', 'maestro.chatPassed', true);
+    return { metadata: { command: '', status: 'passed' } };
+  } catch (error) {
+    const normalized = normalizeError(error);
+    writeEvent('chat_request_rejected', { command: 'native_chat', status: 'rejected', error_code: normalized.code });
+    const message = new vscode.MarkdownString();
+    message.appendMarkdown(`**${normalized.title}**  \n`);
+    message.appendText(`${normalized.cause} Next: ${normalized.action}.`);
+    stream.markdown(message);
+    const action = chatAction(normalized.action);
+    if (action) {
+      stream.button(action);
+    }
+    return { metadata: { command: request.command || '', status: 'rejected', errorCode: normalized.code } };
+  }
+}
+
+function chatAction(action) {
+  const actions = {
+    'Open Settings': { command: 'workbench.action.openSettings', title: 'Open Maestro Settings', arguments: [`@ext:${EXTENSION_ID}`] },
+    'Open Setup Guide': { command: 'maestro.openSetupGuide', title: 'Open Setup Guide' },
+    'Open Troubleshooting': { command: 'maestro.openTroubleshooting', title: 'Open Troubleshooting' },
+    'Run Doctor': { command: 'maestro.doctor', title: 'Run Doctor' },
+    'Save File': { command: 'workbench.action.files.save', title: 'Save File' }
+  };
+  return actions[action];
+}
+
+function escapeTable(value) {
+  return String(value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/[\r\n]/g, ' ');
+}
+
 function writeEvent(eventCode, fields) {
   outputChannel.appendLine(formatEvent(eventCode, fields));
 }
@@ -300,6 +535,10 @@ async function presentError(error) {
     await vscode.commands.executeCommand('workbench.action.files.save');
   } else if (selected === 'Manage Workspace Trust') {
     await vscode.commands.executeCommand('workbench.trust.manage');
+  } else if (selected === 'Run Doctor') {
+    await doctor();
+  } else if (selected === 'Open Troubleshooting') {
+    await openTroubleshooting();
   }
 }
 
@@ -391,17 +630,28 @@ function activate(context) {
     ['maestro.replaceSelection', replaceSelection],
     ['maestro.doctor', doctor],
     ['maestro.version', version],
-    ['maestro.openSetupGuide', openSetupGuide]
+    ['maestro.openSetupGuide', openSetupGuide],
+    ['maestro.openChat', openNativeChat],
+    ['maestro.openTroubleshooting', openTroubleshooting]
   ];
   for (const [name, handler] of registrations) {
     context.subscriptions.push(vscode.commands.registerCommand(name, guarded(handler)));
   }
+  const participant = vscode.chat.createChatParticipant(
+    CHAT_PARTICIPANT_ID,
+    (request, _chatContext, stream, token) => handleNativeChat(request, stream, token)
+  );
+  participant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'icon.png');
+  context.subscriptions.push(participant);
   void Promise.all([
     vscode.commands.executeCommand('setContext', 'maestro.doctorPassed', false),
     vscode.commands.executeCommand('setContext', 'maestro.chatPassed', false),
     vscode.commands.executeCommand('setContext', 'maestro.mutationReviewed', false),
     refreshOnboardingStatus()
   ]);
+  if (process.env.MAESTRO_VSCODE_TEST_MODE === '1') {
+    return Object.freeze({ handleNativeChat });
+  }
 }
 
 function deactivate() {}

@@ -6,6 +6,8 @@
 !SUPPORT.md
 !ASSET_PROVENANCE.md
 !command-builder.js
+!chat-protocol.js
+!cli-runner.js
 !diagnostics.js
 !errors.js
 !extension.js
@@ -18,3 +20,4 @@
 !onboarding.js
 !package.json
 !path-resolver.js
+!workspace-context.js

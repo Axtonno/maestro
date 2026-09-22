@@ -17,6 +17,10 @@ dichiarato nelle note di release.
   support claim;
 - onboarding VS Code nativo con walkthrough verificabile, cinque azioni stabili
   in Command Palette e una status bar passiva con recovery a singola azione.
+- Chat nativa `@maestro` con identità visibile di profilo e modelli, selezione
+  automatica della root VS Code e handoff della mutation al terminale TTY;
+- contratto CLI read-only `profile` e flag `--workspace-current` per usare il
+  workspace scelto dall'host senza riscrivere la configurazione persistente.
 
 ### Changed
 

@@ -18,7 +18,9 @@ suite('Installed Maestro VSIX', () => {
       'maestro.replaceSelection',
       'maestro.doctor',
       'maestro.version',
-      'maestro.openSetupGuide'
+      'maestro.openSetupGuide',
+      'maestro.openChat',
+      'maestro.openTroubleshooting'
     ]) {
       assert.ok(commands.includes(command), `${command} was not registered`);
     }
@@ -38,7 +40,7 @@ suite('Installed Maestro VSIX', () => {
     const configuration = vscode.workspace.getConfiguration('maestro');
     await configuration.update('binaryPath', '/definitely/missing/maestro', vscode.ConfigurationTarget.Workspace);
     await expectNoTask('maestro.version');
-    await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+    await configuration.update('binaryPath', process.env.MAESTRO_VSCODE_TEST_BINARY, vscode.ConfigurationTarget.Workspace);
     await configuration.update('configPath', './missing.yaml', vscode.ConfigurationTarget.Workspace);
     const versionStarted = observeTask();
     await vscode.commands.executeCommand('maestro.version');
@@ -48,7 +50,7 @@ suite('Installed Maestro VSIX', () => {
     const doctorStarted = observeTask();
     await vscode.commands.executeCommand('maestro.doctor');
     assert.deepEqual((await doctorStarted).execution.args, [
-      'doctor', '--mode', 'all', '--config', path.join(workspace, 'maestro.yaml')
+      'doctor', '--mode', 'all', '--config', path.join(workspace, 'maestro.yaml'), '--workspace-current'
     ]);
   });
 
@@ -81,7 +83,7 @@ suite('Installed Maestro VSIX', () => {
     const task = await started;
     assert.ok(task.execution instanceof vscode.ProcessExecution);
     assert.equal(task.execution.process, binary);
-    assert.deepEqual(task.execution.args, ['doctor', '--mode', 'all']);
+    assert.deepEqual(task.execution.args, ['doctor', '--mode', 'all', '--workspace-current']);
     const event = await ended;
     assert.equal(event.exitCode, 0);
   });
@@ -100,10 +102,36 @@ suite('Installed Maestro VSIX', () => {
     const task = await started;
     assert.deepEqual(task.execution.args, [
       'chat', '--config', path.join(workspace, 'maestro.yaml'),
-      '--file', 'app/Example.php', '--', 'Which status is returned?'
+      '--workspace-current', '--file', 'app/Example.php', '--', 'Which status is returned?'
     ]);
     const event = await ended;
     assert.equal(event.exitCode, 0);
+  });
+
+  test('serves native chat from the installed VSIX with visible runtime identity', async () => {
+    const workspace = process.env.MAESTRO_VSCODE_TEST_WORKSPACE;
+    const configuration = vscode.workspace.getConfiguration('maestro');
+    await configuration.update('binaryPath', process.env.MAESTRO_VSCODE_TEST_BINARY, vscode.ConfigurationTarget.Workspace);
+    await configuration.update('configPath', './maestro.yaml', vscode.ConfigurationTarget.Workspace);
+    const document = await vscode.workspace.openTextDocument(path.join(workspace, 'app', 'Example.php'));
+    await vscode.window.showTextDocument(document);
+    const extension = vscode.extensions.getExtension('axtonno.maestro-local-ai');
+    const api = await extension.activate();
+    assert.ok(api && typeof api.handleNativeChat === 'function');
+    const rendered = [];
+    const stream = {
+      markdown(value) { rendered.push(typeof value === 'string' ? value : value.value); },
+      progress() {},
+      button() {}
+    };
+    const token = { onCancellationRequested() { return { dispose() {} }; } };
+    const result = await api.handleNativeChat({ prompt: 'What is returned?', command: undefined }, stream, token);
+    assert.equal(result.metadata.status, 'passed');
+    const output = rendered.join('\n');
+    assert.match(output, /Profile \| recommended/);
+    assert.match(output, /Chat model \| qwen3\.5:9b/);
+    assert.match(output, /Mutation model \| qwen2\.5-coder:14b/);
+    assert.match(output, /Installed(?: |&nbsp;)native(?: |&nbsp;)chat(?: |&nbsp;)response\./);
   });
 
   test('keeps mutation approval in a real TTY and deny has zero effects', async () => {

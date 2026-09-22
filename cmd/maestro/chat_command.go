@@ -22,10 +22,11 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 	flags := flag.NewFlagSet("maestro chat", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	usage := func() {
-		fmt.Fprintln(stdout, "usage: maestro chat [--config path] [--file logical-path] [--stream] [question]")
+		fmt.Fprintln(stdout, "usage: maestro chat [--config path] [--workspace-current] [--file logical-path] [--stream] [question]")
 	}
 	flags.Usage = func() {}
 	configPath := flags.String("config", "", "path to Maestro configuration")
+	workspaceCurrent := flags.Bool("workspace-current", false, "use the current working directory as workspace root")
 	logical := flags.String("file", "", "single logical workspace file")
 	stream := flags.Bool("stream", false, "stream the direct response")
 	if err := flags.Parse(arguments); err != nil {
@@ -81,6 +82,12 @@ func runChat(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Wr
 		renderConfigurationDiagnostic(stderr, err)
 		return 2
 	}
+	config, err = applyCurrentWorkspace(config, *workspaceCurrent, dependencies, productconfig.Config.ValidateChatExecutionProfile)
+	if err != nil {
+		fmt.Fprintln(stderr, "chat failed: invalid_request")
+		renderConfigurationDiagnostic(stderr, err)
+		return 2
+	}
 	heartbeat := newChatHeartbeat(stderr, dependencies.chatHeartbeat)
 	chatDependencies := directChatDependencies(dependencies)
 	chatDependencies.GenerationStarted = heartbeat.Start
@@ -130,9 +137,9 @@ func directChatDependencies(dependencies commandDependencies) directchat.Depende
 }
 
 func duplicateChatFlag(arguments []string) bool {
-	seen := make(map[string]struct{}, 3)
+	seen := make(map[string]struct{}, 4)
 	for _, argument := range arguments {
-		for _, name := range []string{"--config", "--file", "--stream"} {
+		for _, name := range []string{"--config", "--workspace-current", "--file", "--stream"} {
 			if argument == name || strings.HasPrefix(argument, name+"=") {
 				if _, exists := seen[name]; exists {
 					return true

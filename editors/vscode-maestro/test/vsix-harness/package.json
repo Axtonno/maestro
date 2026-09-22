@@ -5,7 +5,7 @@
   "private": true,
   "publisher": "maestro-local",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.100.0"
   },
   "main": "./extension.js",
   "activationEvents": [

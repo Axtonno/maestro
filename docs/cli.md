@@ -12,6 +12,7 @@ che supera i gate della Milestone 41.
 ```text
 maestro setup [--config path] [--workspace path] [--pull]
 maestro chat
+maestro profile [--config path] [--workspace-current]
 maestro mutate --preview --file <path> --lines <start:end> [--config path] <istruzione>
 maestro mutate --file <path> --lines <start:end> [--config path] <istruzione>
 maestro doctor --mode chat
@@ -20,6 +21,12 @@ maestro doctor --mode mutation [--config path]
 maestro doctor --mode all [--config path]
 maestro version
 ```
+
+`--workspace-current`, quando presente su `chat`, `profile`, `doctor`,
+`mutate` o `workspace replace`, sostituisce in memoria `workspace.root` con la
+working directory del processo e rivalida il profilo prima di qualsiasi I/O.
+Non modifica il file YAML. Il flag è destinato agli host espliciti, come
+l'estensione VS Code, che hanno già selezionato e confinato la root.
 
 La root help può mostrare comandi storici o di sviluppo. `agent`, `run`,
 `models`, `agents` e `bench` non appartengono al support claim v0.5.0 e non
@@ -50,7 +57,7 @@ fallisce chiuso e non viene sostituito.
 ## `chat`
 
 ```text
-maestro chat [--config path] [--file logical-path] [--stream] [question]
+maestro chat [--config path] [--workspace-current] [--file logical-path] [--stream] [question]
 ```
 
 La domanda può essere un argomento posizionale oppure stdin bounded, mai
@@ -113,6 +120,22 @@ Il risultato è intenzionalmente visibile all’utente locale. Log e failure non
 includono domanda, prompt, response completa, contenuto del file, root fisica o
 secret. Le righe `num_predict_requested` e `residency_requested` sono presenti
 nei profili v3 e v4; l'envelope v2 storico resta invariato.
+
+## `profile`
+
+```text
+maestro profile [--config path] [--workspace-current]
+```
+
+Carica e valida il profilo v4 senza contattare il provider, invocare modelli o
+leggere file del workspace. Restituisce un'identità JSON stabile destinata a
+integrazioni locali:
+
+```json
+{"schema_version":1,"profile":"recommended","provider":"ollama","chat_model":"qwen3.5:9b","mutation_model":"qwen2.5-coder:14b"}
+```
+
+L'output non contiene root fisiche, path della configurazione o secret.
 
 ## `doctor --mode chat`
 

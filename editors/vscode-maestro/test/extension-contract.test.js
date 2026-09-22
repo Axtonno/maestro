@@ -17,7 +17,9 @@ const commandIDs = [
   'maestro.replaceSelection',
   'maestro.doctor',
   'maestro.version',
-  'maestro.openSetupGuide'
+  'maestro.openSetupGuide',
+  'maestro.openChat',
+  'maestro.openTroubleshooting'
 ];
 const packagedFiles = [
   'CHANGELOG.md',
@@ -27,6 +29,8 @@ const packagedFiles = [
   'SECURITY.md',
   'SUPPORT.md',
   'command-builder.js',
+  'chat-protocol.js',
+  'cli-runner.js',
   'diagnostics.js',
   'errors.js',
   'extension.js',
@@ -38,13 +42,14 @@ const packagedFiles = [
   'media/walkthrough/mutation.md',
   'onboarding.js',
   'package.json',
-  'path-resolver.js'
+  'path-resolver.js',
+  'workspace-context.js'
 ];
 
-test('manifest freezes the Marketplace candidate identity and four-command workspace surface', () => {
+test('manifest freezes the unpublished native-chat candidate identity', () => {
   assert.equal(manifest.name, 'maestro-local-ai');
   assert.equal(manifest.displayName, 'Maestro for VS Code');
-  assert.equal(manifest.version, '0.2.0');
+  assert.equal(manifest.version, '0.3.0');
   assert.equal(manifest.publisher, 'axtonno');
   assert.equal(manifest.private, undefined);
   assert.equal(manifest.preview, true);
@@ -55,11 +60,17 @@ test('manifest freezes the Marketplace candidate identity and four-command works
   assert.equal(manifest.bugs.url, 'https://github.com/Axtonno/maestro/issues');
   assert.match(manifest.homepage, /^https:\/\/github\.com\/Axtonno\/maestro\//);
   assert.ok(manifest.categories.includes('Machine Learning'));
+  assert.ok(manifest.categories.includes('Chat'));
   assert.ok(manifest.keywords.length > 0 && manifest.keywords.length <= 30);
   assert.deepEqual(manifest.extensionKind, ['workspace']);
   assert.equal(manifest.capabilities.untrustedWorkspaces.supported, false);
   assert.equal(manifest.capabilities.virtualWorkspaces.supported, false);
   assert.equal(manifest.dependencies, undefined);
+  assert.equal(manifest.engines.vscode, '^1.100.0');
+  assert.equal(manifest.contributes.chatParticipants.length, 1);
+  assert.equal(manifest.contributes.chatParticipants[0].id, 'maestro.chat');
+  assert.equal(manifest.contributes.chatParticipants[0].name, 'maestro');
+  assert.deepEqual(manifest.contributes.chatParticipants[0].commands.map(command => command.name), ['status', 'preview', 'doctor']);
   assert.deepEqual(
     manifest.contributes.commands.map(entry => entry.command).sort(),
     [...commandIDs].sort()
@@ -73,11 +84,13 @@ test('manifest freezes the Marketplace candidate identity and four-command works
     'maestro.replaceSelection': 'Maestro: Mutate Selection',
     'maestro.doctor': 'Maestro: Doctor',
     'maestro.version': 'Maestro: Show Binary Identity',
-    'maestro.openSetupGuide': 'Maestro: Open Setup Guide'
+    'maestro.openSetupGuide': 'Maestro: Open Setup Guide',
+    'maestro.openChat': 'Maestro: Open Chat',
+    'maestro.openTroubleshooting': 'Maestro: Open Troubleshooting'
   });
 });
 
-test('walkthrough and settings encode verifiable onboarding without a profile claim', () => {
+test('walkthrough and settings encode onboarding plus the qualified profile', () => {
   assert.equal(manifest.contributes.walkthroughs.length, 1);
   const walkthrough = manifest.contributes.walkthroughs[0];
   assert.equal(walkthrough.id, 'maestro.setup');
@@ -96,12 +109,14 @@ test('walkthrough and settings encode verifiable onboarding without a profile cl
   }
   const properties = manifest.contributes.configuration.properties;
   assert.equal(properties['maestro.binaryPath'].default, '');
-  assert.equal(properties['maestro.binaryPath'].scope, 'window');
+  assert.equal(properties['maestro.binaryPath'].scope, 'machine-overridable');
   assert.match(properties['maestro.binaryPath'].markdownDescription, /Example:.*takes precedence/s);
   assert.equal(properties['maestro.configPath'].default, '');
   assert.equal(properties['maestro.configPath'].scope, 'resource');
   assert.match(properties['maestro.configPath'].markdownDescription, /Example:.*takes precedence/s);
-  assert.equal(properties['maestro.profile'], undefined);
+  assert.equal(properties['maestro.profile'].default, 'recommended');
+  assert.equal(properties['maestro.profile'].scope, 'resource');
+  assert.deepEqual(properties['maestro.profile'].enum, ['recommended']);
 });
 
 test('packaging is allowlisted and has no publication script', () => {
@@ -125,7 +140,7 @@ test('packaging is allowlisted and has no publication script', () => {
   assert.equal(icon.readUInt32BE(20), 256);
 });
 
-test('extension delegates mutation and never writes or approves', () => {
+test('extension delegates mutation, captures only read-only CLI calls, and never writes or approves', () => {
   for (const forbidden of [
     'workspace.applyEdit',
     'new vscode.WorkspaceEdit',
@@ -133,9 +148,7 @@ test('extension delegates mutation and never writes or approves', () => {
     'fs.write',
     "sendText('y'",
     'sendText("y"',
-    'child_process',
     'exec(',
-    'spawn(',
     'fetch(',
     'https.request',
     'http.request'
@@ -145,6 +158,12 @@ test('extension delegates mutation and never writes or approves', () => {
   assert.match(commandBuilder, /'workspace', 'replace'/);
   assert.match(source, /complete preview in the terminal/);
   assert.match(source, /new vscode\.ProcessExecution/);
+  const runner = fs.readFileSync(path.join(root, 'cli-runner.js'), 'utf8');
+  assert.match(runner, /childProcess\.spawn/);
+  assert.match(runner, /shell: false/);
+  assert.doesNotMatch(runner, /exec\(|execFile\(|shell: true/);
+  assert.match(source, /buildCapturedChatInvocation/);
+  assert.match(source, /buildProfileInvocation/);
   assert.doesNotMatch(source, /telemetry|createWebview|registerWebview|createTreeView/i);
 });
 
@@ -165,9 +184,10 @@ test('public docs preserve the claim boundary and define support and updates', (
   assert.match(readme, /not yet available in the Visual Studio\s+Marketplace/);
   assert.match(readme, /never\s+records prompts/);
   assert.match(readme, /allow once/);
-  assert.match(readme, /releases\/download\/v0\.5\.0\/maestro-v0\.5\.0-linux-amd64\.tar\.gz/);
-  assert.match(readme, /tar -xz --strip-components=1/);
+  assert.match(readme, /post-v0\.5\.0 Maestro source candidate/);
+  assert.match(readme, /go build -o/);
+  assert.match(readme, /@maestro \/status/);
   assert.match(readme, /uninstall-extension axtonno\.maestro-local-ai/);
-  assert.match(support, /`0\.2\.x` adds the guided\s+onboarding surface/);
+  assert.match(support, /`0\.3\.x` adds native Chat plus\s+workspace adaptation/);
   assert.match(support, /higher patch containing the revert/);
 });

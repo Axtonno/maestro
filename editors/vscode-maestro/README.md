@@ -1,136 +1,137 @@
 # Maestro for VS Code
 
-Maestro for VS Code runs four explicit [Maestro](https://github.com/Axtonno/maestro)
-CLI workflows from the editor: binary identity, doctor, chat about the active
-file, and Controlled Mutation of selected lines.
+Maestro for VS Code adds `@maestro` to the native VS Code Chat and keeps
+Controlled Mutation behind the Maestro CLI terminal approval boundary.
 
-This is an unpublished pre-release candidate. Version 0.2.0 is installable from a local
-VSIX for qualification, but it is not yet available in the Visual Studio
-Marketplace. The extension never writes files itself, approves a mutation,
-downloads software, or starts work when a workspace opens.
+Version 0.3.0 is an unpublished local candidate. It is installable from a
+VSIX, but it is not yet available in the Visual Studio Marketplace. The
+extension never writes project files, approves a mutation, downloads software,
+or starts provider/model work when a workspace opens.
 
 ## Requirements
 
 - a trusted local workspace on a Linux extension host, including Remote WSL;
-- VS Code 1.85.0 or later;
-- Ollama 0.33.1 and the models selected by `maestro setup`;
-- Maestro v0.5.0 on the extension-host `PATH`.
+- VS Code 1.100.0 or later with Chat enabled;
+- Ollama 0.33.1 and the two models selected by `maestro setup`;
+- the current post-v0.5.0 Maestro source candidate, including `profile` and
+  `--workspace-current`.
 
-The qualified extension environment is Ubuntu 24.04 x86-64 with VS Code
+The immutable v0.5.0 archive predates the M50 workspace/profile contract. To
+test this local candidate from the repository, build the current CLI in WSL:
+
+```sh
+go build -o "$HOME/.local/bin/maestro" ./cmd/maestro
+maestro setup
+```
+
+The qualified environment is Ubuntu 24.04 x86-64 in Remote WSL with VS Code
 Stable. Windows-native, macOS, web, Dev Containers, and Remote SSH extension
 hosts are not qualified by this candidate. The VSIX contains no Maestro
 binary, provider, model, user configuration, or telemetry client.
 
-## First run
+## Install and open Chat
 
-From the project you want Maestro to use, install the pinned CLI and run setup:
-
-```sh
-install -d "$HOME/.local/bin" && curl -fsSL https://github.com/Axtonno/maestro/releases/download/v0.5.0/maestro-v0.5.0-linux-amd64.tar.gz | tar -xz --strip-components=1 -C "$HOME/.local/bin" maestro-v0.5.0-linux-amd64/maestro
-maestro setup
-```
-
-The first line is the one supported short installation command for this
-candidate. It installs only the pinned v0.5.0 binary and never invokes
-`sudo`. The checksum-oriented archive procedure remains available in the
-[v0.5.0 release notes](https://github.com/Axtonno/maestro/blob/master/docs/releases/v0.5.0.md).
-`maestro setup` owns configuration and any consent for model downloads; the
-extension does not reproduce either operation.
-
-Install the local candidate into VS Code:
+Install the local candidate from a VS Code window connected to WSL:
 
 ```sh
-code --install-extension maestro-local-ai-0.2.0.vsix
+code --install-extension maestro-local-ai-0.3.0.vsix --force
 ```
 
-VS Code opens the native **Set up Maestro** walkthrough after installation.
-You can reopen it at any time with **Maestro: Open Setup Guide**. Its five
-steps complete only when their local readiness or command outcome is verified.
+Run **Maestro: Open Chat** from the Command Palette, or open the VS Code Chat
+view and type `@maestro`. The Chat surface provides:
 
-The Command Palette exposes these stable actions:
+- `@maestro <question>` for local Direct Chat;
+- `@maestro /status` for effective profile, model, workspace, and setup health;
+- `@maestro /preview <instruction>` to open the selected-line Controlled
+  Mutation flow in a terminal;
+- `@maestro /doctor` to run the full Doctor in a terminal.
 
-1. **Maestro: Show Binary Identity**
-2. **Maestro: Doctor**
-3. **Maestro: Chat About Active File**
-4. **Maestro: Mutate Selection**
-5. **Maestro: Open Setup Guide**
+Every response starts with the effective profile, Direct Chat model,
+Controlled Mutation model, selected workspace, mode, and active file context.
+Model output is rendered as untrusted text. The extension never records prompts,
+source, responses, or configuration contents in the Maestro output channel.
 
-The first two commands establish which binary and runtime are in use. Chat
-passes one saved local file chosen by you. Controlled Mutation accepts one
-complete selection in a saved PHP file below `app/`.
+## Workspace adaptation
+
+The project root is not a setting. Maestro uses the VS Code context:
+
+| VS Code state | Behavior |
+| --- | --- |
+| One folder | Uses that folder automatically |
+| Multi-root with an active file | Uses the folder containing that file |
+| Ambiguous multi-root | Asks for one folder |
+| File outside the workspace | Blocks contextual chat and mutation |
+| Dirty or unsaved file | Blocks file context until it is saved |
+| No open folder | Allows generic chat; disables mutation |
+| Remote WSL | Uses paths and processes from the WSL extension host |
+
+The extension passes `--workspace-current` and starts the CLI with the selected
+folder as its working directory. The CLI validates that override and remains
+authoritative for path containment, model identity, stale checks, preview, and
+apply.
 
 ## Settings
 
-- `maestro.binaryPath` (window scope, default empty): optional executable
-  path, for example `/home/me/.local/bin/maestro` or `./bin/maestro`. An
-  explicit value takes precedence; otherwise the exact extension-host `PATH`
-  is searched without a shell.
-- `maestro.configPath` (resource scope, default empty): optional v4 path, for
-  example `./maestro.yaml`. An explicit workspace-contained value takes
-  precedence; otherwise the CLI uses `MAESTRO_CONFIG`, `XDG_CONFIG_HOME`, then
-  `~/.config/maestro/config.yaml` as created by `maestro setup`.
+- `maestro.binaryPath` (machine-overridable, default empty): optional executable
+  in the extension-host environment, for example
+  `/home/me/.local/bin/maestro`. Configure it once in Remote WSL settings; an
+  explicit value takes precedence over the extension-host `PATH`.
+- `maestro.configPath` (resource scope, default empty): optional workspace
+  configuration, for example `./.maestro/config.yaml`. When empty, the CLI uses
+  `MAESTRO_CONFIG`, `XDG_CONFIG_HOME`, then
+  `~/.config/maestro/config.yaml`.
+- `maestro.profile` (resource scope): `recommended`, the qualified two-model
+  profile. The effective CLI identity must match this value. The rejected
+  single-model evaluation profile is not exposed.
 - `maestro.terminalName`: name of the dedicated integrated terminal.
 
-In multi-root workspaces, file commands use the folder containing the active
-file. Other commands require an unambiguous focused folder.
-
-One lightweight status bar item performs only passive local checks and shows
-`Ready`, `Config missing`, or `Binary missing`. Selecting it always opens the
-next action: Doctor, the setup guide, or the binary-path setting. It never runs
-the CLI, accesses the network, or starts model work when the workspace opens.
+One passive status item shows `Ready`, `Config missing`, or `Binary missing`.
+It reads only local metadata and never runs the CLI or provider at startup.
 
 ## Controlled Mutation and security
 
-Every command runs as a direct process task with separate arguments in a new
-integrated terminal. The terminal is authoritative for CLI output and errors.
+Chat is a read-only direct CLI process with bounded output, timeout, and
+cancellation. The question is sent on standard input instead of the process
+argument list. Classic commands and Controlled Mutation use a direct
+`ProcessExecution` task in a new integrated terminal.
 
-For mutation, review the complete CLI preview in that terminal. Deny to leave
-the workspace unchanged, or allow once to apply exactly the displayed
-single-file diff. The extension cannot enter the approval, apply an edit, or
+For mutation, review the complete CLI preview in the terminal. Deny to keep the
+workspace unchanged, or allow once to apply exactly the displayed single-file
+diff. The extension cannot enter the approval, call `workspace.applyEdit`, or
 bypass Maestro's stale-source check.
-
-The `Maestro` output channel records only redacted lifecycle fields. It never
-records prompts, file contents, diffs, provider output, secrets, configuration
-contents, home paths, or the environment. See [SECURITY.md](SECURITY.md) for
-the reporting route and trust boundary.
 
 ## Troubleshooting
 
-| Error | Next action |
+| State | Single next action |
 | --- | --- |
-| `binary_not_found` | Set `maestro.binaryPath` or expose `maestro` on the extension-host `PATH`. |
-| `binary_not_executable` | Select a regular executable Maestro file. |
-| `config_not_found`, `config_not_readable` | Correct the explicit config path or its permissions. |
-| `config_outside_expected_scope` | Use the CLI default or move the explicit config into the workspace. |
-| `workspace_untrusted` | Review and trust the workspace before invoking a local binary. |
-| `workspace_virtual`, `platform_unsupported` | Use a local Linux or Remote WSL extension host. |
-| `file_dirty` | Save the active file and retry. |
-| `selection_empty`, `selection_partial`, `selection_multiple` | Select exactly one range of complete lines. |
-| `mutation_target_invalid` | Select a PHP file below `app/`. |
-| `cli_exit_nonzero` | Read the terminal, correct the CLI failure, and retry. |
+| Maestro binary missing | Open Maestro Settings |
+| Configuration missing | Open Setup Guide |
+| CLI profile/workspace contract missing | Open Troubleshooting and build the current CLI |
+| Ollama unreachable | Run Doctor |
+| Direct Chat model/digest missing | Run Doctor |
+| Controlled Mutation model/digest missing | Run Doctor |
+| Workspace unsupported or ambiguous | Select/open a supported workspace |
+| File dirty | Save File |
+| Selection invalid | Select one range of complete lines |
+| Request timeout | Run Doctor |
 
-A mutation denial is reported as `denied`, not as a failure. More help and the
-information to include in a report are in [SUPPORT.md](SUPPORT.md).
+The `Maestro` output channel contains only redacted lifecycle fields. See
+[SECURITY.md](SECURITY.md) and [SUPPORT.md](SUPPORT.md) before reporting an
+issue.
 
 ## Updates and removal
 
 No update is downloaded or installed by the extension. Before Marketplace
-publication, upgrade by installing a newer signed-off VSIX with
-`code --install-extension <file.vsix> --force`.
-
-Remove this candidate with:
+publication, install a newer signed-off VSIX explicitly with `--force`.
 
 ```sh
 code --uninstall-extension axtonno.maestro-local-ai
 ```
 
 Uninstalling the extension does not remove Maestro, Ollama, models,
-configuration, or project files. Versioning, update, and rollback policy are
-documented in [SUPPORT.md](SUPPORT.md).
+configuration, or project files.
 
 ## Development
-
-Packaging uses the lockfile-pinned `@vscode/vsce`:
 
 ```sh
 npm ci --ignore-scripts

@@ -61,6 +61,7 @@ function buildChatInvocation(resolved, logicalPath, question) {
   return invocation(resolved.binaryPath, [
     'chat',
     ...configArguments(resolved),
+    '--workspace-current',
     '--file', checkedArgument(logicalPath, 'file_outside_workspace'),
     '--', checkedUserText(question, 'question_empty', 'question_invalid')
   ]);
@@ -72,12 +73,38 @@ function buildMutationInvocation(resolved, logicalPath, lines, instruction) {
     '--file', checkedArgument(logicalPath, 'file_outside_workspace'),
     '--lines', checkedArgument(lines, 'selection_invalid'),
     ...configArguments(resolved),
+    '--workspace-current',
     '--', checkedUserText(instruction, 'instruction_empty', 'instruction_invalid')
   ]);
 }
 
 function buildDoctorInvocation(resolved) {
-  return invocation(resolved.binaryPath, ['doctor', '--mode', 'all', ...configArguments(resolved)]);
+  return invocation(resolved.binaryPath, ['doctor', '--mode', 'all', ...configArguments(resolved), '--workspace-current']);
+}
+
+function buildCapturedChatInvocation(resolved, logicalPath, workspaceCurrent) {
+  return invocation(resolved.binaryPath, [
+    'chat',
+    ...configArguments(resolved),
+    ...(workspaceCurrent ? ['--workspace-current'] : []),
+    ...(logicalPath ? ['--file', checkedArgument(logicalPath, 'file_outside_workspace')] : [])
+  ]);
+}
+
+function buildProfileInvocation(resolved, workspaceCurrent) {
+  return invocation(resolved.binaryPath, [
+    'profile',
+    ...configArguments(resolved),
+    ...(workspaceCurrent ? ['--workspace-current'] : [])
+  ]);
+}
+
+function buildCapturedDoctorInvocation(resolved, workspaceCurrent) {
+  return invocation(resolved.binaryPath, [
+    'doctor', '--mode', 'all',
+    ...configArguments(resolved),
+    ...(workspaceCurrent ? ['--workspace-current'] : [])
+  ]);
 }
 
 function buildVersionInvocation(resolved) {
@@ -96,9 +123,12 @@ function configArguments(resolved) {
 }
 
 module.exports = {
+  buildCapturedChatInvocation,
+  buildCapturedDoctorInvocation,
   buildChatInvocation,
   buildDoctorInvocation,
   buildMutationInvocation,
+  buildProfileInvocation,
   buildVersionInvocation,
   inclusiveSelectedLines,
   mutationLogicalPath,

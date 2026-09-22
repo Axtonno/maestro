@@ -7,7 +7,7 @@ const path = require('node:path');
 const { runTests } = require('@vscode/test-electron');
 
 const extensionID = 'axtonno.maestro-local-ai';
-const extensionVersion = '0.2.0';
+const extensionVersion = '0.3.0';
 
 async function main() {
   const vscodeExecutablePath = process.env.MAESTRO_VSCODE_EXECUTABLE;
@@ -19,7 +19,7 @@ async function main() {
     throw new Error(`VS Code CLI does not exist: ${vscodeCLIPath}`);
   }
   const vsixPath = path.resolve(
-    process.env.MAESTRO_VSIX_PATH || path.join(__dirname, '..', 'dist', 'maestro-local-ai-0.2.0.vsix')
+    process.env.MAESTRO_VSIX_PATH || path.join(__dirname, '..', 'dist', 'maestro-local-ai-0.3.0.vsix')
   );
   if (!fs.statSync(vsixPath).isFile()) {
     throw new Error(`VSIX does not exist: ${vsixPath}`);
@@ -32,6 +32,18 @@ async function main() {
   fs.mkdirSync(path.join(workspace, 'app'), { recursive: true });
   fs.writeFileSync(path.join(workspace, 'app', 'Example.php'), "<?php\nreturn 201;\n", 'utf8');
   fs.writeFileSync(path.join(workspace, 'maestro.yaml'), 'version: 4\n', 'utf8');
+  const readonlyProbe = path.join(workspace, 'maestro-readonly-probe');
+  fs.writeFileSync(readonlyProbe, [
+    '#!/bin/sh',
+    'case "$1" in',
+    '  profile) printf \'%s\\n\' \'{"schema_version":1,"profile":"recommended","provider":"ollama","chat_model":"qwen3.5:9b","mutation_model":"qwen2.5-coder:14b"}\' ;;',
+    '  chat) case " $* " in *" -- "*) : ;; *) cat >/dev/null ;; esac; printf \'mode\\tchat\\nterminal\\tcompleted\\nmodel\\tqwen3.5:9b\\nfinish_reason\\tstop\\nresult\\nInstalled native chat response.\\n\' ;;',
+    '  doctor) printf \'pass\\tmutation_provider\\tollama_available\\npass\\tmutation_direct_chat_model\\tqualified_model_digest\\npass\\tmutation_controlled_mutation_model\\tqualified_model_digest\\n\' ;;',
+    '  *) exit 0 ;;',
+    'esac',
+    ''
+  ].join('\n'), 'utf8');
+  fs.chmodSync(readonlyProbe, 0o755);
   const ttyProbe = path.join(workspace, 'maestro-tty-probe');
   fs.writeFileSync(ttyProbe, [
     '#!/bin/sh',
@@ -68,11 +80,11 @@ async function main() {
         throw new Error(`previous VSIX does not exist: ${previousVSIX}`);
       }
       cli('--install-extension', path.resolve(previousVSIX), '--force');
-      assertListed(cli('--list-extensions', '--show-versions'), true, '0.1.1');
+      assertListed(cli('--list-extensions', '--show-versions'), true, '0.2.0');
     }
     cli('--install-extension', vsixPath, '--force');
     assertListed(cli('--list-extensions', '--show-versions'), true);
-    assertListed(cli('--list-extensions', '--show-versions'), false, '0.1.1');
+    assertListed(cli('--list-extensions', '--show-versions'), false, '0.2.0');
     cli('--uninstall-extension', extensionID);
     assertListed(cli('--list-extensions', '--show-versions'), false);
     cli('--install-extension', vsixPath, '--force');
@@ -98,8 +110,9 @@ async function main() {
       ],
       extensionTestsEnv: {
         MAESTRO_VSCODE_TEST_WORKSPACE: workspace,
-        MAESTRO_VSCODE_TEST_BINARY: process.env.MAESTRO_VSCODE_TEST_BINARY || '/bin/true',
-        MAESTRO_VSCODE_TTY_PROBE: ttyProbe
+        MAESTRO_VSCODE_TEST_BINARY: readonlyProbe,
+        MAESTRO_VSCODE_TTY_PROBE: ttyProbe,
+        MAESTRO_VSCODE_TEST_MODE: '1'
       }
     });
   } finally {

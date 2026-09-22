@@ -3,6 +3,22 @@
 All notable changes to Maestro for VS Code are recorded here. Versions follow
 the policy in [SUPPORT.md](SUPPORT.md).
 
+## 0.3.0 — Native Chat and workspace adaptation candidate
+
+- Add the single native `@maestro` Chat assistant with `/status`, `/preview`,
+  and `/doctor` commands, without a hard GitHub Copilot extension dependency.
+- Show the effective qualified profile, Direct Chat model, Controlled Mutation
+  model, workspace, mode, and file/selection context in Chat.
+- Derive the project root from single-root, active-file multi-root, or explicit
+  multi-root selection and pass it through the CLI `--workspace-current`
+  contract; generic no-folder chat remains read-only.
+- Add bounded, cancellable, no-shell CLI capture for profile identity, Doctor,
+  and chat while keeping mutation preview/approval in a real terminal TTY.
+- Expose only the `recommended` two-model profile and add actionable setup,
+  provider, model, timeout, workspace, file, and selection failures.
+- Keep the candidate local and unpublished with no automatic CLI/model
+  downloads, telemetry, direct edits, or auto-apply.
+
 ## 0.2.0 — VS Code onboarding candidate
 
 - Add a native five-step walkthrough with verifiable completion for CLI

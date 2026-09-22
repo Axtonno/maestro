@@ -9,7 +9,9 @@ const commandIDs = [
   'maestro.replaceSelection',
   'maestro.doctor',
   'maestro.version',
-  'maestro.openSetupGuide'
+  'maestro.openSetupGuide',
+  'maestro.openChat',
+  'maestro.openTroubleshooting'
 ];
 
 suite('Maestro for VS Code', () => {
@@ -36,23 +38,23 @@ suite('Maestro for VS Code', () => {
     const configuration = vscode.workspace.getConfiguration('maestro');
     await configuration.update('binaryPath', '/definitely/missing/maestro', vscode.ConfigurationTarget.Workspace);
     await expectNoTask('maestro.version');
-    await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+    await configuration.update('binaryPath', process.env.MAESTRO_VSCODE_TEST_BINARY, vscode.ConfigurationTarget.Workspace);
     await configuration.update('configPath', './missing.yaml', vscode.ConfigurationTarget.Workspace);
     assertTask(await executeAndObserve('maestro.version'), ['version', '--diagnostic']);
     await expectNoTask('maestro.doctor');
     await configuration.update('configPath', './maestro.yaml', vscode.ConfigurationTarget.Workspace);
     assertTask(await executeAndObserve('maestro.doctor'), [
-      'doctor', '--mode', 'all', '--config', path.join(process.env.MAESTRO_VSCODE_TEST_WORKSPACE, 'maestro.yaml')
+      'doctor', '--mode', 'all', '--config', path.join(process.env.MAESTRO_VSCODE_TEST_WORKSPACE, 'maestro.yaml'), '--workspace-current'
     ]);
   });
 
   test('delegates the default setup configuration to the CLI', async () => {
     const workspace = process.env.MAESTRO_VSCODE_TEST_WORKSPACE;
     const configuration = vscode.workspace.getConfiguration('maestro');
-    await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+    await configuration.update('binaryPath', process.env.MAESTRO_VSCODE_TEST_BINARY, vscode.ConfigurationTarget.Workspace);
     await configuration.update('configPath', '', vscode.ConfigurationTarget.Workspace);
     const task = await executeAndObserve('maestro.doctor');
-    assertTask(task, ['doctor', '--mode', 'all']);
+    assertTask(task, ['doctor', '--mode', 'all', '--workspace-current']);
   });
 
   test('binds chat and mutation to the saved active file and selection', async () => {
@@ -65,7 +67,7 @@ suite('Maestro for VS Code', () => {
     const chat = await executeAndObserve('maestro.askActiveFile', 'Which status is returned?');
     assertTask(chat, [
       'chat', '--config', path.join(workspace, 'maestro.yaml'),
-      '--file', 'app/Example.php', '--', 'Which status is returned?'
+      '--workspace-current', '--file', 'app/Example.php', '--', 'Which status is returned?'
     ]);
 
     const line = document.lineAt(1);
@@ -73,9 +75,34 @@ suite('Maestro for VS Code', () => {
     const mutation = await executeAndObserve('maestro.replaceSelection', 'Change only 201 to 202.');
     assertTask(mutation, [
       'workspace', 'replace', '--file', 'app/Example.php', '--lines', '2:2',
-      '--config', path.join(workspace, 'maestro.yaml'), '--', 'Change only 201 to 202.'
+      '--config', path.join(workspace, 'maestro.yaml'), '--workspace-current', '--', 'Change only 201 to 202.'
     ]);
     assert.equal(document.getText(), '<?php\nreturn 201;\n');
+  });
+
+  test('serves native chat with visible profile, models, workspace, and local response', async () => {
+    await configureHarmlessBinary();
+    const extension = vscode.extensions.getExtension('axtonno.maestro-local-ai');
+    const api = await extension.activate();
+    assert.ok(api && typeof api.handleNativeChat === 'function');
+    const workspace = process.env.MAESTRO_VSCODE_TEST_WORKSPACE;
+    const document = await vscode.workspace.openTextDocument(path.join(workspace, 'app', 'Example.php'));
+    await vscode.window.showTextDocument(document);
+    const rendered = [];
+    const stream = {
+      markdown(value) { rendered.push(typeof value === 'string' ? value : value.value); },
+      progress() {},
+      button() {}
+    };
+    const token = { onCancellationRequested() { return { dispose() {} }; } };
+    const result = await api.handleNativeChat({ prompt: 'What is returned?', command: undefined }, stream, token);
+    assert.equal(result.metadata.status, 'passed');
+    const output = rendered.join('\n');
+    assert.match(output, /Profile \| recommended/);
+    assert.match(output, /Chat model \| qwen3\.5:9b/);
+    assert.match(output, /Mutation model \| qwen2\.5-coder:14b/);
+    assert.match(output, /Workspace \| workspace/);
+    assert.match(output, /Native(?: |&nbsp;)chat(?: |&nbsp;)response\./);
   });
 
   test('rejects dirty buffers and non-single whole-line selections before launch', async () => {
@@ -111,7 +138,7 @@ suite('Maestro for VS Code', () => {
 
 async function configureHarmlessBinary() {
   const configuration = vscode.workspace.getConfiguration('maestro');
-  await configuration.update('binaryPath', '/bin/true', vscode.ConfigurationTarget.Workspace);
+  await configuration.update('binaryPath', process.env.MAESTRO_VSCODE_TEST_BINARY || '/bin/true', vscode.ConfigurationTarget.Workspace);
   await configuration.update('configPath', './maestro.yaml', vscode.ConfigurationTarget.Workspace);
 }
 
@@ -119,7 +146,7 @@ function assertTask(task, expectedArgs) {
   assert.ok(task);
   assert.equal(task.definition.type, 'maestro-preview');
   assert.ok(task.execution instanceof vscode.ProcessExecution);
-  assert.equal(task.execution.process, '/bin/true');
+  assert.equal(task.execution.process, process.env.MAESTRO_VSCODE_TEST_BINARY || '/bin/true');
   assert.deepEqual(task.execution.args, expectedArgs);
   assert.equal(task.execution.options.cwd, process.env.MAESTRO_VSCODE_TEST_WORKSPACE);
 }

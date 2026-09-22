@@ -21,7 +21,7 @@ import (
 
 func runWorkspace(arguments []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, dependencies commandDependencies) int {
 	if len(arguments) == 0 || arguments[0] == "--help" || arguments[0] == "-h" || arguments[0] == "help" {
-		fmt.Fprintln(stdout, "usage: maestro workspace replace --file <path> --lines <start:end> [--config path] <instruction>")
+		fmt.Fprintln(stdout, "usage: maestro workspace replace --file <path> --lines <start:end> [--config path] [--workspace-current] <instruction>")
 		return 0
 	}
 	if arguments[0] != "replace" {
@@ -61,12 +61,13 @@ func runControlledMutation(name string, arguments []string, previewOnly bool, st
 	flags.SetOutput(io.Discard)
 	usage := func() {
 		if name == "maestro mutate" {
-			fmt.Fprintln(stdout, "usage: maestro mutate [--preview] --file <path> --lines <start:end> [--config path] <instruction>")
+			fmt.Fprintln(stdout, "usage: maestro mutate [--preview] --file <path> --lines <start:end> [--config path] [--workspace-current] <instruction>")
 			return
 		}
-		fmt.Fprintln(stdout, "usage: maestro workspace replace --file <path> --lines <start:end> [--config path] <instruction>")
+		fmt.Fprintln(stdout, "usage: maestro workspace replace --file <path> --lines <start:end> [--config path] [--workspace-current] <instruction>")
 	}
 	configPath := flags.String("config", "", "path to Maestro configuration")
+	workspaceCurrent := flags.Bool("workspace-current", false, "use the current working directory as workspace root")
 	logical := flags.String("file", "", "single logical workspace file")
 	lines := flags.String("lines", "", "inclusive start:end line range")
 	if err := flags.Parse(arguments); err != nil {
@@ -88,6 +89,12 @@ func runControlledMutation(name string, arguments []string, previewOnly bool, st
 		return 2
 	}
 	config, err := resolveAndLoadMutation(*configPath, dependencies)
+	if err != nil {
+		fmt.Fprintln(stderr, "mutation failed: invalid_request")
+		renderConfigurationDiagnostic(stderr, err)
+		return 2
+	}
+	config, err = applyCurrentWorkspace(config, *workspaceCurrent, dependencies, productconfig.Config.ValidateMutationExecutionProfile)
 	if err != nil {
 		fmt.Fprintln(stderr, "mutation failed: invalid_request")
 		renderConfigurationDiagnostic(stderr, err)
@@ -158,7 +165,7 @@ func parseLineRange(value string) (int, int, bool) {
 func duplicateMutationFlag(arguments []string) bool {
 	seen := map[string]bool{}
 	for _, argument := range arguments {
-		for _, name := range []string{"--config", "--file", "--lines"} {
+		for _, name := range []string{"--config", "--workspace-current", "--file", "--lines"} {
 			if argument == name || strings.HasPrefix(argument, name+"=") {
 				if seen[name] {
 					return true
