@@ -44,8 +44,9 @@ Il candidate [Maestro for VS Code](editors/vscode-maestro/README.md) include
 `@maestro` nella Chat nativa, mostra profilo e modelli effettivi e deriva il
 project root dal workspace VS Code su extension host Linux o Remote WSL. Si
 installa ancora da un VSIX locale, conserva preview e approval nel terminale
-Maestro e non è pubblicato nel Marketplace; non amplia il support claim
-corrente.
+Maestro e non è pubblicato nel Marketplace. Il candidate 0.4.0 rende esplicito
+il target `local-linux` o `remote-wsl`; Dev Containers, Remote SSH e altri
+remote falliscono chiusi e non ereditano un claim Linux generico.
 
 ## Documentazione
 

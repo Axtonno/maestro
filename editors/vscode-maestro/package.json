@@ -2,7 +2,7 @@
   "name": "maestro-local-ai",
   "displayName": "Maestro for VS Code",
   "description": "Chat with Maestro in VS Code and run controlled local mutations through the Maestro CLI.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "axtonno",
   "preview": true,
   "license": "SEE LICENSE IN LICENSE",
@@ -204,13 +204,13 @@
           "type": "string",
           "default": "",
           "scope": "machine-overridable",
-          "markdownDescription": "Optional Maestro executable path in the extension-host environment. Default: empty. Example: `/home/me/.local/bin/maestro` in Remote WSL. An explicit path takes precedence over the exact extension-host `PATH`. Configure it once per local or remote machine; relative paths resolve from the selected workspace."
+          "markdownDescription": "Optional Maestro executable path in the current extension-host environment. Default: empty. Example: `/home/me/.local/bin/maestro` in Remote WSL. An explicit path takes precedence over that host's exact `PATH`. Configure it independently per local or remote machine; relative paths resolve from the selected workspace. A binary installed only on the UI host is never used remotely."
         },
         "maestro.configPath": {
           "type": "string",
           "default": "",
           "scope": "resource",
-          "markdownDescription": "Optional Maestro v4 configuration file. Default: empty. Example: `./maestro.yaml`. An explicit workspace-contained path takes precedence; when empty, the CLI uses `MAESTRO_CONFIG`, `XDG_CONFIG_HOME`, then `~/.config/maestro/config.yaml` as created by `maestro setup`."
+          "markdownDescription": "Optional Maestro v4 configuration file in the current extension-host environment. Default: empty. Example: `./maestro.yaml`. An explicit workspace-contained path takes precedence; when empty, the remote or local CLI uses its own `MAESTRO_CONFIG`, `XDG_CONFIG_HOME`, then `~/.config/maestro/config.yaml` as created by `maestro setup`."
         },
         "maestro.profile": {
           "type": "string",

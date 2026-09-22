@@ -3,6 +3,22 @@
 All notable changes to Maestro for VS Code are recorded here. Versions follow
 the policy in [SUPPORT.md](SUPPORT.md).
 
+## 0.4.0 — remote execution contract candidate
+
+- Freeze the extension as a workspace extension and expose the effective
+  execution target as `local-linux` or `remote-wsl` in Chat and redacted
+  lifecycle diagnostics.
+- Resolve binary, configuration, workspace paths, processes, and the approval
+  terminal exclusively in the current extension host; a binary available only
+  on the UI host is never treated as remotely available.
+- Fail closed with actionable errors when a supported remote is forced onto the
+  UI host or when the workspace uses Dev Containers, Remote SSH, Codespaces,
+  tunnels, or an unknown remote authority.
+- Keep Dev Containers and Remote SSH explicitly planned until each has passed a
+  clean Extension Development Host and installed-VSIX gate.
+- Preserve Workspace Trust, virtual-workspace rejection, redacted output,
+  CLI-only mutation authority, and the absence of stored secrets.
+
 ## 0.3.0 — Native Chat and workspace adaptation candidate
 
 - Add the single native `@maestro` Chat assistant with `/status`, `/preview`,

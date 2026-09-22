@@ -86,3 +86,27 @@ test('config resolution requires a readable regular file contained by the worksp
   t.after(() => fs.rmSync(outside, { force: true }));
   assert.throws(() => resolveConfigPath(outside, root), error => error.code === 'config_outside_expected_scope');
 });
+
+test('config resolution handles UTF-8 names and CRLF without changing containment', t => {
+  const root = fixture(t);
+  const directory = path.join(root, 'config', 'caffè');
+  fs.mkdirSync(directory);
+  const config = path.join(directory, 'maestro.yaml');
+  fs.writeFileSync(config, 'version: 4\r\n', 'utf8');
+  const resolved = resolveConfigPath('./config/caffè/maestro.yaml', root);
+  assert.equal(resolved.path, config);
+  assert.equal(resolved.logicalPath, 'config/caffè/maestro.yaml');
+  assert.equal(fs.readFileSync(resolved.path, 'utf8'), 'version: 4\r\n');
+});
+
+test('config symlinks cannot escape the workspace', { skip: process.platform === 'win32' }, t => {
+  const root = fixture(t);
+  const outside = path.join(path.dirname(root), `${path.basename(root)}-secret.yaml`);
+  const link = path.join(root, 'config', 'linked.yaml');
+  fs.writeFileSync(outside, 'secret: true\n');
+  fs.symlinkSync(outside, link);
+  t.after(() => fs.rmSync(outside, { force: true }));
+  assert.throws(() => resolveConfigPath('./config/linked.yaml', root), error => {
+    return error.code === 'config_outside_expected_scope';
+  });
+});

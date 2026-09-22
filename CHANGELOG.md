@@ -21,6 +21,9 @@ dichiarato nelle note di release.
   automatica della root VS Code e handoff della mutation al terminale TTY;
 - contratto CLI read-only `profile` e flag `--workspace-current` per usare il
   workspace scelto dall'host senza riscrivere la configurazione persistente.
+- contratto di esecuzione VS Code workspace-host con target visibile
+  `local-linux`/`remote-wsl`, risoluzione di binario e configurazione sul solo
+  extension host corrente e rifiuto esplicito dei remote non qualificati.
 
 ### Changed
 

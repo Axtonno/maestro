@@ -6,6 +6,7 @@ const FIELD_ORDER = Object.freeze([
   'duration_ms',
   'exit_code',
   'binary_origin',
+  'execution_target',
   'logical_path',
   'error_code'
 ]);

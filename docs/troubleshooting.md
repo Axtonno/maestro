@@ -4,6 +4,24 @@ Questa pagina entra in gioco quando installazione, `setup`, chat o mutation non
 completano il percorso atteso. `doctor` è uno strumento di diagnosi e supporto,
 non un prerequisito del primo utilizzo.
 
+## VS Code remoto non avvia Maestro
+
+Il candidate VSIX 0.4.0 supporta soltanto Linux locale e Remote WSL. In una
+finestra Remote WSL installare o configurare il binario e la configurazione
+dentro la distro; il `PATH` e i file dell'host UI Windows non sono visibili al
+workspace extension host.
+
+- `extension_host_mismatch`: l'estensione è stata forzata sul lato UI; rimuovere
+  l'override `remote.extensionKind` e reinstallarla nel remote host;
+- `dev_container_unqualified`: Dev Containers è pianificato ma non ancora
+  qualificato da un gate pulito;
+- `remote_unsupported`: Remote SSH, Codespaces, tunnel e remote sconosciuti non
+  ereditano il claim Linux;
+- `binary_not_found` o `config_not_found`: correggere path e setting nel remote
+  host corrente, non sull'host locale.
+
+`@maestro /status` mostra `Extension host: remote-wsl` nel percorso qualificato.
+
 ## `setup` non completa
 
 Controllare che Ollama sia avviato su `127.0.0.1:11434`. Se i modelli mancano,

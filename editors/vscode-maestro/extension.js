@@ -7,6 +7,7 @@ const { classifyCliFailure, classifyDoctorOutput, parseChatEnvelope, parseProfil
 const commands = require('./command-builder');
 const { formatEvent } = require('./diagnostics');
 const { PreviewError, normalizeError } = require('./errors');
+const { requireExecutionEnvironment } = require('./execution-environment');
 const { ONBOARDING_STATES, inspectOnboarding } = require('./onboarding');
 const { resolveBinaryPath, resolveConfigPath } = require('./path-resolver');
 const { classifyWorkspaceContext } = require('./workspace-context');
@@ -29,13 +30,20 @@ function settingsFor(scope) {
   };
 }
 
+function currentExecutionEnvironment() {
+  const extension = vscode.extensions.getExtension(EXTENSION_ID);
+  return requireExecutionEnvironment({
+    platform: process.platform,
+    remoteName: vscode.env.remoteName,
+    workspaceExtension: Boolean(extension && extension.extensionKind === vscode.ExtensionKind.Workspace)
+  }, PreviewError);
+}
+
 function requireSupportedHost() {
   if (!vscode.workspace.isTrusted) {
     throw new PreviewError('workspace_untrusted');
   }
-  if (process.platform !== 'linux') {
-    throw new PreviewError('platform_unsupported');
-  }
+  return currentExecutionEnvironment();
 }
 
 function activeWorkspaceEditor(options = {}) {
@@ -58,6 +66,7 @@ function activeWorkspaceEditor(options = {}) {
 }
 
 function resolveRuntime(folder, options = {}) {
+  const execution = currentExecutionEnvironment();
   const scope = folder && folder.uri;
   const settings = settingsFor(scope);
   const workspaceRoot = folder ? folder.uri.fsPath : undefined;
@@ -80,6 +89,7 @@ function resolveRuntime(folder, options = {}) {
     configLogicalPath: config && config.logicalPath,
     configOrigin: config && config.origin,
     profile: settings.profile,
+    executionTarget: execution.target,
     terminalName: validateTerminalName(settings.terminalName)
   };
 }
@@ -241,6 +251,7 @@ async function launch(folder, runtime, invocation, metadata) {
     type: 'maestro-preview',
     command: metadata.command,
     binaryOrigin: runtime.binaryOrigin,
+    executionTarget: runtime.executionTarget,
     logicalPath: metadata.logicalPath,
     startedAt: Date.now()
   };
@@ -268,6 +279,7 @@ async function launch(folder, runtime, invocation, metadata) {
     command: metadata.command,
     status: 'started',
     binary_origin: runtime.binaryOrigin,
+    execution_target: runtime.executionTarget,
     logical_path: metadata.logicalPath
   });
   try {
@@ -292,6 +304,7 @@ function onTaskEnded(event) {
     duration_ms: duration,
     exit_code: exitCode,
     binary_origin: definition.binaryOrigin,
+    execution_target: definition.executionTarget,
     logical_path: definition.logicalPath,
     error_code: passed || denied ? undefined : 'cli_exit_nonzero'
   });
@@ -316,7 +329,7 @@ function showResolution(runtime) {
     ? `; config from Settings: ${runtime.configPath}`
     : '';
   vscode.window.setStatusBarMessage(
-    `Maestro — binary from ${origin}: ${runtime.binaryPath}${config}`,
+    `Maestro — ${runtime.executionTarget}; binary from ${origin}: ${runtime.binaryPath}${config}`,
     10000
   );
 }
@@ -380,10 +393,12 @@ async function inspectEffectiveProfile(target, runtime, token) {
 }
 
 function renderIdentity(stream, identity, target, mode) {
+  const execution = currentExecutionEnvironment();
   const rows = [
     ['Profile', identity.profile],
     ['Chat model', identity.chatModel],
     ['Mutation model', identity.mutationModel],
+    ['Extension host', execution.target],
     ['Workspace', target.workspaceName],
     ['Mode', mode]
   ];
@@ -461,6 +476,7 @@ async function handleNativeChat(request, stream, token) {
     stream.progress('Asking the local Maestro model…');
     writeEvent('chat_request_started', {
       command: 'native_chat', status: 'started', binary_origin: runtime.binaryOrigin,
+      execution_target: runtime.executionTarget,
       logical_path: target.logicalPath
     });
     const started = Date.now();
@@ -483,6 +499,7 @@ async function handleNativeChat(request, stream, token) {
     stream.markdown(markdown);
     writeEvent('chat_request_finished', {
       command: 'native_chat', status: 'passed', duration_ms: Date.now() - started,
+      execution_target: runtime.executionTarget,
       binary_origin: runtime.binaryOrigin, logical_path: target.logicalPath
     });
     await vscode.commands.executeCommand('setContext', 'maestro.chatPassed', true);
@@ -559,7 +576,15 @@ async function refreshOnboardingStatus() {
     return;
   }
   const folder = statusWorkspaceFolder();
-  if (process.platform !== 'linux' || !vscode.workspace.isTrusted || !folder || folder.uri.scheme !== 'file') {
+  let execution;
+  try {
+    execution = currentExecutionEnvironment();
+  } catch {
+    statusItem.hide();
+    await setReadinessContexts(false, false);
+    return;
+  }
+  if (!vscode.workspace.isTrusted || !folder || folder.uri.scheme !== 'file') {
     statusItem.hide();
     await setReadinessContexts(false, false);
     return;
@@ -575,7 +600,7 @@ async function refreshOnboardingStatus() {
   statusItem.name = 'Maestro onboarding status';
   if (result.state === ONBOARDING_STATES.BINARY_MISSING) {
     statusItem.text = '$(warning) Maestro: Binary missing';
-    statusItem.tooltip = 'No executable Maestro CLI was found. Open the binaryPath setting.';
+    statusItem.tooltip = `No executable Maestro CLI was found in ${execution.target}. Open the binaryPath setting.`;
     statusItem.command = {
       command: 'workbench.action.openSettings',
       title: 'Set Maestro Binary Path',
@@ -583,11 +608,11 @@ async function refreshOnboardingStatus() {
     };
   } else if (result.state === ONBOARDING_STATES.CONFIG_MISSING) {
     statusItem.text = '$(warning) Maestro: Config missing';
-    statusItem.tooltip = 'No readable Maestro configuration was found. Open the setup guide.';
+    statusItem.tooltip = `No readable Maestro configuration was found in ${execution.target}. Open the setup guide.`;
     statusItem.command = 'maestro.openSetupGuide';
   } else {
     statusItem.text = '$(check) Maestro: Ready';
-    statusItem.tooltip = 'Maestro CLI and configuration are available. Run Doctor.';
+    statusItem.tooltip = `Maestro CLI and configuration are available in ${execution.target}. Run Doctor.`;
     statusItem.command = 'maestro.doctor';
   }
   statusItem.show();
@@ -650,7 +675,10 @@ function activate(context) {
     refreshOnboardingStatus()
   ]);
   if (process.env.MAESTRO_VSCODE_TEST_MODE === '1') {
-    return Object.freeze({ handleNativeChat });
+    return Object.freeze({
+      executionEnvironment: currentExecutionEnvironment(),
+      handleNativeChat
+    });
   }
 }
 

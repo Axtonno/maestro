@@ -7,7 +7,7 @@ const path = require('node:path');
 const { runTests } = require('@vscode/test-electron');
 
 const extensionID = 'axtonno.maestro-local-ai';
-const extensionVersion = '0.3.0';
+const extensionVersion = '0.4.0';
 
 async function main() {
   const vscodeExecutablePath = process.env.MAESTRO_VSCODE_EXECUTABLE;
@@ -19,7 +19,7 @@ async function main() {
     throw new Error(`VS Code CLI does not exist: ${vscodeCLIPath}`);
   }
   const vsixPath = path.resolve(
-    process.env.MAESTRO_VSIX_PATH || path.join(__dirname, '..', 'dist', 'maestro-local-ai-0.3.0.vsix')
+    process.env.MAESTRO_VSIX_PATH || path.join(__dirname, '..', 'dist', 'maestro-local-ai-0.4.0.vsix')
   );
   if (!fs.statSync(vsixPath).isFile()) {
     throw new Error(`VSIX does not exist: ${vsixPath}`);
@@ -80,11 +80,11 @@ async function main() {
         throw new Error(`previous VSIX does not exist: ${previousVSIX}`);
       }
       cli('--install-extension', path.resolve(previousVSIX), '--force');
-      assertListed(cli('--list-extensions', '--show-versions'), true, '0.2.0');
+      assertListed(cli('--list-extensions', '--show-versions'), true, '0.3.0');
     }
     cli('--install-extension', vsixPath, '--force');
     assertListed(cli('--list-extensions', '--show-versions'), true);
-    assertListed(cli('--list-extensions', '--show-versions'), false, '0.2.0');
+    assertListed(cli('--list-extensions', '--show-versions'), false, '0.3.0');
     cli('--uninstall-extension', extensionID);
     assertListed(cli('--list-extensions', '--show-versions'), false);
     cli('--install-extension', vsixPath, '--force');

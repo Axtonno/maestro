@@ -27,6 +27,16 @@ suite('Maestro for VS Code', () => {
     }
   });
 
+  test('runs in the qualified extension host without UI-host fallback', async () => {
+    const extension = vscode.extensions.getExtension('axtonno.maestro-local-ai');
+    const api = await extension.activate();
+    const expected = vscode.env.remoteName === 'wsl' ? 'remote-wsl' : 'local-linux';
+    assert.equal(api.executionEnvironment.target, expected);
+    if (vscode.env.remoteName === 'wsl') {
+      assert.equal(extension.extensionKind, vscode.ExtensionKind.Workspace);
+    }
+  });
+
   test('launches diagnostics as a direct process task', async () => {
     await configureHarmlessBinary();
     const task = await executeAndObserve('maestro.version');
@@ -101,6 +111,7 @@ suite('Maestro for VS Code', () => {
     assert.match(output, /Profile \| recommended/);
     assert.match(output, /Chat model \| qwen3\.5:9b/);
     assert.match(output, /Mutation model \| qwen2\.5-coder:14b/);
+    assert.match(output, /Extension host \| (?:local-linux|remote-wsl)/);
     assert.match(output, /Workspace \| workspace/);
     assert.match(output, /Native(?: |&nbsp;)chat(?: |&nbsp;)response\./);
   });

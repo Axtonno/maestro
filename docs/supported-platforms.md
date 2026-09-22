@@ -38,6 +38,27 @@ per esecuzione o filesystem Windows nativi.
 
 Il perimetro funzionale completo è nella pagina [Capacità correnti](current-capabilities.md).
 
+## Estensione VS Code candidate 0.4.0
+
+Il supporto della CLI e quello dell'extension host sono claim separati. Il
+candidate VSIX 0.4.0 dichiara `extensionKind: ["workspace"]` e qualifica:
+
+| Extension host | Stato candidate |
+| --- | --- |
+| Linux locale `amd64` | Implementato; gate puliti 0.4.0 pendenti |
+| Remote WSL, Ubuntu 24.04 `x86_64` su filesystem Linux | Implementato; riconferma installed-VSIX 0.4.0 pendente |
+| Dev Container | Pianificato; errore esplicito `dev_container_unqualified` |
+| Remote SSH, Codespaces, tunnel o remote sconosciuto | Non supportato; errore `remote_unsupported` |
+| Windows nativo, macOS, web | Non supportato dal VSIX candidate |
+
+In Remote WSL, estensione, CLI, configurazione, workspace e terminale di
+approval risiedono nella distro. Un binario disponibile soltanto nell'host UI
+Windows non viene cercato né presentato come disponibile. Il candidate 0.3.0
+ha superato il precedente gate live WSL; i claim 0.4.0 restano pendenti finché
+la build installata non supera Extension Development Host e VSIX su ogni target
+dichiarato. La qualificazione della CLI Windows nativa non implica la
+qualificazione dell'estensione locale Windows.
+
 ## Trial llama.cpp / GGUF post-v0.5
 
 M46 ha qualificato su Windows 11 `amd64` il profilo single-model dichiarato in

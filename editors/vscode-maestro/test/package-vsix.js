@@ -7,7 +7,7 @@ const yauzl = require('yauzl');
 const yazl = require('yazl');
 
 const root = path.resolve(__dirname, '..');
-const output = path.join(root, 'dist', 'maestro-local-ai-0.3.0.vsix');
+const output = path.join(root, 'dist', 'maestro-local-ai-0.4.0.vsix');
 const fixedTime = new Date('1980-01-01T00:00:00.000Z');
 
 async function main() {

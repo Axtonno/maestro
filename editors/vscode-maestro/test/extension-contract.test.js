@@ -33,6 +33,7 @@ const packagedFiles = [
   'cli-runner.js',
   'diagnostics.js',
   'errors.js',
+  'execution-environment.js',
   'extension.js',
   'media/icon.png',
   'media/walkthrough/binary-path.md',
@@ -46,10 +47,10 @@ const packagedFiles = [
   'workspace-context.js'
 ];
 
-test('manifest freezes the unpublished native-chat candidate identity', () => {
+test('manifest freezes the unpublished remote-execution candidate identity', () => {
   assert.equal(manifest.name, 'maestro-local-ai');
   assert.equal(manifest.displayName, 'Maestro for VS Code');
-  assert.equal(manifest.version, '0.3.0');
+  assert.equal(manifest.version, '0.4.0');
   assert.equal(manifest.publisher, 'axtonno');
   assert.equal(manifest.private, undefined);
   assert.equal(manifest.preview, true);
@@ -111,6 +112,7 @@ test('walkthrough and settings encode onboarding plus the qualified profile', ()
   assert.equal(properties['maestro.binaryPath'].default, '');
   assert.equal(properties['maestro.binaryPath'].scope, 'machine-overridable');
   assert.match(properties['maestro.binaryPath'].markdownDescription, /Example:.*takes precedence/s);
+  assert.match(properties['maestro.binaryPath'].markdownDescription, /UI host is never used remotely/);
   assert.equal(properties['maestro.configPath'].default, '');
   assert.equal(properties['maestro.configPath'].scope, 'resource');
   assert.match(properties['maestro.configPath'].markdownDescription, /Example:.*takes precedence/s);
@@ -165,6 +167,9 @@ test('extension delegates mutation, captures only read-only CLI calls, and never
   assert.match(source, /buildCapturedChatInvocation/);
   assert.match(source, /buildProfileInvocation/);
   assert.doesNotMatch(source, /telemetry|createWebview|registerWebview|createTreeView/i);
+  assert.match(source, /vscode\.env\.remoteName/);
+  assert.match(source, /vscode\.ExtensionKind\.Workspace/);
+  assert.doesNotMatch(source, /context\.secrets\.(store|delete)|workspaceState\.update|globalState\.update/);
 });
 
 test('one passive status item exposes the required states and next actions', () => {
@@ -188,6 +193,8 @@ test('public docs preserve the claim boundary and define support and updates', (
   assert.match(readme, /go build -o/);
   assert.match(readme, /@maestro \/status/);
   assert.match(readme, /uninstall-extension axtonno\.maestro-local-ai/);
-  assert.match(support, /`0\.3\.x` adds native Chat plus\s+workspace adaptation/);
+  assert.match(support, /`0\.4\.x` freezes the\s+remote execution contract/);
+  assert.match(readme, /Dev Container \| Fails with `dev_container_unqualified`/);
+  assert.match(readme, /Remote SSH or another remote \| Fails with `remote_unsupported`/);
   assert.match(support, /higher patch containing the revert/);
 });

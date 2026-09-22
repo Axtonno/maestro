@@ -1,0 +1,20 @@
+{
+  "name": "maestro-remote-test-harness",
+  "displayName": "Maestro Remote Test Harness",
+  "version": "0.0.0",
+  "private": true,
+  "publisher": "maestro-local",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "main": "./extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "extensionDependencies": [
+    "axtonno.maestro-local-ai"
+  ],
+  "activationEvents": [
+    "*"
+  ]
+}
