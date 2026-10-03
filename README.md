@@ -61,6 +61,7 @@ remote falliscono chiusi e non ereditano un claim Linux generico.
 - [CLI](docs/cli.md) e [configurazione](docs/configuration.md)
 - [Roadmap pubblica](docs/roadmap.md)
 - [Maestro for VS Code](editors/vscode-maestro/README.md)
+- [Installare e aggiornare la chat in VS Code](docs/vscode-chat.md)
 - [Contribuire](CONTRIBUTING.md)
 
 ## Sviluppo
