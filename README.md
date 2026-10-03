@@ -52,6 +52,7 @@ remote falliscono chiusi e non ereditano un claim Linux generico.
 
 - [Quick Start](docs/quick-start.md)
 - [Installazione](docs/installation.md)
+- [Disinstallazione completa](docs/uninstallation.md)
 - [Capacità correnti](docs/current-capabilities.md)
 - [Controlled Mutation](docs/controlled-mutation.md)
 - [Piattaforme supportate](docs/supported-platforms.md)

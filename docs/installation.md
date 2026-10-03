@@ -90,11 +90,10 @@ maestro setup
 
 ## Rimozione
 
-La rimozione del binario non tocca configurazione, workspace, Ollama o modelli:
-
-```sh
-rm "$HOME/.local/bin/maestro"
-```
+Seguire la [guida alla disinstallazione completa](uninstallation.md) per
+rimuovere CLI, estensione VS Code, configurazioni, backup e pacchetti.
+La guida include la rimozione facoltativa di modelli e Ollama e i controlli
+finali, preservando i progetti e gli strumenti condivisi.
 
 Per il primo utilizzo proseguire con il [Quick Start](quick-start.md). Per
 identità dell’artifact e procedura riproducibile consultare

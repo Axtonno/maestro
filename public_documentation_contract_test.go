@@ -79,6 +79,7 @@ func TestPublicDocumentationAllowlist(t *testing.T) {
 		"security-model.md":                      true,
 		"supported-platforms.md":                 true,
 		"troubleshooting.md":                     true,
+		"uninstallation.md":                      true,
 		"vscode-chat.md":                         true,
 	}
 	allowedDirectories := map[string]bool{"releases": true, "schemas": true}
